@@ -1,0 +1,982 @@
+[
+  {
+    "id": "biz_partner_intro",
+    "category": "CAREER",
+    "art": null,
+    "tags": [
+      "business",
+      "chain"
+    ],
+    "cooldown": 18,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": -3000,
+          "statChanges": {
+            "stress": 5,
+            "networking": 4
+          },
+          "messageKey": "events.biz_partner_intro.choices.0.message"
+        },
+        "followups": [
+          {
+            "id": "biz_partner_scaling",
+            "delayMonths": 2
+          }
+        ],
+        "labelKey": "events.biz_partner_intro.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": {
+            "happiness": 2
+          },
+          "messageKey": "events.biz_partner_intro.choices.1.message"
+        },
+        "labelKey": "events.biz_partner_intro.choices.1.label"
+      }
+    ],
+    "titleKey": "events.biz_partner_intro.title",
+    "descriptionKey": "events.biz_partner_intro.description"
+  },
+  {
+    "id": "biz_partner_scaling",
+    "category": "CAREER",
+    "art": null,
+    "tags": [
+      "business",
+      "chain"
+    ],
+    "cooldown": 18,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": -8000,
+          "statChanges": {
+            "stress": 8
+          },
+          "messageKey": "events.biz_partner_scaling.choices.0.message"
+        },
+        "followups": [
+          {
+            "id": "biz_partner_dispute",
+            "delayMonths": 3
+          }
+        ],
+        "labelKey": "events.biz_partner_scaling.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": -3000,
+          "statChanges": {
+            "stress": 2
+          },
+          "messageKey": "events.biz_partner_scaling.choices.1.message"
+        },
+        "labelKey": "events.biz_partner_scaling.choices.1.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": {
+            "stress": -3
+          },
+          "messageKey": "events.biz_partner_scaling.choices.2.message"
+        },
+        "labelKey": "events.biz_partner_scaling.choices.2.label"
+      }
+    ],
+    "titleKey": "events.biz_partner_scaling.title",
+    "descriptionKey": "events.biz_partner_scaling.description"
+  },
+  {
+    "id": "biz_partner_dispute",
+    "category": "LEGAL",
+    "art": null,
+    "tags": [
+      "business",
+      "chain"
+    ],
+    "cooldown": 18,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": -10000,
+          "statChanges": {
+            "stress": -5,
+            "happiness": 2
+          },
+          "messageKey": "events.biz_partner_dispute.choices.0.message"
+        },
+        "labelKey": "events.biz_partner_dispute.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": -2000,
+          "statChanges": {
+            "stress": 3
+          },
+          "messageKey": "events.biz_partner_dispute.choices.1.message"
+        },
+        "labelKey": "events.biz_partner_dispute.choices.1.label"
+      },
+      {
+        "effects": {
+          "cashChange": 12000,
+          "statChanges": {
+            "happiness": -4
+          },
+          "messageKey": "events.biz_partner_dispute.choices.2.message"
+        },
+        "labelKey": "events.biz_partner_dispute.choices.2.label"
+      }
+    ],
+    "titleKey": "events.biz_partner_dispute.title",
+    "descriptionKey": "events.biz_partner_dispute.description"
+  },
+  {
+    "id": "health_checkup",
+    "category": "MEDICAL",
+    "art": null,
+    "tags": [
+      "health",
+      "chain"
+    ],
+    "cooldown": 12,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": -2000,
+          "statChanges": {
+            "stress": -2,
+            "health": 2
+          },
+          "messageKey": "events.health_checkup.choices.0.message"
+        },
+        "followups": [
+          {
+            "id": "health_claim",
+            "delayMonths": 3
+          }
+        ],
+        "labelKey": "events.health_checkup.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": {
+            "stress": 1
+          },
+          "messageKey": "events.health_checkup.choices.1.message"
+        },
+        "followups": [
+          {
+            "id": "health_emergency",
+            "delayMonths": 2
+          }
+        ],
+        "labelKey": "events.health_checkup.choices.1.label"
+      }
+    ],
+    "titleKey": "events.health_checkup.title",
+    "descriptionKey": "events.health_checkup.description"
+  },
+  {
+    "id": "health_claim",
+    "category": "MEDICAL",
+    "art": null,
+    "tags": [
+      "health",
+      "chain"
+    ],
+    "cooldown": 12,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 4000,
+          "statChanges": {
+            "stress": -4
+          },
+          "messageKey": "events.health_claim.choices.0.message"
+        },
+        "labelKey": "events.health_claim.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": -3000,
+          "statChanges": {
+            "stress": -2
+          },
+          "messageKey": "events.health_claim.choices.1.message"
+        },
+        "labelKey": "events.health_claim.choices.1.label"
+      }
+    ],
+    "titleKey": "events.health_claim.title",
+    "descriptionKey": "events.health_claim.description"
+  },
+  {
+    "id": "health_emergency",
+    "category": "MEDICAL",
+    "art": null,
+    "tags": [
+      "health",
+      "chain"
+    ],
+    "cooldown": 12,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": -6000,
+          "statChanges": {
+            "stress": 6
+          },
+          "messageKey": "events.health_emergency.choices.0.message"
+        },
+        "labelKey": "events.health_emergency.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": {
+            "stress": 10
+          },
+          "addLiability": {
+            "name": "Medical Payment Plan",
+            "balance": 7000,
+            "originalBalance": 7000,
+            "interestRate": 0.1,
+            "monthlyPayment": 250,
+            "type": "MEDICAL_DEBT"
+          },
+          "messageKey": "events.health_emergency.choices.1.message"
+        },
+        "labelKey": "events.health_emergency.choices.1.label"
+      }
+    ],
+    "titleKey": "events.health_emergency.title",
+    "descriptionKey": "events.health_emergency.description"
+  },
+  {
+    "id": "landlord_screening",
+    "category": "HOUSING",
+    "art": null,
+    "tags": [
+      "landlord",
+      "chain"
+    ],
+    "cooldown": 12,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": -200,
+          "statChanges": {
+            "stress": 2
+          },
+          "messageKey": "events.landlord_screening.choices.0.message"
+        },
+        "followups": [
+          {
+            "id": "landlord_tenant_good",
+            "delayMonths": 2
+          }
+        ],
+        "labelKey": "events.landlord_screening.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": {
+            "stress": 1
+          },
+          "messageKey": "events.landlord_screening.choices.1.message"
+        },
+        "followups": [
+          {
+            "id": "landlord_tenant_issue",
+            "delayMonths": 2
+          }
+        ],
+        "labelKey": "events.landlord_screening.choices.1.label"
+      }
+    ],
+    "titleKey": "events.landlord_screening.title",
+    "descriptionKey": "events.landlord_screening.description"
+  },
+  {
+    "id": "landlord_tenant_good",
+    "category": "HOUSING",
+    "art": null,
+    "tags": [
+      "landlord",
+      "chain"
+    ],
+    "cooldown": 12,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 1500,
+          "statChanges": {
+            "stress": -3
+          },
+          "messageKey": "events.landlord_tenant_good.choices.0.message"
+        },
+        "labelKey": "events.landlord_tenant_good.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 800,
+          "statChanges": {
+            "happiness": 3
+          },
+          "messageKey": "events.landlord_tenant_good.choices.1.message"
+        },
+        "labelKey": "events.landlord_tenant_good.choices.1.label"
+      }
+    ],
+    "titleKey": "events.landlord_tenant_good.title",
+    "descriptionKey": "events.landlord_tenant_good.description"
+  },
+  {
+    "id": "landlord_tenant_issue",
+    "category": "HOUSING",
+    "art": null,
+    "tags": [
+      "landlord",
+      "chain"
+    ],
+    "cooldown": 12,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": {
+            "stress": 4
+          },
+          "messageKey": "events.landlord_tenant_issue.choices.0.message"
+        },
+        "followups": [
+          {
+            "id": "landlord_eviction",
+            "delayMonths": 2
+          }
+        ],
+        "labelKey": "events.landlord_tenant_issue.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": -800,
+          "statChanges": {
+            "stress": 2
+          },
+          "messageKey": "events.landlord_tenant_issue.choices.1.message"
+        },
+        "labelKey": "events.landlord_tenant_issue.choices.1.label"
+      }
+    ],
+    "titleKey": "events.landlord_tenant_issue.title",
+    "descriptionKey": "events.landlord_tenant_issue.description"
+  },
+  {
+    "id": "landlord_eviction",
+    "category": "LEGAL",
+    "art": null,
+    "tags": [
+      "landlord",
+      "chain"
+    ],
+    "cooldown": 12,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": -2000,
+          "statChanges": {
+            "stress": 6
+          },
+          "messageKey": "events.landlord_eviction.choices.0.message"
+        },
+        "labelKey": "events.landlord_eviction.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": -1500,
+          "statChanges": {
+            "stress": 3
+          },
+          "messageKey": "events.landlord_eviction.choices.1.message"
+        },
+        "labelKey": "events.landlord_eviction.choices.1.label"
+      }
+    ],
+    "titleKey": "events.landlord_eviction.title",
+    "descriptionKey": "events.landlord_eviction.description"
+  },
+  {
+    "id": "insurance_discount",
+    "category": "ECONOMIC",
+    "art": null,
+    "tags": [
+      "vehicle"
+    ],
+    "cooldown": 10,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 300,
+          "statChanges": {
+            "stress": -2
+          },
+          "messageKey": "events.insurance_discount.choices.0.message"
+        },
+        "labelKey": "events.insurance_discount.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "messageKey": "events.insurance_discount.choices.1.message"
+        },
+        "labelKey": "events.insurance_discount.choices.1.label"
+      }
+    ],
+    "titleKey": "events.insurance_discount.title",
+    "descriptionKey": "events.insurance_discount.description"
+  },
+  {
+    "id": "career_cert_offer",
+    "category": "CAREER",
+    "art": null,
+    "tags": [
+      "career"
+    ],
+    "cooldown": 14,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": -1200,
+          "statChanges": {
+            "financialIQ": 4,
+            "stress": 2
+          },
+          "messageKey": "events.career_cert_offer.choices.0.message"
+        },
+        "labelKey": "events.career_cert_offer.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "messageKey": "events.career_cert_offer.choices.1.message"
+        },
+        "labelKey": "events.career_cert_offer.choices.1.label"
+      }
+    ],
+    "titleKey": "events.career_cert_offer.title",
+    "descriptionKey": "events.career_cert_offer.description"
+  },
+  {
+    "id": "micro_grant",
+    "category": "WINDFALL",
+    "art": null,
+    "tags": [
+      "windfall"
+    ],
+    "cooldown": 16,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 1000,
+          "statChanges": {
+            "happiness": 3
+          },
+          "messageKey": "events.micro_grant.choices.0.message"
+        },
+        "labelKey": "events.micro_grant.choices.0.label"
+      }
+    ],
+    "titleKey": "events.micro_grant.title",
+    "descriptionKey": "events.micro_grant.description"
+  },
+  {
+    "id": "supply_chain_shock",
+    "category": "ECONOMIC",
+    "art": null,
+    "tags": [
+      "market"
+    ],
+    "cooldown": 12,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": -1500,
+          "statChanges": {
+            "stress": 2
+          },
+          "messageKey": "events.supply_chain_shock.choices.0.message"
+        },
+        "labelKey": "events.supply_chain_shock.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": {
+            "stress": 1
+          },
+          "messageKey": "events.supply_chain_shock.choices.1.message"
+        },
+        "labelKey": "events.supply_chain_shock.choices.1.label"
+      }
+    ],
+    "titleKey": "events.supply_chain_shock.title",
+    "descriptionKey": "events.supply_chain_shock.description"
+  },
+  {
+    "id": "alex_hackathon",
+    "category": "CAREER",
+    "art": null,
+    "tags": ["character", "tech"],
+    "characterIds": ["alex"],
+    "cooldown": 12,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 400,
+          "statChanges": { "networking": 4, "stress": 4 },
+          "messageKey": "events.alex_hackathon.choices.0.message"
+        },
+        "labelKey": "events.alex_hackathon.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": { "stress": -3, "happiness": 2 },
+          "messageKey": "events.alex_hackathon.choices.1.message"
+        },
+        "labelKey": "events.alex_hackathon.choices.1.label"
+      }
+    ],
+    "titleKey": "events.alex_hackathon.title",
+    "descriptionKey": "events.alex_hackathon.description"
+  },
+  {
+    "id": "alex_open_source",
+    "category": "CAREER",
+    "art": null,
+    "tags": ["character", "tech"],
+    "characterIds": ["alex"],
+    "cooldown": 12,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": { "financialIQ": 3, "networking": 3 },
+          "messageKey": "events.alex_open_source.choices.0.message"
+        },
+        "labelKey": "events.alex_open_source.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": { "stress": -2 },
+          "messageKey": "events.alex_open_source.choices.1.message"
+        },
+        "labelKey": "events.alex_open_source.choices.1.label"
+      }
+    ],
+    "titleKey": "events.alex_open_source.title",
+    "descriptionKey": "events.alex_open_source.description"
+  },
+  {
+    "id": "maria_shift_bonus",
+    "category": "CAREER",
+    "art": null,
+    "tags": ["character", "healthcare"],
+    "characterIds": ["maria"],
+    "cooldown": 10,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 600,
+          "statChanges": { "stress": 6, "health": -2 },
+          "messageKey": "events.maria_shift_bonus.choices.0.message"
+        },
+        "labelKey": "events.maria_shift_bonus.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": { "stress": -2, "health": 2 },
+          "messageKey": "events.maria_shift_bonus.choices.1.message"
+        },
+        "labelKey": "events.maria_shift_bonus.choices.1.label"
+      }
+    ],
+    "titleKey": "events.maria_shift_bonus.title",
+    "descriptionKey": "events.maria_shift_bonus.description"
+  },
+  {
+    "id": "maria_community_clinic",
+    "category": "CAREER",
+    "art": null,
+    "tags": ["character", "healthcare"],
+    "characterIds": ["maria"],
+    "cooldown": 14,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 200,
+          "statChanges": { "fulfillment": 6, "networking": 2 },
+          "messageKey": "events.maria_community_clinic.choices.0.message"
+        },
+        "labelKey": "events.maria_community_clinic.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": { "stress": -2 },
+          "messageKey": "events.maria_community_clinic.choices.1.message"
+        },
+        "labelKey": "events.maria_community_clinic.choices.1.label"
+      }
+    ],
+    "titleKey": "events.maria_community_clinic.title",
+    "descriptionKey": "events.maria_community_clinic.description"
+  },
+  {
+    "id": "james_client_review",
+    "category": "CAREER",
+    "art": null,
+    "tags": ["character", "finance"],
+    "characterIds": ["james"],
+    "cooldown": 12,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 300,
+          "statChanges": { "networking": 4, "stress": 3 },
+          "messageKey": "events.james_client_review.choices.0.message"
+        },
+        "labelKey": "events.james_client_review.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": { "financialIQ": 3, "stress": -2 },
+          "messageKey": "events.james_client_review.choices.1.message"
+        },
+        "labelKey": "events.james_client_review.choices.1.label"
+      }
+    ],
+    "titleKey": "events.james_client_review.title",
+    "descriptionKey": "events.james_client_review.description"
+  },
+  {
+    "id": "james_model_edge",
+    "category": "CAREER",
+    "art": null,
+    "tags": ["character", "finance"],
+    "characterIds": ["james"],
+    "cooldown": 14,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 500,
+          "statChanges": { "financialIQ": 4, "stress": 4 },
+          "messageKey": "events.james_model_edge.choices.0.message"
+        },
+        "labelKey": "events.james_model_edge.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": { "networking": 2, "stress": -2 },
+          "messageKey": "events.james_model_edge.choices.1.message"
+        },
+        "labelKey": "events.james_model_edge.choices.1.label"
+      }
+    ],
+    "titleKey": "events.james_model_edge.title",
+    "descriptionKey": "events.james_model_edge.description"
+  },
+  {
+    "id": "devon_brand_collab",
+    "category": "CAREER",
+    "art": null,
+    "tags": ["character", "creative"],
+    "characterIds": ["devon"],
+    "cooldown": 12,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 450,
+          "statChanges": { "networking": 4, "stress": 3 },
+          "messageKey": "events.devon_brand_collab.choices.0.message"
+        },
+        "labelKey": "events.devon_brand_collab.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": { "happiness": 3, "stress": -2 },
+          "messageKey": "events.devon_brand_collab.choices.1.message"
+        },
+        "labelKey": "events.devon_brand_collab.choices.1.label"
+      }
+    ],
+    "titleKey": "events.devon_brand_collab.title",
+    "descriptionKey": "events.devon_brand_collab.description"
+  },
+  {
+    "id": "devon_portfolio_feature",
+    "category": "CAREER",
+    "art": null,
+    "tags": ["character", "creative"],
+    "characterIds": ["devon"],
+    "cooldown": 14,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 300,
+          "statChanges": { "networking": 5, "fulfillment": 4 },
+          "messageKey": "events.devon_portfolio_feature.choices.0.message"
+        },
+        "labelKey": "events.devon_portfolio_feature.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": { "stress": -2 },
+          "messageKey": "events.devon_portfolio_feature.choices.1.message"
+        },
+        "labelKey": "events.devon_portfolio_feature.choices.1.label"
+      }
+    ],
+    "titleKey": "events.devon_portfolio_feature.title",
+    "descriptionKey": "events.devon_portfolio_feature.description"
+  },
+  {
+    "id": "marcus_pitch_night",
+    "category": "CAREER",
+    "art": null,
+    "tags": ["character", "entrepreneur", "chain"],
+    "characterIds": ["marcus"],
+    "cooldown": 18,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 500,
+          "statChanges": { "networking": 6, "stress": 5 },
+          "followups": [{ "id": "marcus_seed_terms", "delayMonths": 2 }],
+          "messageKey": "events.marcus_pitch_night.choices.0.message"
+        },
+        "labelKey": "events.marcus_pitch_night.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": { "stress": -3 },
+          "messageKey": "events.marcus_pitch_night.choices.1.message"
+        },
+        "labelKey": "events.marcus_pitch_night.choices.1.label"
+      }
+    ],
+    "titleKey": "events.marcus_pitch_night.title",
+    "descriptionKey": "events.marcus_pitch_night.description"
+  },
+  {
+    "id": "marcus_seed_terms",
+    "category": "CAREER",
+    "art": null,
+    "tags": ["character", "entrepreneur", "chain"],
+    "characterIds": ["marcus"],
+    "cooldown": 18,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 8000,
+          "statChanges": { "fulfillment": 6, "stress": 6 },
+          "messageKey": "events.marcus_seed_terms.choices.0.message"
+        },
+        "labelKey": "events.marcus_seed_terms.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 3000,
+          "statChanges": { "networking": 4, "stress": 3 },
+          "messageKey": "events.marcus_seed_terms.choices.1.message"
+        },
+        "labelKey": "events.marcus_seed_terms.choices.1.label"
+      }
+    ],
+    "titleKey": "events.marcus_seed_terms.title",
+    "descriptionKey": "events.marcus_seed_terms.description"
+  },
+  {
+    "id": "sarah_trade_bid",
+    "category": "CAREER",
+    "art": null,
+    "tags": ["character", "trades", "chain"],
+    "characterIds": ["sarah"],
+    "cooldown": 18,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": -500,
+          "statChanges": { "networking": 4, "stress": 4 },
+          "followups": [{ "id": "sarah_inspection", "delayMonths": 1 }],
+          "messageKey": "events.sarah_trade_bid.choices.0.message"
+        },
+        "labelKey": "events.sarah_trade_bid.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 150,
+          "statChanges": { "stress": -2 },
+          "messageKey": "events.sarah_trade_bid.choices.1.message"
+        },
+        "labelKey": "events.sarah_trade_bid.choices.1.label"
+      }
+    ],
+    "titleKey": "events.sarah_trade_bid.title",
+    "descriptionKey": "events.sarah_trade_bid.description"
+  },
+  {
+    "id": "sarah_inspection",
+    "category": "CAREER",
+    "art": null,
+    "tags": ["character", "trades", "chain"],
+    "characterIds": ["sarah"],
+    "cooldown": 18,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 2500,
+          "statChanges": { "fulfillment": 5, "happiness": 2 },
+          "messageKey": "events.sarah_inspection.choices.0.message"
+        },
+        "labelKey": "events.sarah_inspection.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": -600,
+          "statChanges": { "stress": 5 },
+          "messageKey": "events.sarah_inspection.choices.1.message"
+        },
+        "labelKey": "events.sarah_inspection.choices.1.label"
+      }
+    ],
+    "titleKey": "events.sarah_inspection.title",
+    "descriptionKey": "events.sarah_inspection.description"
+  },
+  {
+    "id": "linda_pension_briefing",
+    "category": "CAREER",
+    "art": null,
+    "tags": ["character", "government"],
+    "characterIds": ["linda"],
+    "cooldown": 16,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 200,
+          "statChanges": { "financialIQ": 3, "stress": -2 },
+          "messageKey": "events.linda_pension_briefing.choices.0.message"
+        },
+        "labelKey": "events.linda_pension_briefing.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": { "stress": -2 },
+          "messageKey": "events.linda_pension_briefing.choices.1.message"
+        },
+        "labelKey": "events.linda_pension_briefing.choices.1.label"
+      }
+    ],
+    "titleKey": "events.linda_pension_briefing.title",
+    "descriptionKey": "events.linda_pension_briefing.description"
+  },
+  {
+    "id": "linda_policy_committee",
+    "category": "CAREER",
+    "art": null,
+    "tags": ["character", "government"],
+    "characterIds": ["linda"],
+    "cooldown": 18,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 350,
+          "statChanges": { "networking": 4, "fulfillment": 3 },
+          "messageKey": "events.linda_policy_committee.choices.0.message"
+        },
+        "labelKey": "events.linda_policy_committee.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": { "stress": -1 },
+          "messageKey": "events.linda_policy_committee.choices.1.message"
+        },
+        "labelKey": "events.linda_policy_committee.choices.1.label"
+      }
+    ],
+    "titleKey": "events.linda_policy_committee.title",
+    "descriptionKey": "events.linda_policy_committee.description"
+  },
+  {
+    "id": "tyler_big_pitch",
+    "category": "CAREER",
+    "art": null,
+    "tags": ["character", "sales"],
+    "characterIds": ["tyler"],
+    "cooldown": 12,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": 700,
+          "statChanges": { "networking": 5, "stress": 4 },
+          "messageKey": "events.tyler_big_pitch.choices.0.message"
+        },
+        "labelKey": "events.tyler_big_pitch.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": { "stress": -2 },
+          "messageKey": "events.tyler_big_pitch.choices.1.message"
+        },
+        "labelKey": "events.tyler_big_pitch.choices.1.label"
+      }
+    ],
+    "titleKey": "events.tyler_big_pitch.title",
+    "descriptionKey": "events.tyler_big_pitch.description"
+  },
+  {
+    "id": "tyler_pipeline_dip",
+    "category": "CAREER",
+    "art": null,
+    "tags": ["character", "sales"],
+    "characterIds": ["tyler"],
+    "cooldown": 14,
+    "choices": [
+      {
+        "effects": {
+          "cashChange": -200,
+          "statChanges": { "stress": 4, "networking": 3 },
+          "messageKey": "events.tyler_pipeline_dip.choices.0.message"
+        },
+        "labelKey": "events.tyler_pipeline_dip.choices.0.label"
+      },
+      {
+        "effects": {
+          "cashChange": 0,
+          "statChanges": { "stress": -2 },
+          "messageKey": "events.tyler_pipeline_dip.choices.1.message"
+        },
+        "labelKey": "events.tyler_pipeline_dip.choices.1.label"
+      }
+    ],
+    "titleKey": "events.tyler_pipeline_dip.title",
+    "descriptionKey": "events.tyler_pipeline_dip.description"
+  }
+]

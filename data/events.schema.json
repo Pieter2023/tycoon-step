@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EventLibrary",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "category", "choices"],
+    "properties": {
+      "id": { "type": "string" },
+      "title": { "type": "string" },
+      "titleKey": { "type": "string" },
+      "description": { "type": "string" },
+      "descriptionKey": { "type": "string" },
+      "category": {
+        "type": "string",
+        "enum": [
+          "CAREER",
+          "ECONOMIC",
+          "MEDICAL",
+          "LEGAL",
+          "HOUSING",
+          "FAMILY_EMERGENCY",
+          "RELATIONSHIP",
+          "WINDFALL",
+          "VEHICLE",
+          "AI_DISRUPTION",
+          "TAX"
+        ]
+      },
+      "art": { "type": ["string", "null"] },
+      "tags": { "type": "array", "items": { "type": "string" } },
+      "characterIds": { "type": "array", "items": { "type": "string" } },
+      "cooldown": { "type": "number" },
+      "choices": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["effects"],
+          "properties": {
+            "label": { "type": "string" },
+            "labelKey": { "type": "string" },
+            "effects": { "type": "object" },
+            "followups": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["id"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "delayMonths": { "type": "number" }
+                }
+              }
+            }
+          },
+          "anyOf": [
+            { "required": ["label"] },
+            { "required": ["labelKey"] }
+          ]
+        }
+      },
+      "anyOf": [
+        { "required": ["title"] },
+        { "required": ["titleKey"] }
+      ],
+      "allOf": [
+        {
+          "anyOf": [
+            { "required": ["description"] },
+            { "required": ["descriptionKey"] }
+          ]
+        }
+      ]
+    }
+  }
+}

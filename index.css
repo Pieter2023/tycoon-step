@@ -1,0 +1,377 @@
+@import "tailwindcss";
+
+/* =====================================================
+   Custom Theme (Tailwind v4)
+   ===================================================== */
+@theme {
+  --color-slate-850: #172033;
+  --color-slate-950: #0a0f1a;
+
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-bounce-slow: bounce 2s infinite;
+}
+
+/* =====================================================
+   Base Styles
+   ===================================================== */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* =====================================================
+   Design System Tokens
+   ===================================================== */
+:root {
+  --ds-surface-0: #0b1220;
+  --ds-surface-1: #0f172a;
+  --ds-surface-2: #111827;
+  --ds-surface-3: #1f2937;
+
+  --ds-text-1: #f8fafc;
+  --ds-text-2: #e2e8f0;
+  --ds-text-3: #94a3b8;
+
+  --ds-accent-500: #10b981;
+  --ds-accent-600: #059669;
+  --ds-warning-500: #f59e0b;
+  --ds-danger-500: #ef4444;
+
+  --ds-border-1: rgba(148, 163, 184, 0.2);
+  --ds-border-2: rgba(148, 163, 184, 0.35);
+
+  --ds-radius-sm: 10px;
+  --ds-radius-md: 14px;
+  --ds-radius-lg: 18px;
+  --ds-radius-pill: 999px;
+
+  --ds-shadow-1: 0 10px 30px rgba(3, 7, 18, 0.45);
+
+  --ds-space-1: 4px;
+  --ds-space-2: 8px;
+  --ds-space-3: 12px;
+  --ds-space-4: 16px;
+  --ds-space-5: 20px;
+
+  --ds-font-xs: 0.72rem;
+  --ds-font-sm: 0.85rem;
+  --ds-font-md: 1rem;
+  --ds-font-lg: 1.15rem;
+  --ds-font-xl: 1.35rem;
+}
+
+/* =====================================================
+   Design System Components
+   ===================================================== */
+.ds-card {
+  background: var(--ds-surface-2);
+  border: 1px solid var(--ds-border-1);
+  border-radius: var(--ds-radius-lg);
+  box-shadow: var(--ds-shadow-1);
+}
+
+.ds-card--muted {
+  background: rgba(15, 23, 42, 0.6);
+  box-shadow: none;
+}
+
+.ds-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ds-space-2);
+  border-radius: var(--ds-radius-md);
+  border: 1px solid transparent;
+  font-weight: 600;
+  transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.ds-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.ds-button--sm {
+  padding: 6px 10px;
+  font-size: var(--ds-font-xs);
+}
+
+.ds-button--md {
+  padding: 10px 14px;
+  font-size: var(--ds-font-sm);
+}
+
+.ds-button--lg {
+  padding: 12px 18px;
+  font-size: var(--ds-font-md);
+}
+
+.ds-button--primary {
+  background: var(--ds-accent-600);
+  color: var(--ds-text-1);
+}
+
+.ds-button--primary:hover:not(:disabled) {
+  background: var(--ds-accent-500);
+}
+
+.ds-button--secondary {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: var(--ds-border-1);
+  color: var(--ds-text-2);
+}
+
+.ds-button--secondary:hover:not(:disabled) {
+  background: rgba(30, 41, 59, 1);
+  border-color: var(--ds-border-2);
+}
+
+.ds-button--danger {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fecaca;
+}
+
+.ds-button--danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.28);
+}
+
+.ds-button--ghost {
+  background: transparent;
+  border-color: var(--ds-border-1);
+  color: var(--ds-text-2);
+}
+
+.ds-button--full {
+  width: 100%;
+}
+
+.ds-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--ds-radius-pill);
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid var(--ds-border-1);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.ds-badge--low {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.ds-badge--med {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.ds-badge--high {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.ds-badge--extreme {
+  background: rgba(168, 85, 247, 0.18);
+  color: #ddd6fe;
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.ds-badge--neutral {
+  background: rgba(30, 41, 59, 0.7);
+  color: var(--ds-text-2);
+  border-color: var(--ds-border-2);
+}
+
+.ds-tooltip {
+  position: absolute;
+  z-index: 50;
+  background: var(--ds-surface-2);
+  border: 1px solid var(--ds-border-1);
+  color: var(--ds-text-2);
+  border-radius: var(--ds-radius-sm);
+  padding: 6px 8px;
+  font-size: var(--ds-font-xs);
+  box-shadow: var(--ds-shadow-1);
+}
+
+/* =====================================================
+   Contrast tuning (default theme)
+   ===================================================== */
+/* Lift muted text one step for AA contrast on dark surfaces */
+.text-slate-500 {
+  color: rgb(148, 163, 184) !important;
+}
+.text-slate-400 {
+  color: rgb(203, 213, 225) !important;
+}
+.text-slate-300 {
+  color: rgb(226, 232, 240) !important;
+}
+
+/* Visible focus rings for keyboard navigation */
+:focus-visible {
+  outline: 2px solid rgb(56, 189, 248);
+  outline-offset: 2px;
+}
+
+/* =====================================================
+   Accessibility options (toggled via html classes)
+   ===================================================== */
+/* Larger text: Tailwind uses rem units, so increasing the root font-size scales the UI */
+html.tycoon-text-lg {
+  font-size: 18px;
+}
+
+/* High-contrast mode: boost commonly-used muted text colors */
+html.tycoon-high-contrast .text-slate-400 {
+  color: rgb(226, 232, 240) !important;
+}
+html.tycoon-high-contrast .text-slate-500 {
+  color: rgb(203, 213, 225) !important;
+}
+html.tycoon-high-contrast .text-slate-300 {
+  color: rgb(241, 245, 249) !important;
+}
+html.tycoon-high-contrast .border-slate-700 {
+  border-color: rgba(148, 163, 184, 0.6) !important;
+}
+html.tycoon-high-contrast .border-slate-600 {
+  border-color: rgba(148, 163, 184, 0.75) !important;
+}
+html.tycoon-high-contrast .text-emerald-300 {
+  color: rgb(167, 243, 208) !important;
+}
+html.tycoon-high-contrast .text-emerald-400 {
+  color: rgb(110, 231, 183) !important;
+}
+html.tycoon-high-contrast .text-amber-300 {
+  color: rgb(253, 230, 138) !important;
+}
+html.tycoon-high-contrast .text-amber-400 {
+  color: rgb(252, 211, 77) !important;
+}
+html.tycoon-high-contrast .text-red-400 {
+  color: rgb(252, 165, 165) !important;
+}
+
+/* Reduce motion: minimize animations/transitions */
+html.tycoon-reduce-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* =====================================================
+   Custom Scrollbar
+   ===================================================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* =====================================================
+   Custom Utilities
+   ===================================================== */
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Pulse animation for important elements */
+@keyframes gentle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.gentle-pulse {
+  animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+/* GPU-friendly animation hint */
+.gpu-hint {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Mobile safe area */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  }
+}
+
+/* Touch-friendly button targets (44px minimum per iOS HIG, 48dp per Material) */
+.touch-target {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* For buttons that need the target but shouldn't change their visual padding */
+.touch-target-area {
+  position: relative;
+}
+.touch-target-area::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
+  width: 100%;
+  height: 100%;
+}

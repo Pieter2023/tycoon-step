@@ -1,0 +1,30 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[dev]
+  command = "npm run dev"
+  targetPort = 5173
+
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[functions."avatar-options"]
+  timeout = 60
+
+[functions."avatar-final"]
+  timeout = 60
+
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[context.production]
+  [[context.production.redirects]]
+    from = "/*"
+    to = "/index.html"
+    status = 200
