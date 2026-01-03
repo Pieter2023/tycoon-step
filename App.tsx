@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useReducedMotion } from 'framer-motion';
 import { GameState, AssetType, MarketItem, Lifestyle, Character, Asset, SideHustle, EducationOption, Liability, PlayerConfig, MonthlyActionId, TABS, TabId, SideHustleUpgradeOption, EducationLevel, PlayerStats } from './types';
-import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getFinancialFreedomTarget, getInitialQuestState, getQuestById, ALL_LIFE_EVENTS } from './constants';
-import { processTurn, calculateMonthlyCashFlowEstimate, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier } from './services/gameLogic';
+import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
+import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, ALL_LIFE_EVENTS } from './constants';
+import { processTurn, calculateMonthlyCashFlowEstimate, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier, checkPromotion } from './services/gameLogic';
 import { playMoneyGain, playMoneyLoss, playClick, playPurchase, playSell, playAchievement, playLevelUp, playVictory, playWarning, playTick, playNotification, playError, setMuted } from './services/audioService';
 import {
   saveAdultGame,
@@ -24,10 +25,11 @@ import { GLOSSARY_ENTRIES, QUIZ_DEFINITIONS, getQuizDefinition } from './data/le
 import TabErrorBoundary from './components/TabErrorBoundary';
 import Modal from './components/Modal';
 import QuestLog from './components/QuestLog';
-import FinancialFreedomBreakdown from './components/FinancialFreedomBreakdown';
 import { Button, Badge, Card, Tooltip } from './components/ui';
 import AppShell, { AppShellNavItem } from './components/ui/AppShell';
 import CustomAvatarBuilder, { CustomAvatarResult } from './components/customAvatar/CustomAvatarBuilder';
+import HelpDrawer from './components/HelpDrawer';
+import DashboardWidget from './components/DashboardWidget';
 import SelfLearnTab from './components/tabs/SelfLearnTab';
 import { PlayPageLayout } from './components/v2/PlayPage';
 import { MoneyPageLayout } from './components/v2/MoneyPage';
@@ -65,6 +67,16 @@ const formatPercent = (val: number): string => formatPercentValue(val, 1);
 
 const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
 
+const TAB_SHORTCUTS: Partial<Record<TabId, string>> = {
+  [TABS.INVEST]: 'I',
+  [TABS.ASSETS]: 'P',
+  [TABS.BANK]: 'B',
+  [TABS.CAREER]: 'C',
+  [TABS.EDUCATION]: 'E',
+  [TABS.SIDEHUSTLE]: 'S',
+  [TABS.LIFESTYLE]: 'L'
+};
+
 const getAssetIcon = (type: AssetType) => {
   const icons: Record<AssetType, string> = {
     [AssetType.STOCK]: '📈', [AssetType.INDEX_FUND]: '📊', [AssetType.BOND]: '📜',
@@ -77,6 +89,17 @@ const getAssetIcon = (type: AssetType) => {
 const getOpsUpgradeCost = (asset: Asset) => {
   const qty = asset.quantity || 1;
   return Math.max(750, Math.round(asset.value * qty * 0.06));
+};
+
+type CashFlowHistoryEntry = {
+  month: number;
+  income: number;
+  expenses: number;
+};
+
+type AiDisruptionHistoryEntry = {
+  month: number;
+  level: number;
 };
 
 const getBusinessIncomeRange = (asset: Asset) => {
@@ -443,7 +466,9 @@ const NEGOTIATIONS_INTRO_VIDEO_SRC = '/videos/tycoon-master-negotiations.mp4';
 
 const AUTO_TUTORIAL_POPUPS_STORAGE_KEY = 'tycoon_auto_tutorial_popups_v1';
 const ONBOARDING_SEEN_STORAGE_KEY = 'tycoon_onboarding_seen_v1';
-const TAB_HELP_SEEN_PREFIX = 'tycoon_tab_help_seen_v1_';
+const HIDE_TIPS_STORAGE_KEY = 'tycoon_hide_tips_v1';
+const CASH_FLOW_HISTORY_STORAGE_KEY = 'tycoon_cash_flow_history_v1_';
+const AI_DISRUPTION_HISTORY_STORAGE_KEY = 'tycoon_ai_disruption_history_v1_';
 const AUTOPLAY_PREF_PREFIX = 'tycoon_autoplay_pref_v1_';
 const UI_V2_STORAGE_KEY = 'tycoon_ui_v2';
 
@@ -743,6 +768,26 @@ const [gameState, setGameState] = useState<GameState>(() => {
   })();
   const [currentSaveSlot, setCurrentSaveSlot] = useState<SaveSlotId>(initialSaveSlot);
   const [autoPlaySpeed, setAutoPlaySpeed] = useState<number | null>(() => readAutoplayPreference(initialSaveSlot));
+  const cashFlowHistoryStorageKey = `${CASH_FLOW_HISTORY_STORAGE_KEY}${currentSaveSlot}`;
+  const aiDisruptionHistoryStorageKey = `${AI_DISRUPTION_HISTORY_STORAGE_KEY}${currentSaveSlot}`;
+  const [cashFlowHistory, setCashFlowHistory] = useState<CashFlowHistoryEntry[]>(() => {
+    try {
+      const raw = localStorage.getItem(`${CASH_FLOW_HISTORY_STORAGE_KEY}${initialSaveSlot}`);
+      return raw ? (JSON.parse(raw) as CashFlowHistoryEntry[]) : [];
+    } catch (e) {
+      console.warn('Failed to read cash flow history:', e);
+      return [];
+    }
+  });
+  const [aiDisruptionHistory, setAiDisruptionHistory] = useState<AiDisruptionHistoryEntry[]>(() => {
+    try {
+      const raw = localStorage.getItem(`${AI_DISRUPTION_HISTORY_STORAGE_KEY}${initialSaveSlot}`);
+      return raw ? (JSON.parse(raw) as AiDisruptionHistoryEntry[]) : [];
+    } catch (e) {
+      console.warn('Failed to read AI disruption history:', e);
+      return [];
+    }
+  });
   const [activeTab, setActiveTab] = useState<TabId>(TABS.OVERVIEW);
   const [investmentFilter, setInvestmentFilter] = useState<string>('ALL');
   const [investmentTierFilter, setInvestmentTierFilter] = useState<'ALL' | 'STARTER' | 'MID' | 'ADVANCED'>('ALL');
@@ -777,25 +822,40 @@ const [gameState, setGameState] = useState<GameState>(() => {
     onAction?: () => void;
   } | null>(null);
   const [monthlyReport, setMonthlyReport] = useState<any>(null);
+  const [dashboardModal, setDashboardModal] = useState<null | 'netWorth' | 'cashFlow' | 'credit' | 'ai'>(null);
   const [showCharacterSelect, setShowCharacterSelect] = useState(false);
   const [showCustomAvatarBuilder, setShowCustomAvatarBuilder] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<keyof typeof DIFFICULTY_SETTINGS>('NORMAL');
   const [soundEnabled, setSoundEnabled] = useState(initialGameState?.soundEnabled ?? true);
   const [showMortgageModal, setShowMortgageModal] = useState<MarketItem | null>(null);
   const [selectedMortgage, setSelectedMortgage] = useState<string>('');
+  const [lastLifestyle, setLastLifestyle] = useState<Lifestyle | null>(null);
+  const lastLifestyleRef = useRef(gameState.lifestyle);
+  const lastMonthRef = useRef(gameState.month);
+  const [openActionsSignal, setOpenActionsSignal] = useState(0);
+  const [forcedMoneyTab, setForcedMoneyTab] = useState<'invest' | 'portfolio' | 'bank' | null>(null);
+  const [forcedLifeTab, setForcedLifeTab] = useState<'lifestyle' | 'sidehustles' | null>(null);
 
   // ============================================
   // NEXT MONTH PREVIEW (Step 10)
   // ============================================
   const [showTurnPreview, setShowTurnPreview] = useState(false);
   const [turnPreview, setTurnPreview] = useState<TurnPreviewData | null>(null);
-  const [skipTurnPreview, setSkipTurnPreview] = useState<boolean>(() => {
-    if (isMultiplayer) return true;
+  const [showNextMonthPreview, setShowNextMonthPreview] = useState<boolean>(() => {
+    if (isMultiplayer) return false;
     try {
-      return localStorage.getItem('tycoon_skip_turn_preview') === '1';
+      const stored = localStorage.getItem('tycoon_show_turn_preview');
+      if (stored === '1' || stored === '0') {
+        return stored === '1';
+      }
+      const legacy = localStorage.getItem('tycoon_skip_turn_preview');
+      if (legacy === '1') {
+        return false;
+      }
+      return true;
     } catch (e) {
       console.warn('Failed to read turn preview preference:', e);
-      return false;
+      return true;
     }
   });
 
@@ -935,11 +995,19 @@ const [gameState, setGameState] = useState<GameState>(() => {
   useEffect(() => {
     if (isMultiplayer) return;
     try {
-      localStorage.setItem('tycoon_skip_turn_preview', skipTurnPreview ? '1' : '0');
+      localStorage.setItem('tycoon_show_turn_preview', showNextMonthPreview ? '1' : '0');
     } catch (e) {
       console.warn('Failed to save turn preview preference:', e);
     }
-  }, [skipTurnPreview, isMultiplayer]);
+  }, [showNextMonthPreview, isMultiplayer]);
+
+
+  useEffect(() => {
+    if (gameState.month === lastMonthRef.current) return;
+    setLastLifestyle(lastLifestyleRef.current);
+    lastLifestyleRef.current = gameState.lifestyle;
+    lastMonthRef.current = gameState.month;
+  }, [gameState.lifestyle, gameState.month]);
 
   // ============================================
   // COACH HINTS (Step 12)
@@ -1320,7 +1388,14 @@ const [gameState, setGameState] = useState<GameState>(() => {
       return true;
     }
   });
-  const [tabHelpOpen, setTabHelpOpen] = useState<Record<string, boolean>>({});
+  const [hideTipsEverywhere, setHideTipsEverywhere] = useState(() => {
+    try {
+      return localStorage.getItem(HIDE_TIPS_STORAGE_KEY) === '1';
+    } catch (e) {
+      console.warn('Failed to read tips preference:', e);
+      return false;
+    }
+  });
   
   // Tutorial state - track which tips have been shown
   const [showTutorial, setShowTutorial] = useState(() => {
@@ -1459,6 +1534,14 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
   useEffect(() => {
     try {
+      localStorage.setItem(HIDE_TIPS_STORAGE_KEY, hideTipsEverywhere ? '1' : '0');
+    } catch (e) {
+      console.warn('Failed to save tips preference:', e);
+    }
+  }, [hideTipsEverywhere]);
+
+  useEffect(() => {
+    try {
       localStorage.setItem(`${AUTOPLAY_PREF_PREFIX}${currentSaveSlot}`, autoPlaySpeed ? String(autoPlaySpeed) : 'off');
       localStorage.setItem(LAST_SAVE_SLOT_STORAGE_KEY, currentSaveSlot);
     } catch (e) {
@@ -1471,6 +1554,62 @@ const [gameState, setGameState] = useState<GameState>(() => {
   }, [currentSaveSlot]);
 
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem(cashFlowHistoryStorageKey);
+      setCashFlowHistory(raw ? (JSON.parse(raw) as CashFlowHistoryEntry[]) : []);
+    } catch (e) {
+      console.warn('Failed to load cash flow history:', e);
+      setCashFlowHistory([]);
+    }
+  }, [cashFlowHistoryStorageKey]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(aiDisruptionHistoryStorageKey);
+      setAiDisruptionHistory(raw ? (JSON.parse(raw) as AiDisruptionHistoryEntry[]) : []);
+    } catch (e) {
+      console.warn('Failed to load AI disruption history:', e);
+      setAiDisruptionHistory([]);
+    }
+  }, [aiDisruptionHistoryStorageKey]);
+
+  useEffect(() => {
+    if (!monthlyReport) return;
+    if (isMultiplayer) return;
+    const entry = {
+      month: gameState.month,
+      income: monthlyReport.income,
+      expenses: monthlyReport.expenses
+    };
+    setCashFlowHistory((prev) => {
+      const withoutDupes = prev.filter((item) => item.month !== entry.month);
+      const next = [...withoutDupes, entry].slice(-24);
+      try {
+        localStorage.setItem(cashFlowHistoryStorageKey, JSON.stringify(next));
+      } catch (e) {
+        console.warn('Failed to save cash flow history:', e);
+      }
+      return next;
+    });
+  }, [cashFlowHistoryStorageKey, gameState.month, isMultiplayer, monthlyReport]);
+
+  useEffect(() => {
+    if (isMultiplayer) return;
+    const level = gameState.aiDisruption?.disruptionLevel ?? 0;
+    const entry = { month: gameState.month, level };
+    setAiDisruptionHistory((prev) => {
+      const withoutDupes = prev.filter((item) => item.month !== entry.month);
+      const next = [...withoutDupes, entry].slice(-24);
+      try {
+        localStorage.setItem(aiDisruptionHistoryStorageKey, JSON.stringify(next));
+      } catch (e) {
+        console.warn('Failed to save AI disruption history:', e);
+      }
+      return next;
+    });
+  }, [aiDisruptionHistoryStorageKey, gameState.aiDisruption?.disruptionLevel, gameState.month, isMultiplayer]);
+
+  useEffect(() => {
     if (autoTutorialPopups) return;
     if (!showTutorial) return;
     setShowTutorial(false);
@@ -1478,19 +1617,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
     markOnboardingSeen();
   }, [autoTutorialPopups, showTutorial, markOnboardingSeen]);
 
-  useEffect(() => {
-    const cfg = TAB_INTRO_VIDEO_CONFIG[activeTab];
-    if (!cfg || !cfg.quickTips || cfg.quickTips.length === 0) return;
-    if (!autoTutorialPopups) return;
-    try {
-      const key = `${TAB_HELP_SEEN_PREFIX}${activeTab}`;
-      if (localStorage.getItem(key) === '1') return;
-      setTabHelpOpen((prev) => ({ ...prev, [activeTab]: true }));
-      localStorage.setItem(key, '1');
-    } catch (e) {
-      console.warn('Failed to save tab help preference:', e);
-    }
-  }, [activeTab, autoTutorialPopups]);
 
   const isScrollRestoreBlocked =
     !!gameState.pendingScenario ||
@@ -1529,13 +1655,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
   // IMPORTANT: Use the deterministic cash flow estimate for UI so UI renders don't consume randomness.
   const cashFlow = useMemo(() => calculateMonthlyCashFlowEstimate(gameState), [gameState]);
   const activeQuiz = useMemo(() => (activeQuizId ? getQuizDefinition(activeQuizId) : null), [activeQuizId]);
-  const freedomTarget = useMemo(() => getFinancialFreedomTarget(cashFlow.expenses), [cashFlow.expenses]);
-  const winProgress = useMemo(() => {
-    return freedomTarget <= 0 ? 0 : Math.min(100, (cashFlow.passive / freedomTarget) * 100);
-  }, [cashFlow.passive, freedomTarget]);
   const activeTabVideo = TAB_INTRO_VIDEO_CONFIG[activeTab];
   const activeTabQuickTips = activeTabVideo?.quickTips || [];
-  const isTabHelpOpen = !!tabHelpOpen[activeTab];
   const autoplayEnabled = autoPlaySpeed !== null;
   const autoplaySpeedLabel = autoPlaySpeed ? (AUTOPLAY_SPEED_LABELS[autoPlaySpeed] || '1x') : '1x';
   const autoplayTooltip = autoplayEnabled
@@ -1547,6 +1668,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const careerLevel = gameState.career?.level ?? gameState.playerJob?.level ?? 0;
   const creditScore = gameState.creditRating ?? 650;
   const creditTier = getCreditTier(creditScore);
+  const aiDisruptionLevel = gameState.aiDisruption?.disruptionLevel ?? 0;
   const creditCardBalance = (gameState.liabilities || []).filter(l => l.type === 'CREDIT_CARD').reduce((sum, l) => sum + l.balance, 0);
   const creditLimitEstimate = Math.max(2000, Math.round(cashFlow.income * 2));
   const creditUtilization = creditLimitEstimate > 0 ? creditCardBalance / creditLimitEstimate : 0;
@@ -1555,23 +1677,65 @@ const [gameState, setGameState] = useState<GameState>(() => {
     () => LOAN_OPTIONS.map(loan => adjustLoanOption(loan, careerLevel, creditScore, dti)),
     [careerLevel, creditScore, dti]
   );
+  const lifestyleCashDelta = useMemo(() => {
+    if (!lastLifestyle) return null;
+    const prev = LIFESTYLE_OPTS[lastLifestyle];
+    const current = LIFESTYLE_OPTS[gameState.lifestyle];
+    if (!prev || !current) return null;
+    const delta = prev.cost - current.cost;
+    if (delta === 0) return null;
+    return delta;
+  }, [gameState.lifestyle, lastLifestyle]);
+
+  const netWorthTrendData = useMemo(() => {
+    const history = gameState.netWorthHistory?.length
+      ? gameState.netWorthHistory
+      : [{ month: gameState.month, value: netWorth }];
+    return history.slice(-12).map((entry) => ({
+      label: `M${entry.month}`,
+      value: entry.value
+    }));
+  }, [gameState.month, gameState.netWorthHistory, netWorth]);
+
+  const cashFlowTrendData = useMemo(() => {
+    const fallback = [{ month: gameState.month, income: cashFlow.income, expenses: cashFlow.expenses }];
+    const history = cashFlowHistory.length ? cashFlowHistory : fallback;
+    return history.slice(-6).map((entry) => ({
+      label: `M${entry.month}`,
+      income: entry.income,
+      expenses: entry.expenses
+    }));
+  }, [cashFlow.expenses, cashFlow.income, cashFlowHistory, gameState.month]);
+
+  const creditTrendData = useMemo(() => {
+    const history = gameState.creditHistory?.length
+      ? gameState.creditHistory
+      : [{ month: gameState.month, score: creditScore, reasons: [] }];
+    return history.slice(-12).map((entry) => ({
+      label: `M${entry.month}`,
+      value: entry.score
+    }));
+  }, [creditScore, gameState.creditHistory, gameState.month]);
+
+  const aiTrendData = useMemo(() => {
+    const fallback = [{ month: gameState.month, level: aiDisruptionLevel }];
+    const history = aiDisruptionHistory.length ? aiDisruptionHistory : fallback;
+    return history.slice(-12).map((entry) => ({
+      label: `M${entry.month}`,
+      value: entry.level
+    }));
+  }, [aiDisruptionHistory, aiDisruptionLevel, gameState.month]);
+
+  const latestCashFlowEntry = cashFlowTrendData[cashFlowTrendData.length - 1];
+  const latestCashFlowNet = latestCashFlowEntry
+    ? latestCashFlowEntry.income - latestCashFlowEntry.expenses
+    : 0;
   const eventLabEvent = useMemo(
     () => ALL_LIFE_EVENTS.find(event => event.id === eventLabEventId) || ALL_LIFE_EVENTS[0],
     [eventLabEventId]
   );
   const questState = gameState.quests || getInitialQuestState(gameState.character?.id);
   const readyQuestCount = questState.readyToClaim?.length || 0;
-  const prevCashFlowRef = useRef<{ passive: number; expenses: number } | null>(null);
-  const [lastMonthCashFlow, setLastMonthCashFlow] = useState<{ passive: number; expenses: number } | null>(null);
-
-  useEffect(() => {
-    if (!prevCashFlowRef.current) {
-      prevCashFlowRef.current = { passive: cashFlow.passive, expenses: cashFlow.expenses };
-      return;
-    }
-    setLastMonthCashFlow(prevCashFlowRef.current);
-    prevCashFlowRef.current = { passive: cashFlow.passive, expenses: cashFlow.expenses };
-  }, [gameState.month, cashFlow.passive, cashFlow.expenses]);
 
   const filteredInvestments = useMemo(() => {
     return MARKET_ITEMS.filter(item => {
@@ -2292,7 +2456,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
     };
   }, []);
 
-  const advanceMonth = useCallback(() => {
+  const advanceMonth = useCallback((opts?: { showSummaryToast?: boolean }) => {
     if (isProcessing || gameState.pendingScenario || gameState.pendingSideHustleUpgrade) return;
     setIsProcessing(true);
     playTick();
@@ -2300,6 +2464,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
     setTimeout(() => {
       const { newState, monthlyReport: report } = processTurn(gameState);
       const netIncome = report.income - report.expenses;
+      const shouldShowSummaryToast = !!opts?.showSummaryToast;
 
       // Autoplay scheduling is blocked while decision/modals are open (see the Auto-play effect),
       // but we do NOT automatically disable autoplay. This lets autoplay continue seamlessly
@@ -2318,6 +2483,16 @@ const [gameState, setGameState] = useState<GameState>(() => {
       if (report.promoted) {
         playLevelUp();
         showNotif('🎉 Promotion!', `Promoted to ${newState.career?.title}!`, 'success');
+      }
+
+      if (shouldShowSummaryToast) {
+        const cashDelta = report.income - report.expenses;
+        const cashDeltaLabel = `${cashDelta >= 0 ? '+' : '-'}${formatMoneyFull(Math.abs(cashDelta))}`;
+        showNotif(
+          'Month complete',
+          `Income ${formatMoneyFull(report.income)} • Expenses ${formatMoneyFull(report.expenses)} • Cash ${cashDeltaLabel}`,
+          cashDelta >= 0 ? 'success' : 'warning'
+        );
       }
 
       // Goals & Quests: completion + claim notifications are handled by the live quest sync effect (Step 6).
@@ -2361,15 +2536,16 @@ const [gameState, setGameState] = useState<GameState>(() => {
     if (isProcessing || gameState.pendingScenario || gameState.pendingSideHustleUpgrade) return;
 
     // If autoplay is enabled, or preview is disabled, advance immediately.
-    if (autoPlaySpeed !== null || skipTurnPreview || isMultiplayer) {
-      advanceMonth();
+    if (autoPlaySpeed !== null || !showNextMonthPreview || isMultiplayer) {
+      const showSummaryToast = !showNextMonthPreview && autoPlaySpeed === null && !isMultiplayer;
+      advanceMonth({ showSummaryToast });
       return;
     }
 
     playClick();
     setTurnPreview(buildTurnPreview(gameState));
     setShowTurnPreview(true);
-  }, [advanceMonth, autoPlaySpeed, buildTurnPreview, gameState, isMultiplayer, isProcessing, skipTurnPreview]);
+  }, [advanceMonth, autoPlaySpeed, buildTurnPreview, gameState, isMultiplayer, isProcessing, showNextMonthPreview]);
 
   // Step 12: manual way to (re)open the preview after taking a quick fix.
   const openTurnPreviewNow = useCallback(() => {
@@ -2380,6 +2556,99 @@ const [gameState, setGameState] = useState<GameState>(() => {
     setShowTurnPreview(true);
     setShowReopenPreviewPill(false);
   }, [buildTurnPreview, gameState, isMultiplayer, isProcessing]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) return;
+      }
+      const key = event.key.toLowerCase();
+      const openActions = () => {
+        if (uiV2Enabled) {
+          setV2Path('/play');
+        } else {
+          setActiveTab(TABS.OVERVIEW);
+        }
+        setOpenActionsSignal((prev) => prev + 1);
+      };
+      const openMoneyTab = (tab: 'invest' | 'portfolio' | 'bank') => {
+        if (uiV2Enabled) {
+          setV2Path('/money');
+          setForcedMoneyTab(tab);
+        } else {
+          const tabId = tab === 'invest' ? TABS.INVEST : tab === 'portfolio' ? TABS.ASSETS : TABS.BANK;
+          setActiveTab(tabId);
+        }
+      };
+      const openLifeTab = (tab: 'lifestyle' | 'sidehustles') => {
+        if (uiV2Enabled) {
+          setV2Path('/life');
+          setForcedLifeTab(tab);
+        } else {
+          const tabId = tab === 'lifestyle' ? TABS.LIFESTYLE : TABS.SIDEHUSTLE;
+          setActiveTab(tabId);
+        }
+      };
+
+      switch (key) {
+        case 'n':
+          event.preventDefault();
+          if (showTurnPreview && turnPreview) {
+            confirmTurnPreview();
+          } else {
+            handleNextTurn();
+          }
+          break;
+        case 't':
+          event.preventDefault();
+          setAutoPlaySpeed(autoPlaySpeed ? null : AUTOPLAY_SPEED_OPTIONS[0]);
+          break;
+        case 'a':
+          event.preventDefault();
+          openActions();
+          break;
+        case 'i':
+          event.preventDefault();
+          openMoneyTab('invest');
+          break;
+        case 'p':
+          event.preventDefault();
+          openMoneyTab('portfolio');
+          break;
+        case 'b':
+          event.preventDefault();
+          openMoneyTab('bank');
+          break;
+        case 'c':
+          event.preventDefault();
+          if (uiV2Enabled) setV2Path('/career');
+          else setActiveTab(TABS.CAREER);
+          break;
+        case 'e':
+          event.preventDefault();
+          if (uiV2Enabled) setV2Path('/learn');
+          else setActiveTab(TABS.EDUCATION);
+          break;
+        case 's':
+          event.preventDefault();
+          openLifeTab('sidehustles');
+          break;
+        case 'l':
+          event.preventDefault();
+          openLifeTab('lifestyle');
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [autoPlaySpeed, confirmTurnPreview, handleNextTurn, showTurnPreview, turnPreview, uiV2Enabled]);
 
   // Auto-play
   // Autoplay should feel "hands-off": it temporarily pauses itself while any blocking UI is open
@@ -2837,10 +3106,108 @@ const [gameState, setGameState] = useState<GameState>(() => {
     showNotif('Monthly Action Used', message, 'success');
   };
 
+  const handleUseMonthlyActions = useCallback((actionIds: MonthlyActionId[]) => {
+    if (actionIds.length === 0) return;
+    if (isProcessing) return;
+    if (gameState.pendingScenario) {
+      showNotif('Resolve Event First', 'Please respond to the current event before taking Monthly Actions.', 'warning');
+      return;
+    }
+    if (gameState.isBankrupt) {
+      showNotif('Game Over', 'You are bankrupt and can no longer take actions.', 'error');
+      return;
+    }
+
+    playClick();
+
+    let workingState = gameState;
+    let appliedCount = 0;
+
+    actionIds.forEach((actionId) => {
+      const beforeCash = workingState.cash;
+      const { newState, message } = applyMonthlyAction(workingState, actionId);
+      if (newState === workingState) {
+        showNotif('Cannot Do That', message, 'warning');
+        return;
+      }
+
+      appliedCount += 1;
+      workingState = newState;
+
+      const cashDelta = newState.cash - beforeCash;
+      if (Math.abs(cashDelta) >= 1) {
+        setFloatingNumbers(p => [...p, { id: Date.now().toString(), value: cashDelta }]);
+        cashDelta > 0 ? playMoneyGain(cashDelta) : playMoneyLoss();
+      }
+
+      showNotif('Monthly Action Used', message, 'success');
+    });
+
+    if (appliedCount === 0) return;
+    setGameState(workingState);
+    recordAutosave(workingState);
+  }, [gameState, isProcessing, playClick, playMoneyGain, playMoneyLoss, recordAutosave, showNotif]);
+
   const monthlyActionsSummary = useMemo(
     () => getMonthlyActionsSummary(gameState, isProcessing),
     [gameState, isProcessing]
   );
+
+  const handleManualPromotion = useCallback(() => {
+    if (isProcessing) return;
+    if (!gameState.career) return;
+    if (gameState.pendingScenario) {
+      showNotif('Resolve Event First', 'Please respond to the current event before requesting a promotion.', 'warning');
+      return;
+    }
+    if (gameState.isBankrupt) {
+      showNotif('Game Over', 'You are bankrupt and can no longer advance your career.', 'error');
+      return;
+    }
+
+    const careerInfo = CAREER_PATHS[gameState.career.path];
+    if (!careerInfo) return;
+    const currentLevel = gameState.career.level;
+    if (currentLevel >= careerInfo.levels.length) {
+      showNotif('Top Level', 'You are already at the top of this career path.', 'info');
+      return;
+    }
+    const nextLevel = careerInfo.levels[currentLevel];
+    const experience = gameState.career.experience ?? 0;
+    if (experience < nextLevel.experienceRequired) {
+      showNotif('More Experience Needed', `Reach ${nextLevel.experienceRequired} months of experience to promote.`, 'warning');
+      return;
+    }
+    if (nextLevel.educationRequired && nextLevel.educationCategory) {
+      const levelOrder = ['HIGH_SCHOOL', 'CERTIFICATE', 'ASSOCIATE', 'BACHELOR', 'MASTER', 'MBA', 'PHD', 'LAW', 'MEDICAL'];
+      const hasRelevantEducation = gameState.education.degrees.some(degId => {
+        const edu = EDUCATION_OPTIONS.find(e => e.id === degId);
+        if (!edu) return false;
+        const requiredIdx = levelOrder.indexOf(nextLevel.educationRequired!);
+        const hasIdx = levelOrder.indexOf(edu.level);
+        return hasIdx >= requiredIdx && edu.category === nextLevel.educationCategory;
+      });
+      if (!hasRelevantEducation) {
+        showNotif(
+          'Education Required',
+          `Need ${nextLevel.educationRequired.replace('_', ' ')} in ${nextLevel.educationCategory}.`,
+          'warning'
+        );
+        return;
+      }
+    }
+
+    const { promoted, newState } = checkPromotion(gameState);
+    if (!promoted) {
+      showNotif('Promotion Pending', 'Keep boosting happiness and networking to improve promotion odds.', 'info');
+      return;
+    }
+
+    setGameState(newState);
+    recordAutosave(newState);
+    playLevelUp();
+    showNotif('🎉 Promotion!', `Promoted to ${newState.career?.title}!`, 'success');
+  }, [gameState, isProcessing, playLevelUp, recordAutosave, showNotif]);
 
   
 
@@ -4444,6 +4811,30 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   </div>
                 </label>
 
+                <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-4">
+                  <h3 className="text-sm font-semibold text-white">Keyboard shortcuts</h3>
+                  <p className="text-xs text-slate-400 mt-1">Press a key to jump without clicking.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 text-sm">
+                    {[
+                      ['N', 'Next Month'],
+                      ['T', 'Toggle Autoplay'],
+                      ['A', 'Actions'],
+                      ['I', 'Invest'],
+                      ['P', 'Portfolio'],
+                      ['B', 'Bank'],
+                      ['C', 'Career'],
+                      ['E', 'Education'],
+                      ['S', 'Side Hustles'],
+                      ['L', 'Lifestyle']
+                    ].map(([key, label]) => (
+                      <div key={key} className="flex items-center justify-between rounded-lg border border-slate-700/70 bg-slate-950/40 px-3 py-2">
+                        <span className="text-slate-300">{label}</span>
+                        <span className="text-xs font-semibold text-emerald-300">{key}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="pt-2 flex flex-col sm:flex-row gap-2">
                   <button
                     onClick={() =>
@@ -4549,6 +4940,16 @@ const [gameState, setGameState] = useState<GameState>(() => {
                     {formatMoneyFull(Math.max(0, turnPreview.projectedEndCash))}
                   </div>
                 </div>
+
+                {lifestyleCashDelta !== null && (
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="text-sm text-slate-300">Lifestyle change impact</div>
+                    <div className={`text-sm font-semibold ${lifestyleCashDelta >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                      {lifestyleCashDelta >= 0 ? '+' : '-'}
+                      {formatMoneyFull(Math.abs(lifestyleCashDelta))}/mo
+                    </div>
+                  </div>
+                )}
 
                 {turnPreview.warningLevel === 'SHORTFALL' && (
                   <div className="mt-3 text-sm text-red-200 flex items-start gap-2">
@@ -4773,10 +5174,10 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   <input
                     type="checkbox"
                     className="rounded border-slate-600 bg-slate-900"
-                    checked={skipTurnPreview}
-                    onChange={(e) => setSkipTurnPreview(e.target.checked)}
+                    checked={showNextMonthPreview}
+                    onChange={(e) => setShowNextMonthPreview(e.target.checked)}
                   />
-                  Don't show this again
+                  Show month preview
                 </label>
 
                 <div className="flex gap-2 justify-end">
@@ -5973,6 +6374,149 @@ const [gameState, setGameState] = useState<GameState>(() => {
           </div>
         </Modal>
       )}
+      {dashboardModal && (
+        <Modal
+          isOpen={!!dashboardModal}
+          onClose={() => setDashboardModal(null)}
+          ariaLabel="Dashboard details"
+          closeOnOverlayClick
+          closeOnEsc
+          contentClassName="bg-slate-800 border border-slate-700 rounded-2xl p-6 max-w-3xl w-full"
+        >
+          {dashboardModal === 'netWorth' && (
+            <div>
+              <h2 className="text-xl font-bold text-white mb-2">Net Worth Trend</h2>
+              <p className="text-slate-400 text-sm mb-4">
+                Latest: <span className="text-white font-semibold">{formatMoney(netWorth)}</span>
+              </p>
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={netWorthTrendData}>
+                    <defs>
+                      <linearGradient id="netWorthDetailGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#34d399" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="label" hide />
+                    <YAxis hide domain={['dataMin', 'dataMax']} />
+                    <RechartsTooltip
+                      contentStyle={{
+                        background: '#0f172a',
+                        border: '1px solid #1e293b',
+                        borderRadius: 8,
+                        fontSize: 12
+                      }}
+                      formatter={(val: number) => [formatMoneyFull(val), 'Net Worth']}
+                    />
+                    <Area type="monotone" dataKey="value" stroke="#34d399" fill="url(#netWorthDetailGradient)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+          {dashboardModal === 'cashFlow' && (
+            <div>
+              <h2 className="text-xl font-bold text-white mb-2">Cash Flow</h2>
+              <p className="text-slate-400 text-sm mb-4">
+                Latest net: <span className="text-white font-semibold">
+                  {latestCashFlowNet >= 0 ? '+' : '-'}{formatMoneyFull(Math.abs(latestCashFlowNet))}
+                </span>
+              </p>
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={cashFlowTrendData}>
+                    <XAxis dataKey="label" hide />
+                    <YAxis hide />
+                    <RechartsTooltip
+                      contentStyle={{
+                        background: '#0f172a',
+                        border: '1px solid #1e293b',
+                        borderRadius: 8,
+                        fontSize: 12
+                      }}
+                      formatter={(val: number, name: string) => [
+                        formatMoneyFull(val),
+                        name === 'income' ? 'Income' : 'Expenses'
+                      ]}
+                    />
+                    <Bar dataKey="income" fill="#34d399" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="expenses" fill="#f97316" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+          {dashboardModal === 'credit' && (
+            <div>
+              <h2 className="text-xl font-bold text-white mb-2">Credit Score History</h2>
+              <p className="text-slate-400 text-sm mb-4">
+                Current score: <span className={`font-semibold ${getCreditTierColor(creditTier)}`}>{creditScore}</span>
+                <span className="text-slate-500"> • {creditTier}</span>
+              </p>
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={creditTrendData}>
+                    <defs>
+                      <linearGradient id="creditDetailGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#38bdf8" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="label" hide />
+                    <YAxis hide domain={[300, 850]} />
+                    <RechartsTooltip
+                      contentStyle={{
+                        background: '#0f172a',
+                        border: '1px solid #1e293b',
+                        borderRadius: 8,
+                        fontSize: 12
+                      }}
+                      formatter={(val: number) => [Math.round(val).toString(), 'Score']}
+                    />
+                    <Area type="monotone" dataKey="value" stroke="#38bdf8" fill="url(#creditDetailGradient)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+          {dashboardModal === 'ai' && (
+            <div>
+              <h2 className="text-xl font-bold text-white mb-2">AI Disruption Level</h2>
+              <p className="text-slate-400 text-sm mb-4">
+                Current: <span className="text-white font-semibold">{Math.round(aiDisruptionLevel)}%</span>
+                <span className={`ml-2 font-semibold ${getAIRiskColor(aiImpact?.automationRisk || 'LOW')}`}>
+                  {aiImpact?.automationRisk || 'LOW'} risk
+                </span>
+              </p>
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={aiTrendData}>
+                    <defs>
+                      <linearGradient id="aiDetailGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="label" hide />
+                    <YAxis hide domain={[0, 100]} />
+                    <RechartsTooltip
+                      contentStyle={{
+                        background: '#0f172a',
+                        border: '1px solid #1e293b',
+                        borderRadius: 8,
+                        fontSize: 12
+                      }}
+                      formatter={(val: number) => [`${Math.round(val)}%`, 'Disruption']}
+                    />
+                    <Area type="monotone" dataKey="value" stroke="#f59e0b" fill="url(#aiDetailGradient)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+        </Modal>
+      )}
       {uiV2Enabled ? (
         <AppShell
           title="Financial Freedom"
@@ -6005,6 +6549,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
               onSetAutoplaySpeed={setAutoPlaySpeed}
               monthlyActions={monthlyActionsSummary}
               onUseMonthlyAction={handleUseMonthlyAction}
+              openActionsSignal={openActionsSignal}
               events={gameState.events}
               gameState={gameState}
               onClaimQuest={handleClaimQuest}
@@ -6029,6 +6574,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
               portfolioTabProps={portfolioTabProps}
               bankTabProps={bankTabProps}
               showQuiz={!!activeQuiz}
+              forcedTab={forcedMoneyTab || undefined}
             />
           )}
           {v2Path === '/career' && (
@@ -6038,6 +6584,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
               cashFlow={cashFlow}
               formatMoney={formatMoney}
               aiImpact={aiImpact}
+              isProcessing={isProcessing}
+              onPromote={handleManualPromotion}
             />
           )}
           {v2Path === '/learn' && (
@@ -6067,6 +6615,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
               handleStopSideHustle={handleStopSideHustle}
               setShowSideHustleUpgradeModal={setShowSideHustleUpgradeModal}
               coachSideHustlesRef={coachSideHustlesRef}
+              forcedTab={forcedLifeTab || undefined}
             />
           )}
         </AppShell>
@@ -6143,6 +6692,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                           size="lg"
                           onClick={handleNextTurn}
                           disabled={isProcessing || !!gameState.pendingScenario}
+                          title="Next Month (N)"
                         >
                           {isProcessing ? <Clock size={18} className="animate-spin" /> : <Play size={18} />}
                           <span>Next Month</span>
@@ -6152,7 +6702,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                         variant="secondary"
                         size="md"
                         onClick={() => setAutoPlaySpeed(autoPlaySpeed ? null : AUTOPLAY_SPEED_OPTIONS[0])}
-                        title={autoplayTooltip}
+                        title={`${autoplayTooltip} • Shortcut: T`}
                         aria-label="Autoplay toggle"
                         aria-pressed={autoplayEnabled}
                         className={autoplayEnabled ? 'border-amber-500/40 text-amber-200 bg-amber-600/20' : ''}
@@ -6164,6 +6714,17 @@ const [gameState, setGameState] = useState<GameState>(() => {
                         </span>
                       </Button>
                     </div>
+                    {!isMultiplayer && (
+                      <label className="flex items-center gap-2 text-[11px] text-slate-400 select-none">
+                        <input
+                          type="checkbox"
+                          className="rounded border-slate-600 bg-slate-900"
+                          checked={showNextMonthPreview}
+                          onChange={(e) => setShowNextMonthPreview(e.target.checked)}
+                        />
+                        Show month preview
+                      </label>
+                    )}
                     <div className="hidden sm:flex items-center gap-1">
                       {AUTOPLAY_SPEED_OPTIONS.map((speed) => {
                         const label = AUTOPLAY_SPEED_LABELS[speed] || '1x';
@@ -6303,24 +6864,48 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 </div>
 
                 <div className="hidden md:block">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-slate-400">Financial Freedom Progress <span className="text-slate-500">(Goal: {Math.round(FINANCIAL_FREEDOM_TARGET_MULTIPLIER * 100)}%)</span></span>
-                    <span className="text-emerald-400">{Math.floor(winProgress)}%</span>
-                  </div>
-                  <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                    <motion.div 
-                      className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400" 
-                      animate={{ width: `${winProgress}%` }} 
-                      transition={{ duration: 0.5 }}
+                  <div className="grid grid-cols-2 gap-3">
+                    <DashboardWidget
+                      title="Net Worth Trend"
+                      data={netWorthTrendData}
+                      unit="$"
+                      onClick={() => setDashboardModal('netWorth')}
+                      valueLabel={formatMoney(netWorth)}
+                      caption="Last 12 months"
+                      ariaLabel="View net worth trend details"
+                      variant="line"
+                    />
+                    <DashboardWidget
+                      title="Cash Flow"
+                      data={cashFlowTrendData}
+                      unit="$"
+                      onClick={() => setDashboardModal('cashFlow')}
+                      valueLabel={`${latestCashFlowNet >= 0 ? '+' : '-'}${formatMoneyFull(Math.abs(latestCashFlowNet))}`}
+                      caption="Income vs expenses"
+                      ariaLabel="View cash flow details"
+                      variant="bar"
+                    />
+                    <DashboardWidget
+                      title="Credit Score History"
+                      data={creditTrendData}
+                      unit="pts"
+                      onClick={() => setDashboardModal('credit')}
+                      valueLabel={`${creditScore} ${creditTier}`}
+                      caption="Last 12 months"
+                      ariaLabel="View credit score details"
+                      variant="line"
+                    />
+                    <DashboardWidget
+                      title="AI Disruption Level"
+                      data={aiTrendData}
+                      unit="%"
+                      onClick={() => setDashboardModal('ai')}
+                      valueLabel={`${Math.round(aiDisruptionLevel)}%`}
+                      caption={`Risk: ${aiImpact?.automationRisk || 'LOW'}`}
+                      ariaLabel="View AI disruption details"
+                      variant="line"
                     />
                   </div>
-                  <FinancialFreedomBreakdown
-                    passive={cashFlow.passive}
-                    expenses={cashFlow.expenses}
-                    goalPercent={FINANCIAL_FREEDOM_TARGET_MULTIPLIER * 100}
-                    lastPassive={lastMonthCashFlow?.passive ?? null}
-                    lastExpenses={lastMonthCashFlow?.expenses ?? null}
-                  />
                 </div>
 
                 {hudPanelOpen && (
@@ -6339,24 +6924,46 @@ const [gameState, setGameState] = useState<GameState>(() => {
                         <p className="text-xl font-semibold text-amber-100">{formatMoney(cashFlow.passive)}</p>
                       </Card>
                     </div>
-                    <div className="mt-4">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-slate-400">Financial Freedom Progress <span className="text-slate-500">(Goal: {Math.round(FINANCIAL_FREEDOM_TARGET_MULTIPLIER * 100)}%)</span></span>
-                        <span className="text-emerald-400">{Math.floor(winProgress)}%</span>
-                      </div>
-                      <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                        <motion.div 
-                          className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400" 
-                          animate={{ width: `${winProgress}%` }} 
-                          transition={{ duration: 0.5 }}
-                        />
-                      </div>
-                      <FinancialFreedomBreakdown
-                        passive={cashFlow.passive}
-                        expenses={cashFlow.expenses}
-                        goalPercent={FINANCIAL_FREEDOM_TARGET_MULTIPLIER * 100}
-                        lastPassive={lastMonthCashFlow?.passive ?? null}
-                        lastExpenses={lastMonthCashFlow?.expenses ?? null}
+                    <div className="mt-4 grid grid-cols-1 gap-3">
+                      <DashboardWidget
+                        title="Net Worth Trend"
+                        data={netWorthTrendData}
+                        unit="$"
+                        onClick={() => setDashboardModal('netWorth')}
+                        valueLabel={formatMoney(netWorth)}
+                        caption="Last 12 months"
+                        ariaLabel="View net worth trend details"
+                        variant="line"
+                      />
+                      <DashboardWidget
+                        title="Cash Flow"
+                        data={cashFlowTrendData}
+                        unit="$"
+                        onClick={() => setDashboardModal('cashFlow')}
+                        valueLabel={`${latestCashFlowNet >= 0 ? '+' : '-'}${formatMoneyFull(Math.abs(latestCashFlowNet))}`}
+                        caption="Income vs expenses"
+                        ariaLabel="View cash flow details"
+                        variant="bar"
+                      />
+                      <DashboardWidget
+                        title="Credit Score History"
+                        data={creditTrendData}
+                        unit="pts"
+                        onClick={() => setDashboardModal('credit')}
+                        valueLabel={`${creditScore} ${creditTier}`}
+                        caption="Last 12 months"
+                        ariaLabel="View credit score details"
+                        variant="line"
+                      />
+                      <DashboardWidget
+                        title="AI Disruption Level"
+                        data={aiTrendData}
+                        unit="%"
+                        onClick={() => setDashboardModal('ai')}
+                        valueLabel={`${Math.round(aiDisruptionLevel)}%`}
+                        caption={`Risk: ${aiImpact?.automationRisk || 'LOW'}`}
+                        ariaLabel="View AI disruption details"
+                        variant="line"
                       />
                     </div>
                   </div>
@@ -6381,10 +6988,13 @@ const [gameState, setGameState] = useState<GameState>(() => {
             { id: TABS.SELF_LEARN, label: t('tabs.selfLearn'), icon: BookOpen },
             { id: TABS.SIDEHUSTLE, label: t('tabs.sideHustles'), icon: Coffee },
             { id: TABS.LIFESTYLE, label: t('tabs.lifestyle'), icon: Heart },
-          ] as const).map(tab => (
+          ] as const).map(tab => {
+            const shortcut = TAB_SHORTCUTS[tab.id];
+            return (
             <div key={tab.id} className="flex items-center gap-1">
               <motion.button whileTap={{ scale: 0.98 }}
                 onClick={() => { playClick(); setActiveTab(tab.id); }}
+                title={shortcut ? `${tab.label} (${shortcut})` : tab.label}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium whitespace-nowrap transition-all touch-target ${
                   activeTab === tab.id
                     ? 'bg-emerald-600 text-white'
@@ -6396,31 +7006,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   </span>
                 )}
               </motion.button>
-              {TAB_INTRO_VIDEO_CONFIG[tab.id] && (
-                <button
-                  onClick={() => {
-                    playClick();
-                    setActiveTab(tab.id);
-                    setTabHelpOpen((prev) => ({ ...prev, [tab.id]: true }));
-                    try {
-                      localStorage.setItem(`${TAB_HELP_SEEN_PREFIX}${tab.id}`, '1');
-                    } catch (e) {
-                      console.warn('Failed to save tab help preference:', e);
-                    }
-                  }}
-                  className={`p-2 rounded-lg transition-all ${
-                    activeTab === tab.id
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
-                  }`}
-                  aria-label={`${tab.label} help`}
-                  title={`${tab.label} help`}
-                >
-                  <Info size={16} />
-                </button>
-              )}
             </div>
-          ))}
+          );
+          })}
         
           </div>
         </div>
@@ -6477,138 +7065,92 @@ const [gameState, setGameState] = useState<GameState>(() => {
         {/* TAB GUIDE VIDEOS */}
         {/* ============================================ */}
         {activeTabVideo && (
-          <div className="mb-4">
-            <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-slate-900/50 border border-slate-700 flex items-center justify-center">
-                  {activeTabVideo.icon ?? <BookOpen size={18} className="text-emerald-300" />}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">Help &amp; tips</p>
-                  <p className="text-xs text-slate-400">{activeTabVideo.title}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => openIntroVideoModal(activeTab, { autoplay: true })}
-                  className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold flex items-center gap-2"
-                >
-                  <Play size={16} /> Watch video
-                </button>
-
-                {activeTabQuickTips.length > 0 && (
-                  <button
-                    onClick={() => {
-                      setTabHelpOpen((prev) => ({ ...prev, [activeTab]: !prev[activeTab] }));
-                      if (!isTabHelpOpen) {
-                        try {
-                          localStorage.setItem(`${TAB_HELP_SEEN_PREFIX}${activeTab}`, '1');
-                        } catch (e) {
-                          console.warn('Failed to save tab help preference:', e);
-                        }
-                      }
-                    }}
-                    className="px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold flex items-center gap-2"
-                    aria-expanded={isTabHelpOpen}
-                    aria-controls="tab-quick-tips"
-                  >
-                    <Info size={16} /> Quick tips
-                  </button>
-                )}
-
-                {minimizedTabVideos[activeTab] && (
-                  <button
-                    onClick={() => setMinimizedTabVideos((prev) => ({ ...prev, [activeTab]: false }))}
-                    className="px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold"
-                  >
-                    Hide
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <AnimatePresence>
-              {isTabHelpOpen && activeTabQuickTips.length > 0 && (
-                <motion.div
-                  id="tab-quick-tips"
-                  initial={{ opacity: 0, y: -6, height: 0 }}
-                  animate={{ opacity: 1, y: 0, height: 'auto' }}
-                  exit={{ opacity: 0, y: -6, height: 0 }}
-                  transition={{ duration: 0.18 }}
-                  className="mt-3 bg-slate-800/40 border border-slate-700/70 rounded-2xl p-4 overflow-hidden"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-semibold text-white">Quick tips</p>
-                    <button
-                      onClick={() => setTabHelpOpen((prev) => ({ ...prev, [activeTab]: false }))}
-                      className="text-xs text-slate-400 hover:text-white"
-                    >
-                      Hide
-                    </button>
-                  </div>
-                  <ul className="text-sm text-slate-300 space-y-1">
-                    {activeTabQuickTips.map((tip) => (
-                      <li key={tip}>• {tip}</li>
-                    ))}
-                  </ul>
-                  <div className="mt-3">
+          <div className={`mb-3 ${hideTipsEverywhere ? 'flex justify-end' : ''}`}>
+            <HelpDrawer
+              title="Help & tips"
+              summary={activeTabVideo.title}
+              isGloballyHidden={hideTipsEverywhere}
+              content={(
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-slate-900/50 border border-slate-700 flex items-center justify-center">
+                        {activeTabVideo.icon ?? <BookOpen size={18} className="text-emerald-300" />}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-white">{activeTabVideo.title}</p>
+                        {activeTabVideo.description && (
+                          <p className="text-xs text-slate-400">{activeTabVideo.description}</p>
+                        )}
+                      </div>
+                    </div>
                     <button
                       onClick={() => openIntroVideoModal(activeTab, { autoplay: true })}
-                      className="px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold flex items-center gap-2"
+                      className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold flex items-center gap-2"
                     >
                       <Play size={16} /> Watch video
                     </button>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
-            <AnimatePresence>
-              {minimizedTabVideos[activeTab] && (
-                <motion.div
-                  initial={{ opacity: 0, y: -6, height: 0 }}
-                  animate={{ opacity: 1, y: 0, height: 'auto' }}
-                  exit={{ opacity: 0, y: -6, height: 0 }}
-                  transition={{ duration: 0.18 }}
-                  className="mt-3 bg-slate-800/40 border border-slate-700/70 rounded-2xl p-3 overflow-hidden"
-                >
-                  <div className="flex items-center gap-3">
-                    {activeTabVideo.poster ? (
-                      <img
-                        src={activeTabVideo.poster}
-                        alt={`${activeTabVideo.title} video thumbnail`}
-                        className="w-28 h-16 rounded-xl object-cover border border-slate-700"
-                      />
-                    ) : (
-                      <div className="w-28 h-16 rounded-xl bg-slate-900/60 border border-slate-700 flex items-center justify-center">
-                        <Play size={18} className="text-slate-300" />
+                  {activeTabQuickTips.length > 0 && (
+                    <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-3">
+                      <p className="text-xs font-semibold text-slate-200 mb-2">Quick tips</p>
+                      <ul className="text-sm text-slate-300 space-y-1">
+                        {activeTabQuickTips.map((tip) => (
+                          <li key={tip}>• {tip}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {minimizedTabVideos[activeTab] && (
+                    <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {activeTabVideo.poster ? (
+                          <img
+                            src={activeTabVideo.poster}
+                            alt={`${activeTabVideo.title} video thumbnail`}
+                            className="w-24 h-14 rounded-lg object-cover border border-slate-700"
+                          />
+                        ) : (
+                          <div className="w-24 h-14 rounded-lg bg-slate-900/60 border border-slate-700 flex items-center justify-center">
+                            <Play size={16} className="text-slate-300" />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-white truncate">{activeTabVideo.title}</p>
+                          <p className="text-xs text-slate-400 truncate">Finished — replay anytime.</p>
+                        </div>
                       </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">{activeTabVideo.title}</p>
-                      <p className="text-xs text-slate-400 truncate">{activeTabVideo.description}</p>
-                      <p className="text-xs text-slate-500 mt-1">Finished — replay anytime.</p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => openIntroVideoModal(activeTab, { autoplay: true })}
+                          className="px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold flex items-center gap-2"
+                        >
+                          <Play size={16} /> Replay
+                        </button>
+                        <button
+                          onClick={() => setMinimizedTabVideos((prev) => ({ ...prev, [activeTab]: false }))}
+                          className="p-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200"
+                          aria-label="Hide video"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => openIntroVideoModal(activeTab, { autoplay: true })}
-                        className="px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold flex items-center gap-2"
-                      >
-                        <Play size={16} /> Replay
-                      </button>
-                      <button
-                        onClick={() => setMinimizedTabVideos((prev) => ({ ...prev, [activeTab]: false }))}
-                        className="p-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200"
-                        aria-label="Hide video"
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
+                  )}
+
+                  <div className="flex items-center justify-end">
+                    <button
+                      onClick={() => setHideTipsEverywhere((prev) => !prev)}
+                      className="text-xs text-slate-400 hover:text-white"
+                    >
+                      {hideTipsEverywhere ? 'Show tips everywhere' : 'Hide tips everywhere'}
+                    </button>
                   </div>
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
+            />
           </div>
         )}
 
@@ -6628,7 +7170,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 isProcessing={isProcessing}
                 coachMonthlyActionsRef={coachMonthlyActionsRef}
                 coachHighlight={coachHighlight}
-                handleUseMonthlyAction={handleUseMonthlyAction}
                 InfoTip={InfoTip}
                 creditTier={creditTier}
                 creditScore={creditScore}
@@ -6650,6 +7191,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 netWorth={netWorth}
                 monthlyReport={monthlyReport}
                 cashFlow={cashFlow}
+                monthlyActionsSummary={monthlyActionsSummary}
+                handleUseMonthlyActions={handleUseMonthlyActions}
+                openActionsSignal={openActionsSignal}
               />
             </Suspense>
           </TabErrorBoundary>
@@ -6768,6 +7312,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 cashFlow={cashFlow}
                 formatMoney={formatMoney}
                 aiImpact={aiImpact}
+                isProcessing={isProcessing}
+                onPromote={handleManualPromotion}
               />
             </Suspense>
           </TabErrorBoundary>

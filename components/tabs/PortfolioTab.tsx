@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Wallet } from 'lucide-react';
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { AssetType, TABS, TabId } from '../../types';
 import { Card } from '../ui';
 
@@ -40,6 +41,63 @@ const PortfolioTab: React.FC<PortfolioTabProps> = (props) => {
     setActiveTab
   } = props;
 
+  const assetAllocation = useMemo(() => {
+    const totals: Record<string, number> = {
+      cash: gameState.cash || 0,
+      stocks: 0,
+      indexFunds: 0,
+      bonds: 0,
+      realEstate: 0,
+      business: 0,
+      crypto: 0,
+      savings: 0
+    };
+
+    gameState.assets.forEach((asset: any) => {
+      const value = asset.value * asset.quantity;
+      switch (asset.type) {
+        case AssetType.STOCK:
+          totals.stocks += value;
+          break;
+        case AssetType.INDEX_FUND:
+          totals.indexFunds += value;
+          break;
+        case AssetType.BOND:
+          totals.bonds += value;
+          break;
+        case AssetType.REAL_ESTATE:
+          totals.realEstate += value;
+          break;
+        case AssetType.BUSINESS:
+          totals.business += value;
+          break;
+        case AssetType.CRYPTO:
+          totals.crypto += value;
+          break;
+        case AssetType.SAVINGS:
+          totals.savings += value;
+          break;
+        default:
+          break;
+      }
+    });
+
+    return [
+      { name: 'Cash', value: totals.cash, color: '#94a3b8' },
+      { name: 'Stocks', value: totals.stocks, color: '#34d399' },
+      { name: 'Index Funds', value: totals.indexFunds, color: '#38bdf8' },
+      { name: 'Bonds', value: totals.bonds, color: '#60a5fa' },
+      { name: 'Real Estate', value: totals.realEstate, color: '#f59e0b' },
+      { name: 'Business', value: totals.business, color: '#f97316' },
+      { name: 'Crypto', value: totals.crypto, color: '#a855f7' },
+      { name: 'Savings', value: totals.savings, color: '#22c55e' }
+    ].filter((entry) => entry.value > 0);
+  }, [gameState.assets, gameState.cash]);
+
+  const totalAssetValue = useMemo(() => {
+    return assetAllocation.reduce((sum, entry) => sum + entry.value, 0);
+  }, [assetAllocation]);
+
   return (
 <div className="space-y-4">
             {/* Summary Cards */}
@@ -62,6 +120,56 @@ const PortfolioTab: React.FC<PortfolioTabProps> = (props) => {
               </Card>
             </div>
             
+            {assetAllocation.length > 0 && (
+              <Card className="p-4">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-white">Net Worth Mix</p>
+                    <p className="text-xs text-slate-400">Allocation by asset category</p>
+                    <p className="text-sm text-slate-300 mt-2">
+                      Total tracked: <span className="text-white font-semibold">{formatMoney(totalAssetValue)}</span>
+                    </p>
+                  </div>
+                  <div className="h-40 w-full md:w-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={assetAllocation}
+                          dataKey="value"
+                          nameKey="name"
+                          innerRadius={45}
+                          outerRadius={70}
+                          paddingAngle={2}
+                        >
+                          {assetAllocation.map((entry) => (
+                            <Cell key={entry.name} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip
+                          formatter={(val: number, name: string) => [formatMoney(val), name]}
+                          contentStyle={{
+                            background: '#0f172a',
+                            border: '1px solid #1e293b',
+                            borderRadius: 8,
+                            fontSize: 12
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-slate-400">
+                  {assetAllocation.map((entry) => (
+                    <div key={entry.name} className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                      <span className="text-slate-300">{entry.name}</span>
+                      <span className="text-slate-500">{formatMoney(entry.value)}</span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
             {/* Assets List */}
             {gameState.assets.length === 0 ? (
               <div className="text-center py-16 bg-slate-800/30 rounded-2xl">

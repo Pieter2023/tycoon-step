@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Heart, Home, Users } from 'lucide-react';
 import Modal from '../Modal';
 import LifestyleTab from '../tabs/LifestyleTab';
@@ -21,6 +21,7 @@ type LifePageLayoutProps = {
   handleStopSideHustle: (hustleId: string) => void;
   setShowSideHustleUpgradeModal: (open: boolean) => void;
   coachSideHustlesRef: React.RefObject<HTMLDivElement>;
+  forcedTab?: 'lifestyle' | 'sidehustles';
 };
 
 export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
@@ -37,10 +38,16 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
   handleStartSideHustle,
   handleStopSideHustle,
   setShowSideHustleUpgradeModal,
-  coachSideHustlesRef
+  coachSideHustlesRef,
+  forcedTab
 }) => {
   const [activeTab, setActiveTab] = useState<'lifestyle' | 'sidehustles' | 'family'>('lifestyle');
   const [openDetail, setOpenDetail] = useState<'lifestyle' | 'sidehustles' | 'family' | null>(null);
+
+  useEffect(() => {
+    if (!forcedTab) return;
+    setActiveTab(forcedTab);
+  }, [forcedTab]);
 
   const lifestyle = LIFESTYLE_OPTS[gameState.lifestyle];
   const familySummary = useMemo(() => {

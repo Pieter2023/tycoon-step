@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ModeSelector from '../../ModeSelector';
 import KpiChip from './KpiChip';
 import PageHeader from './PageHeader';
@@ -33,6 +33,7 @@ type PlayPageLayoutProps = {
   onSetAutoplaySpeed: (speed: number) => void;
   monthlyActions: MonthlyActionsSummary;
   onUseMonthlyAction: (actionId: MonthlyActionId) => void;
+  openActionsSignal?: number;
   events: LifeEvent[];
   gameState: GameState;
   onClaimQuest: (questId: string) => void;
@@ -68,6 +69,7 @@ export const PlayPageLayout: React.FC<PlayPageLayoutProps> = ({
   onSetAutoplaySpeed,
   monthlyActions,
   onUseMonthlyAction,
+  openActionsSignal,
   events,
   gameState,
   onClaimQuest,
@@ -80,6 +82,13 @@ export const PlayPageLayout: React.FC<PlayPageLayoutProps> = ({
   getAIRiskColor
 }) => {
   const [actionsOpen, setActionsOpen] = useState(false);
+  const lastOpenSignalRef = useRef(openActionsSignal ?? 0);
+
+  useEffect(() => {
+    if (!openActionsSignal || openActionsSignal === lastOpenSignalRef.current) return;
+    lastOpenSignalRef.current = openActionsSignal;
+    setActionsOpen(true);
+  }, [openActionsSignal]);
 
   return (
     <div className="space-y-8">
@@ -162,19 +171,7 @@ export const PlayPageLayout: React.FC<PlayPageLayoutProps> = ({
 };
 
 const PlayPage: React.FC = () => {
-  return (
-    <div className="space-y-6">
-      <section className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6">
-        <h2 className="text-2xl font-bold">Play</h2>
-        <p className="mt-2 text-sm text-slate-400">
-          Start or continue a game. The new Play layout appears once you enter the simulation.
-        </p>
-      </section>
-      <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
-        <ModeSelector />
-      </section>
-    </div>
-  );
+  return <ModeSelector />;
 };
 
 export default PlayPage;

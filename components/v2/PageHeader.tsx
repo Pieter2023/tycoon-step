@@ -67,6 +67,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
             onClick={onNextMonth}
             disabled={nextMonthDisabled}
             className="px-6"
+            title="Next Month (N)"
           >
             {isProcessing ? <Pause size={18} className="animate-spin" /> : <Play size={18} />}
             <span>Next Month</span>
@@ -79,7 +80,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           variant="secondary"
           size="sm"
           onClick={onToggleAutoplay}
-          title={autoplayTooltip}
+          title={`${autoplayTooltip} • Shortcut: T`}
           aria-label="Autoplay toggle"
           aria-pressed={autoplayEnabled}
           className={autoplayEnabled ? 'border-amber-500/40 text-amber-200 bg-amber-600/20' : ''}

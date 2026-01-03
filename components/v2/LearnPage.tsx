@@ -25,8 +25,8 @@ export const LearnPageLayout: React.FC<LearnPageLayoutProps> = ({
   coachHighlight,
   setGameState
 }) => {
-  const [activeTab, setActiveTab] = useState<'courses' | 'quizzes' | 'library' | 'rewards'>('courses');
-  const [openDetail, setOpenDetail] = useState<'courses' | 'library' | null>(null);
+  const [activeTab, setActiveTab] = useState<'selflearn' | 'library' | 'rewards'>('selflearn');
+  const [openDetail, setOpenDetail] = useState<'selflearn' | 'library' | null>(null);
 
   const featuredCourse = useMemo(() => {
     const courses = [
@@ -70,12 +70,12 @@ export const LearnPageLayout: React.FC<LearnPageLayoutProps> = ({
           <button
             type="button"
             onClick={() => {
-              setActiveTab('courses');
-              setOpenDetail('courses');
+              setActiveTab('selflearn');
+              setOpenDetail('selflearn');
             }}
             className="mt-4 rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
           >
-            Open course
+            Open self learn
           </button>
         </div>
         <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
@@ -102,11 +102,8 @@ export const LearnPageLayout: React.FC<LearnPageLayoutProps> = ({
 
       <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
         <div className="flex flex-wrap items-center gap-2 mb-6">
-          <button type="button" className={tabButtonClass('courses')} onClick={() => setActiveTab('courses')}>
-            Courses
-          </button>
-          <button type="button" className={tabButtonClass('quizzes')} onClick={() => setActiveTab('quizzes')}>
-            Quizzes
+          <button type="button" className={tabButtonClass('selflearn')} onClick={() => setActiveTab('selflearn')}>
+            Self Learn
           </button>
           <button type="button" className={tabButtonClass('library')} onClick={() => setActiveTab('library')}>
             Library
@@ -116,28 +113,15 @@ export const LearnPageLayout: React.FC<LearnPageLayoutProps> = ({
           </button>
         </div>
 
-        {activeTab === 'courses' && (
+        {activeTab === 'selflearn' && (
           <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-sm text-slate-300 flex items-center justify-between">
-            <span>Certifications, practice, and course progression.</span>
+            <span>Certifications, quizzes, and course progression.</span>
             <button
               type="button"
-              onClick={() => setOpenDetail('courses')}
+              onClick={() => setOpenDetail('selflearn')}
               className="rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
             >
               Open
-            </button>
-          </div>
-        )}
-
-        {activeTab === 'quizzes' && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-sm text-slate-300 flex items-center justify-between">
-            <span>Quick tests live inside your certification courses.</span>
-            <button
-              type="button"
-              onClick={() => setOpenDetail('courses')}
-              className="rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
-            >
-              Open courses
             </button>
           </div>
         )}
@@ -177,9 +161,9 @@ export const LearnPageLayout: React.FC<LearnPageLayoutProps> = ({
       </section>
 
       <Modal
-        isOpen={openDetail === 'courses'}
+        isOpen={openDetail === 'selflearn'}
         onClose={() => setOpenDetail(null)}
-        ariaLabel="Courses"
+        ariaLabel="Self Learn"
         overlayClassName="items-stretch justify-end"
         contentClassName="h-full max-w-4xl rounded-none rounded-l-3xl p-6 overflow-y-auto"
       >
@@ -216,7 +200,7 @@ const LearnPage: React.FC = () => {
       <section className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6">
         <h2 className="text-2xl font-bold">Learn</h2>
         <p className="mt-2 text-sm text-slate-400">
-          Certifications, quizzes, and coaching content will live here.
+          Certifications, quizzes, and coaching content live under Self Learn.
         </p>
       </section>
     </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Badge, Button, Tooltip } from '../ui';
 import { AssetType, MarketItem } from '../../types';
@@ -85,6 +85,26 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
 
   const yieldTip = getGlossaryEntry('Yield')?.short || 'Expected annual return as a percent of price.';
   const riskTip = getGlossaryEntry('Risk')?.short || 'Higher risk means bigger swings in value.';
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareSelection, setCompareSelection] = useState<string[]>([]);
+
+  const selectedInvestments = useMemo(() => {
+    return compareSelection
+      .map((id) => filteredInvestments.find((item) => item.id === id))
+      .filter((item): item is MarketItem => !!item);
+  }, [compareSelection, filteredInvestments]);
+
+  const getLockupPeriod = (item: MarketItem) => {
+    if (item.type === AssetType.SAVINGS && /locked/i.test(item.description)) return '12 mo';
+    if (item.type === AssetType.BOND) return '6-12 mo';
+    if (item.type === AssetType.REAL_ESTATE || item.type === AssetType.BUSINESS) return 'Long-term';
+    return 'Liquid';
+  };
+
+  const getPassiveIncome = (item: MarketItem, price: number) => {
+    const monthly = Math.round((price * item.expectedYield) / 12);
+    return `${formatMoneyFull(monthly)}/mo`;
+  };
 
   return (
 <div>
@@ -212,6 +232,18 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                 >
                   {batchBuyMode ? 'Batch Buy: ON' : 'Batch Buy'}
                 </Button>
+                <Button
+                  onClick={() => {
+                    setCompareMode((prev) => !prev);
+                    if (compareMode) {
+                      setCompareSelection([]);
+                    }
+                  }}
+                  variant={compareMode ? 'primary' : 'secondary'}
+                  size="md"
+                >
+                  {compareMode ? 'Compare: ON' : 'Compare'}
+                </Button>
 
                 {batchBuyMode && (
                   <Button onClick={clearBatchBuyCart} variant="secondary" size="md">
@@ -226,6 +258,96 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                 Set quantities on stocks, index funds, bonds, crypto, and commodities — then confirm once.
               </div>
             )}
+
+            {compareMode && (
+              <div className="mb-4 rounded-2xl border border-slate-700 bg-slate-900/60 p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold text-white">Compare investments</p>
+                    <p className="text-xs text-slate-400">
+                      Select up to three options to compare key metrics.
+                    </p>
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    Selected: {compareSelection.length}/3
+                  </div>
+                </div>
+
+                {selectedInvestments.length === 0 ? (
+                  <p className="text-xs text-slate-500 mt-3">Pick investments below to see the comparison table.</p>
+                ) : (
+                  <div className="mt-3 overflow-x-auto">
+                    <table className="w-full text-sm text-slate-300">
+                      <thead>
+                        <tr className="text-xs uppercase text-slate-500">
+                          <th className="text-left py-2 pr-3">Metric</th>
+                          {selectedInvestments.map((item) => (
+                            <th key={`compare-${item.id}`} className="text-left py-2 pr-3">
+                              {item.name}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(() => {
+                          const inflationMult = Math.pow(1 + gameState.economy.inflationRate, gameState.month / 12);
+                          return (
+                            <>
+                              <tr className="border-t border-slate-800">
+                                <td className="py-2 pr-3 text-slate-400">Cost</td>
+                                {selectedInvestments.map((item) => {
+                                  const price = Math.round(item.price * inflationMult);
+                                  return (
+                                    <td key={`cost-${item.id}`} className="py-2 pr-3 text-white">
+                                      {formatMoney(price)}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                              <tr className="border-t border-slate-800">
+                                <td className="py-2 pr-3 text-slate-400">Expected return</td>
+                                {selectedInvestments.map((item) => (
+                                  <td key={`return-${item.id}`} className="py-2 pr-3 text-emerald-300">
+                                    {formatPercent(item.expectedYield)}/yr
+                                  </td>
+                                ))}
+                              </tr>
+                              <tr className="border-t border-slate-800">
+                                <td className="py-2 pr-3 text-slate-400">Risk rating</td>
+                                {selectedInvestments.map((item) => (
+                                  <td key={`risk-${item.id}`} className="py-2 pr-3">
+                                    {getRiskRating(item)}
+                                  </td>
+                                ))}
+                              </tr>
+                              <tr className="border-t border-slate-800">
+                                <td className="py-2 pr-3 text-slate-400">Lock-up period</td>
+                                {selectedInvestments.map((item) => (
+                                  <td key={`lockup-${item.id}`} className="py-2 pr-3">
+                                    {getLockupPeriod(item)}
+                                  </td>
+                                ))}
+                              </tr>
+                              <tr className="border-t border-slate-800">
+                                <td className="py-2 pr-3 text-slate-400">Dividends / passive</td>
+                                {selectedInvestments.map((item) => {
+                                  const price = Math.round(item.price * inflationMult);
+                                  return (
+                                    <td key={`income-${item.id}`} className="py-2 pr-3">
+                                      {getPassiveIncome(item, price)}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            </>
+                          );
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
             
             {/* Investment Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -236,6 +358,8 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                 const canMortgage = item.canMortgage && gameState.cash >= price * 0.035;
                 const tier = getItemTier(item);
                 const riskRating = getRiskRating(item);
+                const isSelected = compareSelection.includes(item.id);
+                const canSelectMore = compareSelection.length < 3 || isSelected;
                 const hasEducation = hasRequiredEducationForInvestment(item, gameState.education.degrees);
                 const isLocked = !hasEducation;
                 const requiredEducationLabel = item.requiredEducationCategory
@@ -257,7 +381,28 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                           <p className="text-slate-500 text-xs">{item.type.replace('_', ' ')}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
+                        {compareMode && (
+                          <label className={`flex items-center gap-1 text-xs ${canSelectMore ? 'text-slate-300' : 'text-slate-600'}`}>
+                            <input
+                              type="checkbox"
+                              className="rounded border-slate-600 bg-slate-900"
+                              checked={isSelected}
+                              disabled={!canSelectMore}
+                              onChange={(e) => {
+                                if (!canSelectMore) return;
+                                const checked = e.target.checked;
+                                setCompareSelection((prev) => {
+                                  if (checked) {
+                                    return [...prev, item.id].slice(0, 3);
+                                  }
+                                  return prev.filter((id) => id !== item.id);
+                                });
+                              }}
+                            />
+                            Compare
+                          </label>
+                        )}
                         <Badge variant="neutral">{tier.toLowerCase()}</Badge>
                         <Tooltip content={riskTip}>
                           <Badge variant={riskRating === 'LOW' ? 'low' : riskRating === 'MEDIUM' ? 'med' : 'high'}>

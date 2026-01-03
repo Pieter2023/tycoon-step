@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { ArrowDownRight, ArrowUpRight, Bot, BookOpen, CheckCircle, Clock, CreditCard, DollarSign, Heart, HeartPulse, LineChart, Sparkles, TrendingUp, Trophy, Users, Zap } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Bot, CheckCircle, CreditCard, DollarSign, Heart, LineChart, Sparkles, TrendingUp, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ALL_LIFE_EVENTS, CAREER_PATHS, getInitialQuestState, getQuestById } from '../../constants';
 import { getQuestProgress } from '../../services/gameLogic';
 import { GameState, MonthlyActionId, PlayerStats } from '../../types';
+import { MonthlyActionsSummary } from '../../services/monthlyActions';
+import ActionCard from '../ActionCard';
 
 type OverviewTabProps = {
   t: (key: string, params?: Record<string, string | number>) => string;
@@ -16,7 +18,6 @@ type OverviewTabProps = {
   isProcessing: boolean;
   coachMonthlyActionsRef: React.RefObject<HTMLDivElement>;
   coachHighlight: (target: string) => string;
-  handleUseMonthlyAction: (action: MonthlyActionId) => void;
   InfoTip: React.FC<{ id: string; text: string }>;
   creditTier: string;
   creditScore: number;
@@ -50,6 +51,9 @@ type OverviewTabProps = {
   netWorth: number;
   monthlyReport: any;
   cashFlow: any;
+  monthlyActionsSummary: MonthlyActionsSummary;
+  handleUseMonthlyActions: (actionIds: MonthlyActionId[]) => void;
+  openActionsSignal?: number;
 };
 
 const OverviewTab: React.FC<OverviewTabProps> = (props) => {
@@ -63,7 +67,6 @@ const OverviewTab: React.FC<OverviewTabProps> = (props) => {
     isProcessing,
     coachMonthlyActionsRef,
     coachHighlight,
-    handleUseMonthlyAction,
     InfoTip,
     creditTier,
     creditScore,
@@ -84,8 +87,74 @@ const OverviewTab: React.FC<OverviewTabProps> = (props) => {
     getAIRiskColor,
     netWorth,
     monthlyReport,
-    cashFlow
+    cashFlow,
+    monthlyActionsSummary,
+    handleUseMonthlyActions,
+    openActionsSignal
   } = props;
+
+  const [queuedActions, setQueuedActions] = useState<MonthlyActionId[]>([]);
+  const [actionsOpen, setActionsOpen] = useState(true);
+  const lastOpenSignalRef = useRef(openActionsSignal ?? 0);
+  const actionScrollRef = useRef<HTMLDivElement | null>(null);
+  const queueRemaining = Math.max(0, monthlyActionsSummary.remaining - queuedActions.length);
+
+  const actionDetails = useMemo(() => ({
+    OVERTIME: {
+      costs: ['-15 energy', '+12 stress'],
+      effects: ['+10% salary bonus (next month)']
+    },
+    NETWORK: {
+      costs: ['-$100 cash', '+5 stress', '-5 energy'],
+      effects: ['+$0-$500 chance', '+12 networking']
+    },
+    TRAINING: {
+      costs: ['-$300 cash', '-8 energy', '+4 stress'],
+      effects: ['+12 Financial IQ', '+3 networking']
+    },
+    HUSTLE_SPRINT: {
+      costs: ['-12 energy', '+10 stress'],
+      effects: ['+25% side hustle income (next month)']
+    },
+    RECOVER: {
+      costs: [],
+      effects: ['+18 energy', '-15 stress', '+4 health', '+6 happiness']
+    }
+  }) as Record<MonthlyActionId, { costs: string[]; effects: string[] }>, []);
+
+  const toggleQueuedAction = (actionId: MonthlyActionId, disabled: boolean) => {
+    if (disabled) return;
+    setQueuedActions((prev) => {
+      if (prev.includes(actionId)) {
+        return prev.filter((id) => id !== actionId);
+      }
+      if (queueRemaining <= 0) return prev;
+      return [...prev, actionId];
+    });
+  };
+
+  const confirmQueuedActions = () => {
+    if (queuedActions.length === 0) return;
+    handleUseMonthlyActions(queuedActions);
+    setQueuedActions([]);
+    setActionsOpen(false);
+  };
+
+  const scrollActions = (delta: number) => {
+    if (!actionScrollRef.current) return;
+    actionScrollRef.current.scrollBy({ left: delta, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    if (queuedActions.length <= monthlyActionsSummary.remaining) return;
+    setQueuedActions((prev) => prev.slice(0, monthlyActionsSummary.remaining));
+  }, [monthlyActionsSummary.remaining, queuedActions.length]);
+
+  useEffect(() => {
+    if (!openActionsSignal || openActionsSignal === lastOpenSignalRef.current) return;
+    lastOpenSignalRef.current = openActionsSignal;
+    setActionsOpen(true);
+  }, [openActionsSignal]);
 
   return (<>
 
@@ -104,36 +173,30 @@ const OverviewTab: React.FC<OverviewTabProps> = (props) => {
                 </p>
               </div>
 
-              {(() => {
-                const max = gameState.monthlyActionsMax ?? 2;
-                const remaining = (typeof gameState.monthlyActionsRemaining === 'number') ? gameState.monthlyActionsRemaining : max;
-                const energy = gameState.stats?.energy ?? 0;
-                const stress = gameState.stats?.stress ?? 0;
-                const health = gameState.stats?.health ?? 0;
-                const hasBonus = energy >= 70 && stress <= 60;
-                const hasCareerBonus = (gameState.career?.level ?? gameState.playerJob?.level ?? 0) >= 3;
-                const hasPenalty = energy < 35 || stress >= 85 || health < 30;
-                const reason = hasBonus
-                  ? 'Bonus: +1 action (high energy, manageable stress)'
-                  : hasPenalty
-                    ? 'Penalty: -1 action (low energy / high stress / low health)'
-                    : hasCareerBonus
-                      ? 'Bonus: +1 action (career momentum)'
-                      : 'Tip: keep energy high and stress low for more actions';
-                const tooltip =
-                  `Monthly Actions start at 2. +1 if Energy ≥ 70 AND Stress ≤ 60. +1 if Career level ≥ 3. -1 if Energy < 35 OR Stress ≥ 85 OR Health < 30. Range: 1–4. This month: Energy ${Math.round(energy)}, Stress ${Math.round(stress)}, Health ${Math.round(health)} → Max ${max}.`;
-
-                return (
-                  <div className="text-right">
-                    <p className="text-slate-400 text-xs flex items-center justify-end">
-                      Actions Remaining
-                      <InfoTip id="actions-remaining-tip" text={tooltip} />
-                    </p>
-                    <p className="text-white font-bold text-xl">{remaining} / {max}</p>
-                    <p className="text-slate-400 text-xs mt-1 max-w-[220px] sm:max-w-none">{reason}</p>
-                  </div>
-                );
-              })()}
+            <div className="text-right">
+              <div className="flex items-center justify-end gap-2">
+                <p className="text-slate-400 text-xs">Actions Remaining</p>
+                <InfoTip id="actions-remaining-tip" text={monthlyActionsSummary.tooltip} />
+              </div>
+              <div className="flex items-center justify-end gap-2 mt-1">
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: monthlyActionsSummary.max }).map((_, idx) => (
+                    <span
+                      key={`action-dot-${idx}`}
+                      className={`h-2 w-2 rounded-full ${
+                        idx < queueRemaining ? 'bg-emerald-400' : 'bg-slate-700'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-white font-bold text-sm">
+                  {queueRemaining} / {monthlyActionsSummary.max}
+                </p>
+              </div>
+              <p className="text-slate-400 text-xs mt-1 max-w-[220px] sm:max-w-none">
+                {monthlyActionsSummary.reason}
+              </p>
+            </div>
             </div>
 
             {/* Pending one-turn buffs */}
@@ -153,127 +216,93 @@ const OverviewTab: React.FC<OverviewTabProps> = (props) => {
               </span>
             </div>
 
-            {(() => {
-              const max = gameState.monthlyActionsMax ?? 2;
-              const remaining = (typeof gameState.monthlyActionsRemaining === 'number') ? gameState.monthlyActionsRemaining : max;
-              const locked = isProcessing || !!gameState.pendingScenario || !!gameState.hasWon || !!gameState.isBankrupt;
-              const energy = gameState.stats?.energy ?? 0;
-              const tooDrained = energy < 20;
-              const hasHustle = (gameState.activeSideHustles || []).length > 0;
-              return (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mt-4">
-                  <motion.button
-                    whileHover={{ scale: locked || remaining <= 0 || tooDrained ? 1 : 1.02 }}
-                    whileTap={{ scale: locked || remaining <= 0 || tooDrained ? 1 : 0.99 }}
-                    onClick={() => handleUseMonthlyAction('OVERTIME')}
-                    disabled={locked || remaining <= 0 || tooDrained}
-                    className={`rounded-xl p-4 border text-left transition-all ${
-                      locked || remaining <= 0 || tooDrained
-                        ? 'bg-slate-900/30 border-slate-700/50 text-slate-500 cursor-not-allowed'
-                        : 'bg-slate-900/40 border-slate-700 hover:border-emerald-500/50 hover:bg-slate-800/60'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Clock size={18} className="text-emerald-400" />
-                      <div>
-                        <p className="font-semibold">Work Overtime</p>
-                        <p className="text-xs text-slate-400">+10% salary bonus (next month)</p>
-                      </div>
-                    </div>
-                    <p className="text-xs mt-2">-15 energy • +12 stress</p>
-                    {tooDrained && <p className="text-xs mt-1 text-red-400">Too drained (need 20+ energy)</p>}
-                  </motion.button>
-
-                  <motion.button
-                    whileHover={{ scale: locked || remaining <= 0 || gameState.cash < 100 ? 1 : 1.02 }}
-                    whileTap={{ scale: locked || remaining <= 0 || gameState.cash < 100 ? 1 : 0.99 }}
-                    onClick={() => handleUseMonthlyAction('NETWORK')}
-                    disabled={locked || remaining <= 0 || gameState.cash < 100}
-                    className={`rounded-xl p-4 border text-left transition-all ${
-                      locked || remaining <= 0 || gameState.cash < 100
-                        ? 'bg-slate-900/30 border-slate-700/50 text-slate-500 cursor-not-allowed'
-                        : 'bg-slate-900/40 border-slate-700 hover:border-blue-500/50 hover:bg-slate-800/60'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Users size={18} className="text-blue-400" />
-                      <div>
-                        <p className="font-semibold">Networking</p>
-                        <p className="text-xs text-slate-400">+$0–$500 chance • +networking</p>
-                      </div>
-                    </div>
-                    <p className="text-xs mt-2">Cost: $100 • +12 networking</p>
-                    {gameState.cash < 100 && <p className="text-xs mt-1 text-red-400">Need $100 cash</p>}
-                  </motion.button>
-
-                  <motion.button
-                    whileHover={{ scale: locked || remaining <= 0 || tooDrained || gameState.cash < 300 ? 1 : 1.02 }}
-                    whileTap={{ scale: locked || remaining <= 0 || tooDrained || gameState.cash < 300 ? 1 : 0.99 }}
-                    onClick={() => handleUseMonthlyAction('TRAINING')}
-                    disabled={locked || remaining <= 0 || tooDrained || gameState.cash < 300}
-                    className={`rounded-xl p-4 border text-left transition-all ${
-                      locked || remaining <= 0 || tooDrained || gameState.cash < 300
-                        ? 'bg-slate-900/30 border-slate-700/50 text-slate-500 cursor-not-allowed'
-                        : 'bg-slate-900/40 border-slate-700 hover:border-amber-500/50 hover:bg-slate-800/60'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <BookOpen size={18} className="text-amber-400" />
-                      <div>
-                        <p className="font-semibold">Skill Training</p>
-                        <p className="text-xs text-slate-400">+12 Financial IQ (stronger investing)</p>
-                      </div>
-                    </div>
-                    <p className="text-xs mt-2">Cost: $300 • -8 energy • +4 stress</p>
-                    {gameState.cash < 300 && <p className="text-xs mt-1 text-red-400">Need $300 cash</p>}
-                    {tooDrained && <p className="text-xs mt-1 text-red-400">Too drained</p>}
-                  </motion.button>
-
-                  <motion.button
-                    whileHover={{ scale: locked || remaining <= 0 || tooDrained || !hasHustle ? 1 : 1.02 }}
-                    whileTap={{ scale: locked || remaining <= 0 || tooDrained || !hasHustle ? 1 : 0.99 }}
-                    onClick={() => handleUseMonthlyAction('HUSTLE_SPRINT')}
-                    disabled={locked || remaining <= 0 || tooDrained || !hasHustle}
-                    className={`rounded-xl p-4 border text-left transition-all ${
-                      locked || remaining <= 0 || tooDrained || !hasHustle
-                        ? 'bg-slate-900/30 border-slate-700/50 text-slate-500 cursor-not-allowed'
-                        : 'bg-slate-900/40 border-slate-700 hover:border-purple-500/50 hover:bg-slate-800/60'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Zap size={18} className="text-purple-400" />
-                      <div>
-                        <p className="font-semibold">Hustle Sprint</p>
-                        <p className="text-xs text-slate-400">+25% side hustle income (next month)</p>
-                      </div>
-                    </div>
-                    <p className="text-xs mt-2">Requires active hustle • -12 energy • +10 stress</p>
-                    {!hasHustle && <p className="text-xs mt-1 text-red-400">Start a hustle first</p>}
-                  </motion.button>
-
-                  <motion.button
-                    whileHover={{ scale: locked || remaining <= 0 ? 1 : 1.02 }}
-                    whileTap={{ scale: locked || remaining <= 0 ? 1 : 0.99 }}
-                    onClick={() => handleUseMonthlyAction('RECOVER')}
-                    disabled={locked || remaining <= 0}
-                    className={`rounded-xl p-4 border text-left transition-all ${
-                      locked || remaining <= 0
-                        ? 'bg-slate-900/30 border-slate-700/50 text-slate-500 cursor-not-allowed'
-                        : 'bg-slate-900/40 border-slate-700 hover:border-pink-500/50 hover:bg-slate-800/60'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <HeartPulse size={18} className="text-pink-400" />
-                      <div>
-                        <p className="font-semibold">Recover</p>
-                        <p className="text-xs text-slate-400">Restore energy & reduce stress</p>
-                      </div>
-                    </div>
-                    <p className="text-xs mt-2">+18 energy • -15 stress • +4 health</p>
-                  </motion.button>
+            {actionsOpen ? (
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs text-slate-400">Queue up to {monthlyActionsSummary.remaining} action(s).</p>
+                  <div className="hidden sm:flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => scrollActions(-280)}
+                      className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"
+                      aria-label="Scroll actions left"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollActions(280)}
+                      className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"
+                      aria-label="Scroll actions right"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
                 </div>
-              );
-            })()}
+
+                <div
+                  ref={actionScrollRef}
+                  className="flex gap-3 overflow-x-auto pb-2 scroll-smooth"
+                >
+                  {monthlyActionsSummary.actions.map((action) => {
+                    const details = actionDetails[action.id];
+                    const queued = queuedActions.includes(action.id);
+                    const queueLocked = !queued && queueRemaining <= 0;
+                    const disabled = action.disabled || queueLocked;
+                    const disabledReason = action.disabledReason || (queueLocked ? 'No Monthly Actions remaining.' : undefined);
+
+                    return (
+                      <ActionCard
+                        key={action.id}
+                        title={action.title}
+                        summary={action.subtitle}
+                        costs={details?.costs || [action.details]}
+                        effects={details?.effects || []}
+                        disabled={disabled}
+                        disabledReason={disabledReason}
+                        checked={queued}
+                        onCheckedChange={() => toggleQueuedAction(action.id, disabled)}
+                      />
+                    );
+                  })}
+                </div>
+
+                <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActionsOpen(false)}
+                    title="Hide actions (A)"
+                    className="text-xs text-slate-400 hover:text-white"
+                  >
+                    Hide actions
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmQueuedActions}
+                    disabled={queuedActions.length === 0 || monthlyActionsSummary.locked}
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold ${
+                      queuedActions.length === 0 || monthlyActionsSummary.locked
+                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                        : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                    }`}
+                  >
+                    Confirm actions
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 flex items-center justify-between">
+                <p className="text-xs text-slate-400">Actions queued and executed.</p>
+                <button
+                  type="button"
+                  onClick={() => setActionsOpen(true)}
+                  title="Show actions (A)"
+                  className="text-xs text-emerald-300 hover:text-emerald-200"
+                >
+                  Show actions
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Credit Overview */}

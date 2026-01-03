@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Area,
   AreaChart,
@@ -27,6 +27,7 @@ type MoneyPageLayoutProps = {
   portfolioTabProps: Omit<React.ComponentProps<typeof PortfolioTab>, 'activeTab' | 'setActiveTab'>;
   bankTabProps: React.ComponentProps<typeof BankTab>;
   showQuiz: boolean;
+  forcedTab?: 'invest' | 'portfolio' | 'bank';
 };
 
 const assetTypeLabels: Record<string, string> = {
@@ -52,9 +53,15 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
   investTabProps,
   portfolioTabProps,
   bankTabProps,
-  showQuiz
+  showQuiz,
+  forcedTab
 }) => {
   const [activeTab, setActiveTab] = useState<'invest' | 'portfolio' | 'bank' | 'reports'>('invest');
+
+  useEffect(() => {
+    if (!forcedTab) return;
+    setActiveTab(forcedTab);
+  }, [forcedTab]);
 
   const netWorthHistory = useMemo(() => {
     const history = gameState.netWorthHistory || [];

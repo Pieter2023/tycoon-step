@@ -11,6 +11,8 @@ type CareerPageLayoutProps = {
   cashFlow: any;
   formatMoney: (value: number) => string;
   aiImpact: any;
+  isProcessing: boolean;
+  onPromote: () => void;
 };
 
 const buildSkillCard = (label: string, course?: { certified?: boolean; bestScore?: number; failedAttempts?: number }) => {
@@ -25,7 +27,9 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
   careerPath,
   cashFlow,
   formatMoney,
-  aiImpact
+  aiImpact,
+  isProcessing,
+  onPromote
 }) => {
   const [showDetails, setShowDetails] = useState(false);
   const career = gameState.career;
@@ -166,6 +170,8 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
           cashFlow={cashFlow}
           formatMoney={formatMoney}
           aiImpact={aiImpact}
+          isProcessing={isProcessing}
+          onPromote={onPromote}
         />
       </Modal>
     </div>
