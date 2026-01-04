@@ -6756,13 +6756,26 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
           {!isMobileViewport && (
             <DesktopShell
-            title="Financial Freedom"
-            subtitle="Tycoon"
-            navItems={v2NavItems}
-            activePath={v2Path}
-            onNavigate={(path) => setV2Path(path as typeof v2Path)}
-            headerActions={
-              <div className="flex items-center gap-3">
+              title="Financial Freedom"
+              subtitle="Tycoon"
+              navItems={v2NavItems}
+              activePath={v2Path}
+              onNavigate={(path) => setV2Path(path as typeof v2Path)}
+              headerLeading={
+                <div className={`h-12 w-12 rounded-full bg-gradient-to-br ${gameState.character?.avatarColor || 'from-slate-500 to-slate-600'} flex items-center justify-center text-xl overflow-hidden border border-white/10`}>
+                  {gameState.character?.avatarImage ? (
+                    <img
+                      src={gameState.character.avatarImage}
+                      alt={playerConfig?.name || gameState.character?.name || 'Player'}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    gameState.character?.avatarEmoji || '👤'
+                  )}
+                </div>
+              }
+              headerActions={
+                <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={handleNextTurn}

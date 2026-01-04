@@ -6,6 +6,7 @@ type DesktopShellProps = {
   navItems: { label: string; path: string }[];
   activePath: string;
   onNavigate: (path: string) => void;
+  headerLeading?: React.ReactNode;
   headerActions?: React.ReactNode;
   children: React.ReactNode;
 };
@@ -16,6 +17,7 @@ const DesktopShell: React.FC<DesktopShellProps> = ({
   navItems,
   activePath,
   onNavigate,
+  headerLeading,
   headerActions,
   children
 }) => {
@@ -23,9 +25,12 @@ const DesktopShell: React.FC<DesktopShellProps> = ({
     <div className="hidden md:block min-h-screen text-white">
       <header className="sticky top-0 z-40 border-b border-slate-800/70 bg-slate-950/70 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-5">
-          <div className="min-w-[200px]">
-            {subtitle && <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{subtitle}</p>}
-            <h1 className="text-2xl font-semibold text-white">{title}</h1>
+          <div className="min-w-[200px] flex items-center gap-4">
+            {headerLeading}
+            <div>
+              {subtitle && <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{subtitle}</p>}
+              <h1 className="text-2xl font-semibold text-white">{title}</h1>
+            </div>
           </div>
           <nav className="flex items-center gap-3">
             {navItems.map((item) => {
