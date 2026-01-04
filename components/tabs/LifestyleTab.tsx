@@ -62,8 +62,8 @@ const LifestyleTab: React.FC<LifestyleTabProps> = (props) => {
                 </div>
               </div>
 
-              <div className="h-56">
-                <ResponsiveContainer width="100%" height="100%">
+              <div className="h-56 min-w-[1px] min-h-[1px]">
+                <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
                   <ScatterChart margin={{ top: 10, right: 12, left: 0, bottom: 10 }}>
                     <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" />
                     <XAxis

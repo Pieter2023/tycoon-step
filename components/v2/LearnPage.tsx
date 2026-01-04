@@ -44,13 +44,13 @@ export const LearnPageLayout: React.FC<LearnPageLayoutProps> = ({
   const tabButtonClass = (tab: string) =>
     `rounded-full px-4 py-2 text-xs font-semibold border transition ${
       activeTab === tab
-        ? 'border-white bg-white text-slate-900'
-        : 'border-slate-800 text-slate-200 hover:border-slate-600 hover:text-white'
+        ? 'border-white/80 bg-white text-slate-900 shadow-[0_0_18px_rgba(255,255,255,0.2)]'
+        : 'border-slate-700/70 text-slate-200 hover:border-white/40 hover:text-white'
     }`;
 
   return (
     <div className="space-y-8">
-      <section className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
+      <section className="glass-panel p-6">
         <h2 className="text-2xl font-bold">Learn</h2>
         <p className="mt-2 text-sm text-slate-400">
           Build certifications and education perks to accelerate your career path.
@@ -58,7 +58,7 @@ export const LearnPageLayout: React.FC<LearnPageLayoutProps> = ({
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
+        <div className="glass-panel p-5">
           <div className="flex items-center gap-2 text-sm text-slate-400">
             <Sparkles size={16} className="text-amber-300" />
             Featured Course
@@ -78,7 +78,7 @@ export const LearnPageLayout: React.FC<LearnPageLayoutProps> = ({
             Open self learn
           </button>
         </div>
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
+        <div className="glass-panel p-5">
           <div className="flex items-center gap-2 text-sm text-slate-400">
             <GraduationCap size={16} className="text-emerald-300" />
             Featured Program
@@ -100,7 +100,7 @@ export const LearnPageLayout: React.FC<LearnPageLayoutProps> = ({
         </div>
       </section>
 
-      <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+      <section className="glass-panel p-6">
         <div className="flex flex-wrap items-center gap-2 mb-6">
           <button type="button" className={tabButtonClass('selflearn')} onClick={() => setActiveTab('selflearn')}>
             Self Learn
@@ -114,7 +114,7 @@ export const LearnPageLayout: React.FC<LearnPageLayoutProps> = ({
         </div>
 
         {activeTab === 'selflearn' && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-sm text-slate-300 flex items-center justify-between">
+          <div className="glass-tile p-4 text-sm text-slate-300 flex items-center justify-between">
             <span>Certifications, quizzes, and course progression.</span>
             <button
               type="button"
@@ -127,7 +127,7 @@ export const LearnPageLayout: React.FC<LearnPageLayoutProps> = ({
         )}
 
         {activeTab === 'library' && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-sm text-slate-300 flex items-center justify-between">
+          <div className="glass-tile p-4 text-sm text-slate-300 flex items-center justify-between">
             <span>Formal education programs and degrees.</span>
             <button
               type="button"
@@ -146,7 +146,7 @@ export const LearnPageLayout: React.FC<LearnPageLayoutProps> = ({
               { label: 'Upgrade EQ', certified: !!gameState.eqCourse?.certified },
               { label: 'Master Negotiations', certified: !!gameState.negotiationsCourse?.certified }
             ].map((item) => (
-              <div key={item.label} className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+              <div key={item.label} className="glass-tile p-4">
                 <div className="flex items-center gap-2 text-sm text-slate-300">
                   <Award size={14} className="text-emerald-300" />
                   {item.label}

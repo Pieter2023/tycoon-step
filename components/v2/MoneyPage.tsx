@@ -100,14 +100,14 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
   const tabButtonClass = (tab: string) =>
     `rounded-full px-4 py-2 text-xs font-semibold border transition ${
       activeTab === tab
-        ? 'border-white bg-white text-slate-900'
-        : 'border-slate-800 text-slate-200 hover:border-slate-600 hover:text-white'
+        ? 'border-white/80 bg-white text-slate-900 shadow-[0_0_18px_rgba(255,255,255,0.2)]'
+        : 'border-slate-700/70 text-slate-200 hover:border-white/40 hover:text-white'
     }`;
 
   return (
     <div className="space-y-8">
       <section className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
+        <div className="lg:col-span-2 glass-panel p-6">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -117,8 +117,8 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
             </div>
             <p className="text-lg font-semibold text-white">{formatMoney(netWorth)}</p>
           </div>
-          <div className="h-40 mt-4">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-40 mt-4 min-w-[1px] min-h-[1px]">
+            <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
               <AreaChart data={netWorthHistory.map((entry) => ({ month: entry.month, value: entry.value }))}>
                 <defs>
                   <linearGradient id="netWorthGradient" x1="0" y1="0" x2="0" y2="1">
@@ -135,18 +135,18 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
+        <div className="glass-panel p-6">
           <div className="flex items-center gap-2">
             <PieChartIcon size={18} className="text-blue-300" />
             <h3 className="text-lg font-semibold">Asset Allocation</h3>
           </div>
-          <div className="h-40 mt-4">
+          <div className="h-40 mt-4 min-w-[1px] min-h-[1px]">
             {assetAllocation.length === 0 ? (
               <div className="h-full flex items-center justify-center text-sm text-slate-500">
                 No assets yet.
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
                 <PieChart>
                   <Pie
                     data={assetAllocation}
@@ -169,7 +169,7 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+        <div className="glass-tile p-4">
           <div className="flex items-center gap-2 text-slate-400 text-xs">
             <Wallet size={14} /> Net Cash Flow
           </div>
@@ -178,13 +178,13 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
             {formatMoney(cashFlow.income - cashFlow.expenses)}/mo
           </p>
         </div>
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+        <div className="glass-tile p-4">
           <div className="flex items-center gap-2 text-slate-400 text-xs">
             <Banknote size={14} /> Total Liabilities
           </div>
           <p className="mt-2 text-lg font-semibold text-red-400">{formatMoney(liabilitiesTotal)}</p>
         </div>
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+        <div className="glass-tile p-4">
           <div className="flex items-center gap-2 text-slate-400 text-xs">
             <Wallet size={14} /> Portfolio Value
           </div>
@@ -192,7 +192,7 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
         </div>
       </section>
 
-      <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+      <section className="glass-panel p-6">
         <div className="flex flex-wrap items-center gap-2 mb-6">
           <button type="button" className={tabButtonClass('invest')} onClick={() => setActiveTab('invest')}>
             Invest

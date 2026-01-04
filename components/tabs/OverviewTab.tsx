@@ -338,7 +338,7 @@ const OverviewTab: React.FC<OverviewTabProps> = (props) => {
                   </div>
 
                   <div className="h-32 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
                       <AreaChart data={recent.map(entry => ({ month: entry.month, score: entry.score }))}>
                         <defs>
                           <linearGradient id="creditGradient" x1="0" y1="0" x2="0" y2="1">
@@ -889,7 +889,7 @@ const OverviewTab: React.FC<OverviewTabProps> = (props) => {
                 <LineChart className="text-emerald-400" size={20} />Net Worth History
               </h3>
               <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
                   <AreaChart data={gameState.netWorthHistory}>
                     <defs>
                       <linearGradient id="netWorthGradient" x1="0" y1="0" x2="0" y2="1">

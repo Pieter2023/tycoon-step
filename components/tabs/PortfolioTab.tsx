@@ -131,7 +131,7 @@ const PortfolioTab: React.FC<PortfolioTabProps> = (props) => {
                     </p>
                   </div>
                   <div className="h-40 w-full md:w-56">
-                    <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
                       <PieChart>
                         <Pie
                           data={assetAllocation}

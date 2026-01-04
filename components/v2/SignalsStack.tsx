@@ -138,8 +138,8 @@ const SignalsStack: React.FC<SignalsStackProps> = ({
               {delta >= 0 ? '+' : ''}{delta} this month
             </p>
           </div>
-          <div className="h-40 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-40 w-full min-w-[1px] min-h-[1px]">
+            <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
               <AreaChart data={creditHistory.map(entry => ({ month: entry.month, score: entry.score }))}>
                 <defs>
                   <linearGradient id="creditGradientV2" x1="0" y1="0" x2="0" y2="1">

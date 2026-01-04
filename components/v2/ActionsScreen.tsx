@@ -1,14 +1,19 @@
 import React, { useMemo, useState } from 'react';
 import { BookOpen, Clock, Filter, HeartPulse, Users, Zap } from 'lucide-react';
-import Modal from '../Modal';
 import { MonthlyActionId } from '../../types';
 import { MonthlyActionCard, MonthlyActionCategory, MonthlyActionsSummary } from '../../services/monthlyActions';
+import EventFeed from './EventFeed';
+import NextBestStep from './NextBestStep';
+import { GameState } from '../../types';
 
-type ActionsDrawerProps = {
-  isOpen: boolean;
-  onClose: () => void;
+type ActionsScreenProps = {
   summary: MonthlyActionsSummary;
   onSelectAction: (id: MonthlyActionId) => void;
+  events: GameState['events'];
+  gameState: GameState;
+  isProcessing: boolean;
+  onClaimQuest: (questId: string) => void;
+  onOpenGoals: () => void;
 };
 
 const actionIcon = (action: MonthlyActionCard) => {
@@ -35,7 +40,15 @@ const filters: Array<{ id: 'all' | MonthlyActionCategory; label: string }> = [
   { id: 'recovery', label: 'Recovery' }
 ];
 
-const ActionsDrawer: React.FC<ActionsDrawerProps> = ({ isOpen, onClose, summary, onSelectAction }) => {
+const ActionsScreen: React.FC<ActionsScreenProps> = ({
+  summary,
+  onSelectAction,
+  events,
+  gameState,
+  isProcessing,
+  onClaimQuest,
+  onOpenGoals
+}) => {
   const [filter, setFilter] = useState<'all' | MonthlyActionCategory>('all');
   const filteredActions = useMemo(() => {
     if (filter === 'all') return summary.actions;
@@ -43,29 +56,19 @@ const ActionsDrawer: React.FC<ActionsDrawerProps> = ({ isOpen, onClose, summary,
   }, [filter, summary.actions]);
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      ariaLabel="All Monthly Actions"
-      closeOnOverlayClick
-      closeOnEsc
-      contentClassName="bg-slate-950/80 border border-slate-800/70 rounded-3xl p-6 max-w-3xl w-full backdrop-blur-xl"
-    >
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-5">
+      <section className="glass-panel px-4 py-4">
+        <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-white">Monthly Actions</h2>
-            <p className="text-xs text-slate-400">
-              {summary.remaining} / {summary.max} remaining • {summary.reason}
-            </p>
+            <p className="text-xs text-slate-400">{summary.remaining} / {summary.max} remaining • {summary.reason}</p>
           </div>
           <div className="flex items-center gap-2 text-xs text-slate-400">
             <Filter size={14} />
-            <span>Filter</span>
+            Filter
           </div>
         </div>
-
-        <div className="flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-2">
           {filters.map((item) => (
             <button
               key={item.id}
@@ -73,16 +76,15 @@ const ActionsDrawer: React.FC<ActionsDrawerProps> = ({ isOpen, onClose, summary,
               onClick={() => setFilter(item.id)}
               className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                 filter === item.id
-                  ? 'border-white/80 bg-white text-slate-900 shadow-[0_0_18px_rgba(255,255,255,0.2)]'
-                  : 'border-slate-700/70 text-slate-200 hover:border-white/40'
+                  ? 'border-white/80 bg-white text-slate-950'
+                  : 'border-slate-700/70 text-slate-200 hover:border-white/30'
               }`}
             >
               {item.label}
             </button>
           ))}
         </div>
-
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
           {filteredActions.map((action) => (
             <button
               key={action.id}
@@ -90,13 +92,12 @@ const ActionsDrawer: React.FC<ActionsDrawerProps> = ({ isOpen, onClose, summary,
               onClick={() => {
                 if (action.disabled) return;
                 onSelectAction(action.id);
-                onClose();
               }}
               disabled={action.disabled}
               className={`rounded-2xl border p-4 text-left transition ${
                 action.disabled
                   ? 'cursor-not-allowed border-slate-800/60 bg-slate-900/30 text-slate-500'
-                  : 'border-slate-800 bg-slate-900/50 hover:border-emerald-400/40 hover:bg-slate-900/70'
+                  : 'border-slate-700/70 bg-slate-900/60 hover:border-emerald-400/50'
               }`}
             >
               <div className="flex items-start gap-3">
@@ -113,9 +114,23 @@ const ActionsDrawer: React.FC<ActionsDrawerProps> = ({ isOpen, onClose, summary,
             </button>
           ))}
         </div>
-      </div>
-    </Modal>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2">
+        <div className="glass-panel px-4 py-4">
+          <EventFeed events={events} />
+        </div>
+        <div className="glass-panel px-4 py-4">
+          <NextBestStep
+            gameState={gameState}
+            isProcessing={isProcessing}
+            onClaimQuest={onClaimQuest}
+            onOpenGoals={onOpenGoals}
+          />
+        </div>
+      </section>
+    </div>
   );
 };
 
-export default ActionsDrawer;
+export default ActionsScreen;

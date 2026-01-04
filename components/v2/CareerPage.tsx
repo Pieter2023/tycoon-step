@@ -47,7 +47,7 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
 
   return (
     <div className="space-y-8">
-      <section className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
+      <section className="glass-panel p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${gameState.character?.avatarColor || 'from-slate-500 to-slate-600'} flex items-center justify-center text-2xl`}>
@@ -71,17 +71,17 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
       </section>
 
       <section className="grid gap-6 lg:grid-cols-3">
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6 lg:col-span-2">
+        <div className="glass-panel p-6 lg:col-span-2">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Briefcase size={18} className="text-emerald-300" /> Career Summary
           </h3>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+            <div className="glass-tile p-4">
               <p className="text-xs text-slate-400">Current Level</p>
               <p className="text-lg font-semibold text-white">{career?.level || 1}</p>
               <p className="text-xs text-slate-500 mt-1">Experience: {career?.experience || 0} mo</p>
             </div>
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+            <div className="glass-tile p-4">
               <p className="text-xs text-slate-400">Next Growth Option</p>
               {nextLevel ? (
                 <>
@@ -95,7 +95,7 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
               )}
             </div>
           </div>
-          <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+          <div className="mt-6 glass-tile p-4">
             <div className="flex items-center gap-2">
               <Bot size={16} className="text-purple-300" />
               <p className="text-sm font-semibold text-white">AI Disruption Impact</p>
@@ -107,13 +107,13 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+        <div className="glass-panel p-6">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Sparkles size={18} className="text-amber-300" /> Skills
           </h3>
           <div className="mt-4 space-y-3">
             {skills.map((skill) => (
-              <div key={skill.label} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+              <div key={skill.label} className="glass-tile p-4">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-white">{skill.label}</p>
                   <div className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] ${skill.certified ? 'border-emerald-500/40 bg-emerald-600/20 text-emerald-200' : 'border-slate-700 text-slate-400'}`}>
@@ -129,7 +129,7 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
         </div>
       </section>
 
-      <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+      <section className="glass-panel p-6">
         <h3 className="text-lg font-semibold">Progression</h3>
         <div className="mt-4 space-y-2">
           {levels.map((level, idx) => {
@@ -139,7 +139,7 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
               <div
                 key={level.title}
                 className={`flex items-center gap-3 rounded-2xl border p-3 ${
-                  isCurrent ? 'border-emerald-500/40 bg-emerald-600/10' : 'border-slate-800 bg-slate-900/40'
+                  isCurrent ? 'border-emerald-500/40 bg-emerald-600/10' : 'border-slate-800/60 bg-slate-900/40'
                 }`}
               >
                 <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold ${

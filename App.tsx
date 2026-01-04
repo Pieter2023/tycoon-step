@@ -26,16 +26,22 @@ import TabErrorBoundary from './components/TabErrorBoundary';
 import Modal from './components/Modal';
 import QuestLog from './components/QuestLog';
 import { Button, Badge, Card, Tooltip } from './components/ui';
-import AppShell, { AppShellNavItem } from './components/ui/AppShell';
+import type { AppShellNavItem } from './components/ui/AppShell';
 import CustomAvatarBuilder, { CustomAvatarResult } from './components/customAvatar/CustomAvatarBuilder';
 import HelpDrawer from './components/HelpDrawer';
 import DashboardWidget from './components/DashboardWidget';
 import SelfLearnTab from './components/tabs/SelfLearnTab';
-import { PlayPageLayout } from './components/v2/PlayPage';
 import { MoneyPageLayout } from './components/v2/MoneyPage';
 import { CareerPageLayout } from './components/v2/CareerPage';
 import { LearnPageLayout } from './components/v2/LearnPage';
 import { LifePageLayout } from './components/v2/LifePage';
+import ActionsDrawer from './components/v2/ActionsDrawer';
+import MobileShell from './components/v2/MobileShell';
+import DesktopShell from './components/v2/DesktopShell';
+import DashboardScreen from './components/v2/DashboardScreen';
+import ActionsScreen from './components/v2/ActionsScreen';
+import ProfileScreen from './components/v2/ProfileScreen';
+import MoreScreen from './components/v2/MoreScreen';
 import { getMonthlyActionsSummary } from './services/monthlyActions';
 
 import { 
@@ -833,6 +839,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const lastLifestyleRef = useRef(gameState.lifestyle);
   const lastMonthRef = useRef(gameState.month);
   const [openActionsSignal, setOpenActionsSignal] = useState(0);
+  const [actionsDrawerOpen, setActionsDrawerOpen] = useState(false);
   const [forcedMoneyTab, setForcedMoneyTab] = useState<'invest' | 'portfolio' | 'bank' | null>(null);
   const [forcedLifeTab, setForcedLifeTab] = useState<'lifestyle' | 'sidehustles' | null>(null);
 
@@ -1664,6 +1671,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
     : t('autoplay.tooltipOff');
   const uiV2Enabled = useMemo(() => readUiV2Preference(), []);
   const [v2Path, setV2Path] = useState<'/play' | '/money' | '/career' | '/learn' | '/life'>('/play');
+  const [mobileTab, setMobileTab] = useState<'dashboard' | 'actions' | 'profile' | 'more'>('dashboard');
+  const [mobileOverflowOpen, setMobileOverflowOpen] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const shouldPreloadVideos = !accessibilityPrefs.disableVideoPreload;
   const careerLevel = gameState.career?.level ?? gameState.playerJob?.level ?? 0;
   const creditScore = gameState.creditRating ?? 650;
@@ -1687,6 +1697,27 @@ const [gameState, setGameState] = useState<GameState>(() => {
     return delta;
   }, [gameState.lifestyle, lastLifestyle]);
 
+  useEffect(() => {
+    if (v2Path !== '/play') {
+      setMobileTab('more');
+    }
+  }, [v2Path]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobileViewport(mq.matches);
+    update();
+    mq.addEventListener?.('change', update);
+    return () => mq.removeEventListener?.('change', update);
+  }, []);
+
+  useEffect(() => {
+    if (openActionsSignal > 0) {
+      setActionsDrawerOpen(true);
+    }
+  }, [openActionsSignal]);
+
   const netWorthTrendData = useMemo(() => {
     const history = gameState.netWorthHistory?.length
       ? gameState.netWorthHistory
@@ -1706,6 +1737,26 @@ const [gameState, setGameState] = useState<GameState>(() => {
       expenses: entry.expenses
     }));
   }, [cashFlow.expenses, cashFlow.income, cashFlowHistory, gameState.month]);
+
+  const previousCashFlowEntry = cashFlowHistory.length >= 2
+    ? cashFlowHistory[cashFlowHistory.length - 2]
+    : null;
+  const expenseDelta = previousCashFlowEntry ? cashFlow.expenses - previousCashFlowEntry.expenses : null;
+
+  const passiveTrendMini = useMemo(() => {
+    return [] as Array<{ label: string; value: number }>;
+  }, []);
+
+  const expenseTrendMini = useMemo(() => {
+    return cashFlowTrendData.slice(-3).map((entry) => ({
+      label: entry.label,
+      value: entry.expenses
+    }));
+  }, [cashFlowTrendData]);
+
+  const passiveCoverage = cashFlow.expenses > 0 ? cashFlow.passive / cashFlow.expenses : 0;
+  const freedomPercent = Math.min(1, passiveCoverage / FINANCIAL_FREEDOM_TARGET_MULTIPLIER);
+  const ratioValue = Math.min(100, Math.max(0, Math.round(passiveCoverage * 100)));
 
   const creditTrendData = useMemo(() => {
     const history = gameState.creditHistory?.length
@@ -1798,6 +1849,31 @@ const [gameState, setGameState] = useState<GameState>(() => {
     { label: 'Learn', path: '/learn' },
     { label: 'Life', path: '/life' }
   ];
+  const aiRiskLabel = aiImpact?.automationRisk || 'LOW';
+  const aiRiskBadgeTone =
+    aiRiskLabel === 'CRITICAL'
+      ? 'ds-badge--extreme'
+      : aiRiskLabel === 'HIGH'
+        ? 'ds-badge--high'
+      : aiRiskLabel === 'MEDIUM'
+        ? 'ds-badge--med'
+          : 'ds-badge--low';
+
+  const handleV2Navigate = useCallback(
+    (path: '/play' | '/money' | '/career' | '/learn' | '/life', tab?: 'invest' | 'lifestyle' | 'sidehustles') => {
+      setV2Path(path);
+      if (path === '/money' && tab === 'invest') {
+        setForcedMoneyTab('invest');
+      }
+      if (path === '/life' && tab === 'sidehustles') {
+        setForcedLifeTab('sidehustles');
+      }
+      if (path === '/life' && tab === 'lifestyle') {
+        setForcedLifeTab('lifestyle');
+      }
+    },
+    [setForcedLifeTab, setForcedMoneyTab]
+  );
   // ============================================
   // HANDLERS
   // ============================================
@@ -6518,107 +6594,367 @@ const [gameState, setGameState] = useState<GameState>(() => {
         </Modal>
       )}
       {uiV2Enabled ? (
-        <AppShell
-          title="Financial Freedom"
-          subtitle="Tycoon"
-          navItems={v2NavItems}
-          activePath={v2Path}
-          onNavigate={(path) => setV2Path(path as typeof v2Path)}
-        >
-          {v2Path === '/play' && (
-            <PlayPageLayout
-              playerName={playerConfig?.name || gameState.character?.name || 'Player'}
-              year={Math.ceil(gameState.month / 12)}
-              month={((gameState.month - 1) % 12) + 1}
-              avatarColor={gameState.character?.avatarColor}
-              avatarImage={gameState.character?.avatarImage}
-              avatarEmoji={gameState.character?.avatarEmoji}
-              cashLabel={formatMoney(gameState.cash)}
-              netWorthLabel={formatMoney(netWorth)}
-              passiveLabel={formatMoney(cashFlow.passive)}
-              isProcessing={isProcessing}
-              nextMonthDisabled={isProcessing || !!gameState.pendingScenario}
-              onNextMonth={handleNextTurn}
-              autoplayEnabled={autoplayEnabled}
-              autoplayLabel={autoplayEnabled ? 'ON' : 'OFF'}
-              autoplayTooltip={autoplayTooltip}
-              autoplaySpeed={autoPlaySpeed}
-              autoplaySpeedOptions={AUTOPLAY_SPEED_OPTIONS}
-              autoplaySpeedLabels={AUTOPLAY_SPEED_LABELS}
-              onToggleAutoplay={() => setAutoPlaySpeed(autoPlaySpeed ? null : AUTOPLAY_SPEED_OPTIONS[0])}
-              onSetAutoplaySpeed={setAutoPlaySpeed}
-              monthlyActions={monthlyActionsSummary}
-              onUseMonthlyAction={handleUseMonthlyAction}
-              openActionsSignal={openActionsSignal}
-              events={gameState.events}
-              gameState={gameState}
-              onClaimQuest={handleClaimQuest}
-              onOpenGoals={() => setShowQuestLog(true)}
-              creditScore={creditScore}
-              creditTier={creditTier}
-              getCreditTierColor={getCreditTierColor}
-              aiImpact={aiImpact}
-              careerPath={careerPath}
-              getAIRiskColor={getAIRiskColor}
-            />
+        <>
+          {isMobileViewport && (
+            <MobileShell
+            playerName={playerConfig?.name || gameState.character?.name || 'Player'}
+            year={Math.ceil(gameState.month / 12)}
+            month={((gameState.month - 1) % 12) + 1}
+            avatarColor={gameState.character?.avatarColor}
+            avatarImage={gameState.character?.avatarImage}
+            avatarEmoji={gameState.character?.avatarEmoji}
+            perkLabel={gameState.character?.perk?.name}
+            perkDescription={gameState.character?.perk?.description}
+            aiRiskLabel={aiRiskLabel}
+            aiRiskTone={aiRiskBadgeTone}
+            isProcessing={isProcessing}
+            nextMonthDisabled={isProcessing || !!gameState.pendingScenario}
+            onNextMonth={handleNextTurn}
+            onOpenOverflow={() => setMobileOverflowOpen(true)}
+            activeTab={v2Path === '/play' ? mobileTab : 'more'}
+            onSelectTab={(tab) => {
+              setMobileTab(tab);
+              if (tab !== 'more') {
+                setV2Path('/play');
+              }
+            }}
+          >
+            {v2Path === '/play' && mobileTab === 'dashboard' && (
+              <DashboardScreen
+                cashValue={gameState.cash}
+                netWorthValue={netWorth}
+                passiveValue={cashFlow.passive}
+                expenseValue={cashFlow.expenses}
+                formatMoney={formatMoney}
+                freedomPercent={freedomPercent}
+                passiveTrend={passiveTrendMini}
+                expenseTrend={expenseTrendMini}
+                ratioValue={ratioValue}
+                ratioLabel={`${ratioValue}%`}
+                passiveDelta={null}
+                expenseDelta={expenseDelta}
+                cashSparkline={[]}
+                netWorthSparkline={netWorthTrendData.map((entry) => ({ label: entry.label, value: entry.value }))}
+                passiveSparkline={passiveTrendMini}
+                monthlyActions={monthlyActionsSummary}
+                onUseMonthlyAction={handleUseMonthlyAction}
+                onOpenActions={() => setActionsDrawerOpen(true)}
+                onNavigate={handleV2Navigate}
+                events={gameState.events}
+                gameState={gameState}
+                isProcessing={isProcessing}
+                onClaimQuest={handleClaimQuest}
+                onOpenGoals={() => setShowQuestLog(true)}
+              />
+            )}
+            {v2Path === '/play' && mobileTab === 'actions' && (
+              <ActionsScreen
+                summary={monthlyActionsSummary}
+                onSelectAction={handleUseMonthlyAction}
+                events={gameState.events}
+                gameState={gameState}
+                isProcessing={isProcessing}
+                onClaimQuest={handleClaimQuest}
+                onOpenGoals={() => setShowQuestLog(true)}
+              />
+            )}
+            {v2Path === '/play' && mobileTab === 'profile' && (
+              <ProfileScreen
+                playerName={playerConfig?.name || gameState.character?.name || 'Player'}
+                avatarColor={gameState.character?.avatarColor}
+                avatarImage={gameState.character?.avatarImage}
+                avatarEmoji={gameState.character?.avatarEmoji}
+                gameState={gameState}
+                creditScore={creditScore}
+                creditTier={creditTier}
+                getCreditTierColor={getCreditTierColor}
+                aiImpact={aiImpact}
+                careerPath={careerPath}
+                getAIRiskColor={getAIRiskColor}
+                formatMoney={formatMoney}
+                onNavigate={(path) => setV2Path(path as typeof v2Path)}
+              />
+            )}
+            {v2Path === '/play' && mobileTab === 'more' && (
+              <MoreScreen
+                onNavigate={(path) => setV2Path(path as typeof v2Path)}
+                onOpenSaveManager={openSaveManager}
+                onOpenQuests={() => setShowQuestLog(true)}
+                onOpenGlossary={() => setShowGlossary(true)}
+                onOpenAccessibility={() => setShowAccessibility(true)}
+                onToggleSound={toggleSound}
+                soundEnabled={soundEnabled}
+                showNextMonthPreview={showNextMonthPreview}
+                onToggleMonthPreview={setShowNextMonthPreview}
+                autoplayEnabled={autoplayEnabled}
+                autoplayLabel={autoplayEnabled ? 'ON' : 'OFF'}
+                autoplaySpeed={autoPlaySpeed}
+                autoplaySpeedOptions={AUTOPLAY_SPEED_OPTIONS}
+                autoplaySpeedLabels={AUTOPLAY_SPEED_LABELS}
+                onToggleAutoplay={() => setAutoPlaySpeed(autoPlaySpeed ? null : AUTOPLAY_SPEED_OPTIONS[0])}
+                onSetAutoplaySpeed={setAutoPlaySpeed}
+              />
+            )}
+            {v2Path === '/money' && (
+              <MoneyPageLayout
+                gameState={gameState}
+                netWorth={netWorth}
+                cashFlow={cashFlow}
+                formatMoney={formatMoney}
+                formatMoneyFull={formatMoneyFull}
+                formatPercent={formatPercent}
+                investTabProps={investTabProps}
+                portfolioTabProps={portfolioTabProps}
+                bankTabProps={bankTabProps}
+                showQuiz={!!activeQuiz}
+                forcedTab={forcedMoneyTab || undefined}
+              />
+            )}
+            {v2Path === '/career' && (
+              <CareerPageLayout
+                gameState={gameState}
+                careerPath={careerPath}
+                cashFlow={cashFlow}
+                formatMoney={formatMoney}
+                aiImpact={aiImpact}
+                isProcessing={isProcessing}
+                onPromote={handleManualPromotion}
+              />
+            )}
+            {v2Path === '/learn' && (
+              <LearnPageLayout
+                gameState={gameState}
+                careerPath={careerPath}
+                formatMoney={formatMoney}
+                handleEnrollEducation={handleEnrollEducation}
+                coachLifestyleGridRef={coachLifestyleGridRef}
+                coachHighlight={coachHighlight}
+                setGameState={setGameState}
+              />
+            )}
+            {v2Path === '/life' && (
+              <LifePageLayout
+                gameState={gameState}
+                cashFlow={cashFlow}
+                formatMoney={formatMoney}
+                handleChangeLifestyle={handleChangeLifestyle}
+                coachLifestyleGridRef={coachLifestyleGridRef}
+                coachHighlight={coachHighlight}
+                coachHint={coachHint}
+                InfoTip={InfoTip}
+                getHustleUpgradeLabel={getHustleUpgradeLabel}
+                getNextHustleMilestone={getNextHustleMilestone}
+                handleStartSideHustle={handleStartSideHustle}
+                handleStopSideHustle={handleStopSideHustle}
+                setShowSideHustleUpgradeModal={setShowSideHustleUpgradeModal}
+                coachSideHustlesRef={coachSideHustlesRef}
+                forcedTab={forcedLifeTab || undefined}
+              />
+            )}
+            </MobileShell>
           )}
-          {v2Path === '/money' && (
-            <MoneyPageLayout
-              gameState={gameState}
-              netWorth={netWorth}
-              cashFlow={cashFlow}
-              formatMoney={formatMoney}
-              formatMoneyFull={formatMoneyFull}
-              formatPercent={formatPercent}
-              investTabProps={investTabProps}
-              portfolioTabProps={portfolioTabProps}
-              bankTabProps={bankTabProps}
-              showQuiz={!!activeQuiz}
-              forcedTab={forcedMoneyTab || undefined}
-            />
+
+          {!isMobileViewport && (
+            <DesktopShell
+            title="Financial Freedom"
+            subtitle="Tycoon"
+            navItems={v2NavItems}
+            activePath={v2Path}
+            onNavigate={(path) => setV2Path(path as typeof v2Path)}
+            headerActions={
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleNextTurn}
+                  disabled={isProcessing || !!gameState.pendingScenario}
+                  className="flex items-center gap-2 rounded-full bg-emerald-400/90 px-5 py-2 text-sm font-semibold text-slate-950 shadow-[0_12px_30px_rgba(16,185,129,0.35)] disabled:opacity-60"
+                  title="Next Month (N)"
+                >
+                  {isProcessing ? <Play size={16} className="animate-spin" /> : <Play size={16} />}
+                  Next Month
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAutoPlaySpeed(autoPlaySpeed ? null : AUTOPLAY_SPEED_OPTIONS[0])}
+                  className={`flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold ${
+                    autoplayEnabled
+                      ? 'border-amber-400/70 bg-amber-400/10 text-amber-200'
+                      : 'border-slate-700/70 text-slate-300'
+                  }`}
+                  title={`${autoplayTooltip} • Shortcut: T`}
+                >
+                  {autoplayEnabled ? <FastForward size={14} /> : <Pause size={14} />}
+                  Autoplay {autoplayEnabled ? 'ON' : 'OFF'}
+                </button>
+                <div className="flex items-center gap-1">
+                  {AUTOPLAY_SPEED_OPTIONS.map((speed) => {
+                    const label = AUTOPLAY_SPEED_LABELS[speed] || '1x';
+                    const isActive = autoPlaySpeed === speed;
+                    return (
+                      <button
+                        key={speed}
+                        onClick={() => setAutoPlaySpeed(speed)}
+                        disabled={!autoplayEnabled}
+                        className={`rounded-full border px-3 py-1 text-[10px] font-semibold ${
+                          !autoplayEnabled
+                            ? 'border-slate-800 text-slate-600 cursor-not-allowed'
+                            : isActive
+                              ? 'border-amber-400/70 bg-amber-400/10 text-amber-200'
+                              : 'border-slate-700/70 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            }
+          >
+            {v2Path === '/play' && (
+              <DashboardScreen
+                cashValue={gameState.cash}
+                netWorthValue={netWorth}
+                passiveValue={cashFlow.passive}
+                expenseValue={cashFlow.expenses}
+                formatMoney={formatMoney}
+                freedomPercent={freedomPercent}
+                passiveTrend={passiveTrendMini}
+                expenseTrend={expenseTrendMini}
+                ratioValue={ratioValue}
+                ratioLabel={`${ratioValue}%`}
+                passiveDelta={null}
+                expenseDelta={expenseDelta}
+                cashSparkline={[]}
+                netWorthSparkline={netWorthTrendData.map((entry) => ({ label: entry.label, value: entry.value }))}
+                passiveSparkline={passiveTrendMini}
+                monthlyActions={monthlyActionsSummary}
+                onUseMonthlyAction={handleUseMonthlyAction}
+                onOpenActions={() => setActionsDrawerOpen(true)}
+                onNavigate={handleV2Navigate}
+                events={gameState.events}
+                gameState={gameState}
+                isProcessing={isProcessing}
+                onClaimQuest={handleClaimQuest}
+                onOpenGoals={() => setShowQuestLog(true)}
+              />
+            )}
+            {v2Path === '/money' && (
+              <MoneyPageLayout
+                gameState={gameState}
+                netWorth={netWorth}
+                cashFlow={cashFlow}
+                formatMoney={formatMoney}
+                formatMoneyFull={formatMoneyFull}
+                formatPercent={formatPercent}
+                investTabProps={investTabProps}
+                portfolioTabProps={portfolioTabProps}
+                bankTabProps={bankTabProps}
+                showQuiz={!!activeQuiz}
+                forcedTab={forcedMoneyTab || undefined}
+              />
+            )}
+            {v2Path === '/career' && (
+              <CareerPageLayout
+                gameState={gameState}
+                careerPath={careerPath}
+                cashFlow={cashFlow}
+                formatMoney={formatMoney}
+                aiImpact={aiImpact}
+                isProcessing={isProcessing}
+                onPromote={handleManualPromotion}
+              />
+            )}
+            {v2Path === '/learn' && (
+              <LearnPageLayout
+                gameState={gameState}
+                careerPath={careerPath}
+                formatMoney={formatMoney}
+                handleEnrollEducation={handleEnrollEducation}
+                coachLifestyleGridRef={coachLifestyleGridRef}
+                coachHighlight={coachHighlight}
+                setGameState={setGameState}
+              />
+            )}
+            {v2Path === '/life' && (
+              <LifePageLayout
+                gameState={gameState}
+                cashFlow={cashFlow}
+                formatMoney={formatMoney}
+                handleChangeLifestyle={handleChangeLifestyle}
+                coachLifestyleGridRef={coachLifestyleGridRef}
+                coachHighlight={coachHighlight}
+                coachHint={coachHint}
+                InfoTip={InfoTip}
+                getHustleUpgradeLabel={getHustleUpgradeLabel}
+                getNextHustleMilestone={getNextHustleMilestone}
+                handleStartSideHustle={handleStartSideHustle}
+                handleStopSideHustle={handleStopSideHustle}
+                setShowSideHustleUpgradeModal={setShowSideHustleUpgradeModal}
+                coachSideHustlesRef={coachSideHustlesRef}
+                forcedTab={forcedLifeTab || undefined}
+              />
+            )}
+            </DesktopShell>
           )}
-          {v2Path === '/career' && (
-            <CareerPageLayout
-              gameState={gameState}
-              careerPath={careerPath}
-              cashFlow={cashFlow}
-              formatMoney={formatMoney}
-              aiImpact={aiImpact}
-              isProcessing={isProcessing}
-              onPromote={handleManualPromotion}
-            />
-          )}
-          {v2Path === '/learn' && (
-            <LearnPageLayout
-              gameState={gameState}
-              careerPath={careerPath}
-              formatMoney={formatMoney}
-              handleEnrollEducation={handleEnrollEducation}
-              coachLifestyleGridRef={coachLifestyleGridRef}
-              coachHighlight={coachHighlight}
-              setGameState={setGameState}
-            />
-          )}
-          {v2Path === '/life' && (
-            <LifePageLayout
-              gameState={gameState}
-              cashFlow={cashFlow}
-              formatMoney={formatMoney}
-              handleChangeLifestyle={handleChangeLifestyle}
-              coachLifestyleGridRef={coachLifestyleGridRef}
-              coachHighlight={coachHighlight}
-              coachHint={coachHint}
-              InfoTip={InfoTip}
-              getHustleUpgradeLabel={getHustleUpgradeLabel}
-              getNextHustleMilestone={getNextHustleMilestone}
-              handleStartSideHustle={handleStartSideHustle}
-              handleStopSideHustle={handleStopSideHustle}
-              setShowSideHustleUpgradeModal={setShowSideHustleUpgradeModal}
-              coachSideHustlesRef={coachSideHustlesRef}
-              forcedTab={forcedLifeTab || undefined}
-            />
-          )}
-        </AppShell>
+
+          <ActionsDrawer
+            isOpen={actionsDrawerOpen}
+            onClose={() => setActionsDrawerOpen(false)}
+            summary={monthlyActionsSummary}
+            onSelectAction={handleUseMonthlyAction}
+          />
+
+          <Modal
+            isOpen={mobileOverflowOpen}
+            onClose={() => setMobileOverflowOpen(false)}
+            ariaLabel="Quick actions"
+            contentClassName="bg-slate-900 border border-slate-800 rounded-3xl p-4 max-w-sm w-full"
+          >
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  openSaveManager();
+                  setMobileOverflowOpen(false);
+                }}
+                className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
+              >
+                <SaveIcon size={18} className="text-cyan-300" /> Save / Load
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowQuestLog(true);
+                  setMobileOverflowOpen(false);
+                }}
+                className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
+              >
+                <Trophy size={18} className="text-amber-300" /> Quests
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowGlossary(true);
+                  setMobileOverflowOpen(false);
+                }}
+                className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
+              >
+                <BookOpen size={18} className="text-emerald-300" /> Glossary
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAccessibility(true);
+                  setMobileOverflowOpen(false);
+                }}
+                className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
+              >
+                <Settings size={18} className="text-purple-300" /> Accessibility
+              </button>
+            </div>
+          </Modal>
+        </>
       ) : (
         <>
           {/* Header */}

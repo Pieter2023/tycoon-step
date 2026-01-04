@@ -17,7 +17,7 @@ const EventFeed: React.FC<EventFeedProps> = ({ events, limit = 10 }) => {
         <h3 className="text-lg font-semibold">{t('events.recentTitle')}</h3>
         <span className="text-xs text-slate-500">{items.length} shown</span>
       </div>
-      <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+      <div className="space-y-2 max-h-64 overflow-y-auto pr-1 glass-scroll">
         {items.length === 0 ? (
           <p className="text-sm text-slate-400">Advance a month to trigger events.</p>
         ) : (

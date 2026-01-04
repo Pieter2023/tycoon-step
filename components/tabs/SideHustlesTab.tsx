@@ -354,7 +354,7 @@ const SideHustlesTab: React.FC<SideHustlesTabProps> = (props) => {
                     </p>
                   </div>
                   <div className="h-64 mt-3">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
                       <RadarChart data={radarData}>
                         <PolarGrid stroke="#1f2937" />
                         <PolarAngleAxis dataKey="metric" tick={{ fill: '#94a3b8', fontSize: 11 }} />

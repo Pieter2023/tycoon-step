@@ -65,13 +65,13 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
   const tabButtonClass = (tab: string) =>
     `rounded-full px-4 py-2 text-xs font-semibold border transition ${
       activeTab === tab
-        ? 'border-white bg-white text-slate-900'
-        : 'border-slate-800 text-slate-200 hover:border-slate-600 hover:text-white'
+        ? 'border-white/80 bg-white text-slate-900 shadow-[0_0_18px_rgba(255,255,255,0.2)]'
+        : 'border-slate-700/70 text-slate-200 hover:border-white/40 hover:text-white'
     }`;
 
   return (
     <div className="space-y-8">
-      <section className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
+      <section className="glass-panel p-6">
         <h2 className="text-2xl font-bold">Life</h2>
         <p className="mt-2 text-sm text-slate-400">
           Balance lifestyle, side hustles, and family decisions.
@@ -79,7 +79,7 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
+        <div className="glass-panel p-5">
           <div className="flex items-center gap-2 text-sm text-slate-400">
             <Home size={16} className="text-emerald-300" /> Lifestyle
           </div>
@@ -96,7 +96,7 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
             View details
           </button>
         </div>
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
+        <div className="glass-panel p-5">
           <div className="flex items-center gap-2 text-sm text-slate-400">
             <Users size={16} className="text-amber-300" /> Side Hustles
           </div>
@@ -113,7 +113,7 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
             View details
           </button>
         </div>
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
+        <div className="glass-panel p-5">
           <div className="flex items-center gap-2 text-sm text-slate-400">
             <Heart size={16} className="text-pink-300" /> Family
           </div>
@@ -132,7 +132,7 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
         </div>
       </section>
 
-      <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+      <section className="glass-panel p-6">
         <div className="flex flex-wrap items-center gap-2 mb-6">
           <button type="button" className={tabButtonClass('lifestyle')} onClick={() => setActiveTab('lifestyle')}>
             Lifestyle
@@ -145,7 +145,7 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
           </button>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-sm text-slate-300 flex items-center justify-between">
+        <div className="glass-tile p-4 text-sm text-slate-300 flex items-center justify-between">
           <span>
             {activeTab === 'lifestyle' && 'Lifestyle choices affect expenses, happiness, and stats.'}
             {activeTab === 'sidehustles' && 'Manage side hustles, upgrades, and income.'}
