@@ -4348,6 +4348,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
     batchBuyQuantities,
     setBatchBuyQuantities,
     batchBuyCart,
+    openBatchBuyConfirm,
     handleBuyAsset,
     hasRequiredEducationForInvestment,
     getAssetIcon,
@@ -7577,6 +7578,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 batchBuyQuantities={batchBuyQuantities}
                 setBatchBuyQuantities={setBatchBuyQuantities}
                 batchBuyCart={batchBuyCart}
+                openBatchBuyConfirm={openBatchBuyConfirm}
                 handleBuyAsset={handleBuyAsset}
                 hasRequiredEducationForInvestment={hasRequiredEducationForInvestment}
                 getAssetIcon={getAssetIcon}

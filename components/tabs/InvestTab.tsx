@@ -22,6 +22,7 @@ type InvestTabProps = {
   batchBuyQuantities: Record<string, number>;
   setBatchBuyQuantities: React.Dispatch<React.SetStateAction<Record<string, number>>>;
   batchBuyCart: any;
+  openBatchBuyConfirm: () => void;
   handleBuyAsset: (item: MarketItem) => void;
   hasRequiredEducationForInvestment: (item: MarketItem, degrees: string[]) => boolean;
   getAssetIcon: (type: AssetType) => React.ReactNode;
@@ -62,6 +63,7 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
     batchBuyQuantities,
     setBatchBuyQuantities,
     batchBuyCart,
+    openBatchBuyConfirm,
     handleBuyAsset,
     hasRequiredEducationForInvestment,
     getAssetIcon,
@@ -255,7 +257,25 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
 
             {batchBuyMode && (
               <div className="mb-4 p-3 rounded-xl bg-slate-800/40 border border-slate-700 text-slate-300 text-sm">
-                Set quantities on stocks, index funds, bonds, crypto, and commodities — then confirm once.
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>Set quantities on stocks, index funds, bonds, crypto, and commodities — then confirm once.</div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="text-xs text-slate-400">
+                      Cart: {batchBuyCart.totalUnits} • {formatMoneyFull(batchBuyCart.totalCost)}
+                    </div>
+                    <Button
+                      onClick={openBatchBuyConfirm}
+                      variant="primary"
+                      size="sm"
+                      disabled={batchBuyCart.totalUnits === 0 || !batchBuyCart.canAfford}
+                    >
+                      Review &amp; Buy
+                    </Button>
+                  </div>
+                </div>
+                {batchBuyCart.totalUnits > 0 && !batchBuyCart.canAfford && (
+                  <div className="mt-2 text-xs text-rose-400">Not enough cash for this batch.</div>
+                )}
               </div>
             )}
 
@@ -359,7 +379,6 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                 const tier = getItemTier(item);
                 const riskRating = getRiskRating(item);
                 const isSelected = compareSelection.includes(item.id);
-                const canSelectMore = compareSelection.length < 3 || isSelected;
                 const hasEducation = hasRequiredEducationForInvestment(item, gameState.education.degrees);
                 const isLocked = !hasEducation;
                 const requiredEducationLabel = item.requiredEducationCategory
@@ -383,14 +402,13 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                       </div>
                       <div className="flex items-center gap-2">
                         {compareMode && (
-                          <label className={`flex items-center gap-1 text-xs ${canSelectMore ? 'text-slate-300' : 'text-slate-600'}`}>
+                          <label className="flex items-center gap-1 text-xs text-slate-300 cursor-pointer">
                             <input
                               type="checkbox"
                               className="rounded border-slate-600 bg-slate-900"
                               checked={isSelected}
-                              disabled={!canSelectMore}
                               onChange={(e) => {
-                                if (!canSelectMore) return;
+                                if (!isSelected && compareSelection.length >= 3) return;
                                 const checked = e.target.checked;
                                 setCompareSelection((prev) => {
                                   if (checked) {
@@ -492,7 +510,25 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                               >
                                 −
                               </button>
-                              <div className="min-w-[2.5rem] text-center text-white font-bold">{qty}</div>
+                              <input
+                                type="number"
+                                min={0}
+                                step={1}
+                                inputMode="numeric"
+                                value={qty === 0 ? '' : qty}
+                                onChange={(e) => {
+                                  const next = e.target.value;
+                                  if (next === '') {
+                                    setBatchQty(item.id, 0);
+                                    return;
+                                  }
+                                  const parsed = Math.max(0, Math.floor(Number(next)));
+                                  if (Number.isNaN(parsed)) return;
+                                  setBatchQty(item.id, parsed);
+                                }}
+                                className="w-14 rounded-md border border-slate-700 bg-slate-900 text-center text-sm text-white px-1 py-1"
+                                aria-label={`${item.name} quantity`}
+                              />
                               <button
                                 onClick={() => setBatchQty(item.id, qty + 1)}
                                 disabled={!canAddOne}
