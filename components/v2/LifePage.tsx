@@ -184,8 +184,8 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
         isOpen={openDetail === 'sidehustles'}
         onClose={() => setOpenDetail(null)}
         ariaLabel="Side Hustles"
-        overlayClassName="items-stretch justify-end"
-        contentClassName="h-full max-w-4xl rounded-none rounded-l-3xl p-6 overflow-y-auto"
+        overlayClassName="items-center justify-center"
+        contentClassName="h-[90vh] w-[96vw] max-w-6xl rounded-3xl p-6 overflow-y-auto"
       >
         <SideHustlesTab
           gameState={gameState}

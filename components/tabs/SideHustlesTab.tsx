@@ -148,7 +148,7 @@ const SideHustlesTab: React.FC<SideHustlesTabProps> = (props) => {
   };
 
   return (
-<div className="max-w-4xl mx-auto">
+<div className="w-full">
             {/* Active Side Hustles */}
             <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 mb-6">
               <h3 className="font-bold text-white mb-3 flex items-center gap-2">
