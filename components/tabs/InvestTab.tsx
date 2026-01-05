@@ -228,13 +228,6 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
 
               <div className="flex items-center gap-2">
                 <Button
-                  onClick={toggleBatchBuyMode}
-                  variant={batchBuyMode ? 'primary' : 'secondary'}
-                  size="md"
-                >
-                  {batchBuyMode ? 'Batch Buy: ON' : 'Batch Buy'}
-                </Button>
-                <Button
                   onClick={() => {
                     setCompareMode((prev) => !prev);
                     if (compareMode) {
@@ -246,36 +239,11 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                 >
                   {compareMode ? 'Compare: ON' : 'Compare'}
                 </Button>
-
-                {batchBuyMode && (
-                  <Button onClick={clearBatchBuyCart} variant="secondary" size="md">
-                    Clear
-                  </Button>
-                )}
               </div>
             </div>
-
-            {batchBuyMode && (
-              <div className="mb-4 p-3 rounded-xl bg-slate-800/40 border border-slate-700 text-slate-300 text-sm">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>Set quantities on stocks, index funds, bonds, crypto, and commodities — then confirm once.</div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="text-xs text-slate-400">
-                      Cart: {batchBuyCart.totalUnits} • {formatMoneyFull(batchBuyCart.totalCost)}
-                    </div>
-                    <Button
-                      onClick={openBatchBuyConfirm}
-                      variant="primary"
-                      size="sm"
-                      disabled={batchBuyCart.totalUnits === 0 || !batchBuyCart.canAfford}
-                    >
-                      Review &amp; Buy
-                    </Button>
-                  </div>
-                </div>
-                {batchBuyCart.totalUnits > 0 && !batchBuyCart.canAfford && (
-                  <div className="mt-2 text-xs text-rose-400">Not enough cash for this batch.</div>
-                )}
+            {batchBuyCart.totalUnits > 0 && (
+              <div className="mb-4 text-xs text-slate-500">
+                Cart total: {batchBuyCart.totalUnits} • {formatMoneyFull(batchBuyCart.totalCost)}
               </div>
             )}
 
@@ -478,7 +446,7 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                           💵 Cash
                         </Button>
                       </div>
-                    ) : batchBuyMode && isBatchBuyEligible(item) ? (
+                    ) : isBatchBuyEligible(item) ? (
                       isLocked ? (
                         <div className="w-full py-2.5 rounded-lg text-sm font-medium bg-slate-800 text-slate-500 border border-slate-700 text-center">
                           Education Required
@@ -489,11 +457,12 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                         const lineCost = qty * price;
                         const otherCost = batchBuyCart.totalCost - lineCost;
                         const canAddOne = otherCost + (qty + 1) * price <= gameState.cash;
+                        const canBuyQty = qty > 0 && lineCost <= gameState.cash;
 
                         return (
-                          <div className="w-full flex items-center justify-between gap-3 py-2 px-3 rounded-lg border border-slate-700 bg-slate-900/40">
+                          <div className="w-full flex flex-col gap-2 py-2 px-3 rounded-lg border border-slate-700 bg-slate-900/40">
                             <div className="text-left">
-                              <div className="text-slate-400 text-xs">Cart</div>
+                              <div className="text-slate-400 text-xs">Quantity</div>
                               <div className="text-white font-bold text-sm">
                                 {qty}x
                                 <span className="text-slate-400 font-medium ml-2">{qty > 0 ? formatMoneyFull(lineCost) : '—'}</span>
@@ -539,6 +508,21 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                                 +
                               </button>
                             </div>
+
+                            <Button
+                              onClick={() => {
+                                if (!canBuyQty) return;
+                                playClick();
+                                setBatchBuyQuantities({ [item.id]: qty });
+                                setTimeout(() => openBatchBuyConfirm(), 0);
+                              }}
+                              variant={canBuyQty ? 'primary' : 'ghost'}
+                              size="sm"
+                              disabled={!canBuyQty}
+                              fullWidth
+                            >
+                              Buy {qty > 0 ? `${qty}x` : ''}
+                            </Button>
                           </div>
                         );
                       })()
