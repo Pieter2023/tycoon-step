@@ -13,6 +13,7 @@ type CareerPageLayoutProps = {
   aiImpact: any;
   isProcessing: boolean;
   onPromote: () => void;
+  onNavigate: (path: '/play' | '/money' | '/career' | '/learn' | '/life', tab?: 'invest' | 'lifestyle' | 'sidehustles') => void;
 };
 
 const buildSkillCard = (label: string, course?: { certified?: boolean; bestScore?: number; failedAttempts?: number }) => {
@@ -29,7 +30,8 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
   formatMoney,
   aiImpact,
   isProcessing,
-  onPromote
+  onPromote,
+  onNavigate
 }) => {
   const [showDetails, setShowDetails] = useState(false);
   const career = gameState.career;
@@ -41,9 +43,10 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
     return [
       buildSkillCard('EQ', gameState.eqCourse),
       buildSkillCard('Negotiation', gameState.negotiationsCourse),
-      buildSkillCard('Sales', gameState.salesAcceleratorCourse)
+      buildSkillCard('Sales', gameState.salesAcceleratorCourse),
+      buildSkillCard('Compound Interest', gameState.compoundInterestCourse)
     ];
-  }, [gameState.eqCourse, gameState.negotiationsCourse, gameState.salesAcceleratorCourse]);
+  }, [gameState.eqCourse, gameState.negotiationsCourse, gameState.salesAcceleratorCourse, gameState.compoundInterestCourse]);
 
   return (
     <div className="space-y-8">
@@ -94,6 +97,15 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
                 <p className="text-sm text-slate-300">Max level reached.</p>
               )}
             </div>
+            <button
+              type="button"
+              onClick={() => onNavigate('/life', 'sidehustles')}
+              className="glass-tile p-4 text-left transition-all hover:-translate-y-0.5 hover:border-purple-400/60 hover:shadow-[0_16px_40px_rgba(168,85,247,0.18)]"
+            >
+              <p className="text-xs text-slate-400">Side Hustles</p>
+              <p className="text-sm font-semibold text-white mt-1">Add a hustle income stream</p>
+              <p className="text-[11px] text-purple-300 mt-2">Open side hustles →</p>
+            </button>
           </div>
           <div className="mt-6 glass-tile p-4">
             <div className="flex items-center gap-2">
@@ -172,6 +184,7 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
           aiImpact={aiImpact}
           isProcessing={isProcessing}
           onPromote={onPromote}
+          onOpenSideHustles={() => onNavigate('/life', 'sidehustles')}
         />
       </Modal>
     </div>

@@ -12,6 +12,7 @@ type CareerTabProps = {
   aiImpact: any;
   isProcessing: boolean;
   onPromote: () => void;
+  onOpenSideHustles?: () => void;
 };
 
 const CareerTab: React.FC<CareerTabProps> = (props) => {
@@ -22,7 +23,8 @@ const CareerTab: React.FC<CareerTabProps> = (props) => {
     formatMoney,
     aiImpact,
     isProcessing,
-    onPromote
+    onPromote,
+    onOpenSideHustles
   } = props;
 
   const careerInfo = CAREER_PATHS[careerPath];
@@ -126,6 +128,18 @@ const CareerTab: React.FC<CareerTabProps> = (props) => {
                   </p>
                 )}
               </div>
+
+              {onOpenSideHustles && (
+                <button
+                  type="button"
+                  onClick={onOpenSideHustles}
+                  className="w-full mb-4 rounded-xl border border-purple-500/30 bg-purple-900/10 px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:border-purple-400/60 hover:shadow-[0_16px_40px_rgba(168,85,247,0.18)]"
+                >
+                  <p className="text-xs text-slate-400">Side Hustles</p>
+                  <p className="text-sm font-semibold text-white mt-1">Add a hustle income stream</p>
+                  <p className="text-[11px] text-purple-300 mt-2">Open side hustles →</p>
+                </button>
+              )}
               
               {/* Career Timeline */}
               <div className="bg-slate-900/30 rounded-xl p-4">

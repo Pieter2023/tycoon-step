@@ -6720,6 +6720,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 aiImpact={aiImpact}
                 isProcessing={isProcessing}
                 onPromote={handleManualPromotion}
+                onNavigate={handleV2Navigate}
               />
             )}
             {v2Path === '/learn' && (
@@ -6882,6 +6883,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 aiImpact={aiImpact}
                 isProcessing={isProcessing}
                 onPromote={handleManualPromotion}
+                onNavigate={handleV2Navigate}
               />
             )}
             {v2Path === '/learn' && (
@@ -7670,6 +7672,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 aiImpact={aiImpact}
                 isProcessing={isProcessing}
                 onPromote={handleManualPromotion}
+                onOpenSideHustles={() => setActiveTab(TABS.SIDE_HUSTLES)}
               />
             </Suspense>
           </TabErrorBoundary>
