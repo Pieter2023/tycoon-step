@@ -146,6 +146,9 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const animatedCash = useCountUp(cashValue);
   const animatedNetWorth = useCountUp(netWorthValue);
   const animatedPassive = useCountUp(passiveValue);
+  const expenseAvg = expenseTrend.length
+    ? expenseTrend.reduce((sum, point) => sum + point.value, 0) / expenseTrend.length
+    : 0;
 
   const getSeriesDelta = (series: Array<{ label: string; value: number }>, label?: string | number) => {
     if (label === undefined || label === null) return undefined;
@@ -267,10 +270,10 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <button
             type="button"
             onClick={() => isMobile && setActiveDetail(activeDetail === 'expenses' ? null : 'expenses')}
-            className="rounded-2xl border border-slate-800/60 bg-slate-950/40 p-3 text-left"
+            className="rounded-2xl border border-slate-800/60 bg-gradient-to-br from-slate-950/60 to-rose-950/30 p-3 text-left shadow-[0_0_20px_rgba(244,114,182,0.08)]"
           >
             <div className="flex items-center justify-between">
-              <p className="text-[10px] text-slate-400">Expenses (Monthly)</p>
+              <p className="text-[10px] text-slate-400 uppercase tracking-wide">Monthly Expenses</p>
               {expenseDelta !== null && (
                 <span className={`text-[10px] ${expenseDelta >= 0 ? 'text-rose-300' : 'text-emerald-300'}`}>
                   {expenseDelta >= 0 ? '+' : ''}{formatMoney(expenseDelta)}
@@ -278,6 +281,9 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
               )}
             </div>
             <p className="mt-1 text-sm font-semibold text-white">{formatMoney(expenseValue)}</p>
+            <p className="text-[10px] text-slate-400">
+              Avg {formatMoney(expenseAvg)} • Last 6 months
+            </p>
             <div className="h-16 mt-2 min-w-[1px] min-h-[1px]">
               {expenseTrend.length === 0 ? (
                 <div className="flex h-full items-center justify-center text-[10px] text-slate-500">
@@ -285,10 +291,16 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
-                  <BarChart data={expenseTrend}>
-                  <Tooltip content={expenseTooltip} />
-                    <Bar dataKey="value" fill={CHART_COLORS.negative} radius={[6, 6, 0, 0]} />
-                  </BarChart>
+                  <AreaChart data={expenseTrend}>
+                    <defs>
+                      <linearGradient id="expensesGlow" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#fda4af" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="#fda4af" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <Tooltip content={expenseTooltip} />
+                    <Area type="monotone" dataKey="value" stroke="#fda4af" fill="url(#expensesGlow)" strokeWidth={2} dot={false} />
+                  </AreaChart>
                 </ResponsiveContainer>
               )}
             </div>
