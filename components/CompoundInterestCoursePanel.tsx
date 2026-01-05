@@ -21,24 +21,24 @@ const COURSE = {
   title: 'Compound Interest Mastery',
   tagline: 'Turn small deposits into unstoppable wealth engines.',
   coverImage: {
-    src: '/images/compound-interest/cover__IMAGE_PLACEHOLDER__.png',
+    src: '/images/compound-interest/glowing_glass_jar.webp',
     alt: 'Compound Interest Mastery hero'
   },
   modules: [
     {
       title: 'The Snowball Effect',
       summary: 'Why time beats timing — and how compounding turns patience into power.',
-      image: '/images/compound-interest/module-snowball__IMAGE_PLACEHOLDER__.png'
+      image: '/images/compound-interest/golden_coin_snowball.webp'
     },
     {
       title: 'Rate × Time × Habit',
       summary: 'Lock in a rate, automate deposits, and let the curve do the heavy lifting.',
-      image: '/images/compound-interest/module-rate-time__IMAGE_PLACEHOLDER__.png'
+      image: '/images/compound-interest/futuristic_calendar_percentage_dial.webp'
     },
     {
       title: 'Risk & Resilience',
       summary: 'Balance growth and stability so your compounding survives rough markets.',
-      image: '/images/compound-interest/module-resilience__IMAGE_PLACEHOLDER__.png'
+      image: '/images/compound-interest/balanced_scale_shield_growth_arrow.webp'
     }
   ]
 };
