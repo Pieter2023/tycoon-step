@@ -95,6 +95,7 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
   const [compareMode, setCompareMode] = useState(false);
   const [compareSelection, setCompareSelection] = useState<string[]>([]);
   const [autoAddId, setAutoAddId] = useState<string>('');
+  const [autoInvestOpen, setAutoInvestOpen] = useState(true);
 
   const selectedInvestments = useMemo(() => {
     return compareSelection
@@ -281,10 +282,15 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
 
             <div className="mb-6 rounded-2xl border border-slate-700 bg-slate-900/60 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-white">Auto-Invest</p>
-                  <p className="text-xs text-slate-400">Invest from last month’s disposable income when you hit Next Month.</p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setAutoInvestOpen((prev) => !prev)}
+                  className="flex items-center gap-2 text-sm font-semibold text-white"
+                  aria-expanded={autoInvestOpen}
+                >
+                  <span>{autoInvestOpen ? '▾' : '▸'}</span>
+                  Auto-Invest
+                </button>
                 <label className="flex items-center gap-2 text-xs text-slate-300">
                   <input
                     type="checkbox"
@@ -297,140 +303,147 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                   Enable auto-invest
                 </label>
               </div>
+              {autoInvestOpen && (
+                <>
+                  <p className="text-xs text-slate-400 mt-2">
+                    Invest from last month’s disposable income when you hit Next Month.
+                  </p>
 
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
-                  <div className="flex items-center justify-between text-xs text-slate-400">
-                    <span>Max auto-invest</span>
-                    <span>{autoInvest.maxPercent}% of disposable income</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={50}
-                    step={1}
-                    value={autoInvest.maxPercent}
-                    onChange={(e) => {
-                      const next = Math.max(0, Math.min(50, Math.floor(Number(e.target.value))));
-                      onUpdateAutoInvest({ ...autoInvest, maxPercent: next });
-                    }}
-                    className="mt-3 w-full accent-emerald-400"
-                  />
-                  <p className="mt-2 text-[11px] text-slate-500">Round down always. Max 50%.</p>
-                </div>
-
-                <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
-                  <div className="flex items-center justify-between text-xs text-slate-400">
-                    <span>Allocation total</span>
-                    <span>{autoTotalPercent}%</span>
-                  </div>
-                  <div className="mt-2 text-[11px] text-slate-500">
-                    Remaining: {autoRemaining}% • {autoRemaining === 0 ? 'Fully allocated' : 'Add more allocations'}
-                  </div>
-                  <div className="mt-3 flex items-center gap-2">
-                    <select
-                      value={autoAddId}
-                      onChange={(e) => setAutoAddId(e.target.value)}
-                      className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-200"
-                    >
-                      {autoInvestOptions
-                        .filter((item) => !autoInvest.allocations.some((alloc) => alloc.itemId === item.id))
-                        .map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                    </select>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      disabled={autoRemaining === 0 || !autoAddId}
-                      onClick={() => {
-                        if (!autoAddId || autoRemaining === 0) return;
-                        const defaultPercent = Math.min(10, autoRemaining);
-                        onUpdateAutoInvest({
-                          ...autoInvest,
-                          allocations: [...autoInvest.allocations, { itemId: autoAddId, percent: defaultPercent }]
-                        });
-                      }}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                {AUTO_INVEST_PRESETS.map((preset) => (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => applyPreset(preset.id)}
-                    className="rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-3 text-left transition hover:border-emerald-400/50 hover:shadow-[0_0_18px_rgba(52,211,153,0.25)]"
-                  >
-                    <div className="text-sm font-semibold text-white">{preset.label}</div>
-                    <div className="mt-1 text-[11px] text-slate-400">{preset.description}</div>
-                    <div className="mt-2 text-[11px] text-emerald-200">Apply preset →</div>
-                  </button>
-                ))}
-              </div>
-
-              {autoInvest.allocations.length === 0 ? (
-                <p className="mt-4 text-xs text-slate-500">No allocations yet. Add investments to begin auto-investing.</p>
-              ) : (
-                <div className="mt-4 space-y-3">
-                  {autoInvest.allocations.map((alloc) => {
-                    const item = autoInvestOptions.find((entry) => entry.id === alloc.itemId);
-                    if (!item) return null;
-                    const inflationMult = Math.pow(1 + gameState.economy.inflationRate, gameState.month / 12);
-                    const price = Math.round(item.price * inflationMult);
-                    const totalWithout = autoTotalPercent - alloc.percent;
-                    const maxAllowed = Math.max(0, 100 - totalWithout);
-
-                    return (
-                      <div key={alloc.itemId} className="flex flex-col gap-2 rounded-xl border border-slate-800 bg-slate-900/40 p-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div>
-                            <p className="text-sm font-semibold text-white">{item.name}</p>
-                            <p className="text-[11px] text-slate-500">Price: {formatMoney(price)}</p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onUpdateAutoInvest({
-                                ...autoInvest,
-                                allocations: autoInvest.allocations.filter((entry) => entry.itemId !== alloc.itemId)
-                              });
-                            }}
-                            className="text-[11px] text-rose-300 hover:text-rose-200"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="range"
-                            min={0}
-                            max={maxAllowed}
-                            step={1}
-                            value={alloc.percent}
-                            onChange={(e) => {
-                              const next = Math.max(0, Math.min(maxAllowed, Math.floor(Number(e.target.value))));
-                              onUpdateAutoInvest({
-                                ...autoInvest,
-                                allocations: autoInvest.allocations.map((entry) =>
-                                  entry.itemId === alloc.itemId ? { ...entry, percent: next } : entry
-                                )
-                              });
-                            }}
-                            className="flex-1 accent-emerald-400"
-                          />
-                          <div className="w-12 text-right text-xs text-slate-300">{alloc.percent}%</div>
-                        </div>
+                  <div className="mt-4 grid gap-4 md:grid-cols-2">
+                    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
+                      <div className="flex items-center justify-between text-xs text-slate-400">
+                        <span>Max auto-invest</span>
+                        <span>{autoInvest.maxPercent}% of disposable income</span>
                       </div>
-                    );
-                  })}
-                </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={50}
+                        step={1}
+                        value={autoInvest.maxPercent}
+                        onChange={(e) => {
+                          const next = Math.max(0, Math.min(50, Math.floor(Number(e.target.value))));
+                          onUpdateAutoInvest({ ...autoInvest, maxPercent: next });
+                        }}
+                        className="mt-3 w-full accent-emerald-400"
+                      />
+                      <p className="mt-2 text-[11px] text-slate-500">Round down always. Max 50%.</p>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
+                      <div className="flex items-center justify-between text-xs text-slate-400">
+                        <span>Allocation total</span>
+                        <span>{autoTotalPercent}%</span>
+                      </div>
+                      <div className="mt-2 text-[11px] text-slate-500">
+                        Remaining: {autoRemaining}% • {autoRemaining === 0 ? 'Fully allocated' : 'Add more allocations'}
+                      </div>
+                      <div className="mt-3 flex items-center gap-2">
+                        <select
+                          value={autoAddId}
+                          onChange={(e) => setAutoAddId(e.target.value)}
+                          className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-200"
+                        >
+                          {autoInvestOptions
+                            .filter((item) => !autoInvest.allocations.some((alloc) => alloc.itemId === item.id))
+                            .map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                        </select>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={autoRemaining === 0 || !autoAddId}
+                          onClick={() => {
+                            if (!autoAddId || autoRemaining === 0) return;
+                            const defaultPercent = Math.min(10, autoRemaining);
+                            onUpdateAutoInvest({
+                              ...autoInvest,
+                              allocations: [...autoInvest.allocations, { itemId: autoAddId, percent: defaultPercent }]
+                            });
+                          }}
+                        >
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                    {AUTO_INVEST_PRESETS.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => applyPreset(preset.id)}
+                        className="rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-3 text-left transition hover:border-emerald-400/50 hover:shadow-[0_0_18px_rgba(52,211,153,0.25)]"
+                      >
+                        <div className="text-sm font-semibold text-white">{preset.label}</div>
+                        <div className="mt-1 text-[11px] text-slate-400">{preset.description}</div>
+                        <div className="mt-2 text-[11px] text-emerald-200">Apply preset →</div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {autoInvest.allocations.length === 0 ? (
+                    <p className="mt-4 text-xs text-slate-500">No allocations yet. Add investments to begin auto-investing.</p>
+                  ) : (
+                    <div className="mt-4 space-y-3">
+                      {autoInvest.allocations.map((alloc) => {
+                        const item = autoInvestOptions.find((entry) => entry.id === alloc.itemId);
+                        if (!item) return null;
+                        const inflationMult = Math.pow(1 + gameState.economy.inflationRate, gameState.month / 12);
+                        const price = Math.round(item.price * inflationMult);
+                        const totalWithout = autoTotalPercent - alloc.percent;
+                        const maxAllowed = Math.max(0, 100 - totalWithout);
+
+                        return (
+                          <div key={alloc.itemId} className="flex flex-col gap-2 rounded-xl border border-slate-800 bg-slate-900/40 p-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-semibold text-white">{item.name}</p>
+                                <p className="text-[11px] text-slate-500">Price: {formatMoney(price)}</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onUpdateAutoInvest({
+                                    ...autoInvest,
+                                    allocations: autoInvest.allocations.filter((entry) => entry.itemId !== alloc.itemId)
+                                  });
+                                }}
+                                className="text-[11px] text-rose-300 hover:text-rose-200"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="range"
+                                min={0}
+                                max={maxAllowed}
+                                step={1}
+                                value={alloc.percent}
+                                onChange={(e) => {
+                                  const next = Math.max(0, Math.min(maxAllowed, Math.floor(Number(e.target.value))));
+                                  onUpdateAutoInvest({
+                                    ...autoInvest,
+                                    allocations: autoInvest.allocations.map((entry) =>
+                                      entry.itemId === alloc.itemId ? { ...entry, percent: next } : entry
+                                    )
+                                  });
+                                }}
+                                className="flex-1 accent-emerald-400"
+                              />
+                              <div className="w-12 text-right text-xs text-slate-300">{alloc.percent}%</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
