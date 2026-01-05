@@ -89,9 +89,10 @@ export const LearnPageLayout: React.FC<LearnPageLayoutProps> = ({
           <Award size={16} className="text-emerald-300" />
           Rewards
         </div>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-4">
           {[
             { label: 'Sales Training', certified: !!gameState.salesAcceleratorCourse?.certified },
+            { label: 'Compound Interest', certified: !!gameState.compoundInterestCourse?.certified },
             { label: 'Upgrade EQ', certified: !!gameState.eqCourse?.certified },
             { label: 'Master Negotiations', certified: !!gameState.negotiationsCourse?.certified }
           ].map((item) => (

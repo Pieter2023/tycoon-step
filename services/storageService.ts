@@ -58,6 +58,14 @@ const normalizeAdultState = (state: GameState): GameState => {
     rewardClaimed: typeof rawSalesCourse?.rewardClaimed === 'boolean' ? rawSalesCourse.rewardClaimed : false,
   };
 
+  const rawCompoundCourse = (state as any).compoundInterestCourse;
+  const compoundInterestCourse = {
+    failedAttempts: typeof rawCompoundCourse?.failedAttempts === 'number' ? rawCompoundCourse.failedAttempts : 0,
+    bestScore: typeof rawCompoundCourse?.bestScore === 'number' ? rawCompoundCourse.bestScore : 0,
+    certified: typeof rawCompoundCourse?.certified === 'boolean' ? rawCompoundCourse.certified : false,
+    rewardClaimed: typeof rawCompoundCourse?.rewardClaimed === 'boolean' ? rawCompoundCourse.rewardClaimed : false,
+  };
+
   const hustleLookup = new Map(SIDE_HUSTLES.map(hustle => [hustle.id, hustle]));
   const activeSideHustles = (state.activeSideHustles || []).map(hustle => {
     const base = hustleLookup.get(hustle.id);
@@ -110,6 +118,7 @@ const normalizeAdultState = (state: GameState): GameState => {
     negotiationsCourse,
     negotiationsPerks,
     salesAcceleratorCourse,
+    compoundInterestCourse,
     activeSideHustles,
     pendingSideHustleUpgrade: (state as any).pendingSideHustleUpgrade ?? null,
     creditRating,

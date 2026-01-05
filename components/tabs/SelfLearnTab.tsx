@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { BookOpen, ChevronDown, HeartPulse, Users, Zap } from 'lucide-react';
+import { BookOpen, ChevronDown, HeartPulse, Sparkles, Users, Zap } from 'lucide-react';
 import { GameState } from '../../types';
 import SalesCertificationPanel from '../SalesCertificationPanel';
+import CompoundInterestCoursePanel from '../CompoundInterestCoursePanel';
 import UpgradeEQTab from '../UpgradeEQTab';
 import MasterNegotiationsTab from '../MasterNegotiationsTab';
 import { useI18n } from '../../i18n';
@@ -12,7 +13,7 @@ type SelfLearnTabProps = {
   formatMoney: (value: number) => string;
 };
 
-type SectionId = 'sales' | 'eq' | 'negotiations';
+type SectionId = 'sales' | 'compound' | 'eq' | 'negotiations';
 
 const SelfLearnTab: React.FC<SelfLearnTabProps> = ({ gameState, setGameState, formatMoney }) => {
   const { t } = useI18n();
@@ -21,6 +22,7 @@ const SelfLearnTab: React.FC<SelfLearnTabProps> = ({ gameState, setGameState, fo
 
   const sections: Array<{ id: SectionId; label: string; icon: React.ReactNode }> = [
     { id: 'sales', label: t('selfLearn.salesTraining'), icon: <Zap size={16} /> },
+    { id: 'compound', label: 'Compound Interest', icon: <Sparkles size={16} /> },
     { id: 'eq', label: t('tabs.upgradeEq'), icon: <HeartPulse size={16} /> },
     { id: 'negotiations', label: t('tabs.negotiations'), icon: <Users size={16} /> },
   ];
@@ -77,6 +79,14 @@ const SelfLearnTab: React.FC<SelfLearnTabProps> = ({ gameState, setGameState, fo
 
       {activeSection === 'sales' && (
         <SalesCertificationPanel
+          gameState={gameState}
+          setGameState={setGameState}
+          formatMoney={formatMoney}
+        />
+      )}
+
+      {activeSection === 'compound' && (
+        <CompoundInterestCoursePanel
           gameState={gameState}
           setGameState={setGameState}
           formatMoney={formatMoney}

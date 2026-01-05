@@ -596,6 +596,7 @@ export interface GameState {
   negotiationsCourse?: NegotiationsCourseState;
   negotiationsPerks?: NegotiationsPerksState;
   salesAcceleratorCourse?: SalesAcceleratorCourseState;
+  compoundInterestCourse?: CompoundInterestCourseState;
 }
 
 export interface EQCourseState {
@@ -630,6 +631,13 @@ export interface NegotiationsPerksState {
 }
 
 export interface SalesAcceleratorCourseState {
+  failedAttempts: number;
+  bestScore: number;
+  certified: boolean;
+  rewardClaimed: boolean;
+}
+
+export interface CompoundInterestCourseState {
   failedAttempts: number;
   bestScore: number;
   certified: boolean;

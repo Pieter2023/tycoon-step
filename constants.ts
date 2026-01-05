@@ -2707,4 +2707,10 @@ export const INITIAL_GAME_STATE: GameState = {
     certified: false,
     rewardClaimed: false
   },
+  compoundInterestCourse: {
+    failedAttempts: 0,
+    bestScore: 0,
+    certified: false,
+    rewardClaimed: false
+  },
 };
