@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Badge, Button, Tooltip } from '../ui';
+import { Badge, Button } from '../ui';
 import { AssetType, AutoInvestSettings, MarketItem } from '../../types';
 import { AUTO_INVEST_PRESETS, MARKET_ITEMS } from '../../constants';
-import { QuizQuestion, getGlossaryEntry } from '../../data/learning';
+import { QuizQuestion } from '../../data/learning';
 
 type InvestTabProps = {
   formatMoney: (value: number) => string;
@@ -26,6 +26,7 @@ type InvestTabProps = {
   openBatchBuyConfirm: () => void;
   autoInvest: AutoInvestSettings;
   onUpdateAutoInvest: (next: AutoInvestSettings) => void;
+  onOpenGlossary: () => void;
   handleBuyAsset: (item: MarketItem) => void;
   hasRequiredEducationForInvestment: (item: MarketItem, degrees: string[]) => boolean;
   getAssetIcon: (type: AssetType) => React.ReactNode;
@@ -69,6 +70,7 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
     openBatchBuyConfirm,
     autoInvest,
     onUpdateAutoInvest,
+    onOpenGlossary,
     handleBuyAsset,
     hasRequiredEducationForInvestment,
     getAssetIcon,
@@ -90,8 +92,6 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
     onSkipQuiz
   } = props;
 
-  const yieldTip = getGlossaryEntry('Yield')?.short || 'Expected annual return as a percent of price.';
-  const riskTip = getGlossaryEntry('Risk')?.short || 'Higher risk means bigger swings in value.';
   const [compareMode, setCompareMode] = useState(false);
   const [compareSelection, setCompareSelection] = useState<string[]>([]);
   const [autoAddId, setAutoAddId] = useState<string>('');
@@ -577,11 +577,9 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                           </label>
                         )}
                         <Badge variant="neutral">{tier.toLowerCase()}</Badge>
-                        <Tooltip content={riskTip}>
-                          <Badge variant={riskRating === 'LOW' ? 'low' : riskRating === 'MEDIUM' ? 'med' : 'high'}>
-                            {riskRating.toLowerCase()} risk
-                          </Badge>
-                        </Tooltip>
+                        <Badge variant={riskRating === 'LOW' ? 'low' : riskRating === 'MEDIUM' ? 'med' : 'high'}>
+                          {riskRating.toLowerCase()} risk
+                        </Badge>
                       </div>
                     </div>
                     
@@ -598,20 +596,31 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                       </p>
                     )}
                     
-                    <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                    <div className="grid grid-cols-2 gap-2 text-xs mb-2">
                       <div className="bg-slate-900/50 rounded-lg p-2">
                         <p className="text-slate-500">Price</p>
                         <p className="text-white font-bold">{formatMoney(price)}</p>
                       </div>
                       <div className="bg-slate-900/50 rounded-lg p-2">
-                        <p className="text-slate-500 inline-flex items-center gap-1">
-                          Yield
-                          <Tooltip content={yieldTip}>
-                            <span className="text-slate-400">?</span>
-                          </Tooltip>
-                        </p>
+                        <p className="text-slate-500">Yield (APY)</p>
                         <p className="text-emerald-400 font-bold">{formatPercent(item.expectedYield)}/yr</p>
                       </div>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-400 mb-3">
+                      <span>
+                        Risk:{' '}
+                        <span className={`font-semibold ${riskRating === 'LOW' ? 'text-emerald-300' : riskRating === 'MEDIUM' ? 'text-amber-300' : 'text-rose-300'}`}>
+                          {riskRating}
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={onOpenGlossary}
+                        className="text-sky-300 hover:text-sky-200"
+                        title="Open glossary"
+                      >
+                        Glossary: APY, REIT, risk…
+                      </button>
                     </div>
                     
                     {item.canMortgage ? (

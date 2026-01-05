@@ -4380,6 +4380,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
     openBatchBuyConfirm,
     autoInvest,
     onUpdateAutoInvest: updateAutoInvest,
+    onOpenGlossary: () => setShowGlossary(true),
     handleBuyAsset,
     hasRequiredEducationForInvestment,
     getAssetIcon,
