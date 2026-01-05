@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Badge, Button, Tooltip } from '../ui';
 import { AssetType, AutoInvestSettings, MarketItem } from '../../types';
-import { MARKET_ITEMS } from '../../constants';
+import { AUTO_INVEST_PRESETS, MARKET_ITEMS } from '../../constants';
 import { QuizQuestion, getGlossaryEntry } from '../../data/learning';
 
 type InvestTabProps = {
@@ -108,6 +108,19 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
 
   const autoTotalPercent = autoInvest.allocations.reduce((sum, alloc) => sum + alloc.percent, 0);
   const autoRemaining = Math.max(0, 100 - autoTotalPercent);
+
+  const applyPreset = (presetId: string) => {
+    const preset = AUTO_INVEST_PRESETS.find((entry) => entry.id === presetId);
+    if (!preset) return;
+    onUpdateAutoInvest({
+      enabled: true,
+      maxPercent: Math.max(0, Math.min(50, Math.floor(preset.maxPercent))),
+      allocations: preset.allocations.map((alloc) => ({
+        itemId: alloc.itemId,
+        percent: Math.max(0, Math.min(100, Math.floor(alloc.percent)))
+      }))
+    });
+  };
 
   useEffect(() => {
     if (!autoAddId && autoInvestOptions.length > 0) {
@@ -345,6 +358,21 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                     </Button>
                   </div>
                 </div>
+              </div>
+
+              <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                {AUTO_INVEST_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => applyPreset(preset.id)}
+                    className="rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-3 text-left transition hover:border-emerald-400/50 hover:shadow-[0_0_18px_rgba(52,211,153,0.25)]"
+                  >
+                    <div className="text-sm font-semibold text-white">{preset.label}</div>
+                    <div className="mt-1 text-[11px] text-slate-400">{preset.description}</div>
+                    <div className="mt-2 text-[11px] text-emerald-200">Apply preset →</div>
+                  </button>
+                ))}
               </div>
 
               {autoInvest.allocations.length === 0 ? (

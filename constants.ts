@@ -425,6 +425,47 @@ export const MARKET_ITEMS: MarketItem[] = [
   { id: 'saas', name: 'SaaS Startup', type: AssetType.BUSINESS, price: 100000, expectedYield: 0.35, volatility: 0.50, risk: 'VERY_HIGH', description: 'Software as a service company', industry: 'technology' }
 ];
 
+export const AUTO_INVEST_PRESETS = [
+  {
+    id: 'conservative',
+    label: 'Conservative',
+    maxPercent: 20,
+    description: 'Focus on stability with bonds and broad market exposure.',
+    allocations: [
+      { itemId: 'tbill', percent: 35 },
+      { itemId: 'corpbond', percent: 30 },
+      { itemId: 'sp500', percent: 20 },
+      { itemId: 'gold', percent: 15 }
+    ]
+  },
+  {
+    id: 'balanced',
+    label: 'Balanced',
+    maxPercent: 30,
+    description: 'Blend index funds with dividends for steady growth.',
+    allocations: [
+      { itemId: 'sp500', percent: 30 },
+      { itemId: 'total', percent: 20 },
+      { itemId: 'dividend', percent: 20 },
+      { itemId: 'corpbond', percent: 15 },
+      { itemId: 'gold', percent: 15 }
+    ]
+  },
+  {
+    id: 'growth',
+    label: 'Growth',
+    maxPercent: 40,
+    description: 'Higher growth tilt with tech and emerging markets.',
+    allocations: [
+      { itemId: 'sp500', percent: 35 },
+      { itemId: 'total', percent: 20 },
+      { itemId: 'emerging', percent: 15 },
+      { itemId: 'techgiant', percent: 20 },
+      { itemId: 'growth', percent: 10 }
+    ]
+  }
+];
+
 // ============================================
 // MORTGAGE OPTIONS
 // ============================================

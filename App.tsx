@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspens
 import { motion, AnimatePresence, useMotionValue, useSpring, useReducedMotion } from 'framer-motion';
 import { GameState, AssetType, MarketItem, Lifestyle, Character, Asset, SideHustle, EducationOption, Liability, PlayerConfig, MonthlyActionId, TABS, TabId, SideHustleUpgradeOption, EducationLevel, PlayerStats } from './types';
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
-import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, ALL_LIFE_EVENTS } from './constants';
+import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, ALL_LIFE_EVENTS, AUTO_INVEST_PRESETS } from './constants';
 import { processTurn, calculateMonthlyCashFlowEstimate, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier, checkPromotion } from './services/gameLogic';
 import { playMoneyGain, playMoneyLoss, playClick, playPurchase, playSell, playAchievement, playLevelUp, playVictory, playWarning, playTick, playNotification, playError, setMuted } from './services/audioService';
 import {
@@ -1482,31 +1482,43 @@ const [gameState, setGameState] = useState<GameState>(() => {
   // Tutorial tips content
   const tutorialTips = [
     { 
+      id: 'welcome',
       title: '👋 Welcome to Tycoon!', 
       message: `Your goal: Build enough passive income to cover ${Math.round(FINANCIAL_FREEDOM_TARGET_MULTIPLIER * 100)}% of your expenses. Click "Next Month" to advance time and watch your finances grow!`,
       highlight: 'next-month'
     },
     {
+      id: 'overview',
       title: '💰 Track Your Progress',
       message: 'The Overview tab shows your net worth, cash flow, and important stats. Watch your passive income grow!',
       highlight: 'overview'
     },
     {
+      id: 'invest',
       title: '📈 Invest to Build Wealth',
       message: 'Go to the Invest tab to buy stocks, real estate, and businesses. These generate passive income!',
       highlight: 'invest'
     },
     {
+      id: 'auto-invest',
+      title: '⚡ Auto-Invest',
+      message: 'Auto-invest puts a percent of last month’s disposable income to work automatically. Choose a preset to enable it now (you can pause anytime).',
+      highlight: 'invest'
+    },
+    {
+      id: 'career',
       title: '💼 Career & Education',
       message: 'Boost your salary through education and side hustles. Higher income = more to invest!',
       highlight: 'career'
     },
     {
+      id: 'lifestyle',
       title: '❤️ Watch Your Health!',
       message: 'Check the Lifestyle tab for health, stress, and energy. Low health can trigger expensive medical emergencies!',
       highlight: 'lifestyle'
     },
     {
+      id: 'financial-iq',
       title: '🧠 Financial IQ',
       message: 'Increase Financial IQ by making smart investment decisions and surviving market events. Higher IQ = better negotiation outcomes!',
       highlight: 'stats'
@@ -4334,6 +4346,18 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const updateAutoInvest = (next: typeof autoInvest) => {
     setGameState(prev => ({ ...prev, autoInvest: next }));
   };
+  const applyAutoInvestPreset = (presetId: string) => {
+    const preset = AUTO_INVEST_PRESETS.find((entry) => entry.id === presetId);
+    if (!preset) return;
+    updateAutoInvest({
+      enabled: true,
+      maxPercent: Math.max(0, Math.min(50, Math.floor(preset.maxPercent))),
+      allocations: preset.allocations.map((alloc) => ({
+        itemId: alloc.itemId,
+        percent: Math.max(0, Math.min(100, Math.floor(alloc.percent)))
+      }))
+    });
+  };
 
   const investTabProps = {
     formatMoney,
@@ -6113,6 +6137,24 @@ const [gameState, setGameState] = useState<GameState>(() => {
             <div className="flex-1">
               <h3 className="text-lg font-bold text-white mb-2">{tutorialTips[tutorialStep].title.split(' ').slice(1).join(' ')}</h3>
               <p className="text-slate-300 text-sm mb-4">{tutorialTips[tutorialStep].message}</p>
+              {tutorialTips[tutorialStep].id === 'auto-invest' && (
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {AUTO_INVEST_PRESETS.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => {
+                        applyAutoInvestPreset(preset.id);
+                        setActiveTab(TABS.INVEST);
+                        handleV2Navigate('/money', 'invest');
+                      }}
+                      className="rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-100 hover:border-blue-400 hover:bg-blue-500/20"
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-center justify-between mt-4">
