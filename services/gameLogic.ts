@@ -4,11 +4,12 @@
 import { 
   GameState, Asset, Liability, Scenario, MarketTrend, MarketCyclePhase, AssetType,
   CareerPath, EducationCategory, EducationLevel, Mortgage, SideHustle, MonthlyReport,
-  Child, Spouse, LifeEventCategory, MonthlyActionId, QuestState, QuestReward, QuestDefinition
+  Child, Spouse, LifeEventCategory, MonthlyActionId, QuestState, QuestReward, QuestDefinition,
+  MarketItem
 } from '../types';
 import { 
   CAREER_PATHS, LIFESTYLE_OPTS, DIFFICULTY_SETTINGS, AI_CAREER_IMPACT,
-  EDUCATION_OPTIONS, MORTGAGE_OPTIONS, ALL_LIFE_EVENTS, getFinancialFreedomTarget,
+  EDUCATION_OPTIONS, MORTGAGE_OPTIONS, ALL_LIFE_EVENTS, getFinancialFreedomTarget, MARKET_ITEMS,
   QUEST_DEFINITIONS, getInitialQuestState, getQuestById
 } from '../constants';
 import { formatCurrencyValue } from '../i18n';
@@ -123,6 +124,67 @@ const getNegotiationRaiseBonus = (state: GameState): number => {
   const certifiedBonus = state.negotiationsCourse?.certified ? 0.01 : 0;
   const scoreBonus = (bestScore / 15) * 0.01;
   return Math.min(0.03, certifiedBonus + scoreBonus);
+};
+
+const educationLevelOrder: EducationLevel[] = ['HIGH_SCHOOL', 'CERTIFICATE', 'ASSOCIATE', 'BACHELOR', 'MASTER', 'MBA', 'PHD', 'LAW', 'MEDICAL'];
+
+const hasRequiredEducationForInvestment = (item: MarketItem, degreeIds: string[]) => {
+  if (!item.requiredEducationCategory && !item.requiredEducationLevel) return true;
+  const requiredLevelIdx = item.requiredEducationLevel ? educationLevelOrder.indexOf(item.requiredEducationLevel) : -1;
+  return degreeIds.some(degId => {
+    const edu = EDUCATION_OPTIONS.find(e => e.id === degId);
+    if (!edu) return false;
+    const hasCategory = item.requiredEducationCategory
+      ? item.requiredEducationCategory.includes(edu.category)
+      : true;
+    const hasLevel = requiredLevelIdx >= 0 ? educationLevelOrder.indexOf(edu.level) >= requiredLevelIdx : true;
+    return hasCategory && hasLevel;
+  });
+};
+
+const isAutoInvestEligible = (item: MarketItem) => {
+  return item.type !== AssetType.REAL_ESTATE && item.type !== AssetType.BUSINESS;
+};
+
+const addAutoInvestAssetUnits = (state: GameState, item: MarketItem, unitPrice: number, qty: number): GameState => {
+  if (qty <= 0) return state;
+  const existing = (state.assets || []).find(a => a.name === item.name && !a.mortgageId);
+  let newAssets = [...(state.assets || [])];
+
+  if (existing) {
+    const idx = newAssets.findIndex(a => a.id === existing.id);
+    const newQuantity = (existing.quantity || 1) + qty;
+    const newCostBasis = ((existing.costBasis * (existing.quantity || 1)) + (unitPrice * qty)) / newQuantity;
+    const newCashFlow = (item.expectedYield * newCostBasis) / 12;
+    newAssets[idx] = {
+      ...existing,
+      quantity: newQuantity,
+      value: unitPrice,
+      costBasis: newCostBasis,
+      cashFlow: newCashFlow
+    };
+  } else {
+    const baseMonthly = (item.expectedYield * unitPrice) / 12;
+    newAssets.push({
+      id: `asset-${Date.now()}-${item.id}`,
+      name: item.name,
+      type: item.type,
+      value: unitPrice,
+      costBasis: unitPrice,
+      quantity: qty,
+      cashFlow: baseMonthly,
+      volatility: item.volatility,
+      appreciationRate: item.expectedYield * 0.4,
+      priceHistory: [{ month: state.month, value: unitPrice }],
+      baseYield: item.expectedYield,
+      industry: item.industry,
+      opsUpgrade: item.type === AssetType.BUSINESS ? false : undefined,
+      currentMonthIncome: item.type === AssetType.BUSINESS ? Math.round(baseMonthly) : undefined,
+      lastMonthIncome: item.type === AssetType.BUSINESS ? Math.round(baseMonthly) : undefined
+    });
+  }
+
+  return { ...state, assets: newAssets };
 };
 
 const validTracks = new Set(['DEBT_CRUSHER', 'INVESTOR', 'ENTREPRENEUR']);
@@ -3096,6 +3158,55 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
     newState.cash = projectedCash;
   }
 
+  // 7c. Auto-invest from last month's disposable income (in arrears)
+  if (!newState.isBankrupt && state.autoInvest?.enabled && state.lastMonthlyReport) {
+    const disposable = Math.max(0, state.lastMonthlyReport.income - state.lastMonthlyReport.expenses);
+    const maxPercent = Math.max(0, Math.min(50, Math.floor(state.autoInvest.maxPercent || 0)));
+    const investBudget = Math.floor(disposable * (maxPercent / 100));
+    const allocations = (state.autoInvest.allocations || []).filter(a => a.percent > 0);
+    const totalPercent = allocations.reduce((sum, a) => sum + a.percent, 0);
+    let availableCash = newState.cash;
+
+    if (investBudget > 0 && totalPercent > 0 && availableCash > 0) {
+      const inflationMult = Math.pow(1 + (newState.economy?.inflationRate || 0.03), newState.month / 12);
+      const purchases: Array<{ name: string; qty: number; cost: number }> = [];
+
+      for (const alloc of allocations) {
+        const item = MARKET_ITEMS.find(i => i.id === alloc.itemId);
+        if (!item || !isAutoInvestEligible(item)) continue;
+        if (!hasRequiredEducationForInvestment(item, newState.education?.degrees || [])) continue;
+
+        const price = Math.round(item.price * inflationMult);
+        const effectivePercent = totalPercent > 100
+          ? Math.floor((alloc.percent / totalPercent) * 100)
+          : alloc.percent;
+        const allocBudget = Math.floor(investBudget * (effectivePercent / 100));
+        const maxByBudget = Math.floor(allocBudget / price);
+        const maxByCash = Math.floor(availableCash / price);
+        const qty = Math.min(maxByBudget, maxByCash);
+        if (qty <= 0) continue;
+
+        newState = addAutoInvestAssetUnits(newState, item, price, qty);
+        const cost = qty * price;
+        availableCash -= cost;
+        purchases.push({ name: item.name, qty, cost });
+      }
+
+      if (purchases.length > 0) {
+        newState.cash = availableCash;
+        const summary = purchases.map(p => `${p.qty}x ${p.name}`).join(', ');
+        const totalSpent = purchases.reduce((sum, p) => sum + p.cost, 0);
+        newState.events = [{
+          id: `autoinvest_${Date.now()}`,
+          month: newState.month,
+          title: '📈 Auto-Invest',
+          description: `Invested ${formatMoneyFull(totalSpent)}: ${summary}`,
+          type: 'DECISION'
+        }, ...(newState.events || [])];
+      }
+    }
+  }
+
   // 7b. Update side hustle progression (milestones trigger upgrade choices)
   newState = updateSideHustleProgress(newState);
 
@@ -3322,6 +3433,8 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
     aiImpact: newState.aiDisruption?.affectedIndustries?.[newState.career?.path || 'TECH']?.automationRisk,
     childExpenses: cashFlow.childrenExpenses
   };
+
+  newState.lastMonthlyReport = monthlyReport;
   
   return { newState, monthlyReport };
 };

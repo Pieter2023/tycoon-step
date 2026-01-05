@@ -66,6 +66,29 @@ const normalizeAdultState = (state: GameState): GameState => {
     rewardClaimed: typeof rawCompoundCourse?.rewardClaimed === 'boolean' ? rawCompoundCourse.rewardClaimed : false,
   };
 
+  const rawAutoInvest = (state as any).autoInvest;
+  const autoInvestAllocations = Array.isArray(rawAutoInvest?.allocations)
+    ? rawAutoInvest.allocations
+        .filter((entry: any) => entry && typeof entry.itemId === 'string' && typeof entry.percent === 'number')
+        .map((entry: any) => ({
+          itemId: entry.itemId,
+          percent: Math.max(0, Math.min(100, Math.floor(entry.percent)))
+        }))
+    : [];
+  const autoInvest = {
+    enabled: !!rawAutoInvest?.enabled,
+    maxPercent: typeof rawAutoInvest?.maxPercent === 'number'
+      ? Math.max(0, Math.min(50, Math.floor(rawAutoInvest.maxPercent)))
+      : 20,
+    allocations: autoInvestAllocations
+  };
+
+  const rawLastMonthlyReport = (state as any).lastMonthlyReport;
+  const lastMonthlyReport = rawLastMonthlyReport && typeof rawLastMonthlyReport.income === 'number'
+    && typeof rawLastMonthlyReport.expenses === 'number'
+    ? rawLastMonthlyReport
+    : undefined;
+
   const hustleLookup = new Map(SIDE_HUSTLES.map(hustle => [hustle.id, hustle]));
   const activeSideHustles = (state.activeSideHustles || []).map(hustle => {
     const base = hustleLookup.get(hustle.id);
@@ -119,6 +142,8 @@ const normalizeAdultState = (state: GameState): GameState => {
     negotiationsPerks,
     salesAcceleratorCourse,
     compoundInterestCourse,
+    autoInvest,
+    lastMonthlyReport,
     activeSideHustles,
     pendingSideHustleUpgrade: (state as any).pendingSideHustleUpgrade ?? null,
     creditRating,

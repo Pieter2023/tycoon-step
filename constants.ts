@@ -2713,4 +2713,9 @@ export const INITIAL_GAME_STATE: GameState = {
     certified: false,
     rewardClaimed: false
   },
+  autoInvest: {
+    enabled: false,
+    maxPercent: 20,
+    allocations: []
+  },
 };

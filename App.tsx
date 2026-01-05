@@ -4330,6 +4330,11 @@ const [gameState, setGameState] = useState<GameState>(() => {
   // ============================================
   // MAIN GAME SCREEN
   // ============================================
+  const autoInvest = gameState.autoInvest || { enabled: false, maxPercent: 20, allocations: [] };
+  const updateAutoInvest = (next: typeof autoInvest) => {
+    setGameState(prev => ({ ...prev, autoInvest: next }));
+  };
+
   const investTabProps = {
     formatMoney,
     formatMoneyFull,
@@ -4349,6 +4354,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
     setBatchBuyQuantities,
     batchBuyCart,
     openBatchBuyConfirm,
+    autoInvest,
+    onUpdateAutoInvest: updateAutoInvest,
     handleBuyAsset,
     hasRequiredEducationForInvestment,
     getAssetIcon,
@@ -7581,6 +7588,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 setBatchBuyQuantities={setBatchBuyQuantities}
                 batchBuyCart={batchBuyCart}
                 openBatchBuyConfirm={openBatchBuyConfirm}
+                autoInvest={autoInvest}
+                onUpdateAutoInvest={updateAutoInvest}
                 handleBuyAsset={handleBuyAsset}
                 hasRequiredEducationForInvestment={hasRequiredEducationForInvestment}
                 getAssetIcon={getAssetIcon}

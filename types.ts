@@ -597,6 +597,8 @@ export interface GameState {
   negotiationsPerks?: NegotiationsPerksState;
   salesAcceleratorCourse?: SalesAcceleratorCourseState;
   compoundInterestCourse?: CompoundInterestCourseState;
+  autoInvest?: AutoInvestSettings;
+  lastMonthlyReport?: MonthlyReport;
 }
 
 export interface EQCourseState {
@@ -642,6 +644,17 @@ export interface CompoundInterestCourseState {
   bestScore: number;
   certified: boolean;
   rewardClaimed: boolean;
+}
+
+export interface AutoInvestAllocation {
+  itemId: string;
+  percent: number;
+}
+
+export interface AutoInvestSettings {
+  enabled: boolean;
+  maxPercent: number;
+  allocations: AutoInvestAllocation[];
 }
 
 export interface MonthlyReport {

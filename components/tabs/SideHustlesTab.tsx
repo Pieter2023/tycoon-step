@@ -258,7 +258,91 @@ const SideHustlesTab: React.FC<SideHustlesTabProps> = (props) => {
                 </div>
               </div>
 
-              <div className="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900/40">
+              <div className="space-y-3 sm:hidden">
+                {sortedRows.map((row) => {
+                  const { hustle, payback, aiRisk, isActive, canAfford, isUnlocked } = row;
+                  const canSelectMore = compareSelection.length < 2 || compareSelection.includes(hustle.id);
+                  const paybackLabel = Number.isFinite(payback) ? `${payback.toFixed(1)} mo` : '—';
+
+                  return (
+                    <div key={hustle.id} className="rounded-xl border border-slate-700 bg-slate-900/50 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{hustle.icon}</span>
+                          <div>
+                            <p className="text-sm font-semibold text-white">{hustle.name}</p>
+                            <p className="text-[11px] text-slate-500">{hustle.hoursPerWeek} hrs/week</p>
+                          </div>
+                        </div>
+                        {compareMode && (
+                          <label className="flex items-center gap-2 text-[11px] text-slate-300">
+                            <input
+                              type="checkbox"
+                              className="rounded border-slate-600 bg-slate-900"
+                              checked={compareSelection.includes(hustle.id)}
+                              disabled={!canSelectMore}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                setCompareSelection((prev) => {
+                                  if (checked) return [...prev, hustle.id].slice(0, 2);
+                                  return prev.filter((id) => id !== hustle.id);
+                                });
+                              }}
+                            />
+                            Compare
+                          </label>
+                        )}
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                        <div className="rounded-lg bg-slate-800/60 p-2">
+                          <p className="text-slate-500">Income</p>
+                          <p className="text-emerald-300">
+                            {formatMoney(hustle.incomeRange.min)}-{formatMoney(hustle.incomeRange.max)}
+                          </p>
+                        </div>
+                        <div className="rounded-lg bg-slate-800/60 p-2">
+                          <p className="text-slate-500">Payback</p>
+                          <p className="text-slate-200">{paybackLabel}</p>
+                        </div>
+                        <div className="rounded-lg bg-slate-800/60 p-2">
+                          <p className="text-slate-500">Energy</p>
+                          <p className="text-amber-300">-{hustle.energyCost}</p>
+                        </div>
+                        <div className="rounded-lg bg-slate-800/60 p-2">
+                          <p className="text-slate-500">Stress</p>
+                          <p className="text-red-300">+{hustle.stressIncrease}</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className={`px-2 py-0.5 rounded text-[11px] ${
+                          aiRisk === 'LOW' ? 'bg-emerald-500/20 text-emerald-300' :
+                          aiRisk === 'MEDIUM' ? 'bg-amber-500/20 text-amber-300' :
+                          'bg-red-500/20 text-red-300'
+                        }`}>
+                          {aiRisk} risk
+                        </span>
+                        <button
+                          onClick={() => handleStartSideHustle(hustle)}
+                          disabled={isActive || !canAfford || !isUnlocked}
+                          className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                            isActive
+                              ? 'bg-emerald-600/20 text-emerald-300 cursor-not-allowed'
+                              : !canAfford || !isUnlocked
+                                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                                : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                          }`}
+                        >
+                          {isActive ? 'Active' : 'Start'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="hidden sm:block overflow-x-auto rounded-xl border border-slate-700 bg-slate-900/40">
                 <table className="min-w-full text-sm text-slate-300">
                   <thead className="text-xs uppercase text-slate-500">
                     <tr>
@@ -274,7 +358,7 @@ const SideHustlesTab: React.FC<SideHustlesTabProps> = (props) => {
                   </thead>
                   <tbody>
                     {sortedRows.map((row) => {
-                      const { hustle, avgIncome, payback, aiRisk, isActive, canAfford, isUnlocked } = row;
+                      const { hustle, payback, aiRisk, isActive, canAfford, isUnlocked } = row;
                       const canSelectMore = compareSelection.length < 2 || compareSelection.includes(hustle.id);
                       const paybackLabel = Number.isFinite(payback) ? `${payback.toFixed(1)} mo` : '—';
 
