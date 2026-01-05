@@ -160,7 +160,12 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
                       <Cell key={`slice-${entry.name}`} fill={allocationColors[index % allocationColors.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => [formatMoneyFull(value), 'Value']} />
+                  <Tooltip
+                    formatter={(value: number, _name: string, props: any) => [
+                      formatMoneyFull(value),
+                      props?.payload?.name || 'Asset class'
+                    ]}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             )}
