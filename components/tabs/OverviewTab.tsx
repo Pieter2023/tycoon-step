@@ -218,6 +218,21 @@ const OverviewTab: React.FC<OverviewTabProps> = (props) => {
 
             {actionsOpen ? (
               <div className="mt-4">
+                {queuedActions.length > 0 && (
+                  <div className="sticky top-2 z-20 mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2">
+                    <p className="text-xs text-emerald-100">
+                      {queuedActions.length} action{queuedActions.length === 1 ? '' : 's'} queued — confirm before Next Month.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={confirmQueuedActions}
+                      title="Confirm queued actions before Next Month"
+                      className="px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_18px_rgba(52,211,153,0.35)]"
+                    >
+                      Confirm actions
+                    </button>
+                  </div>
+                )}
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-xs text-slate-400">Queue up to {monthlyActionsSummary.remaining} action(s).</p>
                   <div className="hidden sm:flex items-center gap-2">
@@ -280,10 +295,11 @@ const OverviewTab: React.FC<OverviewTabProps> = (props) => {
                     type="button"
                     onClick={confirmQueuedActions}
                     disabled={queuedActions.length === 0 || monthlyActionsSummary.locked}
+                    title={queuedActions.length === 0 ? 'Queue actions first' : 'Confirm queued actions before Next Month'}
                     className={`px-4 py-2 rounded-xl text-sm font-semibold ${
                       queuedActions.length === 0 || monthlyActionsSummary.locked
                         ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                        : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                        : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_18px_rgba(52,211,153,0.35)]'
                     }`}
                   >
                     Confirm actions
@@ -291,16 +307,30 @@ const OverviewTab: React.FC<OverviewTabProps> = (props) => {
                 </div>
               </div>
             ) : (
-              <div className="mt-4 flex items-center justify-between">
-                <p className="text-xs text-slate-400">Actions queued and executed.</p>
-                <button
-                  type="button"
-                  onClick={() => setActionsOpen(true)}
-                  title="Show actions (A)"
-                  className="text-xs text-emerald-300 hover:text-emerald-200"
-                >
-                  Show actions
-                </button>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs text-slate-400">
+                  {queuedActions.length > 0 ? `${queuedActions.length} action(s) queued — confirm to apply.` : 'Actions queued and executed.'}
+                </p>
+                <div className="flex items-center gap-2">
+                  {queuedActions.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={confirmQueuedActions}
+                      title="Confirm queued actions before Next Month"
+                      className="px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_18px_rgba(52,211,153,0.35)]"
+                    >
+                      Confirm actions
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setActionsOpen(true)}
+                    title="Show actions (A)"
+                    className="text-xs text-emerald-300 hover:text-emerald-200"
+                  >
+                    Show actions
+                  </button>
+                </div>
               </div>
             )}
           </div>
