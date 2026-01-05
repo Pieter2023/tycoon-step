@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis
 } from 'recharts';
+import { CHART_COLORS, ChartTooltip } from './ui/charts/chartTheme';
 
 type DashboardWidgetDataPoint = {
   label?: string;
@@ -75,40 +76,25 @@ const DashboardWidget: React.FC<DashboardWidgetProps> = ({
             <BarChart data={data}>
               <XAxis dataKey="label" hide />
               <YAxis hide />
-              <Tooltip
-                cursor={{ fill: 'rgba(148, 163, 184, 0.08)' }}
-                contentStyle={{
-                  background: '#0f172a',
-                  border: '1px solid #1e293b',
-                  borderRadius: 8,
-                  fontSize: 12
-                }}
-                formatter={(val: number, name: string) => [
-                  val.toLocaleString(),
-                  name === 'income' ? 'Income' : 'Expenses'
-                ]}
-              />
-              <Bar dataKey="income" fill="#34d399" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="expenses" fill="#f97316" radius={[4, 4, 0, 0]} />
+              <Tooltip content={<ChartTooltip valuePrefix={unit ? '' : '$'} />} />
+              <Bar dataKey="income" fill={CHART_COLORS.positive} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="expenses" fill={CHART_COLORS.negative} radius={[6, 6, 0, 0]} />
             </BarChart>
           ) : (
             <LineChart data={data}>
+              <defs>
+                <linearGradient id="dashboardWidgetLine" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="10%" stopColor={CHART_COLORS.accent} stopOpacity={0.4} />
+                  <stop offset="90%" stopColor={CHART_COLORS.accent} stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <XAxis dataKey="label" hide />
               <YAxis hide domain={['dataMin', 'dataMax']} />
-              <Tooltip
-                cursor={{ stroke: '#334155' }}
-                contentStyle={{
-                  background: '#0f172a',
-                  border: '1px solid #1e293b',
-                  borderRadius: 8,
-                  fontSize: 12
-                }}
-                formatter={(val: number) => [val.toLocaleString(), '']}
-              />
+              <Tooltip content={<ChartTooltip valuePrefix={unit ? '' : '$'} />} />
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="#38bdf8"
+                stroke={CHART_COLORS.accent}
                 strokeWidth={2}
                 dot={false}
               />

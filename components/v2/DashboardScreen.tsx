@@ -146,6 +146,22 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const animatedCash = useCountUp(cashValue);
   const animatedNetWorth = useCountUp(netWorthValue);
   const animatedPassive = useCountUp(passiveValue);
+
+  const getSeriesDelta = (series: Array<{ label: string; value: number }>, label?: string | number) => {
+    if (label === undefined || label === null) return undefined;
+    const labelKey = String(label);
+    const idx = series.findIndex((point) => point.label === labelKey);
+    if (idx <= 0) return undefined;
+    return series[idx].value - series[idx - 1].value;
+  };
+
+  const passiveTooltip = (props: any) => (
+    <ChartTooltip {...props} valuePrefix="$" delta={getSeriesDelta(passiveTrend, props?.label)} />
+  );
+
+  const expenseTooltip = (props: any) => (
+    <ChartTooltip {...props} valuePrefix="$" delta={getSeriesDelta(expenseTrend, props?.label)} />
+  );
   const modeTiles = useMemo(() => ([
     { label: 'Overview', icon: LineChart, glow: 'neon-outline-blue', onClick: () => onNavigate('/play') },
     { label: 'Invest', icon: Wallet, glow: 'neon-outline-green', onClick: () => onNavigate('/money', 'invest') },
@@ -241,7 +257,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                         <stop offset="95%" stopColor={CHART_COLORS.positive} stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <Tooltip content={<ChartTooltip valuePrefix="$" delta={passiveDelta ?? undefined} />} />
+                  <Tooltip content={passiveTooltip} />
                     <Area type="monotone" dataKey="value" stroke={CHART_COLORS.positive} fill="url(#passiveMini)" strokeWidth={2} dot={false} />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -270,7 +286,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
               ) : (
                 <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
                   <BarChart data={expenseTrend}>
-                    <Tooltip content={<ChartTooltip valuePrefix="$" delta={expenseDelta ?? undefined} />} />
+                  <Tooltip content={expenseTooltip} />
                     <Bar dataKey="value" fill={CHART_COLORS.negative} radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>

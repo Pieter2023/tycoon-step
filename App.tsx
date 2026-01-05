@@ -1748,7 +1748,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
   }, []);
 
   const expenseTrendMini = useMemo(() => {
-    return cashFlowTrendData.slice(-3).map((entry) => ({
+    return cashFlowTrendData.map((entry) => ({
       label: entry.label,
       value: entry.expenses
     }));
@@ -6762,16 +6762,21 @@ const [gameState, setGameState] = useState<GameState>(() => {
               activePath={v2Path}
               onNavigate={(path) => setV2Path(path as typeof v2Path)}
               headerLeading={
-                <div className={`h-12 w-12 rounded-full bg-gradient-to-br ${gameState.character?.avatarColor || 'from-slate-500 to-slate-600'} flex items-center justify-center text-xl overflow-hidden border border-white/10`}>
-                  {gameState.character?.avatarImage ? (
-                    <img
-                      src={gameState.character.avatarImage}
-                      alt={playerConfig?.name || gameState.character?.name || 'Player'}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    gameState.character?.avatarEmoji || '👤'
-                  )}
+                <div className="flex flex-col items-center gap-1">
+                  <div className={`h-12 w-12 rounded-full bg-gradient-to-br ${gameState.character?.avatarColor || 'from-slate-500 to-slate-600'} flex items-center justify-center text-xl overflow-hidden border border-white/10`}>
+                    {gameState.character?.avatarImage ? (
+                      <img
+                        src={gameState.character.avatarImage}
+                        alt={playerConfig?.name || gameState.character?.name || 'Player'}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      gameState.character?.avatarEmoji || '👤'
+                    )}
+                  </div>
+                  <span className="text-[11px] text-slate-300">
+                    {playerConfig?.name || gameState.character?.name || 'Player'}
+                  </span>
                 </div>
               }
               headerActions={
