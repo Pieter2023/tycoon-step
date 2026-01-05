@@ -7672,7 +7672,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 aiImpact={aiImpact}
                 isProcessing={isProcessing}
                 onPromote={handleManualPromotion}
-                onOpenSideHustles={() => setActiveTab(TABS.SIDE_HUSTLES)}
+                onOpenSideHustles={() => setActiveTab(TABS.SIDEHUSTLE)}
               />
             </Suspense>
           </TabErrorBoundary>
