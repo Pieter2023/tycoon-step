@@ -2152,27 +2152,10 @@ export const generateLifeEvent = (state: GameState): Scenario | null => {
     }
   }
 
-  const queuedEvents = (state.eventQueue || []).filter(entry => entry.minMonth <= state.month);
-  if (queuedEvents.length > 0) {
-    const queuedPick = queuedEvents[Math.floor(Math.random() * queuedEvents.length)];
-    const queuedEvent = ALL_LIFE_EVENTS.find(e => e.id === queuedPick.id);
-    if (queuedEvent) return queuedEvent;
-  }
-  
-  // Track months since last event for "drought breaker"
-  const monthsSinceLastEvent = state.month - (state.eventTracker?.lastEventMonth || 0);
-  
-  // DROUGHT BREAKER: Force an event if it's been 4+ months without one
-  const droughtForce = monthsSinceLastEvent >= 4;
-  
-  // Base 35% chance per month (increased from 15% for more engagement)
-  // If drought, 100% chance
-  if (!droughtForce && Math.random() > 0.35 * eventFreq) {
-    return null;
-  }
+  const hasBusiness = (state.assets || []).some(a => a.type === AssetType.BUSINESS && (a.quantity || 1) > 0);
+  const hasRealEstate = (state.assets || []).some(a => a.type === AssetType.REAL_ESTATE && (a.quantity || 1) > 0);
 
-  // Filter eligible events
-  const eligible = ALL_LIFE_EVENTS.filter(event => {
+  const isEligible = (event: Scenario) => {
     // Skip annual_taxes - it's handled specially above with calculated amounts
     if (event.id === 'annual_taxes') return false;
 
@@ -2196,14 +2179,15 @@ export const generateLifeEvent = (state: GameState): Scenario | null => {
     // Skip job loss shock events if the player is already unemployed.
     if (event.id === 'job_loss' && (state.jobLossMonthsRemaining || 0) > 0) return false;
 
+    if (event.tags?.includes('business') && !hasBusiness) return false;
+    if (event.tags?.includes('landlord') && !hasRealEstate) return false;
+
     // Owned asset risk events should only appear if you own the matching asset type.
     if (event.id.startsWith('owned_business_')) {
-      const hasBusiness = (state.assets || []).some(a => a.type === AssetType.BUSINESS && (a.quantity || 1) > 0);
       if (!hasBusiness) return false;
     }
 
     if (event.id.startsWith('rental_')) {
-      const hasRealEstate = (state.assets || []).some(a => a.type === AssetType.REAL_ESTATE && (a.quantity || 1) > 0);
       if (!hasRealEstate) return false;
     }
     
@@ -2262,7 +2246,31 @@ export const generateLifeEvent = (state: GameState): Scenario | null => {
     if (lastOccurrence && (state.month - lastOccurrence) < cooldownMonths) return false;
     
     return true;
-  });
+  };
+
+  const queuedEvents = (state.eventQueue || [])
+    .filter(entry => entry.minMonth <= state.month)
+    .map(entry => ALL_LIFE_EVENTS.find(e => e.id === entry.id))
+    .filter((event): event is Scenario => !!event)
+    .filter(isEligible);
+  if (queuedEvents.length > 0) {
+    return queuedEvents[Math.floor(Math.random() * queuedEvents.length)];
+  }
+  
+  // Track months since last event for "drought breaker"
+  const monthsSinceLastEvent = state.month - (state.eventTracker?.lastEventMonth || 0);
+  
+  // DROUGHT BREAKER: Force an event if it's been 4+ months without one
+  const droughtForce = monthsSinceLastEvent >= 4;
+  
+  // Base 35% chance per month (increased from 15% for more engagement)
+  // If drought, 100% chance
+  if (!droughtForce && Math.random() > 0.35 * eventFreq) {
+    return null;
+  }
+
+  // Filter eligible events
+  const eligible = ALL_LIFE_EVENTS.filter(isEligible);
   
   if (eligible.length === 0) return null;
   
