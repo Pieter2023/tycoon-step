@@ -180,7 +180,7 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
               </div>
             )}
             {/* Filters */}
-            <div className="flex flex-col gap-2 mb-4">
+            <div className="sticky top-3 z-20 -mx-2 mb-4 rounded-2xl border border-slate-800/70 bg-slate-950/80 px-2 py-2 backdrop-blur">
               <div className="flex gap-2 overflow-x-auto pb-1">
               {[
                 { id: 'ALL', label: 'All' },
@@ -617,6 +617,7 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                         const otherCost = batchBuyCart.totalCost - lineCost;
                         const canAddOne = otherCost + (qty + 1) * price <= gameState.cash;
                         const canBuyQty = qty > 0 && lineCost <= gameState.cash;
+                        const maxAffordable = Math.max(0, Math.floor(gameState.cash / price));
 
                         return (
                           <div className="w-full flex flex-col gap-2 py-2 px-3 rounded-lg border border-slate-700 bg-slate-900/40">
@@ -665,6 +666,17 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                                 }`}
                               >
                                 +
+                              </button>
+                              <button
+                                onClick={() => setBatchQty(item.id, maxAffordable)}
+                                disabled={maxAffordable <= 0}
+                                className={`ml-auto rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                                  maxAffordable > 0
+                                    ? 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+                                    : 'bg-slate-900 text-slate-600 cursor-not-allowed'
+                                }`}
+                              >
+                                Buy max ({formatMoneyFull(maxAffordable * price)})
                               </button>
                             </div>
 
