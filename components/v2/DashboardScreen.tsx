@@ -166,11 +166,11 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     <ChartTooltip {...props} valuePrefix="$" delta={getSeriesDelta(expenseTrend, props?.label)} />
   );
   const modeTiles = useMemo(() => ([
-    { label: 'Overview', icon: LineChart, glow: 'hover:neon-outline-blue focus-visible:neon-outline-blue', onClick: () => onNavigate('/play') },
-    { label: 'Invest', icon: Wallet, glow: 'hover:neon-outline-green focus-visible:neon-outline-green', onClick: () => onNavigate('/money', 'invest') },
-    { label: 'Study', icon: GraduationCap, glow: 'hover:neon-outline-yellow focus-visible:neon-outline-yellow', onClick: () => onNavigate('/learn') },
-    { label: 'Side Hustle', icon: Briefcase, glow: 'hover:neon-outline-purple focus-visible:neon-outline-purple', onClick: () => onNavigate('/life', 'sidehustles') },
-    { label: 'Lifestyle', icon: Heart, glow: 'hover:neon-outline-red focus-visible:neon-outline-red', onClick: () => onNavigate('/life', 'lifestyle') }
+    { label: 'Overview', icon: LineChart, glow: 'glow-blue', onClick: () => onNavigate('/play') },
+    { label: 'Invest', icon: Wallet, glow: 'glow-green', onClick: () => onNavigate('/money', 'invest') },
+    { label: 'Study', icon: GraduationCap, glow: 'glow-yellow', onClick: () => onNavigate('/learn') },
+    { label: 'Side Hustle', icon: Briefcase, glow: 'glow-purple', onClick: () => onNavigate('/life', 'sidehustles') },
+    { label: 'Lifestyle', icon: Heart, glow: 'glow-red', onClick: () => onNavigate('/life', 'lifestyle') }
   ]), [onNavigate]);
 
   return (
@@ -181,7 +181,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
             key={tile.label}
             type="button"
             onClick={tile.onClick}
-            className={`glass-tile ${tile.glow} flex items-center gap-2 px-4 py-3 text-left transition-all duration-150 active:scale-95 active:shadow-[0_0_20px_rgba(255,255,255,0.12)]`}
+            className={`glass-tile mode-tile ${tile.glow} flex items-center gap-2 px-4 py-3 text-left transition-all duration-150 active:scale-95 active:shadow-[0_0_20px_rgba(255,255,255,0.12)]`}
           >
             <tile.icon size={18} className="text-slate-200" />
             <span className="text-sm font-semibold text-white">{tile.label}</span>
