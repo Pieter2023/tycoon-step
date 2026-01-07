@@ -6172,10 +6172,10 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 Do not show again
               </label>
             </div>
-            <div className="rounded-xl border border-slate-700 bg-black/40 overflow-hidden">
+            <div className="rounded-xl border border-slate-700 bg-black/40 overflow-hidden aspect-video">
               <video
                 ref={quickTutorialVideoRef}
-                className="w-full h-[48vh] object-cover"
+                className="w-full h-full object-contain"
                 preload="metadata"
                 controls
                 playsInline
@@ -6191,6 +6191,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 onClick={() => {
                   const vid = quickTutorialVideoRef.current;
                   if (!vid) return;
+                  vid.muted = false;
                   vid.play().catch(() => {
                     window.open(QUICK_TUTORIAL_SRC, '_blank', 'noopener,noreferrer');
                   });
