@@ -6177,8 +6177,12 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 ref={quickTutorialVideoRef}
                 className="w-full h-[48vh] object-cover"
                 preload="metadata"
+                controls
+                playsInline
+                muted
+                src={QUICK_TUTORIAL_SRC}
               >
-                <source src={QUICK_TUTORIAL_SRC} type="video/quicktime" />
+                Your browser can’t play this video.
               </video>
             </div>
             <div className="flex items-center justify-end gap-2">
@@ -6187,7 +6191,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 onClick={() => {
                   const vid = quickTutorialVideoRef.current;
                   if (!vid) return;
-                  vid.play();
+                  vid.play().catch(() => {
+                    window.open(QUICK_TUTORIAL_SRC, '_blank', 'noopener,noreferrer');
+                  });
                 }}
                 className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold"
               >
