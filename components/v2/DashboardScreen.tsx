@@ -214,15 +214,22 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
       </section>
 
       <section className="glass-panel px-4 py-4">
-        <div className="flex items-center justify-between text-xs text-slate-300">
-          <span>Financial Freedom Progress (Goal: 110%)</span>
-          <span className="text-emerald-200">{Math.round(freedomPercent * 100)}%</span>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-slate-400">Financial Freedom Progress</p>
+            <p className="text-sm text-slate-300">Goal: 110% passive coverage</p>
+          </div>
+          <div className="ff-progress-badge">
+            {Math.round(freedomPercent * 100)}%
+          </div>
         </div>
-        <div className="mt-2 h-2 w-full rounded-full bg-slate-800">
+        <div className="mt-3 ff-progress-track">
           <div
-            className="h-2 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400"
+            className="ff-progress-fill"
             style={{ width: `${Math.min(1, freedomPercent) * 100}%` }}
-          />
+          >
+            <div className="ff-progress-spark" />
+          </div>
         </div>
       </section>
 

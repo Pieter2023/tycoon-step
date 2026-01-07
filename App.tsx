@@ -470,6 +470,9 @@ const EDUCATION_INTRO_VIDEO_SRC = '/videos/education-tab-updated-tycoon.mp4';
 const NEGOTIATIONS_INTRO_VIDEO_STORAGE_KEY = 'tycoon_seen_negotiations_intro_video_v1';
 const NEGOTIATIONS_INTRO_VIDEO_SRC = '/videos/tycoon-master-negotiations.mp4';
 
+const QUICK_TUTORIAL_STORAGE_KEY = 'tycoon_quick_tutorial_seen_v1';
+const QUICK_TUTORIAL_SRC = '/videos/quick-tutorial.mov';
+
 const AUTO_TUTORIAL_POPUPS_STORAGE_KEY = 'tycoon_auto_tutorial_popups_v1';
 const ONBOARDING_SEEN_STORAGE_KEY = 'tycoon_onboarding_seen_v1';
 const HIDE_TIPS_STORAGE_KEY = 'tycoon_hide_tips_v1';
@@ -888,6 +891,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const [showGlossary, setShowGlossary] = useState(false);
   const [showSideHustleUpgradeModal, setShowSideHustleUpgradeModal] = useState(false);
   const [showEventLab, setShowEventLab] = useState(false);
+  const [showQuickTutorial, setShowQuickTutorial] = useState(false);
+  const [quickTutorialDontShow, setQuickTutorialDontShow] = useState(false);
+  const quickTutorialVideoRef = useRef<HTMLVideoElement | null>(null);
   const [eventLabEventId, setEventLabEventId] = useState(ALL_LIFE_EVENTS[0]?.id || '');
   const [eventLabOptionIdx, setEventLabOptionIdx] = useState(0);
   const [eventLabSimulation, setEventLabSimulation] = useState<{
@@ -1558,6 +1564,17 @@ const [gameState, setGameState] = useState<GameState>(() => {
       console.warn('Failed to save tips preference:', e);
     }
   }, [hideTipsEverywhere]);
+
+  useEffect(() => {
+    if (!gameStarted || isMultiplayer) return;
+    try {
+      const seen = localStorage.getItem(QUICK_TUTORIAL_STORAGE_KEY) === '1';
+      if (!seen) setShowQuickTutorial(true);
+    } catch (e) {
+      console.warn('Failed to read quick tutorial preference:', e);
+      setShowQuickTutorial(true);
+    }
+  }, [gameStarted, isMultiplayer]);
 
   useEffect(() => {
     try {
@@ -6122,8 +6139,83 @@ const [gameState, setGameState] = useState<GameState>(() => {
         </Modal>
       )}
 
+      {/* Quick Tutorial Modal */}
+      {showQuickTutorial && gameStarted && !gameState.pendingScenario && !gameState.isBankrupt && (
+        <Modal
+          isOpen={showQuickTutorial}
+          onClose={() => {
+            setShowQuickTutorial(false);
+            if (quickTutorialDontShow) {
+              try {
+                localStorage.setItem(QUICK_TUTORIAL_STORAGE_KEY, '1');
+              } catch (e) {
+                console.warn('Failed to save quick tutorial preference:', e);
+              }
+            }
+          }}
+          ariaLabel="Quick Tutorial"
+          overlayClassName="bg-black/70 items-center"
+          closeOnOverlayClick
+          closeOnEsc
+          contentClassName="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-3xl w-full"
+        >
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white">Quick Tutorial</h2>
+              <label className="flex items-center gap-2 text-xs text-slate-300">
+                <input
+                  type="checkbox"
+                  className="rounded border-slate-600 bg-slate-900"
+                  checked={quickTutorialDontShow}
+                  onChange={(e) => setQuickTutorialDontShow(e.target.checked)}
+                />
+                Do not show again
+              </label>
+            </div>
+            <div className="rounded-xl border border-slate-700 bg-black/40 overflow-hidden">
+              <video
+                ref={quickTutorialVideoRef}
+                className="w-full h-[48vh] object-cover"
+                preload="metadata"
+              >
+                <source src={QUICK_TUTORIAL_SRC} type="video/quicktime" />
+              </video>
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const vid = quickTutorialVideoRef.current;
+                  if (!vid) return;
+                  vid.play();
+                }}
+                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold"
+              >
+                Play
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowQuickTutorial(false);
+                  if (quickTutorialDontShow) {
+                    try {
+                      localStorage.setItem(QUICK_TUTORIAL_STORAGE_KEY, '1');
+                    } catch (e) {
+                      console.warn('Failed to save quick tutorial preference:', e);
+                    }
+                  }
+                }}
+                className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {/* Tutorial Modal - shown for new players */}
-      {gameStarted && showTutorial && !tutorialDismissed && !gameState.pendingScenario && !gameState.isBankrupt && tutorialStep < tutorialTips.length && (
+      {gameStarted && showTutorial && !showQuickTutorial && !tutorialDismissed && !gameState.pendingScenario && !gameState.isBankrupt && tutorialStep < tutorialTips.length && (
         <Modal
           isOpen={gameStarted && showTutorial && !tutorialDismissed}
           onClose={() => { setTutorialDismissed(true); setShowTutorial(false); markOnboardingSeen(); }}
