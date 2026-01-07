@@ -6181,6 +6181,10 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 playsInline
                 muted
                 src={QUICK_TUTORIAL_SRC}
+                onPlay={(e) => {
+                  const vid = e.currentTarget;
+                  if (vid.muted) vid.muted = false;
+                }}
               >
                 Your browser can’t play this video.
               </video>
