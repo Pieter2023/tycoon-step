@@ -13,8 +13,8 @@ import {
   Check,
   Bot,
 } from 'lucide-react';
-import { Character, DIFFICULTY_SETTINGS } from '../constants';
-import { CareerPath } from '../types';
+import { DIFFICULTY_SETTINGS } from '../constants';
+import { CareerPath, Character } from '../types';
 
 interface CharacterSelectProps {
   characters: Character[];

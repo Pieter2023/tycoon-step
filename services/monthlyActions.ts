@@ -7,6 +7,7 @@ export type MonthlyActionCard = {
   title: string;
   subtitle: string;
   details: string;
+  effects?: string[];
   category: MonthlyActionCategory;
   disabled: boolean;
   disabledReason?: string;
@@ -57,6 +58,7 @@ export const getMonthlyActionsSummary = (state: GameState, isProcessing: boolean
       title: 'Work Overtime',
       subtitle: '+10% salary bonus (next month)',
       details: '-15 energy • +12 stress',
+      effects: ['+10% salary (next month)', '-15 energy', '+12 stress'],
       category: 'income',
       disabled: locked || remaining <= 0 || tooDrained,
       disabledReason: baseReason || (tooDrained ? 'Too drained (need 20+ energy).' : undefined)
@@ -66,6 +68,7 @@ export const getMonthlyActionsSummary = (state: GameState, isProcessing: boolean
       title: 'Networking',
       subtitle: '+$0–$500 chance • +networking',
       details: 'Cost: $100 • +12 networking',
+      effects: ['-$100 cash', '+12 networking'],
       category: 'income',
       disabled: locked || remaining <= 0 || state.cash < 100,
       disabledReason: baseReason || (state.cash < 100 ? 'Need $100 cash.' : undefined)
@@ -75,6 +78,7 @@ export const getMonthlyActionsSummary = (state: GameState, isProcessing: boolean
       title: 'Skill Training',
       subtitle: '+12 Financial IQ (stronger investing)',
       details: 'Cost: $300 • -8 energy • +4 stress',
+      effects: ['-$300 cash', '+12 Financial IQ', '-8 energy', '+4 stress'],
       category: 'growth',
       disabled: locked || remaining <= 0 || tooDrained || state.cash < 300,
       disabledReason:
@@ -87,6 +91,7 @@ export const getMonthlyActionsSummary = (state: GameState, isProcessing: boolean
       title: 'Hustle Sprint',
       subtitle: '+25% side hustle income (next month)',
       details: 'Requires active hustle • -12 energy • +10 stress',
+      effects: ['+25% hustle income (next month)', '-12 energy', '+10 stress'],
       category: 'income',
       disabled: locked || remaining <= 0 || tooDrained || !hasHustle,
       disabledReason:
@@ -99,6 +104,7 @@ export const getMonthlyActionsSummary = (state: GameState, isProcessing: boolean
       title: 'Recover',
       subtitle: 'Restore energy & reduce stress',
       details: '+18 energy • -15 stress • +4 health',
+      effects: ['+18 energy', '-15 stress', '+4 health'],
       category: 'recovery',
       disabled: locked || remaining <= 0,
       disabledReason: baseReason || undefined

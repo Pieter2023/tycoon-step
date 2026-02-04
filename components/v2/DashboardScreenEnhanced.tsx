@@ -18,6 +18,7 @@ import {
   Activity,
   Heart,
   Lightbulb,
+  Shield,
 } from 'lucide-react';
 import { MonthlyActionsSummary, MonthlyActionCard } from '../../services/monthlyActions';
 import { MonthlyActionId, GameState } from '../../types';
@@ -378,7 +379,7 @@ const DashboardScreenEnhanced: React.FC<DashboardScreenEnhancedProps> = ({
                           </span>
                         </div>
                         <p className="text-xs text-slate-500 mb-2">{action.details}</p>
-                        {!action.disabled && (
+                        {!action.disabled && action.effects && (
                           <div className="flex items-center gap-2 text-xs">
                             {action.effects.map((effect, i) => (
                               <span key={i} className={effect.startsWith('+') ? 'text-emerald-400' : 'text-rose-400'}>
