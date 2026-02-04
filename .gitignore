@@ -4,3 +4,4 @@ coverage/
 .netlify/
 .DS_Store
 .env.local
+redesign-mockup/
