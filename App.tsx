@@ -3810,6 +3810,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
         }
         playPurchase();
         setGameState(prev => {
+          const loanType: Liability['type'] = loanOption.id === 'business' ? 'BUSINESS_LOAN' : 'PERSONAL_LOAN';
           const newLiability: Liability = {
             id: 'loan-' + Date.now(),
             name: loanOption.name,
@@ -3817,7 +3818,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
             originalBalance: loanOption.amount,
             interestRate: loanOption.rate,
             monthlyPayment: payment,
-            type: 'PERSONAL_LOAN'
+            type: loanType
           };
 
           return {
@@ -3969,7 +3970,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
     
     const isRelevant = edu.relevantCareers.includes(careerPath);
     const loanAmount = isExpensive ? edu.cost - deposit : 0;
-    const estLoanPayment = isExpensive ? Math.round(loanAmount / edu.duration) : 0;
+    const estLoanPayment = isExpensive ? calculateLoanPayment(loanAmount, 0.065, edu.duration) : 0;
     const needsConfirm = isExpensive || !isRelevant || deposit >= 5000;
 
     const doEnroll = () => {

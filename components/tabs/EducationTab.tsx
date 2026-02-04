@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { CAREER_PATHS, EDUCATION_OPTIONS } from '../../constants';
+import { calculateEffectiveMonthlySalary } from '../../services/gameLogic';
 import { CareerPath, EducationOption } from '../../types';
 
 type EducationTabProps = {
@@ -99,8 +100,18 @@ const EducationTab: React.FC<EducationTabProps> = (props) => {
           const isExpensive = edu.cost > 20000;
           const deposit = isExpensive ? Math.round(edu.cost * 0.1) : edu.cost;
           const canAfford = gameState.cash >= deposit;
-          const baseSalary = gameState.career?.salary || gameState.playerJob?.salary || 0;
-          const salaryDelta = isRelevant ? Math.round(baseSalary * (edu.salaryBoost - 1)) : 0;
+          const currentSalary = calculateEffectiveMonthlySalary(gameState);
+          const nextDegrees = alreadyHave ? gameState.education.degrees : [...gameState.education.degrees, edu.id];
+          const boostedSalary = isRelevant
+            ? calculateEffectiveMonthlySalary({
+                ...gameState,
+                education: {
+                  ...gameState.education,
+                  degrees: nextDegrees
+                }
+              })
+            : currentSalary;
+          const salaryDelta = isRelevant ? Math.max(0, boostedSalary - currentSalary) : 0;
           const paybackMonths = salaryDelta > 0 ? Math.ceil(edu.cost / salaryDelta) : null;
 
           // Check prerequisites

@@ -1140,7 +1140,10 @@ export const calculateMonthlyCashFlow = (state: GameState): {
       ? asset.currentMonthIncome
       : asset.cashFlow * qty;
     const assetIncome = (baseIncome + (asset.value * yieldBonus / 12) * qty) * sectorMult * incomeMult;
-    passiveIncome += assetIncome;
+    const realEstateMaintenance = asset.type === AssetType.REAL_ESTATE
+      ? Math.round((asset.value * qty) * 0.01 / 12)
+      : 0;
+    passiveIncome += (assetIncome - realEstateMaintenance);
   }
 
   // Financial IQ slightly improves passive income efficiency (0% to +5%)
@@ -1221,7 +1224,10 @@ export const calculateMonthlyCashFlowEstimate = (state: GameState): {
     const qty = asset.quantity ?? 1;
     const incomeMult = getAssetIncomeMultiplier(state, asset.id);
     const assetIncome = (asset.cashFlow + (asset.value * yieldBonus / 12)) * qty * sectorMult * incomeMult;
-    passiveIncome += assetIncome;
+    const realEstateMaintenance = asset.type === AssetType.REAL_ESTATE
+      ? Math.round((asset.value * qty) * 0.01 / 12)
+      : 0;
+    passiveIncome += (assetIncome - realEstateMaintenance);
   }
 
   // Financial IQ slightly improves passive income efficiency (0% to +5%)
@@ -1561,18 +1567,20 @@ export const checkPromotion = (state: GameState): { promoted: boolean; newState:
   const newState = { ...state };
   const diffSettings = DIFFICULTY_SETTINGS[state.difficulty as keyof typeof DIFFICULTY_SETTINGS] || DIFFICULTY_SETTINGS.NORMAL;
   
+  const nextBaseSalary = Math.round(nextLevel.baseSalary * diffSettings.salaryMultiplier);
+
   newState.career = {
     ...state.career,
     level: currentLevel + 1,
     title: nextLevel.title,
-    salary: Math.round(nextLevel.baseSalary * diffSettings.salaryMultiplier)
+    salary: Math.max(state.career.salary, nextBaseSalary)
   };
   
   newState.playerJob = {
     ...state.playerJob,
     level: currentLevel + 1,
     title: nextLevel.title,
-    salary: Math.round(nextLevel.baseSalary * diffSettings.salaryMultiplier)
+    salary: Math.max(state.playerJob?.salary || 0, nextBaseSalary)
   };
   
   return { promoted: true, newState };
@@ -2992,6 +3000,8 @@ const calculateLateFee = (liability: Liability): number => {
       return 25;
     case 'PERSONAL_LOAN':
       return 30;
+    case 'BUSINESS_LOAN':
+      return 30;
     case 'MEDICAL_DEBT':
       return 15;
     case 'LEGAL_DEBT':
@@ -3235,9 +3245,7 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
         return { ...liability, balance: newBalance };
       }
 
-      const interestPayment = interestAccrued;
-      const principalPayment = Math.max(0, liability.monthlyPayment - interestPayment);
-      const newBalance = Math.max(0, liability.balance - principalPayment);
+      const newBalance = Math.max(0, liability.balance + interestAccrued - liability.monthlyPayment);
       return { ...liability, balance: newBalance };
     })
     .filter(l => l.balance > 0);

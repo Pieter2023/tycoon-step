@@ -202,7 +202,7 @@ export interface Liability {
   originalBalance: number;
   interestRate: number;
   monthlyPayment: number;
-  type: 'MORTGAGE' | 'STUDENT_LOAN' | 'CAR_LOAN' | 'PERSONAL_LOAN' | 'CREDIT_CARD' | 'MEDICAL_DEBT' | 'LEGAL_DEBT';
+  type: 'MORTGAGE' | 'STUDENT_LOAN' | 'CAR_LOAN' | 'PERSONAL_LOAN' | 'BUSINESS_LOAN' | 'CREDIT_CARD' | 'MEDICAL_DEBT' | 'LEGAL_DEBT';
   assetId?: string;
 }
 

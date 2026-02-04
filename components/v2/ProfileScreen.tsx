@@ -1,5 +1,6 @@
 import React from 'react';
 import { Briefcase, GraduationCap, HeartPulse, Sparkles } from 'lucide-react';
+import { calculateEffectiveMonthlySalary } from '../../services/gameLogic';
 import { GameState } from '../../types';
 import SignalsStack from './SignalsStack';
 
@@ -50,7 +51,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onNavigate
 }) => {
   const jobTitle = gameState.playerJob?.title || gameState.career?.title || 'Career path';
-  const salary = gameState.playerJob?.salary ?? gameState.career?.salary ?? 0;
+  const salary = calculateEffectiveMonthlySalary(gameState);
   const stats = gameState.stats || {
     happiness: 0,
     health: 0,

@@ -83,8 +83,18 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
 
   const liabilitiesTotal = useMemo(() => {
     const liabilitySum = gameState.liabilities.reduce((sum, l) => sum + l.balance, 0);
-    const mortgageSum = gameState.mortgages.reduce((sum, m) => sum + m.balance, 0);
-    return liabilitySum + mortgageSum;
+    const liabilityMortgageIds = new Set(
+      gameState.liabilities.filter(l => l.type === 'MORTGAGE').map(l => l.id)
+    );
+    const liabilityMortgageAssetIds = new Set(
+      gameState.liabilities.filter(l => l.type === 'MORTGAGE' && l.assetId).map(l => l.assetId)
+    );
+    const uncoveredMortgageSum = gameState.mortgages.reduce((sum, m) => {
+      if (liabilityMortgageIds.has(m.id)) return sum;
+      if (m.assetId && liabilityMortgageAssetIds.has(m.assetId)) return sum;
+      return sum + m.balance;
+    }, 0);
+    return liabilitySum + uncoveredMortgageSum;
   }, [gameState.liabilities, gameState.mortgages]);
 
   const portfolioValue = useMemo(() => {
