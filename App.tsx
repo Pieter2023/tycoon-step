@@ -887,7 +887,7 @@ const App: React.FC<AppProps> = ({ onBackToMenu, initialGameState, playerConfig,
   const handleClaimQuest = (questId: string) => { console.log('Claiming quest', questId); };
   const handleSelectQuizAnswer = () => { };
   const handleSubmitQuiz = () => { };
-  const markQuizSeen = () => { };
+  const markQuizSeen = (id?: string) => { };
 
   // Coach & Event Lab
   const [coachHint, setCoachHint] = useState<any>(null);

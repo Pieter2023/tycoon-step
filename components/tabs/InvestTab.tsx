@@ -6,6 +6,7 @@ import { AUTO_INVEST_PRESETS, MARKET_ITEMS } from '../../constants';
 import { QuizQuestion } from '../../data/learning';
 
 type InvestTabProps = {
+  t?: any;
   formatMoney: (value: number) => string;
   formatMoneyFull: (value: number) => string;
   formatPercent: (value: number, digits?: number) => string;
