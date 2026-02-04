@@ -1,0 +1,1945 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for tycoon_step v4. sales course update/i18n/translations/en.json</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../prettify.css" />
+    <link rel="stylesheet" href="../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../../index.html">All files</a> / <a href="index.html">tycoon_step v4. sales course update/i18n/translations</a> en.json</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>0/0</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/0</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/0</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>0/0</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a>
+<a name='L120'></a><a href='#L120'>120</a>
+<a name='L121'></a><a href='#L121'>121</a>
+<a name='L122'></a><a href='#L122'>122</a>
+<a name='L123'></a><a href='#L123'>123</a>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a>
+<a name='L142'></a><a href='#L142'>142</a>
+<a name='L143'></a><a href='#L143'>143</a>
+<a name='L144'></a><a href='#L144'>144</a>
+<a name='L145'></a><a href='#L145'>145</a>
+<a name='L146'></a><a href='#L146'>146</a>
+<a name='L147'></a><a href='#L147'>147</a>
+<a name='L148'></a><a href='#L148'>148</a>
+<a name='L149'></a><a href='#L149'>149</a>
+<a name='L150'></a><a href='#L150'>150</a>
+<a name='L151'></a><a href='#L151'>151</a>
+<a name='L152'></a><a href='#L152'>152</a>
+<a name='L153'></a><a href='#L153'>153</a>
+<a name='L154'></a><a href='#L154'>154</a>
+<a name='L155'></a><a href='#L155'>155</a>
+<a name='L156'></a><a href='#L156'>156</a>
+<a name='L157'></a><a href='#L157'>157</a>
+<a name='L158'></a><a href='#L158'>158</a>
+<a name='L159'></a><a href='#L159'>159</a>
+<a name='L160'></a><a href='#L160'>160</a>
+<a name='L161'></a><a href='#L161'>161</a>
+<a name='L162'></a><a href='#L162'>162</a>
+<a name='L163'></a><a href='#L163'>163</a>
+<a name='L164'></a><a href='#L164'>164</a>
+<a name='L165'></a><a href='#L165'>165</a>
+<a name='L166'></a><a href='#L166'>166</a>
+<a name='L167'></a><a href='#L167'>167</a>
+<a name='L168'></a><a href='#L168'>168</a>
+<a name='L169'></a><a href='#L169'>169</a>
+<a name='L170'></a><a href='#L170'>170</a>
+<a name='L171'></a><a href='#L171'>171</a>
+<a name='L172'></a><a href='#L172'>172</a>
+<a name='L173'></a><a href='#L173'>173</a>
+<a name='L174'></a><a href='#L174'>174</a>
+<a name='L175'></a><a href='#L175'>175</a>
+<a name='L176'></a><a href='#L176'>176</a>
+<a name='L177'></a><a href='#L177'>177</a>
+<a name='L178'></a><a href='#L178'>178</a>
+<a name='L179'></a><a href='#L179'>179</a>
+<a name='L180'></a><a href='#L180'>180</a>
+<a name='L181'></a><a href='#L181'>181</a>
+<a name='L182'></a><a href='#L182'>182</a>
+<a name='L183'></a><a href='#L183'>183</a>
+<a name='L184'></a><a href='#L184'>184</a>
+<a name='L185'></a><a href='#L185'>185</a>
+<a name='L186'></a><a href='#L186'>186</a>
+<a name='L187'></a><a href='#L187'>187</a>
+<a name='L188'></a><a href='#L188'>188</a>
+<a name='L189'></a><a href='#L189'>189</a>
+<a name='L190'></a><a href='#L190'>190</a>
+<a name='L191'></a><a href='#L191'>191</a>
+<a name='L192'></a><a href='#L192'>192</a>
+<a name='L193'></a><a href='#L193'>193</a>
+<a name='L194'></a><a href='#L194'>194</a>
+<a name='L195'></a><a href='#L195'>195</a>
+<a name='L196'></a><a href='#L196'>196</a>
+<a name='L197'></a><a href='#L197'>197</a>
+<a name='L198'></a><a href='#L198'>198</a>
+<a name='L199'></a><a href='#L199'>199</a>
+<a name='L200'></a><a href='#L200'>200</a>
+<a name='L201'></a><a href='#L201'>201</a>
+<a name='L202'></a><a href='#L202'>202</a>
+<a name='L203'></a><a href='#L203'>203</a>
+<a name='L204'></a><a href='#L204'>204</a>
+<a name='L205'></a><a href='#L205'>205</a>
+<a name='L206'></a><a href='#L206'>206</a>
+<a name='L207'></a><a href='#L207'>207</a>
+<a name='L208'></a><a href='#L208'>208</a>
+<a name='L209'></a><a href='#L209'>209</a>
+<a name='L210'></a><a href='#L210'>210</a>
+<a name='L211'></a><a href='#L211'>211</a>
+<a name='L212'></a><a href='#L212'>212</a>
+<a name='L213'></a><a href='#L213'>213</a>
+<a name='L214'></a><a href='#L214'>214</a>
+<a name='L215'></a><a href='#L215'>215</a>
+<a name='L216'></a><a href='#L216'>216</a>
+<a name='L217'></a><a href='#L217'>217</a>
+<a name='L218'></a><a href='#L218'>218</a>
+<a name='L219'></a><a href='#L219'>219</a>
+<a name='L220'></a><a href='#L220'>220</a>
+<a name='L221'></a><a href='#L221'>221</a>
+<a name='L222'></a><a href='#L222'>222</a>
+<a name='L223'></a><a href='#L223'>223</a>
+<a name='L224'></a><a href='#L224'>224</a>
+<a name='L225'></a><a href='#L225'>225</a>
+<a name='L226'></a><a href='#L226'>226</a>
+<a name='L227'></a><a href='#L227'>227</a>
+<a name='L228'></a><a href='#L228'>228</a>
+<a name='L229'></a><a href='#L229'>229</a>
+<a name='L230'></a><a href='#L230'>230</a>
+<a name='L231'></a><a href='#L231'>231</a>
+<a name='L232'></a><a href='#L232'>232</a>
+<a name='L233'></a><a href='#L233'>233</a>
+<a name='L234'></a><a href='#L234'>234</a>
+<a name='L235'></a><a href='#L235'>235</a>
+<a name='L236'></a><a href='#L236'>236</a>
+<a name='L237'></a><a href='#L237'>237</a>
+<a name='L238'></a><a href='#L238'>238</a>
+<a name='L239'></a><a href='#L239'>239</a>
+<a name='L240'></a><a href='#L240'>240</a>
+<a name='L241'></a><a href='#L241'>241</a>
+<a name='L242'></a><a href='#L242'>242</a>
+<a name='L243'></a><a href='#L243'>243</a>
+<a name='L244'></a><a href='#L244'>244</a>
+<a name='L245'></a><a href='#L245'>245</a>
+<a name='L246'></a><a href='#L246'>246</a>
+<a name='L247'></a><a href='#L247'>247</a>
+<a name='L248'></a><a href='#L248'>248</a>
+<a name='L249'></a><a href='#L249'>249</a>
+<a name='L250'></a><a href='#L250'>250</a>
+<a name='L251'></a><a href='#L251'>251</a>
+<a name='L252'></a><a href='#L252'>252</a>
+<a name='L253'></a><a href='#L253'>253</a>
+<a name='L254'></a><a href='#L254'>254</a>
+<a name='L255'></a><a href='#L255'>255</a>
+<a name='L256'></a><a href='#L256'>256</a>
+<a name='L257'></a><a href='#L257'>257</a>
+<a name='L258'></a><a href='#L258'>258</a>
+<a name='L259'></a><a href='#L259'>259</a>
+<a name='L260'></a><a href='#L260'>260</a>
+<a name='L261'></a><a href='#L261'>261</a>
+<a name='L262'></a><a href='#L262'>262</a>
+<a name='L263'></a><a href='#L263'>263</a>
+<a name='L264'></a><a href='#L264'>264</a>
+<a name='L265'></a><a href='#L265'>265</a>
+<a name='L266'></a><a href='#L266'>266</a>
+<a name='L267'></a><a href='#L267'>267</a>
+<a name='L268'></a><a href='#L268'>268</a>
+<a name='L269'></a><a href='#L269'>269</a>
+<a name='L270'></a><a href='#L270'>270</a>
+<a name='L271'></a><a href='#L271'>271</a>
+<a name='L272'></a><a href='#L272'>272</a>
+<a name='L273'></a><a href='#L273'>273</a>
+<a name='L274'></a><a href='#L274'>274</a>
+<a name='L275'></a><a href='#L275'>275</a>
+<a name='L276'></a><a href='#L276'>276</a>
+<a name='L277'></a><a href='#L277'>277</a>
+<a name='L278'></a><a href='#L278'>278</a>
+<a name='L279'></a><a href='#L279'>279</a>
+<a name='L280'></a><a href='#L280'>280</a>
+<a name='L281'></a><a href='#L281'>281</a>
+<a name='L282'></a><a href='#L282'>282</a>
+<a name='L283'></a><a href='#L283'>283</a>
+<a name='L284'></a><a href='#L284'>284</a>
+<a name='L285'></a><a href='#L285'>285</a>
+<a name='L286'></a><a href='#L286'>286</a>
+<a name='L287'></a><a href='#L287'>287</a>
+<a name='L288'></a><a href='#L288'>288</a>
+<a name='L289'></a><a href='#L289'>289</a>
+<a name='L290'></a><a href='#L290'>290</a>
+<a name='L291'></a><a href='#L291'>291</a>
+<a name='L292'></a><a href='#L292'>292</a>
+<a name='L293'></a><a href='#L293'>293</a>
+<a name='L294'></a><a href='#L294'>294</a>
+<a name='L295'></a><a href='#L295'>295</a>
+<a name='L296'></a><a href='#L296'>296</a>
+<a name='L297'></a><a href='#L297'>297</a>
+<a name='L298'></a><a href='#L298'>298</a>
+<a name='L299'></a><a href='#L299'>299</a>
+<a name='L300'></a><a href='#L300'>300</a>
+<a name='L301'></a><a href='#L301'>301</a>
+<a name='L302'></a><a href='#L302'>302</a>
+<a name='L303'></a><a href='#L303'>303</a>
+<a name='L304'></a><a href='#L304'>304</a>
+<a name='L305'></a><a href='#L305'>305</a>
+<a name='L306'></a><a href='#L306'>306</a>
+<a name='L307'></a><a href='#L307'>307</a>
+<a name='L308'></a><a href='#L308'>308</a>
+<a name='L309'></a><a href='#L309'>309</a>
+<a name='L310'></a><a href='#L310'>310</a>
+<a name='L311'></a><a href='#L311'>311</a>
+<a name='L312'></a><a href='#L312'>312</a>
+<a name='L313'></a><a href='#L313'>313</a>
+<a name='L314'></a><a href='#L314'>314</a>
+<a name='L315'></a><a href='#L315'>315</a>
+<a name='L316'></a><a href='#L316'>316</a>
+<a name='L317'></a><a href='#L317'>317</a>
+<a name='L318'></a><a href='#L318'>318</a>
+<a name='L319'></a><a href='#L319'>319</a>
+<a name='L320'></a><a href='#L320'>320</a>
+<a name='L321'></a><a href='#L321'>321</a>
+<a name='L322'></a><a href='#L322'>322</a>
+<a name='L323'></a><a href='#L323'>323</a>
+<a name='L324'></a><a href='#L324'>324</a>
+<a name='L325'></a><a href='#L325'>325</a>
+<a name='L326'></a><a href='#L326'>326</a>
+<a name='L327'></a><a href='#L327'>327</a>
+<a name='L328'></a><a href='#L328'>328</a>
+<a name='L329'></a><a href='#L329'>329</a>
+<a name='L330'></a><a href='#L330'>330</a>
+<a name='L331'></a><a href='#L331'>331</a>
+<a name='L332'></a><a href='#L332'>332</a>
+<a name='L333'></a><a href='#L333'>333</a>
+<a name='L334'></a><a href='#L334'>334</a>
+<a name='L335'></a><a href='#L335'>335</a>
+<a name='L336'></a><a href='#L336'>336</a>
+<a name='L337'></a><a href='#L337'>337</a>
+<a name='L338'></a><a href='#L338'>338</a>
+<a name='L339'></a><a href='#L339'>339</a>
+<a name='L340'></a><a href='#L340'>340</a>
+<a name='L341'></a><a href='#L341'>341</a>
+<a name='L342'></a><a href='#L342'>342</a>
+<a name='L343'></a><a href='#L343'>343</a>
+<a name='L344'></a><a href='#L344'>344</a>
+<a name='L345'></a><a href='#L345'>345</a>
+<a name='L346'></a><a href='#L346'>346</a>
+<a name='L347'></a><a href='#L347'>347</a>
+<a name='L348'></a><a href='#L348'>348</a>
+<a name='L349'></a><a href='#L349'>349</a>
+<a name='L350'></a><a href='#L350'>350</a>
+<a name='L351'></a><a href='#L351'>351</a>
+<a name='L352'></a><a href='#L352'>352</a>
+<a name='L353'></a><a href='#L353'>353</a>
+<a name='L354'></a><a href='#L354'>354</a>
+<a name='L355'></a><a href='#L355'>355</a>
+<a name='L356'></a><a href='#L356'>356</a>
+<a name='L357'></a><a href='#L357'>357</a>
+<a name='L358'></a><a href='#L358'>358</a>
+<a name='L359'></a><a href='#L359'>359</a>
+<a name='L360'></a><a href='#L360'>360</a>
+<a name='L361'></a><a href='#L361'>361</a>
+<a name='L362'></a><a href='#L362'>362</a>
+<a name='L363'></a><a href='#L363'>363</a>
+<a name='L364'></a><a href='#L364'>364</a>
+<a name='L365'></a><a href='#L365'>365</a>
+<a name='L366'></a><a href='#L366'>366</a>
+<a name='L367'></a><a href='#L367'>367</a>
+<a name='L368'></a><a href='#L368'>368</a>
+<a name='L369'></a><a href='#L369'>369</a>
+<a name='L370'></a><a href='#L370'>370</a>
+<a name='L371'></a><a href='#L371'>371</a>
+<a name='L372'></a><a href='#L372'>372</a>
+<a name='L373'></a><a href='#L373'>373</a>
+<a name='L374'></a><a href='#L374'>374</a>
+<a name='L375'></a><a href='#L375'>375</a>
+<a name='L376'></a><a href='#L376'>376</a>
+<a name='L377'></a><a href='#L377'>377</a>
+<a name='L378'></a><a href='#L378'>378</a>
+<a name='L379'></a><a href='#L379'>379</a>
+<a name='L380'></a><a href='#L380'>380</a>
+<a name='L381'></a><a href='#L381'>381</a>
+<a name='L382'></a><a href='#L382'>382</a>
+<a name='L383'></a><a href='#L383'>383</a>
+<a name='L384'></a><a href='#L384'>384</a>
+<a name='L385'></a><a href='#L385'>385</a>
+<a name='L386'></a><a href='#L386'>386</a>
+<a name='L387'></a><a href='#L387'>387</a>
+<a name='L388'></a><a href='#L388'>388</a>
+<a name='L389'></a><a href='#L389'>389</a>
+<a name='L390'></a><a href='#L390'>390</a>
+<a name='L391'></a><a href='#L391'>391</a>
+<a name='L392'></a><a href='#L392'>392</a>
+<a name='L393'></a><a href='#L393'>393</a>
+<a name='L394'></a><a href='#L394'>394</a>
+<a name='L395'></a><a href='#L395'>395</a>
+<a name='L396'></a><a href='#L396'>396</a>
+<a name='L397'></a><a href='#L397'>397</a>
+<a name='L398'></a><a href='#L398'>398</a>
+<a name='L399'></a><a href='#L399'>399</a>
+<a name='L400'></a><a href='#L400'>400</a>
+<a name='L401'></a><a href='#L401'>401</a>
+<a name='L402'></a><a href='#L402'>402</a>
+<a name='L403'></a><a href='#L403'>403</a>
+<a name='L404'></a><a href='#L404'>404</a>
+<a name='L405'></a><a href='#L405'>405</a>
+<a name='L406'></a><a href='#L406'>406</a>
+<a name='L407'></a><a href='#L407'>407</a>
+<a name='L408'></a><a href='#L408'>408</a>
+<a name='L409'></a><a href='#L409'>409</a>
+<a name='L410'></a><a href='#L410'>410</a>
+<a name='L411'></a><a href='#L411'>411</a>
+<a name='L412'></a><a href='#L412'>412</a>
+<a name='L413'></a><a href='#L413'>413</a>
+<a name='L414'></a><a href='#L414'>414</a>
+<a name='L415'></a><a href='#L415'>415</a>
+<a name='L416'></a><a href='#L416'>416</a>
+<a name='L417'></a><a href='#L417'>417</a>
+<a name='L418'></a><a href='#L418'>418</a>
+<a name='L419'></a><a href='#L419'>419</a>
+<a name='L420'></a><a href='#L420'>420</a>
+<a name='L421'></a><a href='#L421'>421</a>
+<a name='L422'></a><a href='#L422'>422</a>
+<a name='L423'></a><a href='#L423'>423</a>
+<a name='L424'></a><a href='#L424'>424</a>
+<a name='L425'></a><a href='#L425'>425</a>
+<a name='L426'></a><a href='#L426'>426</a>
+<a name='L427'></a><a href='#L427'>427</a>
+<a name='L428'></a><a href='#L428'>428</a>
+<a name='L429'></a><a href='#L429'>429</a>
+<a name='L430'></a><a href='#L430'>430</a>
+<a name='L431'></a><a href='#L431'>431</a>
+<a name='L432'></a><a href='#L432'>432</a>
+<a name='L433'></a><a href='#L433'>433</a>
+<a name='L434'></a><a href='#L434'>434</a>
+<a name='L435'></a><a href='#L435'>435</a>
+<a name='L436'></a><a href='#L436'>436</a>
+<a name='L437'></a><a href='#L437'>437</a>
+<a name='L438'></a><a href='#L438'>438</a>
+<a name='L439'></a><a href='#L439'>439</a>
+<a name='L440'></a><a href='#L440'>440</a>
+<a name='L441'></a><a href='#L441'>441</a>
+<a name='L442'></a><a href='#L442'>442</a>
+<a name='L443'></a><a href='#L443'>443</a>
+<a name='L444'></a><a href='#L444'>444</a>
+<a name='L445'></a><a href='#L445'>445</a>
+<a name='L446'></a><a href='#L446'>446</a>
+<a name='L447'></a><a href='#L447'>447</a>
+<a name='L448'></a><a href='#L448'>448</a>
+<a name='L449'></a><a href='#L449'>449</a>
+<a name='L450'></a><a href='#L450'>450</a>
+<a name='L451'></a><a href='#L451'>451</a>
+<a name='L452'></a><a href='#L452'>452</a>
+<a name='L453'></a><a href='#L453'>453</a>
+<a name='L454'></a><a href='#L454'>454</a>
+<a name='L455'></a><a href='#L455'>455</a>
+<a name='L456'></a><a href='#L456'>456</a>
+<a name='L457'></a><a href='#L457'>457</a>
+<a name='L458'></a><a href='#L458'>458</a>
+<a name='L459'></a><a href='#L459'>459</a>
+<a name='L460'></a><a href='#L460'>460</a>
+<a name='L461'></a><a href='#L461'>461</a>
+<a name='L462'></a><a href='#L462'>462</a>
+<a name='L463'></a><a href='#L463'>463</a>
+<a name='L464'></a><a href='#L464'>464</a>
+<a name='L465'></a><a href='#L465'>465</a>
+<a name='L466'></a><a href='#L466'>466</a>
+<a name='L467'></a><a href='#L467'>467</a>
+<a name='L468'></a><a href='#L468'>468</a>
+<a name='L469'></a><a href='#L469'>469</a>
+<a name='L470'></a><a href='#L470'>470</a>
+<a name='L471'></a><a href='#L471'>471</a>
+<a name='L472'></a><a href='#L472'>472</a>
+<a name='L473'></a><a href='#L473'>473</a>
+<a name='L474'></a><a href='#L474'>474</a>
+<a name='L475'></a><a href='#L475'>475</a>
+<a name='L476'></a><a href='#L476'>476</a>
+<a name='L477'></a><a href='#L477'>477</a>
+<a name='L478'></a><a href='#L478'>478</a>
+<a name='L479'></a><a href='#L479'>479</a>
+<a name='L480'></a><a href='#L480'>480</a>
+<a name='L481'></a><a href='#L481'>481</a>
+<a name='L482'></a><a href='#L482'>482</a>
+<a name='L483'></a><a href='#L483'>483</a>
+<a name='L484'></a><a href='#L484'>484</a>
+<a name='L485'></a><a href='#L485'>485</a>
+<a name='L486'></a><a href='#L486'>486</a>
+<a name='L487'></a><a href='#L487'>487</a>
+<a name='L488'></a><a href='#L488'>488</a>
+<a name='L489'></a><a href='#L489'>489</a>
+<a name='L490'></a><a href='#L490'>490</a>
+<a name='L491'></a><a href='#L491'>491</a>
+<a name='L492'></a><a href='#L492'>492</a>
+<a name='L493'></a><a href='#L493'>493</a>
+<a name='L494'></a><a href='#L494'>494</a>
+<a name='L495'></a><a href='#L495'>495</a>
+<a name='L496'></a><a href='#L496'>496</a>
+<a name='L497'></a><a href='#L497'>497</a>
+<a name='L498'></a><a href='#L498'>498</a>
+<a name='L499'></a><a href='#L499'>499</a>
+<a name='L500'></a><a href='#L500'>500</a>
+<a name='L501'></a><a href='#L501'>501</a>
+<a name='L502'></a><a href='#L502'>502</a>
+<a name='L503'></a><a href='#L503'>503</a>
+<a name='L504'></a><a href='#L504'>504</a>
+<a name='L505'></a><a href='#L505'>505</a>
+<a name='L506'></a><a href='#L506'>506</a>
+<a name='L507'></a><a href='#L507'>507</a>
+<a name='L508'></a><a href='#L508'>508</a>
+<a name='L509'></a><a href='#L509'>509</a>
+<a name='L510'></a><a href='#L510'>510</a>
+<a name='L511'></a><a href='#L511'>511</a>
+<a name='L512'></a><a href='#L512'>512</a>
+<a name='L513'></a><a href='#L513'>513</a>
+<a name='L514'></a><a href='#L514'>514</a>
+<a name='L515'></a><a href='#L515'>515</a>
+<a name='L516'></a><a href='#L516'>516</a>
+<a name='L517'></a><a href='#L517'>517</a>
+<a name='L518'></a><a href='#L518'>518</a>
+<a name='L519'></a><a href='#L519'>519</a>
+<a name='L520'></a><a href='#L520'>520</a>
+<a name='L521'></a><a href='#L521'>521</a>
+<a name='L522'></a><a href='#L522'>522</a>
+<a name='L523'></a><a href='#L523'>523</a>
+<a name='L524'></a><a href='#L524'>524</a>
+<a name='L525'></a><a href='#L525'>525</a>
+<a name='L526'></a><a href='#L526'>526</a>
+<a name='L527'></a><a href='#L527'>527</a>
+<a name='L528'></a><a href='#L528'>528</a>
+<a name='L529'></a><a href='#L529'>529</a>
+<a name='L530'></a><a href='#L530'>530</a>
+<a name='L531'></a><a href='#L531'>531</a>
+<a name='L532'></a><a href='#L532'>532</a>
+<a name='L533'></a><a href='#L533'>533</a>
+<a name='L534'></a><a href='#L534'>534</a>
+<a name='L535'></a><a href='#L535'>535</a>
+<a name='L536'></a><a href='#L536'>536</a>
+<a name='L537'></a><a href='#L537'>537</a>
+<a name='L538'></a><a href='#L538'>538</a>
+<a name='L539'></a><a href='#L539'>539</a>
+<a name='L540'></a><a href='#L540'>540</a>
+<a name='L541'></a><a href='#L541'>541</a>
+<a name='L542'></a><a href='#L542'>542</a>
+<a name='L543'></a><a href='#L543'>543</a>
+<a name='L544'></a><a href='#L544'>544</a>
+<a name='L545'></a><a href='#L545'>545</a>
+<a name='L546'></a><a href='#L546'>546</a>
+<a name='L547'></a><a href='#L547'>547</a>
+<a name='L548'></a><a href='#L548'>548</a>
+<a name='L549'></a><a href='#L549'>549</a>
+<a name='L550'></a><a href='#L550'>550</a>
+<a name='L551'></a><a href='#L551'>551</a>
+<a name='L552'></a><a href='#L552'>552</a>
+<a name='L553'></a><a href='#L553'>553</a>
+<a name='L554'></a><a href='#L554'>554</a>
+<a name='L555'></a><a href='#L555'>555</a>
+<a name='L556'></a><a href='#L556'>556</a>
+<a name='L557'></a><a href='#L557'>557</a>
+<a name='L558'></a><a href='#L558'>558</a>
+<a name='L559'></a><a href='#L559'>559</a>
+<a name='L560'></a><a href='#L560'>560</a>
+<a name='L561'></a><a href='#L561'>561</a>
+<a name='L562'></a><a href='#L562'>562</a>
+<a name='L563'></a><a href='#L563'>563</a>
+<a name='L564'></a><a href='#L564'>564</a>
+<a name='L565'></a><a href='#L565'>565</a>
+<a name='L566'></a><a href='#L566'>566</a>
+<a name='L567'></a><a href='#L567'>567</a>
+<a name='L568'></a><a href='#L568'>568</a>
+<a name='L569'></a><a href='#L569'>569</a>
+<a name='L570'></a><a href='#L570'>570</a>
+<a name='L571'></a><a href='#L571'>571</a>
+<a name='L572'></a><a href='#L572'>572</a>
+<a name='L573'></a><a href='#L573'>573</a>
+<a name='L574'></a><a href='#L574'>574</a>
+<a name='L575'></a><a href='#L575'>575</a>
+<a name='L576'></a><a href='#L576'>576</a>
+<a name='L577'></a><a href='#L577'>577</a>
+<a name='L578'></a><a href='#L578'>578</a>
+<a name='L579'></a><a href='#L579'>579</a>
+<a name='L580'></a><a href='#L580'>580</a>
+<a name='L581'></a><a href='#L581'>581</a>
+<a name='L582'></a><a href='#L582'>582</a>
+<a name='L583'></a><a href='#L583'>583</a>
+<a name='L584'></a><a href='#L584'>584</a>
+<a name='L585'></a><a href='#L585'>585</a>
+<a name='L586'></a><a href='#L586'>586</a>
+<a name='L587'></a><a href='#L587'>587</a>
+<a name='L588'></a><a href='#L588'>588</a>
+<a name='L589'></a><a href='#L589'>589</a>
+<a name='L590'></a><a href='#L590'>590</a>
+<a name='L591'></a><a href='#L591'>591</a>
+<a name='L592'></a><a href='#L592'>592</a>
+<a name='L593'></a><a href='#L593'>593</a>
+<a name='L594'></a><a href='#L594'>594</a>
+<a name='L595'></a><a href='#L595'>595</a>
+<a name='L596'></a><a href='#L596'>596</a>
+<a name='L597'></a><a href='#L597'>597</a>
+<a name='L598'></a><a href='#L598'>598</a>
+<a name='L599'></a><a href='#L599'>599</a>
+<a name='L600'></a><a href='#L600'>600</a>
+<a name='L601'></a><a href='#L601'>601</a>
+<a name='L602'></a><a href='#L602'>602</a>
+<a name='L603'></a><a href='#L603'>603</a>
+<a name='L604'></a><a href='#L604'>604</a>
+<a name='L605'></a><a href='#L605'>605</a>
+<a name='L606'></a><a href='#L606'>606</a>
+<a name='L607'></a><a href='#L607'>607</a>
+<a name='L608'></a><a href='#L608'>608</a>
+<a name='L609'></a><a href='#L609'>609</a>
+<a name='L610'></a><a href='#L610'>610</a>
+<a name='L611'></a><a href='#L611'>611</a>
+<a name='L612'></a><a href='#L612'>612</a>
+<a name='L613'></a><a href='#L613'>613</a>
+<a name='L614'></a><a href='#L614'>614</a>
+<a name='L615'></a><a href='#L615'>615</a>
+<a name='L616'></a><a href='#L616'>616</a>
+<a name='L617'></a><a href='#L617'>617</a>
+<a name='L618'></a><a href='#L618'>618</a>
+<a name='L619'></a><a href='#L619'>619</a>
+<a name='L620'></a><a href='#L620'>620</a>
+<a name='L621'></a><a href='#L621'>621</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">{
+  "language.name": "English",
+  "language.es": "Spanish",
+  "language.en": "English",
+  "modal.title": "Modal",
+  "modal.close": "Close modal",
+  "actions.reset": "Reset",
+  "actions.done": "Done",
+  "settings.accessibility.ariaLabel": "Accessibility settings",
+  "settings.accessibility.title": "Accessibility",
+  "settings.accessibility.subtitle": "Adjust text size and contrast for better readability.",
+  "settings.accessibility.largeText.title": "Larger text",
+  "settings.accessibility.largeText.description": "Scales the UI up for easier reading.",
+  "settings.accessibility.highContrast.title": "High contrast",
+  "settings.accessibility.highContrast.description": "Brightens text and UI accents for improved contrast.",
+  "settings.accessibility.reduceMotion.title": "Reduce motion",
+  "settings.accessibility.reduceMotion.description": "Minimize animations and motion effects.",
+  "settings.accessibility.disableConfetti.title": "Disable confetti",
+  "settings.accessibility.disableConfetti.description": "Turn off celebratory particle effects.",
+  "settings.accessibility.disableVideoPreload.title": "Disable tutorial video preload",
+  "settings.accessibility.disableVideoPreload.description": "Only load videos after you press Play.",
+  "save.autosaveNever": "No autosave yet",
+  "save.autosaveJustNow": "Autosaved just now",
+  "save.autosaveLast": "Last autosave: {time}",
+  "save.savedTitle": "Game Saved",
+  "save.savedBody": "Saved to {slot}.",
+  "save.failedTitle": "Save Failed",
+  "save.failedBody": "Unable to save game in this browser.",
+  "save.notFoundTitle": "No Save Found",
+  "save.notFoundBody": "Nothing saved in {slot}.",
+  "save.loadedTitle": "Game Loaded",
+  "save.loadedBody": "Loaded {slot}.",
+  "save.deletedTitle": "Save Deleted",
+  "save.deletedBody": "{slot} deleted.",
+  "save.renamedTitle": "Save Renamed",
+  "save.renamedBody": "Renamed {slot}.",
+  "save.slot.autosave": "Autosave",
+  "save.unknown": "Unknown",
+  "save.exportMissingTitle": "No Save Found",
+  "save.exportMissingBody": "Pick a slot with a save to export.",
+  "save.exportCopiedTitle": "Export Copied",
+  "save.exportCopiedBody": "Save JSON copied to clipboard.",
+  "save.exportCopyFailedTitle": "Copy Failed",
+  "save.exportCopyFailedBody": "Clipboard access was blocked.",
+  "save.exportDownloadedTitle": "Export Downloaded",
+  "save.exportDownloadedBody": "Save JSON downloaded.",
+  "save.exportDownloadFailedTitle": "Download Failed",
+  "save.exportDownloadFailedBody": "Unable to download the save file.",
+  "save.importInvalid": "Invalid JSON. Paste a valid export.",
+  "save.importFailed": "Import failed. Check the JSON format.",
+  "save.importSuccessTitle": "Import Complete",
+  "save.importSuccessBody": "Imported into {slot}.",
+  "settings.tutorialPopups.title": "Show tutorial popups automatically",
+  "settings.tutorialPopups.description": "Auto-open quick tips for new tabs and onboarding.",
+  "settings.language.label": "Language",
+  "settings.language.helper": "Switch language without reloading.",
+  "dates.invalid": "Invalid date",
+  "general.emptyDash": "—",
+  "quests.logTitle": "Quest Log",
+  "quests.logSubtitle": "Track progress, claim rewards, and preview what unlocks next.",
+  "quests.claimAll": "Claim all available",
+  "quests.claim": "Claim",
+  "quests.progress": "Progress",
+  "quests.upNext": "Up next",
+  "quests.preview": "Preview",
+  "quests.unlocksAfter": "Unlocks after: {title}",
+  "quests.rewardLabel": "🎁 Reward:",
+  "quests.trackSummary": "{ready} ready • {active} active • {claimed} claimed",
+  "quests.completeTitle": "Quest complete: {title}",
+  "quests.rewardReady": "Reward ready to claim.",
+  "quests.trackUnlockedTitle": "🧭 Track Unlocked",
+  "quests.trackUnlockedBody": "{track} questline unlocked.",
+  "quests.rewardClaimedTitle": "🏆 Reward Claimed!",
+  "quests.nothingToClaimTitle": "Nothing to Claim",
+  "quests.nothingToClaimBody": "No quest rewards are ready yet.",
+  "quests.claimAllTitle": "Claim all available rewards?",
+  "quests.claimAllBody": {
+    "one": "You have {count} quest reward ready.",
+    "other": "You have {count} quest rewards ready."
+  },
+  "quests.rewardsClaimedTitle": "Rewards Claimed",
+  "quests.rewardsClaimedBody": {
+    "one": "Claimed {count} quest reward.",
+    "other": "Claimed {count} quest rewards."
+  },
+  "quests.openLog": "Open quest log",
+  "events.modalTitle": "Scenario",
+  "events.enlargeImage": "Enlarge event image",
+  "events.tapToEnlarge": "Tap to enlarge",
+  "autoplay.statusOn": "Autoplay: ON ({speed})",
+  "autoplay.statusOff": "Autoplay: OFF",
+  "autoplay.hotkeyHint": "Press Shift+A to toggle",
+  "autoplay.stopHint": "Stop autoplay (Shift+A)",
+  "autoplay.startHint": "Start autoplay (Shift+A)",
+  "autoplay.stop": "Stop Autoplay",
+  "autoplay.start": "Start Autoplay",
+  "autoplay.tooltipOn": "Autoplay ON ({speed}). Pauses during decisions. Hotkey: Shift+A.",
+  "autoplay.tooltipOff": "Autoplay OFF. Pauses during decisions. Hotkey: Shift+A.",
+  "events.recentTitle": "📰 Recent Events",
+  "events.none": "No events yet. Start playing!",
+  "events.labTitle": "🧪 Event Lab",
+  "events.labEventLabel": "Event",
+  "events.labOptionLabel": "Option",
+  "events.labSimulate": "Simulate Outcome",
+  "events.labInject": "Inject Event",
+  "events.labSummary": "Simulation Summary",
+  "events.labCash": "Cash: {value}",
+  "events.labAssets": "Assets: {value}",
+  "events.labLiabilities": "Liabilities: {value}",
+  "events.labMessage": "Message: {value}",
+  "events.eventAlreadyActiveTitle": "Event Already Active",
+  "events.eventAlreadyActiveBody": "Resolve the current event before injecting another.",
+  "events.defaultTitle": "Event",
+  "actions.show": "Show",
+  "actions.hide": "Hide",
+  "hustle.upgrade.deferHint": "Not ready to decide? Close this panel and choose later from your active hustle list.",
+  "credit.whyChanged": "Why it changed this month",
+  "credit.noChange": "No change recorded yet.",
+  "quests.sectionTitle": "Goals &amp; Quests",
+  "quests.sectionSubtitle": "Short-term objectives with small rewards - learn the money habits that win games.",
+  "quests.trackLabel": "Track",
+  "quests.readyLabel": "Ready",
+  "quests.claimedLabel": "Claimed",
+  "quests.readyToClaim": "Ready to claim",
+  "quests.tapClaimHint": "Tap Claim to apply rewards",
+  "quests.noActive": "No active goals right now.",
+  "quests.difficulty.EASY": "EASY",
+  "quests.difficulty.MEDIUM": "MEDIUM",
+  "quests.difficulty.HARD": "HARD",
+  "quests.viewCompleted": { "one": "View completed goals ({count})", "other": "View completed goals ({count})" },
+  "quests.track.CAREER": "Career",
+  "quests.track.INVESTOR": "Investor",
+  "quests.track.ENTREPRENEUR": "Entrepreneur",
+  "quests.track.DEBT_CRUSHER": "Debt Crusher",
+  "quests.progressMoney": "{current} / {target}",
+  "quests.progressMonths": "{current} / {target} months",
+  "quests.progressScore": "{current} / {target}",
+  "quests.reward.cash": "{value} cash",
+  "quests.reward.credit": "{value} credit",
+  "quests.reward.stat": "{value} {stat}",
+  "stats.financialIQ": "Financial IQ",
+  "stats.networking": "Networking",
+  "stats.happiness": "Happiness",
+  "stats.stress": "Stress",
+  "stats.energy": "Energy",
+  "stats.fulfillment": "Fulfillment",
+  "stats.health": "Health",
+  "freedom.breakdown.title": "Breakdown",
+  "freedom.breakdown.goal": "Goal: {value}%",
+  "freedom.breakdown.passiveIncome": "Passive income",
+  "freedom.breakdown.passiveHelp": "What counts as passive income?",
+  "freedom.breakdown.passiveTooltip": "Includes asset cashflow (business, real estate, stocks). Side hustles are tracked separately.",
+  "freedom.breakdown.expenses": "Expenses",
+  "freedom.breakdown.expensesHelp": "What counts as expenses?",
+  "freedom.breakdown.expensesTooltip": "Includes lifestyle, debt payments, education, children, and vehicle costs.",
+  "freedom.breakdown.ratio": "Ratio",
+  "freedom.breakdown.ratioValue": "{passive} / {expenses} = {percent}%",
+  "freedom.breakdown.change": "Change since last month",
+  "freedom.breakdown.passiveLabel": "Passive",
+  "tabs.overview": "Overview",
+  "tabs.invest": "Invest",
+  "tabs.portfolio": "Portfolio",
+  "tabs.bank": "Bank",
+  "tabs.career": "Career",
+  "tabs.education": "Education",
+  "tabs.selfLearn": "Self Learn",
+  "tabs.upgradeEq": "Upgrade EQ",
+  "tabs.negotiations": "Master Negotiations",
+  "tabs.sideHustles": "Side Hustles",
+  "tabs.lifestyle": "Lifestyle",
+  "quests.Q_BUFFER_2K.title": "Starter Buffer",
+  "quests.Q_BUFFER_2K.description": "Save $2,000 in cash so a single bad month doesn't break you.",
+  "quests.Q_BUFFER_2K.hint": "A cash buffer prevents missed payments and keeps options open.",
+  "quests.Q_FIRST_INVESTMENT.title": "First Investment",
+  "quests.Q_FIRST_INVESTMENT.description": "Buy your first investment asset from the Invest tab.",
+  "quests.Q_FIRST_INVESTMENT.hint": "Investing turns saved money into future cash flow.",
+  "quests.Q_FIRST_HUSTLE.title": "Side Hustle Kickoff",
+  "quests.Q_FIRST_HUSTLE.description": "Start a side hustle to diversify your income stream.",
+  "quests.Q_FIRST_HUSTLE.hint": "Extra income reduces reliance on debt and accelerates investing.",
+  "quests.Q_INVESTED_10K.title": "Build a Portfolio",
+  "quests.Q_INVESTED_10K.description": "Reach $10,000 invested across your assets (excluding savings).",
+  "quests.Q_INVESTED_10K.hint": "Consistency beats perfection - small deposits compound over time.",
+  "quests.Q_DIVERSIFY_3.title": "Diversify",
+  "quests.Q_DIVERSIFY_3.description": "Own at least 3 different asset types (excluding savings).",
+  "quests.Q_DIVERSIFY_3.hint": "Diversification reduces the damage from any single crash.",
+  "quests.Q_PASSIVE_500.title": "Passive Income Starter",
+  "quests.Q_PASSIVE_500.description": "Earn $500/month in passive income from assets.",
+  "quests.Q_PASSIVE_500.hint": "Cash flow is the real engine of financial freedom.",
+  "quests.Q_EMERGENCY_3MO.title": "Emergency Fund (3 months)",
+  "quests.Q_EMERGENCY_3MO.description": "Hold 3 months of expenses in cash reserves.",
+  "quests.Q_EMERGENCY_3MO.hint": "Emergency funds help you survive recessions without selling at the worst time.",
+  "quests.Q_CAREER_LEVEL_3.title": "Career Climber",
+  "quests.Q_CAREER_LEVEL_3.description": "Reach career level 3 through experience, education, and smart choices.",
+  "quests.Q_CAREER_LEVEL_3.hint": "Higher income increases how fast you can invest and pay down debt.",
+  "quests.Q_CREDIT_720.title": "Credit Upgrade",
+  "quests.Q_CREDIT_720.description": "Reach a 720+ credit rating to qualify for better loan terms.",
+  "quests.Q_CREDIT_720.hint": "On-time payments (and avoiding delinquency) are the fastest way up.",
+  "quests.Q_INVESTOR_25K.title": "Investor Track: $25K Invested",
+  "quests.Q_INVESTOR_25K.description": "Grow your invested portfolio to $25,000 (excluding savings).",
+  "quests.Q_INVESTOR_25K.hint": "Think long-term: steady contributions beat lucky picks.",
+  "quests.Q_INVESTOR_DIVERSIFY_4.title": "Investor Track: Diversify 4 Types",
+  "quests.Q_INVESTOR_DIVERSIFY_4.description": "Own at least 4 different asset types (excluding savings).",
+  "quests.Q_INVESTOR_DIVERSIFY_4.hint": "Diversification reduces volatility and regret.",
+  "quests.Q_INVESTOR_PASSIVE_1000.title": "Investor Track: $1,000/mo Passive",
+  "quests.Q_INVESTOR_PASSIVE_1000.description": "Reach $1,000/month in passive income.",
+  "quests.Q_INVESTOR_PASSIVE_1000.hint": "Cash flow reduces your dependence on salary.",
+  "quests.Q_ENTREPRENEUR_HUSTLES_2.title": "Entrepreneur Track: Two Hustles",
+  "quests.Q_ENTREPRENEUR_HUSTLES_2.description": "Run two active side hustles at the same time.",
+  "quests.Q_ENTREPRENEUR_HUSTLES_2.hint": "Income diversification speeds up investing - watch your energy and stress.",
+  "quests.Q_ENTREPRENEUR_BUSINESS_1.title": "Entrepreneur Track: Own a Business",
+  "quests.Q_ENTREPRENEUR_BUSINESS_1.description": "Acquire your first business asset.",
+  "quests.Q_ENTREPRENEUR_BUSINESS_1.hint": "Businesses can cash-flow well - but require careful risk management.",
+  "quests.Q_DEBTCRUSHER_REPAID_3K.title": "Debt Crusher Track: Repaid $3,000",
+  "quests.Q_DEBTCRUSHER_REPAID_3K.description": "Pay down $3,000 of total debt principal (liabilities + mortgages).",
+  "quests.Q_DEBTCRUSHER_REPAID_3K.hint": "Debt payoff is a guaranteed return equal to the interest rate.",
+  "quests.Q_DEBTCRUSHER_REPAID_10K.title": "Debt Crusher Track: Repaid $10,000",
+  "quests.Q_DEBTCRUSHER_REPAID_10K.description": "Pay down $10,000 of total debt principal.",
+  "quests.Q_DEBTCRUSHER_REPAID_10K.hint": "Lower debt increases your freedom to invest when opportunities appear.",
+  "quests.Q_DEBTCRUSHER_CREDIT_740.title": "Debt Crusher Track: 740+ Credit",
+  "quests.Q_DEBTCRUSHER_CREDIT_740.description": "Reach a 740+ credit rating (excellent terms).",
+  "quests.Q_DEBTCRUSHER_CREDIT_740.hint": "Good credit is leverage - protect it with on-time payments.",
+  "errors.genericTitle": "Something went wrong",
+  "errors.genericBody": "The UI crashed. Refresh to retry.",
+  "errors.unknown": "Unknown error",
+  "errors.tabTitle": "{tab} Tab Error",
+  "errors.tabBody": "Something went wrong while rendering this tab. You can try again or switch to another tab.",
+  "actions.refresh": "Refresh",
+  "actions.tryContinue": "Try continue",
+  "actions.tryAgain": "Try again",
+  "actions.cancel": "Cancel",
+  "modeSelector.loading": "Loading...",
+  "modeSelector.title": "💰 TYCOON 💰",
+  "modeSelector.subtitle": "Build Your Financial Empire",
+  "modeSelector.auth.title": "Enter Access Code",
+  "modeSelector.auth.subtitle": "This game is in private beta",
+  "modeSelector.auth.placeholder": "Enter password...",
+  "modeSelector.auth.enter": "Enter Game",
+  "modeSelector.createdBy": "Created by",
+  "modeSelector.auth.incorrectPassword": "Incorrect password",
+  "modeSelector.multiplayer.allPlayersNeedNames": "All players must enter their name",
+  "events.biz_partner_intro.title": "🤝 Partnership Pitch",
+  "events.biz_partner_intro.description": "A former colleague wants to join forces to grow a new venture together.",
+  "events.biz_partner_intro.choices.0.label": "Bring them on as a partner",
+  "events.biz_partner_intro.choices.0.message": "You formalize the partnership and split the workload.",
+  "events.biz_partner_intro.choices.1.label": "Stay solo",
+  "events.biz_partner_intro.choices.1.message": "You keep full control and move at your own pace.",
+  "events.biz_partner_scaling.title": "🚀 Scale-Up Decision",
+  "events.biz_partner_scaling.description": "Demand is rising. Your partner wants to scale fast.",
+  "events.biz_partner_scaling.choices.0.label": "Expand fast with paid marketing",
+  "events.biz_partner_scaling.choices.0.message": "You pour fuel on growth and hire contractors.",
+  "events.biz_partner_scaling.choices.1.label": "Grow steadily",
+  "events.biz_partner_scaling.choices.1.message": "You expand carefully with a smaller budget.",
+  "events.biz_partner_scaling.choices.2.label": "Pause expansion",
+  "events.biz_partner_scaling.choices.2.message": "You keep the business lean for now.",
+  "events.biz_partner_dispute.title": "⚖️ Partnership Dispute",
+  "events.biz_partner_dispute.description": "Strategy disagreements are escalating. The partnership needs a resolution.",
+  "events.biz_partner_dispute.choices.0.label": "Buy out your partner",
+  "events.biz_partner_dispute.choices.0.message": "You take full control of the business.",
+  "events.biz_partner_dispute.choices.1.label": "Mediation",
+  "events.biz_partner_dispute.choices.1.message": "A mediator helps you find a compromise.",
+  "events.biz_partner_dispute.choices.2.label": "Sell your share",
+  "events.biz_partner_dispute.choices.2.message": "You exit with cash but lose upside.",
+  "events.health_checkup.title": "🩺 Annual Checkup",
+  "events.health_checkup.description": "Your doctor recommends an insurance plan upgrade before the next cycle.",
+  "events.health_checkup.choices.0.label": "Buy insurance upgrade",
+  "events.health_checkup.choices.0.message": "You lock in better coverage and peace of mind.",
+  "events.health_checkup.choices.1.label": "Skip the upgrade",
+  "events.health_checkup.choices.1.message": "You hope nothing goes wrong.",
+  "events.health_claim.title": "🏥 Coverage Pays Off",
+  "events.health_claim.description": "A surprise clinic visit is fully covered by your upgraded plan.",
+  "events.health_claim.choices.0.label": "File the claim",
+  "events.health_claim.choices.0.message": "Insurance covers the bulk of the cost.",
+  "events.health_claim.choices.1.label": "Upgrade to premium plan",
+  "events.health_claim.choices.1.message": "You lock in even better coverage for next year.",
+  "events.health_emergency.title": "🚑 Medical Emergency",
+  "events.health_emergency.description": "An unexpected medical bill hits your inbox.",
+  "events.health_emergency.choices.0.label": "Pay the bill in cash",
+  "events.health_emergency.choices.0.message": "You clear the bill immediately.",
+  "events.health_emergency.choices.1.label": "Put it on a payment plan",
+  "events.health_emergency.choices.1.message": "You spread the costs over time.",
+  "events.landlord_screening.title": "🏠 Tenant Screening",
+  "events.landlord_screening.description": "A tenant application looks good on paper, but the market is tight.",
+  "events.landlord_screening.choices.0.label": "Screen carefully",
+  "events.landlord_screening.choices.0.message": "You run thorough checks and wait for the right tenant.",
+  "events.landlord_screening.choices.1.label": "Fill the unit fast",
+  "events.landlord_screening.choices.1.message": "You accept the first qualified applicant.",
+  "events.landlord_tenant_good.title": "✅ Great Tenant",
+  "events.landlord_tenant_good.description": "Your tenant pays early and takes great care of the property.",
+  "events.landlord_tenant_good.choices.0.label": "Renew the lease",
+  "events.landlord_tenant_good.choices.0.message": "Stable income keeps your stress low.",
+  "events.landlord_tenant_good.choices.1.label": "Offer a loyalty discount",
+  "events.landlord_tenant_good.choices.1.message": "You keep a reliable tenant and build goodwill.",
+  "events.landlord_tenant_issue.title": "⚠️ Late Rent",
+  "events.landlord_tenant_issue.description": "Your tenant is behind on rent and dodging calls.",
+  "events.landlord_tenant_issue.choices.0.label": "Issue a formal warning",
+  "events.landlord_tenant_issue.choices.0.message": "You start the paper trail for eviction.",
+  "events.landlord_tenant_issue.choices.1.label": "Offer a payment plan",
+  "events.landlord_tenant_issue.choices.1.message": "You cover the gap and hope they recover.",
+  "events.landlord_eviction.title": "📄 Eviction Decision",
+  "events.landlord_eviction.description": "Rent is still unpaid. You need to choose a path forward.",
+  "events.landlord_eviction.choices.0.label": "Proceed with eviction",
+  "events.landlord_eviction.choices.0.message": "Legal fees hurt, but you regain control.",
+  "events.landlord_eviction.choices.1.label": "Offer cash-for-keys",
+  "events.landlord_eviction.choices.1.message": "You pay them to leave quickly and avoid court.",
+  "events.insurance_discount.title": "📉 Premium Discount",
+  "events.insurance_discount.description": "Your insurer offers a limited-time discount for safe driving.",
+  "events.insurance_discount.choices.0.label": "Take the discount",
+  "events.insurance_discount.choices.0.message": "You lock in the savings for the year.",
+  "events.insurance_discount.choices.1.label": "Ignore it",
+  "events.insurance_discount.choices.1.message": "You keep your current premium.",
+  "events.career_cert_offer.title": "🎓 Weekend Certification",
+  "events.career_cert_offer.description": "A respected certification program offers a weekend-intensive cohort.",
+  "events.career_cert_offer.choices.0.label": "Enroll in the cohort",
+  "events.career_cert_offer.choices.0.message": "You earn a credential and stronger leverage at work.",
+  "events.career_cert_offer.choices.1.label": "Pass for now",
+  "events.career_cert_offer.choices.1.message": "You keep your weekends free.",
+  "events.micro_grant.title": "🎁 Local Micro-Grant",
+  "events.micro_grant.description": "Your community offers a small grant for local entrepreneurs.",
+  "events.micro_grant.choices.0.label": "Apply for the grant",
+  "events.micro_grant.choices.0.message": "Your application is approved.",
+  "events.supply_chain_shock.title": "🚢 Supply Chain Shock",
+  "events.supply_chain_shock.description": "Rising shipping costs are squeezing margins across the market.",
+  "events.supply_chain_shock.choices.0.label": "Stock up on essentials",
+  "events.supply_chain_shock.choices.0.message": "You lock in inventory ahead of the price spike.",
+  "events.supply_chain_shock.choices.1.label": "Ride it out",
+  "events.supply_chain_shock.choices.1.message": "You save cash and hope the shock passes.",
+  "modeSelector.multiplayer.turnLabel": "{name}'s Turn",
+  "modeSelector.multiplayer.exit": "Exit Game",
+  "difficulty.normal": "Normal",
+  "quests.Q_ALEX_AUTOMATION.title": "Automation Payoff",
+  "quests.Q_ALEX_AUTOMATION.description": "Reach Career Level 2 to prove your automation edge.",
+  "quests.Q_ALEX_AUTOMATION.hint": "Gain experience or pursue education to level up.",
+  "quests.Q_ALEX_SIDE_PROJECT.title": "Side Project Momentum",
+  "quests.Q_ALEX_SIDE_PROJECT.description": "Grow passive income to $250 per month from your projects.",
+  "quests.Q_ALEX_SIDE_PROJECT.hint": "Invest in assets that generate recurring income.",
+  "quests.Q_MARIA_BUFFER.title": "Steady Buffer",
+  "quests.Q_MARIA_BUFFER.description": "Build one month of expenses in cash reserves.",
+  "quests.Q_MARIA_BUFFER.hint": "Save cash or trim expenses.",
+  "quests.Q_MARIA_STABILITY.title": "Reliable Income Stream",
+  "quests.Q_MARIA_STABILITY.description": "Reach $300 per month in passive income for stability.",
+  "quests.Q_MARIA_STABILITY.hint": "Invest in steady cashflow assets.",
+  "quests.Q_JAMES_MARKET_ENTRY.title": "Market Entry",
+  "quests.Q_JAMES_MARKET_ENTRY.description": "Invest a total of $5,000.",
+  "quests.Q_JAMES_MARKET_ENTRY.hint": "Start with diversified starter assets.",
+  "quests.Q_JAMES_RISK_BALANCE.title": "Risk Balance",
+  "quests.Q_JAMES_RISK_BALANCE.description": "Hold investments across 2 asset types.",
+  "quests.Q_JAMES_RISK_BALANCE.hint": "Diversify between at least two categories.",
+  "quests.Q_SARAH_TOOLKIT.title": "Tool Kit Ready",
+  "quests.Q_SARAH_TOOLKIT.description": "Hold $5,000 cash to upgrade your toolkit.",
+  "quests.Q_SARAH_TOOLKIT.hint": "Save up cash without dipping into reserves.",
+  "quests.Q_SARAH_FIRST_PROPERTY.title": "First Property",
+  "quests.Q_SARAH_FIRST_PROPERTY.description": "Own one real estate asset.",
+  "quests.Q_SARAH_FIRST_PROPERTY.hint": "Consider a starter property or mortgage option.",
+  "quests.Q_DEVON_CLIENT_BASE.title": "Client Base",
+  "quests.Q_DEVON_CLIENT_BASE.description": "Run at least one active side hustle.",
+  "quests.Q_DEVON_CLIENT_BASE.hint": "Start a hustle that matches your strengths.",
+  "quests.Q_DEVON_PASSIVE.title": "Creative Residuals",
+  "quests.Q_DEVON_PASSIVE.description": "Build $200 per month in passive income.",
+  "quests.Q_DEVON_PASSIVE.hint": "Automate or invest for recurring income.",
+  "quests.Q_MARCUS_HUSTLE_2.title": "Hustle Portfolio",
+  "quests.Q_MARCUS_HUSTLE_2.description": "Operate two active side hustles.",
+  "quests.Q_MARCUS_HUSTLE_2.hint": "Stack complementary hustles early.",
+  "quests.Q_MARCUS_BUSINESS.title": "First Business",
+  "quests.Q_MARCUS_BUSINESS.description": "Own a business asset.",
+  "quests.Q_MARCUS_BUSINESS.hint": "Reinvest profits into a business asset.",
+  "quests.Q_LINDA_BUFFER_2.title": "Safety Net",
+  "quests.Q_LINDA_BUFFER_2.description": "Build two months of expenses in cash reserves.",
+  "quests.Q_LINDA_BUFFER_2.hint": "Keep expenses steady and save consistently.",
+  "quests.Q_LINDA_PROMOTION.title": "Public Service Step",
+  "quests.Q_LINDA_PROMOTION.description": "Reach Career Level 2.",
+  "quests.Q_LINDA_PROMOTION.hint": "Gain experience and meet requirements.",
+  "quests.Q_TYLER_PIPELINE.title": "Pipeline Cushion",
+  "quests.Q_TYLER_PIPELINE.description": "Hold $6,000 cash to smooth commissions.",
+  "quests.Q_TYLER_PIPELINE.hint": "Save when commissions are strong.",
+  "quests.Q_TYLER_CREDIT.title": "Credit Ready",
+  "quests.Q_TYLER_CREDIT.description": "Reach a credit score of 680.",
+  "quests.Q_TYLER_CREDIT.hint": "Pay on time and manage utilization.",
+  "events.alex_hackathon.title": "💻 Hackathon Weekend",
+  "events.alex_hackathon.description": "Your team gets invited to a weekend hackathon with potential bonuses.",
+  "events.alex_hackathon.choices.0.label": "Join the hackathon",
+  "events.alex_hackathon.choices.0.message": "You demo well and earn a small bonus.",
+  "events.alex_hackathon.choices.1.label": "Skip and recover",
+  "events.alex_hackathon.choices.1.message": "You rest and avoid burnout.",
+  "events.alex_open_source.title": "🌐 Open Source Shoutout",
+  "events.alex_open_source.description": "A maintainer offers to feature your work in a popular repo.",
+  "events.alex_open_source.choices.0.label": "Contribute a patch",
+  "events.alex_open_source.choices.0.message": "Your contribution gets noticed by peers.",
+  "events.alex_open_source.choices.1.label": "Decline politely",
+  "events.alex_open_source.choices.1.message": "You keep focus on paid work.",
+  "events.maria_shift_bonus.title": "🩺 Extra Shift Offer",
+  "events.maria_shift_bonus.description": "The hospital offers bonus pay for covering an extra shift.",
+  "events.maria_shift_bonus.choices.0.label": "Take the shift",
+  "events.maria_shift_bonus.choices.0.message": "The bonus helps, but it is exhausting.",
+  "events.maria_shift_bonus.choices.1.label": "Protect your energy",
+  "events.maria_shift_bonus.choices.1.message": "You prioritize recovery.",
+  "events.maria_community_clinic.title": "🏥 Community Clinic Day",
+  "events.maria_community_clinic.description": "A local clinic asks for volunteers and offers a small stipend.",
+  "events.maria_community_clinic.choices.0.label": "Volunteer for the day",
+  "events.maria_community_clinic.choices.0.message": "You make connections and help the community.",
+  "events.maria_community_clinic.choices.1.label": "Pass this time",
+  "events.maria_community_clinic.choices.1.message": "You keep your schedule clear.",
+  "events.james_client_review.title": "📈 Client Portfolio Review",
+  "events.james_client_review.description": "A client wants a deep-dive review of their portfolio.",
+  "events.james_client_review.choices.0.label": "Do a full analysis",
+  "events.james_client_review.choices.0.message": "You impress them and earn a bonus.",
+  "events.james_client_review.choices.1.label": "Keep it light",
+  "events.james_client_review.choices.1.message": "You save time and tighten your model.",
+  "events.james_model_edge.title": "🧮 New Model Insight",
+  "events.james_model_edge.description": "You spot a flaw in a pricing model before a meeting.",
+  "events.james_model_edge.choices.0.label": "Fix it overnight",
+  "events.james_model_edge.choices.0.message": "You deliver a clean model and earn trust.",
+  "events.james_model_edge.choices.1.label": "Flag it for later",
+  "events.james_model_edge.choices.1.message": "You avoid overtime but accept a minor hit.",
+  "events.devon_brand_collab.title": "🎨 Brand Collab Request",
+  "events.devon_brand_collab.description": "A small brand wants a fast-turnaround design collab.",
+  "events.devon_brand_collab.choices.0.label": "Take the collab",
+  "events.devon_brand_collab.choices.0.message": "You land a paid project and new contacts.",
+  "events.devon_brand_collab.choices.1.label": "Hold for better fit",
+  "events.devon_brand_collab.choices.1.message": "You keep time for personal work.",
+  "events.devon_portfolio_feature.title": "🖼️ Portfolio Feature",
+  "events.devon_portfolio_feature.description": "A design blog offers to feature your portfolio.",
+  "events.devon_portfolio_feature.choices.0.label": "Send your best work",
+  "events.devon_portfolio_feature.choices.0.message": "The feature boosts your visibility.",
+  "events.devon_portfolio_feature.choices.1.label": "Skip the spotlight",
+  "events.devon_portfolio_feature.choices.1.message": "You stay focused on client work.",
+  "events.marcus_pitch_night.title": "🚀 Pitch Night Invite",
+  "events.marcus_pitch_night.description": "A local angel group invites you to pitch your idea.",
+  "events.marcus_pitch_night.choices.0.label": "Take the stage",
+  "events.marcus_pitch_night.choices.0.message": "You make a strong first impression.",
+  "events.marcus_pitch_night.choices.1.label": "Hold off",
+  "events.marcus_pitch_night.choices.1.message": "You wait until the numbers are tighter.",
+  "events.marcus_seed_terms.title": "💼 Seed Terms Arrive",
+  "events.marcus_seed_terms.description": "An investor sends early seed terms for your venture.",
+  "events.marcus_seed_terms.choices.0.label": "Accept the terms",
+  "events.marcus_seed_terms.choices.0.message": "You secure funding to build faster.",
+  "events.marcus_seed_terms.choices.1.label": "Counter with a smaller round",
+  "events.marcus_seed_terms.choices.1.message": "You keep more control but take less cash.",
+  "events.sarah_trade_bid.title": "🔧 Big Contract Bid",
+  "events.sarah_trade_bid.description": "A contractor asks you to bid on a multi-week job.",
+  "events.sarah_trade_bid.choices.0.label": "Bid aggressively",
+  "events.sarah_trade_bid.choices.0.message": "You lock in the bid and prep for inspection.",
+  "events.sarah_trade_bid.choices.1.label": "Bid conservatively",
+  "events.sarah_trade_bid.choices.1.message": "You keep risk low and cash steady.",
+  "events.sarah_inspection.title": "✅ Site Inspection",
+  "events.sarah_inspection.description": "The site inspector is coming sooner than expected.",
+  "events.sarah_inspection.choices.0.label": "Rush to finish",
+  "events.sarah_inspection.choices.0.message": "You pass inspection and get paid out.",
+  "events.sarah_inspection.choices.1.label": "Pay for overtime help",
+  "events.sarah_inspection.choices.1.message": "You cover the gap but take a cost hit.",
+  "events.linda_pension_briefing.title": "🏛️ Pension Briefing",
+  "events.linda_pension_briefing.description": "HR offers a session on pension and benefit optimization.",
+  "events.linda_pension_briefing.choices.0.label": "Attend the briefing",
+  "events.linda_pension_briefing.choices.0.message": "You spot a small benefit you can claim.",
+  "events.linda_pension_briefing.choices.1.label": "Skip the session",
+  "events.linda_pension_briefing.choices.1.message": "You keep your schedule light.",
+  "events.linda_policy_committee.title": "📜 Policy Committee Invite",
+  "events.linda_policy_committee.description": "You are invited to join a policy committee at work.",
+  "events.linda_policy_committee.choices.0.label": "Join the committee",
+  "events.linda_policy_committee.choices.0.message": "Your visibility grows across departments.",
+  "events.linda_policy_committee.choices.1.label": "Decline politely",
+  "events.linda_policy_committee.choices.1.message": "You avoid extra meetings.",
+  "events.tyler_big_pitch.title": "📊 High-Stakes Pitch",
+  "events.tyler_big_pitch.description": "A large client asks for a last-minute pitch.",
+  "events.tyler_big_pitch.choices.0.label": "Go all in",
+  "events.tyler_big_pitch.choices.0.message": "You close the deal and earn a bump.",
+  "events.tyler_big_pitch.choices.1.label": "Pass the lead",
+  "events.tyler_big_pitch.choices.1.message": "You avoid the stress this month.",
+  "events.tyler_pipeline_dip.title": "📉 Pipeline Dip",
+  "events.tyler_pipeline_dip.description": "Your pipeline goes quiet for a few weeks.",
+  "events.tyler_pipeline_dip.choices.0.label": "Invest in outreach",
+  "events.tyler_pipeline_dip.choices.0.message": "You spend to spark new leads.",
+  "events.tyler_pipeline_dip.choices.1.label": "Wait it out",
+  "events.tyler_pipeline_dip.choices.1.message": "You save cash and hope it rebounds.",
+  "salesQuiz.meta.title": "Sales Accelerator Certification",
+  "salesQuiz.meta.description": "A short, scenario-based certification focused on ethical, effective B2B selling and negotiation fundamentals.",
+  "salesQuiz.meta.entryPointLabel": "Start Certification",
+  "salesQuiz.meta.tip1": "Answer honestly - this is about long-term trust, not tricks.",
+  "salesQuiz.meta.tip2": "Focus on outcomes, proof, and alignment.",
+  "salesQuiz.meta.tip3": "Use ethical persuasion: clarity beats pressure.",
+  "salesQuiz.ui.certified": "Certified",
+  "salesQuiz.ui.attemptsLeft": "Attempts left: {count}",
+  "salesQuiz.ui.bestScore": "Best score: {score}/{total}",
+  "salesQuiz.ui.attemptsUsed": "Attempts used. Improve your skills and try again later.",
+  "salesQuiz.ui.certificationLabel": "Certification",
+  "salesQuiz.ui.coverPlaceholder": "Cover image placeholder",
+  "salesQuiz.ui.passingAllCorrect": "Passing score: All correct",
+  "salesQuiz.ui.passingPercentage": "Passing score: {count}%",
+  "salesQuiz.ui.quickTips": "Quick tips",
+  "salesQuiz.ui.questionCount": "{count} questions - Review enabled",
+  "salesQuiz.ui.noAttempts": "You have used all attempts. Check back after more practice.",
+  "salesQuiz.ui.close": "Close",
+  "salesQuiz.ui.practiceMode": "Practice Mode",
+  "salesQuiz.ui.startCertification": "Start Certification",
+  "salesQuiz.ui.questionLabel": "Question {index} of {total}",
+  "salesQuiz.ui.scoreLabel": "Score: {score}/{total}",
+  "salesQuiz.ui.questionPlaceholder": "Question visual placeholder",
+  "salesQuiz.ui.correct": "Correct",
+  "salesQuiz.ui.incorrect": "Not quite",
+  "salesQuiz.ui.exit": "Exit",
+  "salesQuiz.ui.finish": "Finish",
+  "salesQuiz.ui.next": "Next",
+  "salesQuiz.ui.resultsLabel": "Results",
+  "salesQuiz.ui.resultsPassed": "Certification passed",
+  "salesQuiz.ui.resultsFailed": "Certification failed",
+  "salesQuiz.ui.rewardEarned": "Reward earned: {cash} cash, +{fiq} FIQ, +{happiness} happiness.",
+  "salesQuiz.ui.reviewTitle": "Answer review",
+  "salesQuiz.ui.yourAnswer": "Your answer: {answer}",
+  "salesQuiz.ui.correctAnswer": "Correct answer: {answer}",
+  "salesQuiz.ui.practiceAgain": "Practice again",
+  "salesQuiz.ui.retry": "Retry certification",
+  "salesQuiz.ui.noAnswer": "No answer",
+  "quiz.sales_q1.prompt": "A prospect asks for functionality your product does not currently support. What is the best ethical response?",
+  "quiz.sales_q1.explanation": "Trust comes from accuracy and alignment. Clear limits plus outcome focus builds long-term credibility.",
+  "quiz.sales_q1.option_a": "Be clear about the limitation, then confirm what outcome they need and offer the best current path.",
+  "quiz.sales_q1.option_b": "Imply it is nearly ready so the deal does not slow down.",
+  "quiz.sales_q1.option_c": "Avoid the question and move straight to pricing.",
+  "quiz.sales_q1.option_d": "Promise a custom build even if it is uncertain.",
+  "quiz.sales_q1.feedback_a": "Correct: accuracy builds trust, and outcome alignment keeps momentum without misrepresentation.",
+  "quiz.sales_q1.feedback_b": "Risky: misleading capability claims create churn, escalations, and reputational damage.",
+  "quiz.sales_q1.feedback_c": "Avoidance lowers credibility - capability fit must be clarified before pricing makes sense.",
+  "quiz.sales_q1.feedback_d": "Unethical if uncertain: only commit to delivery timelines and scope you can confidently meet.",
+  "quiz.sales_q2.prompt": "Why does the early phase of a sales conversation matter so much, even in B2B?",
+  "quiz.sales_q2.explanation": "Early intuition shapes direction; later analysis usually justifies a direction already forming.",
+  "quiz.sales_q2.option_a": "Because most buyers refuse to review data later.",
+  "quiz.sales_q2.option_b": "Because the first vendor always wins.",
+  "quiz.sales_q2.option_c": "Because early emotional preference often guides which facts feel convincing later.",
+  "quiz.sales_q2.option_d": "Because it guarantees a shorter sales cycle.",
+  "quiz.sales_q2.feedback_c": "Correct: early framing influences what evidence feels relevant and persuasive afterward.",
+  "quiz.sales_q3.prompt": "Which action best builds genuine goodwill before asking for anything in return?",
+  "quiz.sales_q3.explanation": "Useful value up front creates trust and makes the relationship feel cooperative.",
+  "quiz.sales_q3.option_a": "Send multiple follow-ups to stay top of mind.",
+  "quiz.sales_q3.option_b": "Share a tailored insight, audit finding, or practical improvement idea they can use immediately.",
+  "quiz.sales_q3.option_c": "Push for a quick meeting while interest is high.",
+  "quiz.sales_q3.option_d": "Offer a discount to create urgency.",
+  "quiz.sales_q3.feedback_b": "Correct: useful value up front builds credibility and reciprocity without pressure.",
+  "quiz.sales_q4.prompt": "What is the most ethical way to build credibility in a high-stakes sale?",
+  "quiz.sales_q4.explanation": "Credibility should come from verifiable evidence, not performance or hype.",
+  "quiz.sales_q4.option_a": "Talk confidently and quickly so you sound experienced.",
+  "quiz.sales_q4.option_b": "Avoid specifics so you cannot be challenged.",
+  "quiz.sales_q4.option_c": "Name-drop competitors to sound important.",
+  "quiz.sales_q4.option_d": "Use verified outcomes, reputable benchmarks, and clear proof points from relevant use cases.",
+  "quiz.sales_q4.feedback_d": "Correct: credibility must be verifiable - evidence beats performance or hype.",
+  "quiz.sales_q5.prompt": "Which type of social proof tends to be strongest for a cautious buyer?",
+  "quiz.sales_q5.explanation": "Similarity reduces risk. Buyers trust outcomes from situations that look like theirs.",
+  "quiz.sales_q5.option_a": "A story or case study from a similar company with measurable results.",
+  "quiz.sales_q5.option_b": "A large total number of users.",
+  "quiz.sales_q5.option_c": "A long list of vague testimonials.",
+  "quiz.sales_q5.option_d": "A slogan like \"industry-leading\".",
+  "quiz.sales_q5.feedback_a": "Correct: similarity plus measurable outcomes reduce perceived risk and speed consensus.",
+  "quiz.sales_q6.prompt": "Why do small early commitments (like sharing requirements or agreeing to a short follow-up) matter?",
+  "quiz.sales_q6.explanation": "Consistency is a real human tendency, but it must be earned ethically, not exploited.",
+  "quiz.sales_q6.option_a": "They force the buyer into a contract.",
+  "quiz.sales_q6.option_b": "People naturally try to stay aligned with earlier actions and statements.",
+  "quiz.sales_q6.option_c": "They replace discovery completely.",
+  "quiz.sales_q6.option_d": "They guarantee an immediate close.",
+  "quiz.sales_q6.feedback_b": "Correct: small commitments build momentum ethically when value and fit are real.",
+  "quiz.sales_q7.prompt": "Which example of scarcity is ethical and professional?",
+  "quiz.sales_q7.explanation": "Scarcity must be real and transparent, otherwise it damages trust.",
+  "quiz.sales_q7.option_a": "A fake countdown timer on the proposal.",
+  "quiz.sales_q7.option_b": "Claiming limited availability with no real constraint.",
+  "quiz.sales_q7.option_c": "Pressuring them with \"buy now or regret it.\"",
+  "quiz.sales_q7.option_d": "Explaining a real onboarding capacity limit and offering the next available start date.",
+  "quiz.sales_q7.feedback_d": "Correct: scarcity must be real, transparent, and tied to operational constraints.",
+  "quiz.sales_q8.prompt": "Which statement typically motivates action most effectively in B2B decision-making?",
+  "quiz.sales_q8.explanation": "Decision-makers often move faster to avoid losses than to chase optional gains.",
+  "quiz.sales_q8.option_a": "This adds great new features.",
+  "quiz.sales_q8.option_b": "This is the cheapest option.",
+  "quiz.sales_q8.option_c": "This prevents ongoing losses caused by the current problem.",
+  "quiz.sales_q8.option_d": "This is popular on social media.",
+  "quiz.sales_q8.feedback_c": "Correct: avoiding losses is often a stronger driver than optional upside.",
+  "quiz.sales_q9.prompt": "Which behavior best demonstrates real active listening?",
+  "quiz.sales_q9.explanation": "Summarizing plus confirming builds trust and prevents misunderstanding.",
+  "quiz.sales_q9.option_a": "Summarize their point in your own words and ask if you understood correctly.",
+  "quiz.sales_q9.option_b": "Wait quietly until they stop talking.",
+  "quiz.sales_q9.option_c": "Jump in quickly with a solution.",
+  "quiz.sales_q9.option_d": "Agree with everything they say.",
+  "quiz.sales_q9.feedback_a": "Correct: reflection plus confirmation prevents misalignment and builds trust.",
+  "quiz.sales_q10.prompt": "Which discovery question most reliably reveals urgency and consequences?",
+  "quiz.sales_q10.explanation": "The cost of inaction is what makes problems real and priorities clear.",
+  "quiz.sales_q10.option_a": "Do you like your current provider?",
+  "quiz.sales_q10.option_b": "Would you like a demo?",
+  "quiz.sales_q10.option_c": "What happens over the next 6-12 months if nothing changes?",
+  "quiz.sales_q10.option_d": "Is pricing your biggest concern?",
+  "quiz.sales_q10.feedback_c": "Correct: this exposes consequences, timelines, stakeholders, and true priority.",
+  "quiz.sales_q11.prompt": "A buyer says: \"This feels expensive.\" What is the most accurate interpretation in many cases?",
+  "quiz.sales_q11.explanation": "Price objections often signal a value-clarity problem, not a pure budget problem.",
+  "quiz.sales_q11.option_a": "They are insulting you.",
+  "quiz.sales_q11.option_b": "They are not fully convinced the outcome is worth the investment yet.",
+  "quiz.sales_q11.option_c": "They will never buy.",
+  "quiz.sales_q11.option_d": "They are always lying.",
+  "quiz.sales_q11.feedback_b": "Correct: price objections often indicate unclear ROI, not personal hostility.",
+  "quiz.sales_q12.prompt": "What is the best first response to a price objection if you want to stay ethical and effective?",
+  "quiz.sales_q12.explanation": "If you cannot tie price to impact, the buyer cannot defend the spend internally.",
+  "quiz.sales_q12.option_a": "Offer a discount immediately to keep momentum.",
+  "quiz.sales_q12.option_b": "Argue that competitors are worse.",
+  "quiz.sales_q12.option_c": "End the call and follow up later.",
+  "quiz.sales_q12.option_d": "Reconnect price to outcomes and quantify the cost of the status quo.",
+  "quiz.sales_q12.feedback_d": "Correct: the buyer must be able to justify the spend internally using impact.",
+  "quiz.sales_q13.prompt": "When is it appropriate to ask for a decision (close) without being pushy?",
+  "quiz.sales_q13.explanation": "A confident close is a natural next step once alignment is established.",
+  "quiz.sales_q13.option_a": "After you have aligned on fit, outcomes, and the buyer agrees the value is real.",
+  "quiz.sales_q13.option_b": "As early as possible before objections appear.",
+  "quiz.sales_q13.option_c": "Immediately after the first feature demo.",
+  "quiz.sales_q13.option_d": "Only if they ask you to.",
+  "quiz.sales_q13.feedback_a": "Correct: closing should be the next logical step after shared agreement on value.",
+  "quiz.sales_q14.prompt": "Which is a fair conditional close that maintains integrity?",
+  "quiz.sales_q14.explanation": "It is ethical because the concession is tied to a clear next step, not pressure.",
+  "quiz.sales_q14.option_a": "If you do not sign today, you will lose the deal.",
+  "quiz.sales_q14.option_b": "Everyone else is buying, so should you.",
+  "quiz.sales_q14.option_c": "If we include X, are you comfortable moving forward this week?",
+  "quiz.sales_q14.option_d": "I cannot help you unless you commit now.",
+  "quiz.sales_q14.feedback_c": "Correct: it ties a concession to a clear next step, not intimidation.",
+  "quiz.sales_q15.prompt": "What most consistently drives renewals, referrals, and long-term growth?",
+  "quiz.sales_q15.explanation": "Long-term trust is built after the signature through outcomes and follow-through.",
+  "quiz.sales_q15.option_a": "Aggressive follow-ups after signing.",
+  "quiz.sales_q15.option_b": "Delivering what you promised and staying engaged through a strong handoff and early check-ins.",
+  "quiz.sales_q15.option_c": "Pushing upgrades immediately.",
+  "quiz.sales_q15.option_d": "Keeping the contract terms vague.",
+  "quiz.sales_q15.feedback_b": "Correct: outcomes and follow-through create durable trust and expansion opportunities."
+}
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2025-12-31T04:20:18.827Z
+            </div>
+        <script src="../../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../../sorter.js"></script>
+        <script src="../../../block-navigation.js"></script>
+    </body>
+</html>
+    
