@@ -895,7 +895,8 @@ const App: React.FC<AppProps> = ({ onBackToMenu, initialGameState, playerConfig,
   const coachLifestyleGridRef = useRef<any>(null);
   const coachBankLoansRef = useRef(null);
   const coachSideHustlesRef = useRef(null);
-  const [coachHighlight, setCoachHighlight] = useState<string | null>(null);
+  const [coachHighlightTarget, setCoachHighlightTarget] = useState<string | null>(null);
+  const coachHighlight = (target: string) => (coachHighlightTarget === target ? 'ring-2 ring-emerald-400/40' : '');
 
   const [showEventLab, setShowEventLab] = useState(false);
   const [eventLabEventId, setEventLabEventId] = useState<string | null>(null);
