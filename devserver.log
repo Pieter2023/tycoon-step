@@ -1,0 +1,9 @@
+
+> tycoon-financial-freedom@3.4.3 dev
+> vite --port 3000 --host --port 3002
+
+
+  VITE v6.4.1  ready in 95 ms
+
+  ➜  Local:   http://localhost:3002/
+  ➜  Network: http://192.168.1.80:3002/
