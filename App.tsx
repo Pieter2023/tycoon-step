@@ -38,18 +38,28 @@ import { LifePageLayout } from './components/v2/LifePage';
 import ActionsDrawer from './components/v2/ActionsDrawer';
 import MobileShell from './components/v2/MobileShell';
 import DesktopShell from './components/v2/DesktopShell';
-import DashboardScreen from './components/v2/DashboardScreen';
 import ActionsScreen from './components/v2/ActionsScreen';
 import ProfileScreen from './components/v2/ProfileScreen';
 import MoreScreen from './components/v2/MoreScreen';
 import { getMonthlyActionsSummary } from './services/monthlyActions';
+
+// New Components for Enhanced UI
+import CollapsibleSection from './components/ui/CollapsibleSection';
+import { ToastContainer, useToast } from './components/ui/Toast';
+import Confetti from './components/Confetti';
+import KeyboardShortcutsOverlay from './components/KeyboardShortcutsOverlay';
+import CharacterSelect from './components/CharacterSelect';
+import DashboardScreenEnhanced from './components/v2/DashboardScreenEnhanced';
+
+// Hooks
+import { useKeyboardShortcuts, createGameShortcuts } from './hooks/useKeyboardShortcuts';
 
 import { 
   Play, Pause, FastForward, TrendingUp, DollarSign, Home, Briefcase, 
   GraduationCap, Heart, PiggyBank, LineChart, AlertTriangle, CheckCircle,
   X, Clock, Wallet, ArrowUpRight, ArrowDownRight, Sparkles, Volume2, VolumeX, 
   Bot, CreditCard, Coffee, Banknote, Plus, Minus, Save as SaveIcon, FolderOpen as FolderOpenIcon, Trash2,
-  Users, BookOpen, Zap, HeartPulse, Trophy, Info, Settings, MoreHorizontal
+  Users, BookOpen, Zap, HeartPulse, Trophy, Info, Settings, MoreHorizontal, Keyboard
 } from 'lucide-react';
 
 const OverviewTab = lazy(() => import('./components/tabs/OverviewTab'));
@@ -929,6 +939,27 @@ const [gameState, setGameState] = useState<GameState>(() => {
   });
 
   // ============================================
+  // NEW UI ENHANCEMENTS
+  // ============================================
+  // Toast notification system
+  const { toasts, removeToast, showSuccess, showError, showWarning, showInfo } = useToast();
+  
+  // Confetti effect
+  const [showConfetti, setShowConfetti] = useState(false);
+  
+  // Keyboard shortcuts overlay
+  const [showShortcutsOverlay, setShowShortcutsOverlay] = useState(false);
+
+  // View mode for dashboard (compact vs expanded)
+  const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('compact');
+
+  // Monthly actions selected tracking
+  const [monthlyActionsSelected, setMonthlyActionsSelected] = useState<Set<string>>(new Set());
+
+  // Confetti configuration for origin point
+  const [confettiConfig, setConfettiConfig] = useState<{ origin: { x: number; y: number } } | null>(null);
+
+  // ============================================
   // COACH HINTS + HIGHLIGHTS (Step 12)
   // ============================================
   const [coachHint, setCoachHint] = useState<CoachHintData | null>(null);
@@ -991,6 +1022,52 @@ const [gameState, setGameState] = useState<GameState>(() => {
     root.classList.toggle('tycoon-high-contrast', !!accessibilityPrefs.highContrast);
     root.classList.toggle('tycoon-reduce-motion', !!accessibilityPrefs.reduceMotion);
   }, [accessibilityPrefs.largeText, accessibilityPrefs.highContrast, accessibilityPrefs.reduceMotion]);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts(
+    createGameShortcuts({
+      onNextMonth: () => {
+        if (!isProcessing && !showTurnPreview && gameStarted) {
+          handleNextTurn();
+        }
+      },
+      onToggleAutoplay: () => {
+        if (gameStarted) {
+          setAutoPlaySpeed(autoPlaySpeed ? null : AUTOPLAY_SPEED_OPTIONS[0]);
+        }
+      },
+      onOpenActions: () => {
+        if (gameStarted) {
+          setActionsDrawerOpen(true);
+        }
+      },
+      onNavigateToInvest: () => {
+        if (gameStarted) setActiveTab(TABS.INVEST);
+      },
+      onNavigateToPortfolio: () => {
+        if (gameStarted) setActiveTab(TABS.ASSETS);
+      },
+      onNavigateToBank: () => {
+        if (gameStarted) setActiveTab(TABS.BANK);
+      },
+      onNavigateToCareer: () => {
+        if (gameStarted) setActiveTab(TABS.CAREER);
+      },
+      onNavigateToEducation: () => {
+        if (gameStarted) setActiveTab(TABS.EDUCATION);
+      },
+      onNavigateToSideHustles: () => {
+        if (gameStarted) setActiveTab(TABS.SIDEHUSTLE);
+      },
+      onNavigateToLifestyle: () => {
+        if (gameStarted) setActiveTab(TABS.LIFESTYLE);
+      },
+      onShowShortcuts: () => {
+        if (gameStarted) setShowShortcutsOverlay(true);
+      },
+    }),
+    gameStarted && !showCharacterSelect
+  );
 
   useEffect(() => {
     if (!import.meta.env.DEV) return;
@@ -2583,11 +2660,16 @@ const [gameState, setGameState] = useState<GameState>(() => {
       if (newState.hasWon && !gameState.hasWon) {
         playVictory();
         maybeConfetti({ particleCount: 300, spread: 120, origin: { y: 0.5 } });
+        setShowConfetti(true);
+        showSuccess('🎉 Financial Freedom Achieved!', 'You\'ve reached your goal! Passive income covers 110% of expenses.', { duration: 8000 });
       }
 
       if (report.promoted) {
         playLevelUp();
         showNotif('🎉 Promotion!', `Promoted to ${newState.career?.title}!`, 'success');
+        showSuccess('Promotion!', `Congratulations! You've been promoted to ${newState.career?.title}`, { duration: 6000 });
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 3000);
       }
 
       if (shouldShowSummaryToast) {
@@ -2597,6 +2679,11 @@ const [gameState, setGameState] = useState<GameState>(() => {
           'Month complete',
           `Income ${formatMoneyFull(report.income)} • Expenses ${formatMoneyFull(report.expenses)} • Cash ${cashDeltaLabel}`,
           cashDelta >= 0 ? 'success' : 'warning'
+        );
+        showInfo(
+          'Month Complete',
+          `Income: ${formatMoneyFull(report.income)} • Expenses: ${formatMoneyFull(report.expenses)} • Net: ${cashDeltaLabel}`,
+          { duration: 5000 }
         );
       }
 
@@ -4508,6 +4595,31 @@ const [gameState, setGameState] = useState<GameState>(() => {
         )}
       </AnimatePresence>
 
+      {/* Toast Notifications - New Toast System */}
+      <ToastContainer toasts={toasts} onDismiss={removeToast} />
+
+      {/* Confetti Celebration Effect */}
+      <Confetti active={!!confettiConfig} origin={confettiConfig ? { x: confettiConfig.origin.x, y: confettiConfig.origin.y } : undefined} />
+
+      {/* Keyboard Shortcuts Overlay */}
+      <KeyboardShortcutsOverlay 
+        isOpen={showShortcutsOverlay} 
+        onClose={() => setShowShortcutsOverlay(false)} 
+        shortcuts={[
+          { key: 'n', action: () => {}, description: 'Next Month' },
+          { key: 't', action: () => {}, description: 'Toggle Autoplay' },
+          { key: 'a', action: () => {}, description: 'Actions Tab' },
+          { key: 'i', action: () => {}, description: 'Invest Tab' },
+          { key: 'p', action: () => {}, description: 'Portfolio Tab' },
+          { key: 'b', action: () => {}, description: 'Bank Tab' },
+          { key: 'c', action: () => {}, description: 'Career Tab' },
+          { key: 'e', action: () => {}, description: 'Education Tab' },
+          { key: 's', action: () => {}, description: 'Side Hustles Tab' },
+          { key: 'l', action: () => {}, description: 'Lifestyle Tab' },
+          { key: '?', action: () => {}, description: 'Show Shortcuts' },
+        ]} 
+      />
+
       {/* Tab Intro Video (shows only first time a user opens a tab, unless postponed) */}
       {introVideoTabId && activeIntroVideoConfig && (
         <Modal
@@ -4938,6 +5050,38 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   </div>
                 </label>
 
+                {/* View Mode Toggle */}
+                <div className="border-t border-slate-700/50 pt-4 mt-4">
+                  <div className="text-white font-semibold mb-2">Dashboard View Mode</div>
+                  <div className="flex bg-slate-900 rounded-lg p-1">
+                    <button
+                      onClick={() => setViewMode('compact')}
+                      className={`flex-1 px-3 py-2 text-sm rounded-md transition-all ${
+                        viewMode === 'compact' 
+                          ? 'bg-slate-700 text-white' 
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      Compact
+                    </button>
+                    <button
+                      onClick={() => setViewMode('expanded')}
+                      className={`flex-1 px-3 py-2 text-sm rounded-md transition-all ${
+                        viewMode === 'expanded' 
+                          ? 'bg-slate-700 text-white' 
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      Expanded
+                    </button>
+                  </div>
+                  <p className="text-slate-400 text-sm mt-2">
+                    {viewMode === 'compact' 
+                      ? 'Collapsible sections to reduce information overwhelm' 
+                      : 'All sections expanded with full details visible'}
+                  </p>
+                </div>
+
                 <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-4">
                   <h3 className="text-sm font-semibold text-white">Keyboard shortcuts</h3>
                   <p className="text-xs text-slate-400 mt-1">Press a key to jump without clicking.</p>
@@ -4952,7 +5096,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
                       ['C', 'Career'],
                       ['E', 'Education'],
                       ['S', 'Side Hustles'],
-                      ['L', 'Lifestyle']
+                      ['L', 'Lifestyle'],
+                      ['?', 'Shortcuts']
                     ].map(([key, label]) => (
                       <div key={key} className="flex items-center justify-between rounded-lg border border-slate-700/70 bg-slate-950/40 px-3 py-2">
                         <span className="text-slate-300">{label}</span>
@@ -6775,7 +6920,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
             }}
           >
             {v2Path === '/play' && mobileTab === 'dashboard' && (
-              <DashboardScreen
+              <DashboardScreenEnhanced
                 cashValue={gameState.cash}
                 netWorthValue={netWorth}
                 passiveValue={cashFlow.passive}
@@ -6800,6 +6945,14 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 isProcessing={isProcessing}
                 onClaimQuest={handleClaimQuest}
                 onOpenGoals={() => setShowQuestLog(true)}
+                onShowToast={(title, message, type) => {
+                  switch (type) {
+                    case 'success': showSuccess(title, message); break;
+                    case 'error': showError(title, message); break;
+                    case 'warning': showWarning(title, message); break;
+                    default: showInfo(title, message); break;
+                  }
+                }}
               />
             )}
             {v2Path === '/play' && mobileTab === 'actions' && (
@@ -6986,7 +7139,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
             }
           >
             {v2Path === '/play' && (
-              <DashboardScreen
+              <DashboardScreenEnhanced
                 cashValue={gameState.cash}
                 netWorthValue={netWorth}
                 passiveValue={cashFlow.passive}
@@ -7011,6 +7164,14 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 isProcessing={isProcessing}
                 onClaimQuest={handleClaimQuest}
                 onOpenGoals={() => setShowQuestLog(true)}
+                onShowToast={(title, message, type) => {
+                  switch (type) {
+                    case 'success': showSuccess(title, message); break;
+                    case 'error': showError(title, message); break;
+                    case 'warning': showWarning(title, message); break;
+                    default: showInfo(title, message); break;
+                  }
+                }}
               />
             )}
             {v2Path === '/money' && (
@@ -7201,7 +7362,10 @@ const [gameState, setGameState] = useState<GameState>(() => {
                         <Button
                           variant="primary"
                           size="lg"
-                          onClick={handleNextTurn}
+                          onClick={() => {
+                            handleNextTurn();
+                            setConfettiConfig({ origin: { x: 0.9, y: 0.9 } });
+                          }}
                           disabled={isProcessing || !!gameState.pendingScenario}
                           title="Next Month (N)"
                         >
