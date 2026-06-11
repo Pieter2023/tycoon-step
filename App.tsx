@@ -24,7 +24,20 @@ import { GLOSSARY_ENTRIES, QUIZ_DEFINITIONS, getQuizDefinition } from './data/le
 
 import TabErrorBoundary from './components/TabErrorBoundary';
 import Modal from './components/Modal';
-import { VictoryModal, BankruptcyModal, ChallengeEndModal, RunSummaryModal, AnnualReportModal } from './components/modals';
+import {
+  VictoryModal,
+  BankruptcyModal,
+  ChallengeEndModal,
+  RunSummaryModal,
+  AnnualReportModal,
+  ConfirmDialogModal,
+  ConfirmDialogConfig,
+  AccessibilityModal,
+  AccessibilityPrefs,
+  ImageLightboxModal,
+  EmergencyCashModal,
+  GlossaryModal
+} from './components/modals';
 import { isCloudSyncEnabled, uploadCloudSave } from './services/cloudSave';
 import QuestLog from './components/QuestLog';
 import { Button, Badge, Card, Tooltip } from './components/ui';
@@ -187,24 +200,7 @@ type TurnPreviewData = {
   warningLevel: 'SAFE' | 'LOW_BUFFER' | 'SHORTFALL';
 };
 
-type ConfirmDialogConfig = {
-  title: string;
-  description: string;
-  details?: { label: string; value: string }[];
-  confirmLabel: string;
-  cancelLabel?: string;
-  danger?: boolean;
-  onConfirm: () => void;
-  onCancel?: () => void;
-};
-
-type AccessibilityPrefs = {
-  largeText: boolean;
-  highContrast: boolean;
-  reduceMotion: boolean;
-  disableConfetti: boolean;
-  disableVideoPreload: boolean;
-};
+// ConfirmDialogConfig and AccessibilityPrefs now live in components/modals/.
 
 // ============================================
 // COACH UI (Step 12)
@@ -4967,273 +4963,20 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
       {/* Confirmation Dialog (prevents costly mis-clicks) */}
       {confirmDialog && (
-        <Modal
-          isOpen={!!confirmDialog}
-          onClose={closeConfirmDialog}
-          ariaLabel="Confirmation"
-          overlayClassName="bg-black/80 backdrop-blur-sm"
-          overlayStyle={{
-            paddingTop: 'calc(env(safe-area-inset-top) + 1rem)',
-            paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)',
-            paddingLeft: 'calc(env(safe-area-inset-left) + 1rem)',
-            paddingRight: 'calc(env(safe-area-inset-right) + 1rem)'
-          }}
-          contentClassName="w-full max-w-lg bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden"
-          contentStyle={{ maxHeight: 'calc(100dvh - 2rem)' }}
-          closeOnOverlayClick
-          closeOnEsc
-        >
-          <div className="flex items-start justify-between gap-4 p-5 border-b border-slate-700/60">
-            <div>
-              <h2 className="text-lg font-bold text-white">{confirmDialog.title}</h2>
-              <p className="text-slate-400 text-sm mt-1">{confirmDialog.description}</p>
-            </div>
-          </div>
-          <div className="p-5 space-y-4">
-                {confirmDialog.details && confirmDialog.details.length > 0 && (
-                  <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-4">
-                    <div className="space-y-2">
-                      {confirmDialog.details.map((d) => (
-                        <div key={d.label} className="flex items-center justify-between gap-3 text-sm">
-                          <span className="text-slate-300">{d.label}</span>
-                          <span className="text-slate-200 font-semibold text-right">{d.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    onClick={() => {
-                      const onCancel = confirmDialog.onCancel;
-                      closeConfirmDialog();
-                      onCancel?.();
-                    }}
-                    className="w-full sm:w-auto px-5 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-semibold touch-target"
-                  >
-                    {confirmDialog.cancelLabel || 'Cancel'}
-                  </button>
-                  <button
-                    onClick={() => {
-                      const onConfirm = confirmDialog.onConfirm;
-                      closeConfirmDialog();
-                      onConfirm();
-                    }}
-                    className={`w-full sm:flex-1 px-5 py-3 rounded-xl text-white font-semibold touch-target ${
-                      confirmDialog.danger
-                        ? 'bg-red-600 hover:bg-red-500'
-                        : 'bg-emerald-600 hover:bg-emerald-500'
-                    }`}
-                  >
-                    {confirmDialog.confirmLabel}
-                  </button>
-                </div>
-          </div>
-        </Modal>
+        <ConfirmDialogModal config={confirmDialog} onClose={closeConfirmDialog} />
       )}
 
       {/* Accessibility Settings */}
       {showAccessibility && (
-        <Modal
-          isOpen={showAccessibility}
+        <AccessibilityModal
+          prefs={accessibilityPrefs}
+          setPrefs={setAccessibilityPrefs}
+          autoTutorialPopups={autoTutorialPopups}
+          setAutoTutorialPopups={setAutoTutorialPopups}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
           onClose={() => setShowAccessibility(false)}
-          ariaLabel={t('settings.accessibility.ariaLabel')}
-          overlayClassName="bg-black/80 backdrop-blur-sm"
-          overlayStyle={{
-            paddingTop: 'calc(env(safe-area-inset-top) + 1rem)',
-            paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)',
-            paddingLeft: 'calc(env(safe-area-inset-left) + 1rem)',
-            paddingRight: 'calc(env(safe-area-inset-right) + 1rem)'
-          }}
-          contentClassName="w-full max-w-lg bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden"
-          contentStyle={{ maxHeight: 'calc(100dvh - 2rem)' }}
-          closeOnOverlayClick
-          closeOnEsc
-        >
-          <div className="flex items-start justify-between gap-4 p-5 border-b border-slate-700/60">
-            <div>
-              <h2 className="text-lg font-bold text-white">{t('settings.accessibility.title')}</h2>
-              <p className="text-slate-400 text-sm mt-1">{t('settings.accessibility.subtitle')}</p>
-            </div>
-          </div>
-
-          <div className="p-5 space-y-4">
-                <div className="space-y-2">
-                  <label className="text-white font-semibold" htmlFor="language-select">
-                    {t('settings.language.label')}
-                  </label>
-                  <select
-                    id="language-select"
-                    value={locale}
-                    onChange={(e) => setLocale(e.target.value as typeof locale)}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white"
-                  >
-                    <option value="en">{t('language.en')}</option>
-                    <option value="es">{t('language.es')}</option>
-                  </select>
-                  <p className="text-slate-400 text-sm">{t('settings.language.helper')}</p>
-                </div>
-
-                <label className="flex items-start gap-3 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={accessibilityPrefs.largeText}
-                    onChange={(e) => setAccessibilityPrefs((p) => ({ ...p, largeText: e.target.checked }))}
-                    className="mt-1"
-                  />
-                  <div>
-                    <div className="text-white font-semibold">{t('settings.accessibility.largeText.title')}</div>
-                    <div className="text-slate-400 text-sm">{t('settings.accessibility.largeText.description')}</div>
-                  </div>
-                </label>
-
-                <label className="flex items-start gap-3 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={accessibilityPrefs.highContrast}
-                    onChange={(e) => setAccessibilityPrefs((p) => ({ ...p, highContrast: e.target.checked }))}
-                    className="mt-1"
-                  />
-                  <div>
-                    <div className="text-white font-semibold">{t('settings.accessibility.highContrast.title')}</div>
-                    <div className="text-slate-400 text-sm">{t('settings.accessibility.highContrast.description')}</div>
-                  </div>
-                </label>
-
-                <label className="flex items-start gap-3 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={accessibilityPrefs.reduceMotion}
-                    onChange={(e) => setAccessibilityPrefs((p) => ({ ...p, reduceMotion: e.target.checked }))}
-                    className="mt-1"
-                  />
-                  <div>
-                    <div className="text-white font-semibold">{t('settings.accessibility.reduceMotion.title')}</div>
-                    <div className="text-slate-400 text-sm">{t('settings.accessibility.reduceMotion.description')}</div>
-                  </div>
-                </label>
-
-                <label className="flex items-start gap-3 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={accessibilityPrefs.disableConfetti}
-                    onChange={(e) => setAccessibilityPrefs((p) => ({ ...p, disableConfetti: e.target.checked }))}
-                    className="mt-1"
-                  />
-                  <div>
-                    <div className="text-white font-semibold">{t('settings.accessibility.disableConfetti.title')}</div>
-                    <div className="text-slate-400 text-sm">{t('settings.accessibility.disableConfetti.description')}</div>
-                  </div>
-                </label>
-
-                <label className="flex items-start gap-3 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={accessibilityPrefs.disableVideoPreload}
-                    onChange={(e) => setAccessibilityPrefs((p) => ({ ...p, disableVideoPreload: e.target.checked }))}
-                    className="mt-1"
-                  />
-                  <div>
-                    <div className="text-white font-semibold">{t('settings.accessibility.disableVideoPreload.title')}</div>
-                    <div className="text-slate-400 text-sm">{t('settings.accessibility.disableVideoPreload.description')}</div>
-                  </div>
-                </label>
-
-                <label className="flex items-start gap-3 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={autoTutorialPopups}
-                    onChange={(e) => setAutoTutorialPopups(e.target.checked)}
-                    className="mt-1"
-                  />
-                  <div>
-                    <div className="text-white font-semibold">{t('settings.tutorialPopups.title')}</div>
-                    <div className="text-slate-400 text-sm">{t('settings.tutorialPopups.description')}</div>
-                  </div>
-                </label>
-
-                {/* View Mode Toggle */}
-                <div className="border-t border-slate-700/50 pt-4 mt-4">
-                  <div className="text-white font-semibold mb-2">Dashboard View Mode</div>
-                  <div className="flex bg-slate-900 rounded-lg p-1">
-                    <button
-                      onClick={() => setViewMode('compact')}
-                      className={`flex-1 px-3 py-2 text-sm rounded-md transition-all ${
-                        viewMode === 'compact' 
-                          ? 'bg-slate-700 text-white' 
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      Compact
-                    </button>
-                    <button
-                      onClick={() => setViewMode('expanded')}
-                      className={`flex-1 px-3 py-2 text-sm rounded-md transition-all ${
-                        viewMode === 'expanded' 
-                          ? 'bg-slate-700 text-white' 
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      Expanded
-                    </button>
-                  </div>
-                  <p className="text-slate-400 text-sm mt-2">
-                    {viewMode === 'compact' 
-                      ? 'Collapsible sections to reduce information overwhelm' 
-                      : 'All sections expanded with full details visible'}
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-4">
-                  <h3 className="text-sm font-semibold text-white">Keyboard shortcuts</h3>
-                  <p className="text-xs text-slate-400 mt-1">Press a key to jump without clicking.</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 text-sm">
-                    {[
-                      ['N', 'Next Month'],
-                      ['T', 'Toggle Autoplay'],
-                      ['A', 'Actions'],
-                      ['I', 'Invest'],
-                      ['P', 'Portfolio'],
-                      ['B', 'Bank'],
-                      ['C', 'Career'],
-                      ['E', 'Education'],
-                      ['S', 'Side Hustles'],
-                      ['L', 'Lifestyle'],
-                      ['?', 'Shortcuts']
-                    ].map(([key, label]) => (
-                      <div key={key} className="flex items-center justify-between rounded-lg border border-slate-700/70 bg-slate-950/40 px-3 py-2">
-                        <span className="text-slate-300">{label}</span>
-                        <span className="text-xs font-semibold text-emerald-300">{key}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="pt-2 flex flex-col sm:flex-row gap-2">
-                  <button
-                    onClick={() =>
-                      setAccessibilityPrefs({
-                        largeText: false,
-                        highContrast: false,
-                        reduceMotion: false,
-                        disableConfetti: false,
-                        disableVideoPreload: false
-                      })
-                    }
-                    className="w-full sm:w-auto px-4 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-semibold"
-                  >
-                    {t('actions.reset')}
-                  </button>
-                  <button
-                    onClick={() => setShowAccessibility(false)}
-                    className="w-full sm:flex-1 px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold"
-                  >
-                    {t('actions.done')}
-                  </button>
-                </div>
-          </div>
-        </Modal>
+        />
       )}
 
       {/* Next Month Preview (Step 10) */}
@@ -6056,39 +5799,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
       {/* Event Image Lightbox */}
       {imageLightbox && (
-        <Modal
-          isOpen={!!imageLightbox}
-          onClose={closeImageLightbox}
-          ariaLabel="Event image preview"
-          overlayClassName="bg-black/90 backdrop-blur-sm"
-          closeOnOverlayClick
-          closeOnEsc
-          contentClassName="relative w-full max-w-5xl bg-transparent border-0 shadow-none"
-        >
-          <motion.div
-            initial={reduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.97, y: 8 }}
-            animate={reduceMotion ? { opacity: 1, scale: 1 } : { opacity: 1, scale: 1, y: 0 }}
-            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.98, y: 8 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="relative w-full"
-          >
-            <motion.img
-              src={imageLightbox.src}
-              alt={imageLightbox.alt}
-              className="w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-slate-700"
-              initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
-              animate={reduceMotion ? { opacity: 1 } : { opacity: 1 }}
-              transition={{ duration: 0.35 }}
-              draggable={false}
-            />
-
-            <div className="mt-3 text-center text-xs text-slate-300">
-              <span className="hidden sm:inline">Click</span>
-              <span className="sm:hidden">Tap</span>
-              <span> outside to close</span>
-            </div>
-          </motion.div>
-        </Modal>
+        <ImageLightboxModal image={imageLightbox} reduceMotion={reduceMotion} onClose={closeImageLightbox} />
       )}
 
       {/* Mortgage Modal */}
@@ -6458,72 +6169,30 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
       {/* Emergency Asset Sale Warning */}
       {gameState.cash <= 0 && !gameState.isBankrupt && gameState.assets.length > 0 && (
-        <Modal
-          isOpen={gameState.cash <= 0 && !gameState.isBankrupt && gameState.assets.length > 0}
-          onClose={() => undefined}
-          ariaLabel="Cash emergency"
-          overlayClassName="bg-black/80"
-          closeOnOverlayClick={false}
-          closeOnEsc={false}
-          showCloseButton={false}
-          contentClassName="bg-gradient-to-br from-amber-900/50 to-red-900/50 border border-amber-500/50 rounded-2xl p-6 max-w-lg w-full"
-        >
-          <div className="text-center mb-4">
-            <div className="text-5xl mb-2">⚠️</div>
-            <h2 className="text-2xl font-bold text-amber-400">Cash Emergency!</h2>
-            <p className="text-white">You're out of cash but have assets. Sell at 50% value to survive.</p>
-            <p className="text-slate-400 text-sm mt-2">Credit Rating: <span className={`font-bold ${(gameState.creditRating || 650) > 600 ? 'text-green-400' : 'text-red-400'}`}>{gameState.creditRating || 650}</span></p>
-          </div>
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {gameState.assets.map(asset => {
-              const emergencyValue = Math.round(asset.costBasis * 0.5 * asset.quantity);
-              const mortgage = asset.mortgageId
-                ? (gameState.mortgages.find(m => m.id === asset.mortgageId) || gameState.mortgages.find(m => m.assetId === asset.id))
-                : gameState.mortgages.find(m => m.assetId === asset.id);
-              const netValue = mortgage ? Math.max(0, emergencyValue - mortgage.balance) : emergencyValue;
-              
-              return (
-                <div key={asset.id} className="flex items-center justify-between bg-black/30 rounded-lg p-3">
-                  <div>
-                    <p className="text-white font-medium">{asset.name}</p>
-                    <p className="text-slate-400 text-sm">Emergency Sale: {formatMoney(emergencyValue)}</p>
-                    {mortgage && <p className="text-red-400 text-xs">Net after mortgage: {formatMoney(netValue)}</p>}
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (netValue <= 0) {
-                        showNotif('Cannot Sell', 'Asset is underwater', 'error');
-                        return;
-                      }
-                      playWarning();
-                      setGameState(prev => ({
-                        ...prev,
-                        cash: prev.cash + netValue,
-                        assets: prev.assets.filter(a => a.id !== asset.id),
-                        liabilities: prev.liabilities.filter(l => l.assetId !== asset.id),
-                        mortgages: prev.mortgages.filter(m => m.assetId !== asset.id),
-                        events: [{
-                          id: Date.now().toString(),
-                          month: prev.month,
-                          title: `🔥 Emergency Sale: ${asset.name}`,
-                          description: `Sold at 50% value for ${formatMoneyFull(netValue)} to avoid bankruptcy`,
-                          type: 'WARNING'
-                        }, ...prev.events]
-                      }));
-                    }}
-                    disabled={netValue <= 0}
-                    className={`px-4 py-2 rounded-lg font-medium ${netValue > 0 ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
-                  >
-                    Sell for {formatMoney(netValue)}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-          <p className="text-red-400 text-xs text-center mt-4">
-            ⚠️ {3 - (gameState.missedPayments || 0)} missed payments until bankruptcy
-          </p>
-        </Modal>
+        <EmergencyCashModal
+          gameState={gameState}
+          onSell={(asset, netValue) => {
+            if (netValue <= 0) {
+              showNotif('Cannot Sell', 'Asset is underwater', 'error');
+              return;
+            }
+            playWarning();
+            setGameState(prev => ({
+              ...prev,
+              cash: prev.cash + netValue,
+              assets: prev.assets.filter(a => a.id !== asset.id),
+              liabilities: prev.liabilities.filter(l => l.assetId !== asset.id),
+              mortgages: prev.mortgages.filter(m => m.assetId !== asset.id),
+              events: [{
+                id: Date.now().toString(),
+                month: prev.month,
+                title: `🔥 Emergency Sale: ${asset.name}`,
+                description: `Sold at 50% value for ${formatMoneyFull(netValue)} to avoid bankruptcy`,
+                type: 'WARNING'
+              }, ...prev.events]
+            }));
+          }}
+        />
       )}
 
       {/* Save Manager */}
@@ -6745,27 +6414,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
         isProcessing={isProcessing}
       />
       {showGlossary && (
-        <Modal
-          isOpen={showGlossary}
-          onClose={() => setShowGlossary(false)}
-          ariaLabel="Glossary"
-          closeOnOverlayClick
-          closeOnEsc
-          contentClassName="bg-slate-800 border border-slate-700 rounded-2xl p-6 max-w-2xl w-full"
-        >
-          <h2 className="text-xl font-bold text-white mb-2">Glossary</h2>
-          <p className="text-slate-400 text-sm mb-4">
-            Quick definitions to help you learn without slowing down gameplay.
-          </p>
-          <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-            {GLOSSARY_ENTRIES.map((entry) => (
-              <div key={entry.term} className="rounded-xl border border-slate-700 bg-slate-900/40 p-3">
-                <p className="text-sm font-semibold text-white">{entry.term}</p>
-                <p className="text-sm text-slate-300 mt-1">{entry.definition}</p>
-              </div>
-            ))}
-          </div>
-        </Modal>
+        <GlossaryModal onClose={() => setShowGlossary(false)} />
       )}
       {dashboardModal && (
         <Modal

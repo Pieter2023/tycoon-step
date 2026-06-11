@@ -151,6 +151,19 @@ returned `{valid:true, source:'gumroad'}`.
   renders, console clean). Next slices: remaining inline modals
   (mortgage / emergency-cash / quick-tutorial...), then per-tab extraction.
 
+- **App.tsx split, slice 2: utility modals** — done 2026-06-11 (same
+  session): ConfirmDialogModal (+ ConfirmDialogConfig type moved),
+  AccessibilityModal (+ AccessibilityPrefs type; calls useI18n itself),
+  ImageLightboxModal, EmergencyCashModal (sale math in component, state
+  mutation stays in App's onSell), GlossaryModal. App.tsx 8240 → 7889
+  lines. Verified in preview: accessibility modal (i18n strings resolve,
+  prefs toggle round-trips), glossary, confirm dialog via quest Claim All
+  (gotcha: QuestLog has a button with the SAME label as the dialog's
+  confirm — match the modal's button, not the first DOM hit). Suite 150
+  green. Still inline: scenario, turn-preview, mortgage, market-special,
+  side-hustle-upgrade, save-manager, tutorials, intro-video, dashboard
+  detail — the gameplay-coupled ones, each needs its own pass.
+
 ## Next build priorities (in order)
 
 1. **Finish v2 shell migration / split App.tsx** (the big one — plan it

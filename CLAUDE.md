@@ -29,9 +29,11 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 - `constants.ts` — careers, investments, events, education, difficulty settings
 - `data/events.json` — additional life events
 - `components/v2/` — newer shell UI (DesktopShell sidebar / MobileShell bottom-nav)
-- `components/modals/` — end-game modals extracted from App.tsx (victory,
-  bankruptcy, challenge-end, run-summary, annual-report); visibility
-  conditions still live in App.tsx render
+- `components/modals/` — modals extracted from App.tsx (victory, bankruptcy,
+  challenge-end, run-summary, annual-report, confirm-dialog, accessibility,
+  image-lightbox, emergency-cash, glossary); visibility conditions still
+  live in App.tsx render. ConfirmDialogConfig + AccessibilityPrefs types
+  live here too.
 - `KidsApp.tsx` — separate simplified kids mode
 - `docs/architecture-map.md` — deeper technical map (from Dec 2025 discovery)
 
