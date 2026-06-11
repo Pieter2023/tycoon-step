@@ -102,11 +102,24 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 ## Current state & next steps
 
-Daily challenge shipped + verified live 2026-06-11; follow-ups (full-run
-playtest, streak nudge, OG tags), the run summary card for normal games,
-and learning counterfactuals all done later that day. See `docs/roadmap.md`
-for the queue: Supabase accounts + daily leaderboard, v2 shell migration,
-B2B classroom packs.
+Everything through the Supabase milestone is **shipped, verified live, and
+deployed** as of end-of-day 2026-06-11: daily challenge (+ streaks, OG tags,
+leaderboard), run summary card, learning counterfactuals (sell hindsights +
+year-in-review), cloud saves (sync code + accounts), email login with custom
+SMTP. Working tree clean; remote main == working branch.
+
+**The queue (details + cold-start context in `docs/roadmap.md`):**
+1. Daily leaderboard names → accounts (small: user_id column on
+   daily_scores + send it when signed in)
+2. v2 shell migration / App.tsx split (big refactor — read
+   `docs/implementation-plan.md` first; extract inline modals, then tabs)
+3. B2B classroom packs (one-page offer + outreach; bulk codes already work)
+
+Day-to-day workflow that worked well: build → test (`npm run test:run`) →
+verify live in the preview browser (seed localStorage
+`tycoon_authenticated=true` + `tycoon_access_tier=full`, clean up after) →
+update CLAUDE.md + roadmap → commit → push to main (auto-deploys) → confirm
+the new bundle is served (grep a new string in the live JS).
 
 ## Daily leaderboard / Supabase (built 2026-06-11)
 

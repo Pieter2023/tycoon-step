@@ -1,6 +1,10 @@
 # Roadmap
 
-**Last updated:** 2026-06-11 (daily challenge follow-ups session)
+**Last updated:** 2026-06-11, end of day (marathon session: daily-challenge
+follow-ups, run summary card, learning counterfactuals, full Supabase
+milestone — leaderboard, cloud saves, accounts, custom SMTP — all shipped,
+verified live, and deployed). Suite: 23 files / 145 tests green.
+**Next session starts at "Next build priorities" below.**
 
 ## Recently shipped (2026-06-10)
 
@@ -117,28 +121,41 @@ returned `{valid:true, source:'gumroad'}`.
   limited (~2-4 emails/hr) — add custom SMTP (Resend) before promoting
   email login. Email flow needs a real-inbox test by Pieter.
 
+- **Email flow + custom SMTP** — both verified live 2026-06-11. Real-inbox
+  round-trip (guest → link email → magic link on 2nd browser → account
+  restore) passed; auth emails now send from `Tycoon
+  <noreply@prismaiservices.ca>` via Resend (30/hr, adjustable). Two fixes
+  landed from testing: emailRedirectTo uses window.location.origin, and
+  getAccount uses getUser() for freshness. Email login is production-ready.
+
 ## Next build priorities (in order)
 
-1. ~~Test the email account flow end-to-end~~ ✓ done 2026-06-11 with a real
-   inbox (pieterhouseofrealtors@gmail.com): link-email confirmation upgraded
-   the guest account, magic link signed into a second browser, "Restore from
-   my account" pulled the save down. Two fixes landed from the test:
-   emailRedirectTo now uses window.location.origin, and getAccount uses
-   getUser() so a confirmation done in another tab shows up immediately.
-   Test account deleted afterwards — the email is free to use for real.
-2. ~~Custom SMTP (Resend)~~ ✓ done 2026-06-11: Pieter pasted the Resend API
-   key into Supabase SMTP settings; verified live — auth email arrived from
-   `noreply@prismaiservices.ca` via Resend. Rate limit now 30 emails/hr
-   (raise under Authentication → Rate Limits if ever needed). Email login
-   is fully production-ready.
-3. **Daily leaderboard names → accounts** (optional polish): attach
-   user_id to daily_scores so names follow accounts.
-4. **Finish v2 shell migration** — App.tsx still renders legacy tab UI in
-   places; also consider splitting App.tsx (8k lines) per
-   `docs/implementation-plan.md`.
-5. **B2B classroom packs** — bulk codes via `ACCESS_CODES` already work;
-   needs a one-page offer + outreach to US personal-finance teachers
-   (25+ states mandate the course), credit unions, fee-only advisors.
+1. **Daily leaderboard names → accounts** (small, ~1 session or less).
+   Today `daily_scores` rows carry a free-text `player_name` + device
+   `client_id`. Add a nullable `user_id uuid references auth.users` column
+   (migration via Supabase MCP, project ref `bvsqnhtlwklexyijvexw`), send it
+   from `services/leaderboard.ts` when a session exists (`getAccount()` in
+   `services/auth.ts`), and prefill the name input from the account. Keeps
+   working signed-out. Optional extras: unique-per-user-per-day instead of
+   per-device; show streak on the leaderboard row.
+
+2. **Finish v2 shell migration / split App.tsx** (the big one — plan it
+   first, likely multiple sessions). App.tsx is ~8.2k lines and still
+   renders the legacy tab UI in places; `components/v2/` (DesktopShell /
+   MobileShell) is the target shell. See `docs/implementation-plan.md` and
+   `docs/architecture-map.md` before touching anything. Suggested approach:
+   extract the big inline modals first (victory/bankruptcy/annual-report/
+   challenge-end are self-contained), then per-tab components, keeping the
+   145-test suite green at every step. Don't mix this with feature work.
+
+3. **B2B classroom packs** (business + light code). Bulk access codes
+   already work via the `ACCESS_CODES` Netlify env var (comma-separated —
+   add e.g. `SPRINGFIELD2026` for a school; remember warm functions cache
+   env, so redeploy after changing). Needs: a one-page offer (positioning:
+   25+ US states mandate personal-finance courses), pricing for class sets,
+   outreach list (teachers, credit unions, fee-only advisors). The learning
+   counterfactuals + year-in-review features are the teacher-facing hook;
+   the run summary card is the shareable artifact.
 
 ## Known issues / debt
 
