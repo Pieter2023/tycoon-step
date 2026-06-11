@@ -22,6 +22,7 @@ import { DEFAULT_TAB_UI_STATE, hydrateTabUiState, TabUiState } from './services/
 import { GLOSSARY_ENTRIES, QUIZ_DEFINITIONS, getQuizDefinition } from './data/learning';
 
 import TabErrorBoundary from './components/TabErrorBoundary';
+import { useTabIntroVideo } from './hooks/useTabIntroVideo';
 import Modal from './components/Modal';
 import {
   VictoryModal,
@@ -937,15 +938,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
   // - "Show later" closes without saving (shows again next time they open the tab)
   // - "Don't show again" / "Continue" saves a per-tab localStorage flag
   // ============================================
-  const [introVideoTabId, setIntroVideoTabId] = useState<string | null>(null);
-  const [introVideoMuted, setIntroVideoMuted] = useState(true);
-  const [introVideoIsPlaying, setIntroVideoIsPlaying] = useState(false);
-  const [introVideoHasStarted, setIntroVideoHasStarted] = useState(false);
-  const [introVideoPlaybackError, setIntroVideoPlaybackError] = useState<string | null>(null);
-  const [introVideoAutoplayOnOpen, setIntroVideoAutoplayOnOpen] = useState(false);
-  const [introVideoDontShowAgain, setIntroVideoDontShowAgain] = useState(false);
-  const [minimizedTabVideos, setMinimizedTabVideos] = useState<Record<string, boolean>>({});
-  const introVideoRef = useRef<HTMLVideoElement | null>(null);
+  // QW-3: tab intro-video state machine lives in hooks/useTabIntroVideo.
+  const introVideo = useTabIntroVideo(TAB_INTRO_VIDEO_CONFIG);
 
   // Event image enhancements
   const prefersReducedMotion = useReducedMotion();
@@ -1161,191 +1155,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   // ============================================
   // TAB INTRO VIDEOS (config-driven onboarding popups)
   // ============================================
-  const activeIntroVideoConfig = useMemo(() => {
-    if (!introVideoTabId) return null;
-    return TAB_INTRO_VIDEO_CONFIG[introVideoTabId] || null;
-  }, [introVideoTabId]);
-
-  const markIntroVideoAsSeen = useCallback((tabId: string) => {
-    const cfg = TAB_INTRO_VIDEO_CONFIG[tabId];
-    if (!cfg) return;
-    try {
-      localStorage.setItem(cfg.storageKey, '1');
-    } catch (e) {
-      console.warn('Failed to save intro video preference:', e);
-    }
-  }, []);
-
-  const openIntroVideoModal = useCallback((tabId: string, opts?: { autoplay?: boolean }) => {
-    const cfg = TAB_INTRO_VIDEO_CONFIG[tabId];
-    if (!cfg) return;
-
-    setIntroVideoMuted(true);
-    setIntroVideoIsPlaying(false);
-    setIntroVideoHasStarted(false);
-    setIntroVideoPlaybackError(null);
-    setIntroVideoAutoplayOnOpen(!!opts?.autoplay);
-    setIntroVideoDontShowAgain(false);
-
-    // If the tab has a minimized "replay" panel showing, hide it while the modal is open.
-    setMinimizedTabVideos((prev) => ({ ...prev, [tabId]: false }));
-
-    setIntroVideoTabId(tabId);
-  }, []);
-
-  const closeIntroVideoModal = useCallback((opts?: { remember?: boolean }) => {
-    const tabId = introVideoTabId;
-    if (!tabId) return;
-
-    const remember = opts?.remember !== undefined ? opts.remember : true;
-    if (remember || introVideoDontShowAgain) markIntroVideoAsSeen(tabId);
-
-    setIntroVideoAutoplayOnOpen(false);
-
-    setIntroVideoTabId(null);
-
-    const vid = introVideoRef.current;
-    if (vid) {
-      try {
-        vid.pause();
-        vid.currentTime = 0;
-      } catch (e) {
-        console.debug('Video pause/reset failed:', e);
-      }
-    }
-
-    setIntroVideoIsPlaying(false);
-    setIntroVideoHasStarted(false);
-    setIntroVideoPlaybackError(null);
-  }, [introVideoTabId, markIntroVideoAsSeen, introVideoDontShowAgain]);
-
-  const requestIntroVideoPlayback = useCallback(async () => {
-    const vid = introVideoRef.current;
-    if (!vid) return;
-
-    setIntroVideoPlaybackError(null);
-    setIntroVideoHasStarted(true);
-
-    try {
-      // If we're paused because we've reached the end, restart before playing.
-      const nearEnd = Number.isFinite(vid.duration) && vid.duration > 0
-        ? vid.currentTime >= Math.max(0, vid.duration - 0.05)
-        : false;
-
-      if (vid.ended || nearEnd) {
-        try {
-          vid.currentTime = 0;
-        } catch (e) {
-          console.debug('Video currentTime reset failed:', e);
-        }
-      }
-
-      // If the user clicks Play, automatically unmute (applies to all tab intro videos).
-      try {
-        vid.muted = false;
-      } catch (e) {
-        console.debug('Video unmute failed:', e);
-      }
-      setIntroVideoMuted(false);
-
-      const p = vid.play();
-      // Some browsers return undefined; some return a Promise
-      if (p && typeof (p as Promise<void>).then === 'function') {
-        await (p as Promise<void>);
-      }
-    } catch (err: any) {
-      const name = err?.name ? String(err.name) : '';
-      const msg = err?.message ? String(err.message) : '';
-      const pretty = name && msg ? `${name}: ${msg}` : name || msg || 'Unable to start playback.';
-      setIntroVideoPlaybackError(pretty);
-      setIntroVideoIsPlaying(false);
-    }
-  }, []);
-
-  const tryEnterIntroVideoFullscreen = useCallback((vid: HTMLVideoElement | null) => {
-    if (!vid) return;
-    try {
-      // Only force fullscreen on small screens (mobile/tablet).
-      const isSmall = typeof window !== 'undefined'
-        && typeof window.matchMedia === 'function'
-        && window.matchMedia('(max-width: 768px)').matches;
-
-      if (!isSmall) return;
-
-      // Avoid repeated fullscreen requests if already fullscreen.
-      if (typeof document !== 'undefined' && (document as any).fullscreenElement) return;
-
-      const anyVid = vid as any;
-
-      // iOS Safari supports this on <video> elements.
-      if (typeof anyVid.webkitEnterFullscreen === 'function') {
-        anyVid.webkitEnterFullscreen();
-        return;
-      }
-
-      // Standard Fullscreen API
-      if (typeof vid.requestFullscreen === 'function') {
-        const p = vid.requestFullscreen();
-        if (p && typeof (p as Promise<void>).catch === 'function') {
-          (p as Promise<void>).catch(() => {});
-        }
-        return;
-      }
-
-      // Older WebKit fallback
-      if (typeof anyVid.webkitRequestFullscreen === 'function') {
-        anyVid.webkitRequestFullscreen();
-      }
-    } catch (e) {
-      console.debug('Fullscreen request failed:', e);
-    }
-  }, []);
-
-  // When the user explicitly clicks "Watch Video", we attempt to autoplay
-  // (this is considered a user gesture in most browsers).
-  useEffect(() => {
-    if (!introVideoTabId) return;
-    if (!introVideoAutoplayOnOpen) return;
-    const vid = introVideoRef.current;
-    if (!vid) return;
-
-    let cancelled = false;
-    const tryPlay = () => {
-      if (cancelled) return;
-      void requestIntroVideoPlayback();
-      setIntroVideoAutoplayOnOpen(false);
-    };
-
-    // If the video is already ready, try immediately on next tick.
-    if (vid.readyState >= 2) {
-      const t = window.setTimeout(tryPlay, 0);
-      return () => {
-        cancelled = true;
-        window.clearTimeout(t);
-      };
-    }
-
-    vid.addEventListener('canplay', tryPlay, { once: true });
-    return () => {
-      cancelled = true;
-      vid.removeEventListener('canplay', tryPlay);
-    };
-  }, [introVideoAutoplayOnOpen, introVideoTabId, requestIntroVideoPlayback]);
-
-  const toggleIntroVideoPlayback = useCallback(() => {
-    const vid = introVideoRef.current;
-    if (!vid) return;
-    try {
-      if (vid.paused) {
-        tryEnterIntroVideoFullscreen(vid);
-        void requestIntroVideoPlayback();
-      } else {
-        vid.pause();
-      }
-    } catch (e) {
-      console.debug('Video playback state toggle failed:', e);
-    }
-  }, [requestIntroVideoPlayback, tryEnterIntroVideoFullscreen]);
 
   // If the scenario modal closes, ensure any open lightbox also closes
   useEffect(() => {
@@ -1639,7 +1448,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
     !!marketSpecialAction ||
     !!confirmDialog ||
     !!showMortgageModal ||
-    !!introVideoTabId ||
+    !!introVideo.tabId ||
     showSaveManager ||
     showQuestLog ||
     !!imageLightbox ||
@@ -2792,7 +2601,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
     !!marketSpecialAction ||
     !!confirmDialog ||
     !!showMortgageModal ||
-    !!introVideoTabId ||
+    !!introVideo.tabId ||
     showSaveManager ||
     showQuestLog ||
     !!imageLightbox ||
@@ -2837,7 +2646,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [
     showSaveManager, confirmDialog, showAccessibility, imageLightbox,
-    introVideoTabId, showTurnPreview, showTutorial, tutorialDismissed,
+    introVideo.tabId, showTurnPreview, showTutorial, tutorialDismissed,
     tutorialStep, TUTORIAL_TIPS.length, showMortgageModal,
     confirmTurnPreview
   ]);
@@ -4584,80 +4393,34 @@ const [gameState, setGameState] = useState<GameState>(() => {
       />
 
       {/* Tab Intro Video (shows only first time a user opens a tab, unless postponed) */}
-      {introVideoTabId && activeIntroVideoConfig && (
+      {introVideo.tabId && introVideo.activeConfig && (
         <TabIntroVideoModal
-          config={activeIntroVideoConfig}
-          videoRef={introVideoRef}
-          muted={introVideoMuted}
-          isPlaying={introVideoIsPlaying}
-          hasStarted={introVideoHasStarted}
-          playbackError={introVideoPlaybackError}
-          dontShowAgain={introVideoDontShowAgain}
+          config={introVideo.activeConfig}
+          videoRef={introVideo.videoRef}
+          muted={introVideo.muted}
+          isPlaying={introVideo.isPlaying}
+          hasStarted={introVideo.hasStarted}
+          playbackError={introVideo.playbackError}
+          dontShowAgain={introVideo.dontShowAgain}
           shouldPreload={shouldPreloadVideos}
-          onVideoPlay={() => {
-            // If the user presses Play (native controls or our button), unmute automatically.
-            const vid = introVideoRef.current;
-            if (vid) {
-              try {
-                vid.muted = false;
-              } catch (e) {
-                console.debug('Video unmute on play failed:', e);
-              }
-            }
-            setIntroVideoMuted(false);
-
-            // On mobile, automatically expand to fullscreen when playback starts.
-            tryEnterIntroVideoFullscreen(vid);
-
-            setIntroVideoIsPlaying(true);
-            setIntroVideoHasStarted(true);
-            setIntroVideoPlaybackError(null);
-          }}
-          onVideoPause={() => setIntroVideoIsPlaying(false)}
-          onVideoEnded={() => {
-            setIntroVideoIsPlaying(false);
-            if (introVideoTabId) {
-              setMinimizedTabVideos((prev) => ({ ...prev, [introVideoTabId]: true }));
-            }
-            closeIntroVideoModal({ remember: true });
-          }}
-          onVideoError={() => {
-            const vid = introVideoRef.current;
-            const code = vid?.error?.code;
-            const codeLabel = code === 1
-              ? 'MEDIA_ERR_ABORTED'
-              : code === 2
-                ? 'MEDIA_ERR_NETWORK'
-                : code === 3
-                  ? 'MEDIA_ERR_DECODE'
-                  : code === 4
-                    ? 'MEDIA_ERR_SRC_NOT_SUPPORTED'
-                    : code
-                      ? `MEDIA_ERR_${code}`
-                      : '';
-            setIntroVideoPlaybackError(codeLabel ? `Video error: ${codeLabel}` : 'Video failed to load.');
-            setIntroVideoIsPlaying(false);
-          }}
-          onTogglePlayback={toggleIntroVideoPlayback}
-          onToggleMute={() => {
-            setIntroVideoMuted((m) => {
-              const next = !m;
-              const vid = introVideoRef.current;
-              if (vid) vid.muted = next;
-              return next;
-            });
-          }}
-          onRetry={() => void requestIntroVideoPlayback()}
-          onDontShowAgainChange={setIntroVideoDontShowAgain}
+          onVideoPlay={introVideo.handleVideoPlay}
+          onVideoPause={introVideo.handleVideoPause}
+          onVideoEnded={introVideo.handleVideoEnded}
+          onVideoError={introVideo.handleVideoError}
+          onTogglePlayback={introVideo.togglePlayback}
+          onToggleMute={introVideo.toggleMute}
+          onRetry={() => void introVideo.requestPlayback()}
+          onDontShowAgainChange={introVideo.setDontShowAgain}
           onContinue={() => {
-            closeIntroVideoModal({ remember: true });
-            if (activeIntroVideoConfig.continueToTab) {
-              setActiveTab(activeIntroVideoConfig.continueToTab);
+            const continueToTab = introVideo.activeConfig?.continueToTab;
+            introVideo.close({ remember: true });
+            if (continueToTab) {
+              setActiveTab(continueToTab);
             }
           }}
-          onSkip={() => closeIntroVideoModal({ remember: false })}
-          onCloseRemember={() => closeIntroVideoModal({ remember: true })}
-          onDismiss={() => closeIntroVideoModal()}
+          onSkip={() => introVideo.close({ remember: false })}
+          onCloseRemember={() => introVideo.close({ remember: true })}
+          onDismiss={() => introVideo.close()}
         />
       )}
 
@@ -5889,7 +5652,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                       </div>
                     </div>
                     <button
-                      onClick={() => openIntroVideoModal(activeTab, { autoplay: true })}
+                      onClick={() => introVideo.open(activeTab, { autoplay: true })}
                       className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold flex items-center gap-2"
                     >
                       <Play size={16} /> Watch video
@@ -5907,7 +5670,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                     </div>
                   )}
 
-                  {minimizedTabVideos[activeTab] && (
+                  {introVideo.minimizedTabVideos[activeTab] && (
                     <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
                         {activeTabVideo.poster ? (
@@ -5928,13 +5691,13 @@ const [gameState, setGameState] = useState<GameState>(() => {
                       </div>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => openIntroVideoModal(activeTab, { autoplay: true })}
+                          onClick={() => introVideo.open(activeTab, { autoplay: true })}
                           className="px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold flex items-center gap-2"
                         >
                           <Play size={16} /> Replay
                         </button>
                         <button
-                          onClick={() => setMinimizedTabVideos((prev) => ({ ...prev, [activeTab]: false }))}
+                          onClick={() => introVideo.setMinimizedTabVideos((prev) => ({ ...prev, [activeTab]: false }))}
                           className="p-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200"
                           aria-label="Hide video"
                         >
