@@ -22,3 +22,5 @@ export type { MortgagePreview } from './MortgageModal';
 export { default as TurnPreviewModal } from './TurnPreviewModal';
 export type { TurnPreviewData, TurnPreviewLine } from './TurnPreviewModal';
 export { default as ScenarioModal } from './ScenarioModal';
+export { default as TabIntroVideoModal } from './TabIntroVideoModal';
+export type { TabIntroVideoConfig } from './TabIntroVideoModal';
