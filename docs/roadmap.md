@@ -99,12 +99,22 @@ returned `{valid:true, source:'gumroad'}`.
   end overlay: submit name + score, today's top 10, "You're #N today".
   14 new tests; suite 22 files / 137.
 
+- **Cloud saves via sync code** (cross-device play, no accounts needed) —
+  done same day: `cloud_saves` table locked to SECURITY DEFINER RPCs
+  (exact UUID code required, no enumeration, 2MB cap). ☁️ Cloud Sync panel
+  in the Save Manager: toggle auto-backup (autosave uploads, 60s throttle),
+  copy your code, back up now, restore on any device ("Played before?
+  Restore from Cloud" button on fresh devices). Full backup→wipe→restore
+  round-trip verified against production Supabase. 8 new tests; suite
+  23 files / 145.
+
 ## Next build priorities (in order)
 
-1. **Supabase accounts + cloud saves** — the rest of the milestone: auth
-   (magic link or anonymous-upgrade), cross-device saves, names tied to
-   accounts instead of localStorage. Leaderboard table is ready to gain a
-   user_id column later.
+1. **Supabase auth accounts** — magic link / anonymous-upgrade so names and
+   saves follow a login instead of a sync code. BLOCKED on two Supabase
+   dashboard settings (Site URL + provider toggles) that the MCP can't
+   change — Pieter needs ~5 min in supabase.com/dashboard (project
+   `tycoon`). The sync-code tables migrate cleanly (add user_id columns).
 2. **Finish v2 shell migration** — App.tsx still renders legacy tab UI in
    places; also consider splitting App.tsx (8k lines) per
    `docs/implementation-plan.md`.

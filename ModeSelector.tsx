@@ -5,7 +5,7 @@ import { ArrowRight, BookOpen, BriefcaseBusiness, CalendarDays, LineChart, Shiel
 import App from './App';
 import KidsApp from './KidsApp';
 import { KidsGameState } from './kidsTypes';
-import { getSaveSummary, getSaveSummaries, loadAdultGame, loadKidsGame, deleteSaveSlot, SaveSlotId, SaveSummary } from './services/storageService';
+import { getSaveSummary, getSaveSummaries, loadAdultGame, loadKidsGame, deleteSaveSlot, saveAdultGame, SaveSlotId, SaveSummary } from './services/storageService';
 import { GameState, CareerPath, PlayerConfig, MultiplayerState } from './types';
 import { CAREER_PATHS, CHARACTERS, DIFFICULTY_SETTINGS, INITIAL_GAME_STATE } from './constants';
 import { calculateMonthlyCashFlowEstimate, calculateNetWorth } from './services/gameLogic';
@@ -14,6 +14,7 @@ import CustomAvatarBuilder, { CustomAvatarResult } from './components/customAvat
 import UnlockModal from './components/UnlockModal';
 import { AccessTier, getAccessTier, setAccessTier, validateAccessCode } from './services/accessControl';
 import { createDailyChallengeState, getDailyChallengeId, getDailyCharacter, getDailySeed, getDailyStreak, getPreviousChallengeId, recordDailyChallengePlayed } from './services/dailyChallenge';
+import { adoptSyncCode, fetchCloudSave, getSyncCode, isCloudSyncEnabled, isValidSyncCode, setCloudSyncEnabled, uploadCloudSave } from './services/cloudSave';
 
 type GameMode = 'select' | 'adult' | 'kids' | 'daily' | 'multiplayer-setup' | 'multiplayer-game';
 
@@ -84,6 +85,53 @@ const ModeSelector: React.FC = () => {
   const [kidsAutosave, setKidsAutosave] = useState<SaveSummary | null>(null);
   const [showSaveManager, setShowSaveManager] = useState(false);
   const [saveSummaries, setSaveSummaries] = useState<SaveSummary[]>([]);
+
+  // Cloud sync (sync-code based; see services/cloudSave.ts)
+  const [cloudSyncOn, setCloudSyncOn] = useState(() => isCloudSyncEnabled());
+  const [cloudStatus, setCloudStatus] = useState('');
+  const [cloudBusy, setCloudBusy] = useState(false);
+  const [restoreCode, setRestoreCode] = useState('');
+  const [codeCopied, setCodeCopied] = useState(false);
+
+  const handleCloudBackup = async () => {
+    if (cloudBusy) return;
+    const autosave = loadAdultGame('autosave');
+    if (!autosave) {
+      setCloudStatus('No adult autosave to back up yet — play a month first.');
+      return;
+    }
+    setCloudBusy(true);
+    setCloudStatus('Backing up…');
+    const stamp = await uploadCloudSave(autosave, {
+      name: autosave.character?.name,
+      month: autosave.month,
+      netWorth: calculateNetWorth(autosave)
+    });
+    setCloudBusy(false);
+    setCloudStatus(stamp ? `Backed up ${new Date(stamp).toLocaleTimeString()}.` : 'Backup failed — check your connection.');
+  };
+
+  const handleCloudRestore = async () => {
+    if (cloudBusy) return;
+    const code = restoreCode.trim().toLowerCase();
+    if (!isValidSyncCode(code)) {
+      setCloudStatus('That doesn\'t look like a sync code (8-4-4-4-12 characters).');
+      return;
+    }
+    setCloudBusy(true);
+    setCloudStatus('Looking up your save…');
+    const cloud = await fetchCloudSave(code);
+    setCloudBusy(false);
+    if (!cloud) {
+      setCloudStatus('No save found behind that code.');
+      return;
+    }
+    saveAdultGame(cloud.state, 'autosave');
+    adoptSyncCode(code); // future backups from this device go to the same slot
+    refreshSaves();
+    setRestoreCode('');
+    setCloudStatus(`Restored ${cloud.summary?.name || 'save'} (month ${cloud.state.month}) into Autosave — hit Continue Adult to play.`);
+  };
 
   useEffect(() => {
     const auth = safeLocalStorageGet(AUTH_KEY);
@@ -1056,6 +1104,18 @@ const ModeSelector: React.FC = () => {
           </motion.div>
         )}
 
+        {/* No local saves yet — still offer cloud restore for returning players on a new device */}
+        {!adultAutosave && !kidsAutosave && (
+          <div className="mb-6 flex justify-end">
+            <button
+              onClick={() => { refreshSaves(); setShowSaveManager(true); }}
+              className="rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-xs font-bold text-slate-300 transition hover:border-violet-400/60 hover:text-white"
+            >
+              ☁️ Played before? Restore from Cloud
+            </button>
+          </div>
+        )}
+
         {/* Save Manager Modal */}
         <AnimatePresence>
           {showSaveManager && (
@@ -1144,6 +1204,76 @@ const ModeSelector: React.FC = () => {
                       </div>
                     </div>
                   ))}
+
+                  {/* Cloud Sync */}
+                  <div className="bg-slate-800/60 border border-violet-500/30 rounded-xl p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-white font-bold">☁️ Cloud Sync</h3>
+                        <p className="text-slate-400 text-xs">Back up your adult game and continue on any device with your sync code.</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const next = !cloudSyncOn;
+                          setCloudSyncEnabled(next);
+                          setCloudSyncOn(next);
+                          setCloudStatus(next ? 'Cloud backup on — autosaves upload automatically.' : 'Cloud backup off.');
+                        }}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold border transition ${
+                          cloudSyncOn
+                            ? 'border-violet-400/70 bg-violet-400/15 text-violet-200'
+                            : 'border-slate-600 text-slate-300 hover:border-slate-500'
+                        }`}
+                      >
+                        {cloudSyncOn ? 'ON' : 'OFF'}
+                      </button>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <code className="px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-700 text-violet-200 text-xs tracking-wide">
+                        {getSyncCode() || 'unavailable'}
+                      </code>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(getSyncCode());
+                            setCodeCopied(true);
+                            setTimeout(() => setCodeCopied(false), 2000);
+                          } catch { /* clipboard unavailable */ }
+                        }}
+                        className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold"
+                      >
+                        {codeCopied ? 'Copied!' : 'Copy code'}
+                      </button>
+                      <button
+                        onClick={handleCloudBackup}
+                        disabled={cloudBusy}
+                        className="px-3 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-xs font-bold"
+                      >
+                        Back up now
+                      </button>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <input
+                        type="text"
+                        value={restoreCode}
+                        onChange={(e) => setRestoreCode(e.target.value)}
+                        placeholder="Paste a sync code from another device…"
+                        className="flex-1 min-w-[220px] px-3 py-2 bg-slate-900/70 border border-slate-700 rounded-lg text-white text-xs placeholder-slate-500 focus:outline-none focus:border-violet-400"
+                      />
+                      <button
+                        onClick={handleCloudRestore}
+                        disabled={cloudBusy || !restoreCode.trim()}
+                        className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white text-xs font-bold"
+                      >
+                        Restore
+                      </button>
+                    </div>
+
+                    {cloudStatus && <p className="mt-2 text-xs text-slate-300">{cloudStatus}</p>}
+                    <p className="mt-2 text-[11px] text-slate-500">Keep your code private — anyone who has it can load (and overwrite) this backup.</p>
+                  </div>
 
                   <div className="flex justify-end">
                     <button

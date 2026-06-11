@@ -8,7 +8,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (22 files / 137 tests, all green as of 2026-06-11)
+- `npm run test:run` — vitest suite (23 files / 145 tests, all green as of 2026-06-11)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)
@@ -123,7 +123,19 @@ B2B classroom packs.
   (`tycoon_client_id` device id), today's top 10 + "You're #N today" rank.
   Degrades gracefully offline ("Leaderboard unavailable").
 - Tests: `services/leaderboard.test.ts`, `components/DailyLeaderboard.test.tsx`.
-- Still parked for the full milestone: Supabase auth accounts + cloud saves.
+- **Cloud saves (sync-code, no accounts yet)**: `public.cloud_saves` keyed by a
+  private UUID sync code; table has RLS with NO policies — access ONLY via
+  SECURITY DEFINER RPCs `put_cloud_save`/`get_cloud_save` (exact code
+  required, no enumeration; 2MB payload cap; direct table reads verified 401).
+  Client: `services/cloudSave.ts` (`tycoon_sync_code`, `tycoon_cloud_sync`
+  localStorage keys). UI: ☁️ Cloud Sync panel in ModeSelector's Save Manager
+  (toggle, copy code, Back up now, Restore from code → lands in Autosave +
+  adopts the code); fresh devices get a "Played before? Restore from Cloud"
+  button since Manage Saves is hidden without local saves. `recordAutosave`
+  auto-uploads when enabled (60s throttle). Round-trip verified live.
+- Still parked: Supabase **auth** accounts (magic link / anonymous) — needs
+  dashboard settings (Site URL, provider toggles) the MCP can't change.
+  Sync-code saves are designed to migrate cleanly under auth later.
 
 ## Learning counterfactuals (built 2026-06-11)
 

@@ -27,6 +27,7 @@ import Modal from './components/Modal';
 import ChallengeShareCard from './components/ChallengeShareCard';
 import DailyLeaderboard from './components/DailyLeaderboard';
 import { getDailyStreak } from './services/dailyChallenge';
+import { isCloudSyncEnabled, uploadCloudSave } from './services/cloudSave';
 import QuestLog from './components/QuestLog';
 import { Button, Badge, Card, Tooltip } from './components/ui';
 import type { AppShellNavItem } from './components/ui/AppShell';
@@ -841,6 +842,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const [hudMenuOpen, setHudMenuOpen] = useState(false);
   // Run summary card for normal games (win / bankruptcy / anytime via HUD menu)
   const [showRunCard, setShowRunCard] = useState(false);
+  // Throttle for cloud-save uploads (see recordAutosave)
+  const lastCloudUploadRef = useRef(0);
 
   // Pause autoplay while the year-in-review modal is up so it can be read.
   useEffect(() => {
@@ -2229,6 +2232,16 @@ const [gameState, setGameState] = useState<GameState>(() => {
     const now = Date.now();
     setLastAutosaveAt(now);
     setAutosaveNow(now);
+
+    // Cloud backup: fire-and-forget, throttled to once a minute.
+    if (isCloudSyncEnabled() && now - lastCloudUploadRef.current > 60_000) {
+      lastCloudUploadRef.current = now;
+      uploadCloudSave(state, {
+        name: state.character?.name,
+        month: state.month,
+        netWorth: calculateNetWorth(state)
+      }).catch(() => undefined);
+    }
   }, [isMultiplayer]);
 
   const handleClaimQuest = useCallback((questId: string) => {
