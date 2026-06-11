@@ -1,14 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   DAILY_CHALLENGE_MONTHS,
   createDailyChallengeState,
   getDailyChallengeId,
   getDailyCharacter,
   getDailySeed,
+  getDailyStreak,
+  getPreviousChallengeId,
   hashStringToSeed,
-  mulberry32
+  mulberry32,
+  recordDailyChallengePlayed
 } from './dailyChallenge';
-import { processTurn } from './gameLogic';
+import { calculateNetWorth, processTurn } from './gameLogic';
 import { GameState } from '../types';
 import { CHARACTERS } from '../constants';
 
@@ -119,5 +122,74 @@ describe('deterministic simulation', () => {
     const d = new Date(Date.UTC(2026, 5, 11));
     const final = runMonths(createDailyChallengeState(d), 70);
     expect(final.netWorthHistory.length).toBe(70);
+  });
+
+  it('survives a full 120-month run and stays deterministic to the end', () => {
+    // Headless playtest of the entire sprint: the run must not throw,
+    // must reach the end month, and two hands-off players must finish
+    // with the exact same world and score.
+    const d = new Date(Date.UTC(2026, 5, 11));
+    const a = runMonths(createDailyChallengeState(d), DAILY_CHALLENGE_MONTHS);
+    const b = runMonths(createDailyChallengeState(d), DAILY_CHALLENGE_MONTHS);
+
+    expect(a.month).toBe(DAILY_CHALLENGE_MONTHS + 1); // past target → end overlay fires
+    expect(a.netWorthHistory.length).toBe(DAILY_CHALLENGE_MONTHS);
+    expect(Number.isFinite(calculateNetWorth(a))).toBe(true);
+    expect(calculateNetWorth(a)).toBe(calculateNetWorth(b));
+    expect(a.cash).toBe(b.cash);
+    expect(JSON.stringify(a.netWorthHistory)).toBe(JSON.stringify(b.netWorthHistory));
+    expect(JSON.stringify(a.challengeEvents)).toBe(JSON.stringify(b.challengeEvents));
+  });
+});
+
+describe('daily streak', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('getPreviousChallengeId handles month and year boundaries', () => {
+    expect(getPreviousChallengeId('2026-06-11')).toBe('2026-06-10');
+    expect(getPreviousChallengeId('2026-06-01')).toBe('2026-05-31');
+    expect(getPreviousChallengeId('2026-01-01')).toBe('2025-12-31');
+    expect(getPreviousChallengeId('2024-03-01')).toBe('2024-02-29'); // leap year
+  });
+
+  it('starts a streak at 1 on first play', () => {
+    expect(getDailyStreak()).toBeNull();
+    const s = recordDailyChallengePlayed('2026-06-11');
+    expect(s).toEqual({ lastPlayedId: '2026-06-11', streak: 1, best: 1 });
+    expect(getDailyStreak()).toEqual(s);
+  });
+
+  it('same-day replays do not inflate the streak', () => {
+    recordDailyChallengePlayed('2026-06-11');
+    const s = recordDailyChallengePlayed('2026-06-11');
+    expect(s.streak).toBe(1);
+  });
+
+  it('consecutive days extend the streak and track the best', () => {
+    recordDailyChallengePlayed('2026-06-10');
+    recordDailyChallengePlayed('2026-06-11');
+    const s = recordDailyChallengePlayed('2026-06-12');
+    expect(s).toEqual({ lastPlayedId: '2026-06-12', streak: 3, best: 3 });
+  });
+
+  it('a missed day resets the streak but keeps the best', () => {
+    recordDailyChallengePlayed('2026-06-10');
+    recordDailyChallengePlayed('2026-06-11');
+    const s = recordDailyChallengePlayed('2026-06-14'); // skipped 12th + 13th
+    expect(s).toEqual({ lastPlayedId: '2026-06-14', streak: 1, best: 2 });
+  });
+
+  it('streak extends across a month boundary', () => {
+    recordDailyChallengePlayed('2026-05-31');
+    const s = recordDailyChallengePlayed('2026-06-01');
+    expect(s.streak).toBe(2);
+  });
+
+  it('survives corrupted storage', () => {
+    localStorage.setItem('tycoon_daily_streak_v1', 'not-json{');
+    expect(getDailyStreak()).toBeNull();
+    expect(recordDailyChallengePlayed('2026-06-11').streak).toBe(1);
   });
 });

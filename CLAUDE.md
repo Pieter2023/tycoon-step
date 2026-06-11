@@ -8,7 +8,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (18 files / 97 tests, all green as of 2026-06-11)
+- `npm run test:run` — vitest suite (18 files / 105 tests, all green as of 2026-06-11)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)
@@ -44,9 +44,17 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 - Challenge runs **never autosave** (guard in `recordAutosave`) — adult
   autosave is safe. Demo tier hits the normal 36-month wall mid-challenge
   (Pieter's call: challenge is demo-gated; card doubles as upsell).
-- Tests: `services/dailyChallenge.test.ts`. Verified live 2026-06-11:
-  seed→character matched prediction (Sarah Miller, $16K), events fired,
-  console clean, adult save untouched.
+- Tests: `services/dailyChallenge.test.ts` (incl. headless full 120-month
+  determinism playtest). Verified live 2026-06-11: seed→character matched
+  prediction (Sarah Miller, $16K), events fired, console clean, adult save
+  untouched.
+- **Streak**: localStorage `tycoon_daily_streak_v1` (current + best);
+  `recordDailyChallengePlayed` fires when the player starts today's run
+  (ModeSelector daily card onClick). Card eyebrow + end overlay show the
+  🔥 streak / keep-it-alive nudge.
+- **OG tags**: static Open Graph/Twitter meta in `index.html` →
+  `public/og-image.jpg` (1200×630). Per-run dynamic OG images need a
+  server — revisit in the Supabase era.
 
 ## Access tiers / monetization (selling live since 2026-06-10)
 
@@ -91,7 +99,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 ## Current state & next steps
 
-Daily challenge shipped + verified live 2026-06-11. See `docs/roadmap.md` for
-the queue: follow-ups (playtest full 120-month run incl. end card, streaks,
-OG tags), run summary card for normal games, learning counterfactuals,
+Daily challenge shipped + verified live 2026-06-11; follow-ups (full-run
+playtest, streak nudge, OG tags) done later that day. See `docs/roadmap.md`
+for the queue: run summary card for normal games, learning counterfactuals,
 Supabase accounts + daily leaderboard.

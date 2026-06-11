@@ -51,6 +51,65 @@ export const mulberry32 = (seed: number): (() => number) => {
 export const getDailySeed = (challengeId: string = getDailyChallengeId()): number =>
   hashStringToSeed(`tycoon-daily-${challengeId}`);
 
+// --- Daily streak (localStorage, device-local until accounts exist) ---
+
+const STREAK_KEY = 'tycoon_daily_streak_v1';
+
+export interface DailyStreak {
+  /** Challenge id of the most recent day played. */
+  lastPlayedId: string;
+  /** Consecutive days played, ending at lastPlayedId. */
+  streak: number;
+  /** Longest streak ever recorded on this device. */
+  best: number;
+}
+
+/** Challenge id of the UTC day before the given one. */
+export const getPreviousChallengeId = (challengeId: string): string => {
+  const [y, m, d] = challengeId.split('-').map(Number);
+  const prev = new Date(Date.UTC(y, m - 1, d));
+  prev.setUTCDate(prev.getUTCDate() - 1);
+  return getDailyChallengeId(prev);
+};
+
+export const getDailyStreak = (): DailyStreak | null => {
+  try {
+    const raw = localStorage.getItem(STREAK_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as DailyStreak;
+    if (typeof parsed?.lastPlayedId !== 'string' || typeof parsed?.streak !== 'number') return null;
+    return { ...parsed, best: typeof parsed.best === 'number' ? parsed.best : parsed.streak };
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Records that today's challenge was started. Same-day repeats are no-ops;
+ * playing the day after lastPlayedId extends the streak, anything else resets
+ * it to 1. Returns the updated streak.
+ */
+export const recordDailyChallengePlayed = (
+  challengeId: string = getDailyChallengeId()
+): DailyStreak => {
+  const current = getDailyStreak();
+  let next: DailyStreak;
+  if (current && current.lastPlayedId === challengeId) {
+    next = current;
+  } else if (current && current.lastPlayedId === getPreviousChallengeId(challengeId)) {
+    const streak = current.streak + 1;
+    next = { lastPlayedId: challengeId, streak, best: Math.max(current.best, streak) };
+  } else {
+    next = { lastPlayedId: challengeId, streak: 1, best: Math.max(current?.best ?? 0, 1) };
+  }
+  try {
+    localStorage.setItem(STREAK_KEY, JSON.stringify(next));
+  } catch {
+    // privacy-restricted browsers: streak just won't persist
+  }
+  return next;
+};
+
 /** The day's fixed character (custom avatars are not part of the challenge). */
 export const getDailyCharacter = (seed: number): Character => {
   const rng = mulberry32(seed ^ 0xc04fee);

@@ -13,7 +13,7 @@ import { useI18n } from './i18n';
 import CustomAvatarBuilder, { CustomAvatarResult } from './components/customAvatar/CustomAvatarBuilder';
 import UnlockModal from './components/UnlockModal';
 import { AccessTier, getAccessTier, setAccessTier, validateAccessCode } from './services/accessControl';
-import { createDailyChallengeState, getDailyChallengeId, getDailyCharacter, getDailySeed } from './services/dailyChallenge';
+import { createDailyChallengeState, getDailyChallengeId, getDailyCharacter, getDailySeed, getDailyStreak, getPreviousChallengeId, recordDailyChallengePlayed } from './services/dailyChallenge';
 
 type GameMode = 'select' | 'adult' | 'kids' | 'daily' | 'multiplayer-setup' | 'multiplayer-game';
 
@@ -74,6 +74,7 @@ const ModeSelector: React.FC = () => {
 
   // Daily challenge (seeded, ephemeral — no saves)
   const [dailyState, setDailyState] = useState<GameState | null>(null);
+  const [dailyStreak, setDailyStreak] = useState(() => getDailyStreak());
 
   // Save / Load (single player)
   const SAVE_SLOTS: SaveSlotId[] = ['autosave', 'slot1', 'slot2', 'slot3'];
@@ -857,11 +858,23 @@ const ModeSelector: React.FC = () => {
     },
     {
       title: 'Daily Challenge',
-      eyebrow: getDailyChallengeId(),
+      eyebrow: (() => {
+        const todayId = getDailyChallengeId();
+        if (!dailyStreak) return todayId;
+        if (dailyStreak.lastPlayedId === todayId) return `${todayId} · 🔥 ${dailyStreak.streak}-day streak`;
+        if (dailyStreak.lastPlayedId === getPreviousChallengeId(todayId)) return `${todayId} · 🔥 keep your ${dailyStreak.streak}-day streak!`;
+        return todayId;
+      })(),
       body: `Everyone plays the same seeded world today as ${getDailyCharacter(getDailySeed()).name}. 10-year sprint — score is your final net worth.`,
       Icon: CalendarDays,
-      onClick: () => { setDailyState(createDailyChallengeState()); setMode('daily'); },
-      cta: "Play today's run",
+      onClick: () => {
+        setDailyStreak(recordDailyChallengePlayed());
+        setDailyState(createDailyChallengeState());
+        setMode('daily');
+      },
+      cta: dailyStreak && dailyStreak.lastPlayedId === getPreviousChallengeId(getDailyChallengeId())
+        ? 'Keep the streak alive'
+        : "Play today's run",
       image: '/event-images/business_expansion_opportunity.webp',
       tone: 'border-violet-400/25 hover:border-violet-300/70',
       iconTone: 'bg-violet-300 text-slate-950',

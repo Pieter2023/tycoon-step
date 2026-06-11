@@ -25,6 +25,7 @@ import { GLOSSARY_ENTRIES, QUIZ_DEFINITIONS, getQuizDefinition } from './data/le
 import TabErrorBoundary from './components/TabErrorBoundary';
 import Modal from './components/Modal';
 import ChallengeShareCard from './components/ChallengeShareCard';
+import { getDailyStreak } from './services/dailyChallenge';
 import QuestLog from './components/QuestLog';
 import { Button, Badge, Card, Tooltip } from './components/ui';
 import type { AppShellNavItem } from './components/ui/AppShell';
@@ -6289,6 +6290,15 @@ const [gameState, setGameState] = useState<GameState>(() => {
             <p className="text-slate-400 text-sm mt-1">
               Daily Challenge · {gameState.challenge.id} — everyone plays the same world. Share your run:
             </p>
+            {(() => {
+              const streak = getDailyStreak();
+              if (!streak || streak.streak < 2) return null;
+              return (
+                <p className="text-amber-300 text-sm font-bold mt-2">
+                  🔥 {streak.streak}-day streak{streak.best > streak.streak ? ` · best ${streak.best}` : ''} — come back tomorrow to keep it going!
+                </p>
+              );
+            })()}
           </div>
           <ChallengeShareCard
             gameState={gameState}
