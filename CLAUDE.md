@@ -13,11 +13,12 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 ## Architecture (key files)
 
-- `App.tsx` — the adult game's state + orchestration (~6.3k lines after the
-  2026-06-11 modal extraction). All modals live in `components/modals/`;
+- `App.tsx` — the adult game's state + orchestration (~6.1k lines after the
+  2026-06-11 refactor day). All modals live in `components/modals/`;
   all tab content is extracted AND lazy-loaded from `components/tabs/`.
-  What's left inside: ~4.4k lines of state/handlers, the v2 shell wiring,
-  and the ~800-line legacy header/tab-nav branch (`uiV2Enabled` false).
+  What's left inside: ~4k lines of state/handlers (44+ useState — phase-3
+  target), the v2 shell wiring, and the ~800-line legacy header/tab-nav
+  branch (`uiV2Enabled` false — kept as the test harness).
   Early returns: splash → character select → main render. Passing an
   `initialGameState` **with a character** skips character select entirely.
 - `ModeSelector.tsx` — entry point: access gate → mode cards
@@ -33,14 +34,18 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 - `constants.ts` — careers, investments, events, education, difficulty settings
 - `data/events.json` — additional life events
 - `components/v2/` — newer shell UI (DesktopShell sidebar / MobileShell bottom-nav)
-- `components/modals/` — ALL of App.tsx's modals now live here (20 of them:
-  end-game, utility, event/onboarding, and the gameplay set — scenario,
-  turn-preview, mortgage, market-special, save-manager, tab-intro-video).
-  Visibility conditions + state stay in App.tsx render (the gameplay ones
-  are controlled components). Owns the ConfirmDialogConfig,
-  AccessibilityPrefs, MarketSpecialAction, MortgagePreview,
-  TurnPreviewData, TabIntroVideoConfig types + TUTORIAL_TIPS and
+- `components/modals/` — ALL of App.tsx's modals now live here (21 files:
+  end-game, utility, event/onboarding, the gameplay set — scenario,
+  turn-preview, mortgage, market-special, save-manager, tab-intro-video —
+  plus TutorialVideosModal, the v2 video chooser). Visibility conditions +
+  state stay in App.tsx render (the gameplay ones are controlled
+  components). Owns the ConfirmDialogConfig, AccessibilityPrefs,
+  MarketSpecialAction, MortgagePreview, TurnPreviewData,
+  TabIntroVideoConfig types + TUTORIAL_TIPS and
   QUICK_TUTORIAL_STORAGE_KEY. App.tsx no longer imports recharts.
+- `hooks/useTabIntroVideo.ts` — the intro-video state machine (QW-3);
+  `hooks/useKeyboardShortcuts.ts` predates it. The hook-extraction
+  pattern is the template for the phase-3 state cleanup.
 - `KidsApp.tsx` — separate simplified kids mode
 - `docs/architecture-map.md` — deeper technical map (from Dec 2025 discovery)
 
@@ -121,16 +126,23 @@ year-in-review), cloud saves (sync code + accounts), email login with custom
 SMTP. Working tree clean; remote main == working branch.
 
 Also shipped 2026-06-11 (later sessions): leaderboard→accounts linking
-(suite 23 files / 150 tests), and the **entire modal extraction phase of
-the App.tsx split** — all 20 modals now live in `components/modals/`
-(8 commits, one per risky modal), App.tsx 8467 → 6348 lines, suite green
-and verified live at every step.
+(suite 23 files / 150 tests); the **entire modal extraction phase of the
+App.tsx split** (all 20 modals → `components/modals/`, one commit per
+risky modal, App.tsx 8467 → ~6.1k lines); phase-2 cleanup (dead parallax
+code, QW-3 `hooks/useTabIntroVideo.ts`); **legacy-only features ported to
+v2** (clickable dashboard metric cards → drill-down modal with a 4-chart
+switcher; "Tutorial videos" chooser in HUD menu / mobile overflow /
+MoreScreen — the 7 tutorial videos are finally reachable by players);
+regenerated the missing portfolio poster. All verified live at every step.
 
-**The queue (details + cold-start context in `docs/roadmap.md`):**
-1. App.tsx split, next phase: the v2-shell-vs-legacy decision (retire or
-   extract the ~800-line legacy header/tab-nav branch), then
-   state/handler organization (plan it fresh; don't mix with feature work)
-2. B2B classroom packs (one-page offer + outreach; bulk codes already work)
+**The queue (details + COLD-START CONTEXT section in `docs/roadmap.md` —
+read that first in a new session):**
+1. App.tsx split, phase 3: state organization — extract cohesive useState
+   clusters into hooks, `useTabIntroVideo`-style, one commit each
+   (save/load, autoplay, coach/tutorial, batch-buy clusters)
+2. Retire the legacy shell (~800 lines): first migrate the two integration
+   tests to the v2 shell (they currently force `uiV2Enabled=false`)
+3. B2B classroom packs (one-page offer + outreach; bulk codes already work)
 
 Day-to-day workflow that worked well: build → test (`npm run test:run`) →
 verify live in the preview browser (seed localStorage

@@ -1,10 +1,46 @@
 # Roadmap
 
-**Last updated:** 2026-06-11, late session (leaderboard→accounts linking +
-the FULL modal-extraction phase of the App.tsx split shipped, verified
-live, and deployed; App.tsx 8467 → 6348 lines). Suite: 23 files / 150
-tests green.
-**Next session starts at "Next build priorities" below.**
+**Last updated:** 2026-06-11, end of day. Shipped today (all verified live
++ deployed, suite 23 files / 150 tests green throughout):
+leaderboard→accounts linking; the FULL modal-extraction phase of the
+App.tsx split (20 modals → components/modals/, one commit per gameplay
+modal); phase-2 mechanical wins (dead parallax code deleted, QW-3
+useTabIntroVideo hook); legacy-only features ported to v2 (clickable
+dashboard metric cards → drill-down modal with 4-chart switcher; Tutorial
+videos chooser in HUD menu / mobile overflow / MoreScreen); regenerated
+the missing portfolio poster (ffmpeg blur-fill from the video — it was
+never in git history). App.tsx 8467 → ~6.1k lines. Working tree clean;
+remote main == working branch.
+**Next session: read "Cold-start context" + "Next build priorities" below.**
+
+## Cold-start context for the next session (written 2026-06-11 EOD)
+
+- **Where the refactor stands:** every modal is out of App.tsx
+  (`components/modals/`, 21 files incl. TutorialVideosModal); all tab
+  content was already extracted + lazy-loaded (`components/tabs/`); the
+  intro-video state machine is `hooks/useTabIntroVideo.ts`. What's left
+  in App.tsx (~6.1k lines): ~4k lines of state/handlers (44+ useState),
+  the v2 shell wiring, and the ~800-line legacy shell branch.
+- **Key facts you'd otherwise rediscover the hard way:**
+  - `uiV2Enabled` (App.tsx ~line 460): prod default TRUE, `MODE==='test'`
+    forces FALSE → the integration tests (MortgageModal,
+    GameMathRegression) run against the LEGACY shell. Retiring legacy =
+    first migrate those tests to v2 selectors.
+  - The extracted gameplay modals are CONTROLLED components — state and
+    side effects deliberately stayed in App (see the slice notes below
+    for what stayed where and why).
+  - Verification workflow that works: seed localStorage
+    `tycoon_authenticated=true` + `tycoon_access_tier=full` (+
+    `tycoon_onboarding_seen_v1=1`, `tycoon_quick_tutorial_seen_v1=1` to
+    suppress tutorials) in the preview browser, play, clean up after.
+    Deploy = push to main, then poll the live bundle filename until it
+    matches `ls dist/assets/index-*.js` after a local build.
+  - QuestLog has a button with the same label as the claim-all confirm
+    dialog's button — scripted clicks must target the modal's instance.
+- **Recommended next moves (in order):** see "Next build priorities" —
+  state organization is the big one; start by grouping related useState
+  clusters into hooks (the useTabIntroVideo pattern worked well) rather
+  than a big-bang context/Zustand rewrite.
 
 ## Recently shipped (2026-06-10)
 
@@ -238,27 +274,28 @@ returned `{valid:true, source:'gumroad'}`.
   (lost in the asset restoration) — chooser hides broken thumbnails
   gracefully; restoring the file is a spawned follow-up task.
 
-1. **App.tsx split, phase 2: v2 shell decision + state organization**
-   (plan it first, likely multiple sessions). The modal phase is DONE
-   (2026-06-11 — all 20 modals in `components/modals/`, App.tsx
-   8467 → 6348 lines; see "Recently shipped" above for the slice-by-slice
-   record and what stayed controlled vs. moved). Tab content was ALREADY
-   fully extracted and lazy-loaded (`components/tabs/`, 9 files) before
-   this push — don't re-plan that. What actually remains in App.tsx:
-   - the **legacy-vs-v2 shell duality**: an ~800-line legacy header +
-     tab-nav + main-content branch renders when `uiV2Enabled` is false;
-     DashboardWidget tiles and tab-header Watch buttons only exist there.
-     Decide whether v2 absorbs those affordances or the legacy branch is
-     retired/extracted wholesale.
-   - ~4.4k lines of state + handlers (44+ useState hooks) — the M-3/L-2
-     state-management question from `docs/implementation-plan.md`.
-   - the 8-hook video state machine (QW-3 `useVideoPlayer` consolidation,
-     now feeding TabIntroVideoModal via props).
-   - dead scenarioImage parallax code (safe delete).
-   Same working rules: one slice per commit, suite green at every step,
-   verify live in the preview, don't mix with feature work.
+1. **App.tsx split, phase 3: state organization** (the M-3/L-2 question
+   from `docs/implementation-plan.md`; everything else from phase 2 is
+   done — modals out, tabs out, QW-3 hook, dead code, v2 feature port).
+   ~4k lines of state + handlers (44+ useState hooks) remain in App.tsx.
+   Recommended approach: incremental hook extraction in the
+   `useTabIntroVideo` mold (find a cohesive state cluster + its handlers,
+   move them verbatim into a hook, one commit each) — candidates:
+   save/load cluster (saveSummaries, drafts, import/export),
+   autoplay cluster (speed, preferences, block-list), coach/tutorial
+   cluster, batch-buy cluster. Avoid a big-bang context/Zustand rewrite
+   until the hooks make the seams obvious. Same working rules: one slice
+   per commit, suite green at every step, verify live in the preview.
 
-2. **B2B classroom packs** (business + light code). Bulk access codes
+2. **Retire the legacy shell** (unblocks deleting ~800 lines). Now that
+   its features are ported to v2, the legacy branch only serves the test
+   harness (`MODE==='test'` forces `uiV2Enabled=false`). Steps: make the
+   two integration tests (test/MortgageModal.test.tsx,
+   test/GameMathRegression.test.tsx) drive the v2 shell (set
+   `tycoon_ui_v2=1` in test setup + update selectors), confirm green,
+   then delete the legacy branch + DashboardWidget/Watch remnants.
+
+3. **B2B classroom packs** (business + light code). Bulk access codes
    already work via the `ACCESS_CODES` Netlify env var (comma-separated —
    add e.g. `SPRINGFIELD2026` for a school; remember warm functions cache
    env, so redeploy after changing). Needs: a one-page offer (positioning:
