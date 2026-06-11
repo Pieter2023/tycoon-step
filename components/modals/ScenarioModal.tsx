@@ -38,8 +38,6 @@ const CATEGORY_EMOJI: Record<string, string> = {
 // controls are surfaced inside so desktop users can stop the clock here.
 interface ScenarioModalProps {
   scenario: Scenario;
-  /** App-owned ref (legacy parallax wiring). */
-  imageContainerRef: React.Ref<HTMLDivElement>;
   /** App-owned coach ref + highlight class for the options list. */
   optionsRef: React.Ref<HTMLDivElement>;
   optionsHighlightClass: string;
@@ -54,7 +52,6 @@ interface ScenarioModalProps {
 
 const ScenarioModal: React.FC<ScenarioModalProps> = ({
   scenario,
-  imageContainerRef,
   optionsRef,
   optionsHighlightClass,
   reduceMotion,
@@ -80,7 +77,6 @@ const ScenarioModal: React.FC<ScenarioModalProps> = ({
       {/* Event Image (if available) */}
       {scenario.image && (
         <div
-          ref={imageContainerRef}
           className="mb-4 -mt-2 -mx-2 overflow-hidden rounded-xl relative group cursor-zoom-in select-none bg-slate-900/50 border border-slate-700/50"
           onClick={() => onOpenImage(scenario.image!, t(scenario.title))}
           role="button"

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
-import { motion, AnimatePresence, useMotionValue, useSpring, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { GameState, AssetType, MarketItem, Lifestyle, Character, Asset, SideHustle, EducationOption, Liability, PlayerConfig, MonthlyActionId, TABS, TabId, EducationLevel, PlayerStats } from './types';
 import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, ALL_LIFE_EVENTS, AUTO_INVEST_PRESETS } from './constants';
 import { processTurn, calculateMonthlyCashFlowEstimate, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier, checkPromotion, MAX_SOLD_POSITIONS } from './services/gameLogic';
@@ -950,11 +950,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   // Event image enhancements
   const prefersReducedMotion = useReducedMotion();
   const reduceMotion = accessibilityPrefs.reduceMotion || prefersReducedMotion;
-  const scenarioImageContainerRef = useRef<HTMLDivElement | null>(null);
-  const scenarioImageX = useMotionValue(0);
-  const scenarioImageY = useMotionValue(0);
-  const scenarioImageXSpring = useSpring(scenarioImageX, { stiffness: 160, damping: 22, mass: 0.3 });
-  const scenarioImageYSpring = useSpring(scenarioImageY, { stiffness: 160, damping: 22, mass: 0.3 });
   const [imageLightbox, setImageLightbox] = useState<{ src: string; alt: string } | null>(null);
 
   // Initialize audio mute state from saved preference
@@ -1356,10 +1351,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
   useEffect(() => {
     if (!gameState.pendingScenario && imageLightbox) {
       setImageLightbox(null);
-      scenarioImageX.set(0);
-      scenarioImageY.set(0);
     }
-  }, [gameState.pendingScenario, imageLightbox, scenarioImageX, scenarioImageY]);
+  }, [gameState.pendingScenario, imageLightbox]);
 
   useEffect(() => {
     if (gameState.pendingSideHustleUpgrade) {
@@ -1376,27 +1369,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const closeImageLightbox = useCallback(() => {
     setImageLightbox(null);
   }, []);
-
-  const handleScenarioImagePointerMove = useCallback((e: React.PointerEvent) => {
-    if (reduceMotion) return;
-    // Keep the effect subtle and avoid odd movement on touch devices
-    if (e.pointerType && e.pointerType !== 'mouse') return;
-    const el = scenarioImageContainerRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const relX = (e.clientX - rect.left) / rect.width;
-    const relY = (e.clientY - rect.top) / rect.height;
-    // Centered offsets, clamped to keep motion subtle
-    const offsetX = Math.max(-0.5, Math.min(0.5, relX - 0.5)) * 18; // px
-    const offsetY = Math.max(-0.5, Math.min(0.5, relY - 0.5)) * 12; // px
-    scenarioImageX.set(offsetX);
-    scenarioImageY.set(offsetY);
-  }, [reduceMotion, scenarioImageX, scenarioImageY]);
-
-  const resetScenarioImageParallax = useCallback(() => {
-    scenarioImageX.set(0);
-    scenarioImageY.set(0);
-  }, [scenarioImageX, scenarioImageY]);
 
   // Save / Load
   const SAVE_SLOTS: SaveSlotId[] = ['autosave', 'slot1', 'slot2', 'slot3'];
@@ -4781,7 +4753,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
       {gameState.pendingScenario && (
         <ScenarioModal
           scenario={gameState.pendingScenario}
-          imageContainerRef={scenarioImageContainerRef}
           optionsRef={coachAssetsSellRef}
           optionsHighlightClass={coachHighlight('assets-sell')}
           reduceMotion={reduceMotion}
