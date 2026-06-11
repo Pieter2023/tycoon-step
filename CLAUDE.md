@@ -31,9 +31,11 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 - `components/v2/` — newer shell UI (DesktopShell sidebar / MobileShell bottom-nav)
 - `components/modals/` — modals extracted from App.tsx (victory, bankruptcy,
   challenge-end, run-summary, annual-report, confirm-dialog, accessibility,
-  image-lightbox, emergency-cash, glossary); visibility conditions still
-  live in App.tsx render. ConfirmDialogConfig + AccessibilityPrefs types
-  live here too.
+  image-lightbox, emergency-cash, glossary, side-hustle-upgrade,
+  market-special, dashboard-detail, quick-tutorial, tutorial); visibility
+  conditions still live in App.tsx render. Owns the ConfirmDialogConfig,
+  AccessibilityPrefs, MarketSpecialAction types + TUTORIAL_TIPS and
+  QUICK_TUTORIAL_STORAGE_KEY. App.tsx no longer imports recharts.
 - `KidsApp.tsx` — separate simplified kids mode
 - `docs/architecture-map.md` — deeper technical map (from Dec 2025 discovery)
 

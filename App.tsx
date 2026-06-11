@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useReducedMotion } from 'framer-motion';
-import { GameState, AssetType, MarketItem, Lifestyle, Character, Asset, SideHustle, EducationOption, Liability, PlayerConfig, MonthlyActionId, TABS, TabId, SideHustleUpgradeOption, EducationLevel, PlayerStats } from './types';
-import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
+import { GameState, AssetType, MarketItem, Lifestyle, Character, Asset, SideHustle, EducationOption, Liability, PlayerConfig, MonthlyActionId, TABS, TabId, EducationLevel, PlayerStats } from './types';
 import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, ALL_LIFE_EVENTS, AUTO_INVEST_PRESETS } from './constants';
 import { processTurn, calculateMonthlyCashFlowEstimate, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier, checkPromotion, MAX_SOLD_POSITIONS } from './services/gameLogic';
 import { playMoneyGain, playMoneyLoss, playClick, playPurchase, playSell, playAchievement, playLevelUp, playVictory, playWarning, playTick, playNotification, playError, setMuted } from './services/audioService';
@@ -36,7 +35,15 @@ import {
   AccessibilityPrefs,
   ImageLightboxModal,
   EmergencyCashModal,
-  GlossaryModal
+  GlossaryModal,
+  SideHustleUpgradeModal,
+  MarketSpecialModal,
+  MarketSpecialAction,
+  DashboardDetailModal,
+  QuickTutorialModal,
+  QUICK_TUTORIAL_STORAGE_KEY,
+  TutorialModal,
+  TUTORIAL_TIPS
 } from './components/modals';
 import { isCloudSyncEnabled, uploadCloudSave } from './services/cloudSave';
 import QuestLog from './components/QuestLog';
@@ -163,26 +170,6 @@ const getHustleUpgradeLabel = (hustle: SideHustle, index: number, optionId?: str
   return option?.label || optionId;
 };
 
-const formatUpgradeEffects = (option: SideHustleUpgradeOption) => {
-  const effects = option.effects || {};
-  const parts: string[] = [];
-  if (typeof effects.incomeMultiplier === 'number') {
-    const pct = Math.round((effects.incomeMultiplier - 1) * 100);
-    if (pct !== 0) parts.push(`Income ${pct > 0 ? '+' : ''}${pct}%`);
-  }
-  if (typeof effects.passiveIncomeShare === 'number' && effects.passiveIncomeShare > 0) {
-    parts.push(`Passive ${Math.round(effects.passiveIncomeShare * 100)}%`);
-  }
-  if (typeof effects.energyMultiplier === 'number') {
-    const pct = Math.round((effects.energyMultiplier - 1) * 100);
-    if (pct !== 0) parts.push(`Energy ${pct}%`);
-  }
-  if (typeof effects.stressMultiplier === 'number') {
-    const pct = Math.round((effects.stressMultiplier - 1) * 100);
-    if (pct !== 0) parts.push(`Stress ${pct}%`);
-  }
-  return parts.length > 0 ? parts.join(' • ') : 'No change';
-};
 
 type TurnPreviewLine = { label: string; value: number };
 
@@ -480,7 +467,7 @@ const EDUCATION_INTRO_VIDEO_SRC = '/videos/education-tab-updated-tycoon.mp4';
 const NEGOTIATIONS_INTRO_VIDEO_STORAGE_KEY = 'tycoon_seen_negotiations_intro_video_v1';
 const NEGOTIATIONS_INTRO_VIDEO_SRC = '/videos/tycoon-master-negotiations.mp4';
 
-const QUICK_TUTORIAL_STORAGE_KEY = 'tycoon_quick_tutorial_seen_v1';
+
 const QUICK_TUTORIAL_SRC = '/videos/quick-tutorial.mp4';
 
 const AUTO_TUTORIAL_POPUPS_STORAGE_KEY = 'tycoon_auto_tutorial_popups_v1';
@@ -554,21 +541,7 @@ type TabIntroVideoConfig = {
   continueToTab?: TabId;
 };
 
-type MarketSpecialAction =
-  | {
-      type: 'BUY_DISCOUNT';
-      budget: number;
-      discount: number; // e.g. 0.3 = 30% off
-      title: string;
-      description: string;
-      allowedTypes?: AssetType[];
-    }
-  | {
-      type: 'PANIC_SELL';
-      discount: number; // e.g. 0.3 = 30% fire-sale haircut
-      title: string;
-      description: string;
-    };
+// MarketSpecialAction type now lives in components/modals/MarketSpecialModal.
 
 // NOTE: Add future tab videos by extending this config (tab id -> src/poster/storage key)
 const TAB_INTRO_VIDEO_CONFIG: Partial<Record<TabId, TabIntroVideoConfig>> = {
@@ -922,7 +895,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const [showSideHustleUpgradeModal, setShowSideHustleUpgradeModal] = useState(false);
   const [showEventLab, setShowEventLab] = useState(false);
   const [showQuickTutorial, setShowQuickTutorial] = useState(false);
-  const [quickTutorialDontShow, setQuickTutorialDontShow] = useState(false);
+
   const quickTutorialVideoRef = useRef<HTMLVideoElement | null>(null);
   const [eventLabEventId, setEventLabEventId] = useState(ALL_LIFE_EVENTS[0]?.id || '');
   const [eventLabOptionIdx, setEventLabOptionIdx] = useState(0);
@@ -1583,50 +1556,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   }, [activeTab, investmentFilter, quizSeen, activeQuizId]);
   
   // Tutorial tips content
-  const tutorialTips = [
-    { 
-      id: 'welcome',
-      title: '👋 Welcome to Tycoon!', 
-      message: `Your goal: Build enough passive income to cover ${Math.round(FINANCIAL_FREEDOM_TARGET_MULTIPLIER * 100)}% of your expenses. Click "Next Month" to advance time and watch your finances grow!`,
-      highlight: 'next-month'
-    },
-    {
-      id: 'overview',
-      title: '💰 Track Your Progress',
-      message: 'The Overview tab shows your net worth, cash flow, and important stats. Watch your passive income grow!',
-      highlight: 'overview'
-    },
-    {
-      id: 'invest',
-      title: '📈 Invest to Build Wealth',
-      message: 'Go to the Invest tab to buy stocks, real estate, and businesses. These generate passive income!',
-      highlight: 'invest'
-    },
-    {
-      id: 'auto-invest',
-      title: '⚡ Auto-Invest',
-      message: 'Auto-invest puts a percent of last month’s disposable income to work automatically. Choose a preset to enable it now (you can pause anytime).',
-      highlight: 'invest'
-    },
-    {
-      id: 'career',
-      title: '💼 Career & Education',
-      message: 'Boost your salary through education and side hustles. Higher income = more to invest!',
-      highlight: 'career'
-    },
-    {
-      id: 'lifestyle',
-      title: '❤️ Watch Your Health!',
-      message: 'Check the Lifestyle tab for health, stress, and energy. Low health can trigger expensive medical emergencies!',
-      highlight: 'lifestyle'
-    },
-    {
-      id: 'financial-iq',
-      title: '🧠 Financial IQ',
-      message: 'Increase Financial IQ by making smart investment decisions and surviving market events. Higher IQ = better negotiation outcomes!',
-      highlight: 'stats'
-    }
-  ];
 
   const markOnboardingSeen = useCallback(() => {
     try {
@@ -2915,7 +2844,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
   // Autoplay should feel "hands-off": it temporarily pauses itself while any blocking UI is open
   // (events, confirmation dialogs, special market flows, etc.) and then continues automatically.
   // Players can always stop it explicitly via the header button, keyboard (Shift+A), or the event popup.
-  const isTutorialActive = showTutorial && !tutorialDismissed && tutorialStep < tutorialTips.length;
+  const isTutorialActive = showTutorial && !tutorialDismissed && tutorialStep < TUTORIAL_TIPS.length;
   const isEmergencyCashModal = gameState.cash <= 0 && !gameState.isBankrupt && gameState.assets.length > 0;
   const pendingSideHustle = gameState.pendingSideHustleUpgrade
     ? gameState.activeSideHustles.find(h => h.id === gameState.pendingSideHustleUpgrade?.hustleId)
@@ -2974,7 +2903,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
   }, [
     showSaveManager, confirmDialog, showAccessibility, imageLightbox,
     introVideoTabId, showTurnPreview, showTutorial, tutorialDismissed,
-    tutorialStep, tutorialTips.length, showMortgageModal,
+    tutorialStep, TUTORIAL_TIPS.length, showMortgageModal,
     confirmTurnPreview
   ]);
 
@@ -5320,56 +5249,13 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
       {/* Side Hustle Milestone Upgrade */}
       {showSideHustleUpgradeModal && pendingSideHustle && pendingSideHustleMilestone && (
-        <Modal
-          isOpen={showSideHustleUpgradeModal}
+        <SideHustleUpgradeModal
+          hustle={pendingSideHustle}
+          milestone={pendingSideHustleMilestone}
+          cash={gameState.cash}
+          onChoose={handleSideHustleUpgradeChoice}
           onClose={() => setShowSideHustleUpgradeModal(false)}
-          ariaLabel="Side hustle milestone upgrade"
-          overlayClassName="bg-black/70 backdrop-blur-sm"
-          contentClassName="bg-slate-800 border border-slate-700 rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto"
-        >
-          <div className="text-center mb-5">
-            <div className="mx-auto w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center text-3xl mb-3">
-              {pendingSideHustle.icon}
-            </div>
-            <h2 className="text-2xl font-bold text-white">Milestone reached</h2>
-            <p className="text-slate-400 text-sm">
-              {pendingSideHustle.name} hit {pendingSideHustleMilestone.monthsRequired} months. Choose your next move.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            {pendingSideHustleMilestone.options.map(option => {
-              const canAfford = gameState.cash >= option.cost;
-              return (
-                <button
-                  key={option.id}
-                  onClick={() => handleSideHustleUpgradeChoice(option.id)}
-                  disabled={!canAfford}
-                  className={`w-full text-left p-4 rounded-xl border transition-all ${
-                    canAfford
-                      ? 'bg-slate-800/60 border-slate-600 hover:border-emerald-500/60 hover:bg-slate-700/60'
-                      : 'bg-slate-800/40 border-slate-700 text-slate-500 cursor-not-allowed'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-white font-semibold">{option.label}</p>
-                      <p className="text-slate-400 text-xs">{option.description}</p>
-                    </div>
-                    <div className="text-right text-sm">
-                      <p className="text-emerald-300 font-semibold">{option.cost > 0 ? formatMoneyFull(option.cost) : 'Free'}</p>
-                      <p className="text-slate-500 text-xs">{formatUpgradeEffects(option)}</p>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          <p className="text-xs text-slate-500 mt-4">
-            {t('hustle.upgrade.deferHint')}
-          </p>
-        </Modal>
+        />
       )}
 
       {/* Scenario Modal */}
@@ -5508,293 +5394,19 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
       {/* Market Special Action Modal (Buy the Dip / Panic Sell) */}
       {marketSpecialAction && (
-        <Modal
-          isOpen={!!marketSpecialAction}
+        <MarketSpecialModal
+          action={marketSpecialAction}
+          gameState={gameState}
+          discountBuyItemId={discountBuyItemId}
+          setDiscountBuyItemId={setDiscountBuyItemId}
+          discountBuyQuantity={discountBuyQuantity}
+          setDiscountBuyQuantity={setDiscountBuyQuantity}
+          panicSellSelection={panicSellSelection}
+          setPanicSellSelection={setPanicSellSelection}
+          onExecuteDiscountBuy={executeDiscountBuy}
+          onExecutePanicSell={executePanicSell}
           onClose={closeMarketSpecialAction}
-          ariaLabel="Market special action"
-          overlayClassName="bg-black/80 backdrop-blur-sm"
-          overlayStyle={{
-            paddingTop: 'calc(env(safe-area-inset-top) + 1rem)',
-            paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)'
-          }}
-          contentClassName="bg-slate-900 border border-slate-700 rounded-2xl p-5 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-          closeOnOverlayClick
-          closeOnEsc
-        >
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <div>
-              <h3 className="text-xl font-bold text-white">{marketSpecialAction.title}</h3>
-              <p className="text-slate-300 text-sm mt-1">{marketSpecialAction.description}</p>
-            </div>
-          </div>
-
-              {marketSpecialAction.type === 'BUY_DISCOUNT' && (
-                <div className="space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                    <div className="text-slate-300">
-                      Budget: <span className="text-white font-semibold">{formatMoneyFull(marketSpecialAction.budget)}</span>
-                      <span className="text-slate-400"> • Cash: {formatMoneyFull(gameState.cash)}</span>
-                    </div>
-                    <div className="text-slate-400">
-                      Discount: <span className="text-white font-semibold">{Math.round(marketSpecialAction.discount * 100)}%</span>
-                    </div>
-                  </div>
-
-                  {(() => {
-                    const inflationMult = Math.pow(1 + gameState.economy.inflationRate, gameState.month / 12);
-                    const cap = Math.min(gameState.cash, marketSpecialAction.budget);
-
-                    const deals = MARKET_ITEMS
-                      .filter(i => i.type !== AssetType.SAVINGS)
-                      .map(i => {
-                        const base = Math.round(i.price * inflationMult);
-                        const discounted = Math.max(1, Math.round(base * (1 - marketSpecialAction.discount)));
-                        const singleUnit = i.type === AssetType.REAL_ESTATE || i.type === AssetType.BUSINESS;
-                        const maxUnits = singleUnit ? (discounted <= cap ? 1 : 0) : Math.floor(cap / discounted);
-                        return {
-                          item: i,
-                          base,
-                          discounted,
-                          singleUnit,
-                          maxUnits,
-                          affordable: maxUnits > 0
-                        };
-                      })
-                      .sort((a, b) => Number(b.affordable) - Number(a.affordable) || a.discounted - b.discounted)
-                      .slice(0, 18);
-
-                    if (deals.length === 0) {
-                      return (
-                        <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700 text-slate-300">
-                          No deals available right now.
-                        </div>
-                      );
-                    }
-
-                    const selected = deals.find(d => d.item.id === discountBuyItemId) || null;
-
-                    return (
-                      <>
-                        <div className="grid gap-2">
-                          {deals.map(d => {
-                            const isSelected = discountBuyItemId === d.item.id;
-                            return (
-                              <button
-                                key={d.item.id}
-                                onClick={() => {
-                                  setDiscountBuyItemId(d.item.id);
-                                  if (d.singleUnit) {
-                                    setDiscountBuyQuantity(1);
-                                  } else {
-                                    setDiscountBuyQuantity((q) => Math.min(Math.max(1, q), Math.max(1, d.maxUnits)));
-                                  }
-                                }}
-                                className={`text-left p-3 rounded-xl border transition ${
-                                  isSelected ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-700 bg-slate-800/40 hover:bg-slate-800/60'
-                                }`}
-                              >
-                                <div className="flex items-start justify-between gap-3">
-                                  <div>
-                                    <div className="text-white font-semibold">{d.item.name}</div>
-                                    <div className="text-xs text-slate-400 mt-0.5">{d.item.description}</div>
-                                    <div className="text-xs text-slate-400 mt-1">
-                                      <span className="line-through">{formatMoneyFull(d.base)}</span>
-                                      <span className="ml-2 text-white font-semibold">{formatMoneyFull(d.discounted)}</span>
-                                      <span className="ml-2 text-slate-400">({Math.round(marketSpecialAction.discount * 100)}% off)</span>
-                                    </div>
-                                  </div>
-                                  <div className="text-right text-xs">
-                                    <div className={`font-semibold ${d.affordable ? 'text-emerald-300' : 'text-rose-300'}`}>
-                                      {d.affordable ? `Max ${d.singleUnit ? 1 : d.maxUnits}` : 'Too expensive'}
-                                    </div>
-                                    <div className="text-slate-400 mt-1">
-                                      ~{formatMoneyFull((d.item.expectedYield * d.discounted) / 12)}/mo
-                                    </div>
-                                  </div>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700">
-                          {!selected ? (
-                            <div className="text-slate-300 text-sm">Select a deal above to continue.</div>
-                          ) : (
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-between gap-3">
-                                <div className="text-slate-200 font-semibold">{selected.item.name}</div>
-                                {selected.singleUnit ? (
-                                  <div className="text-slate-300 text-sm">Qty: <span className="text-white font-semibold">1</span></div>
-                                ) : (
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      className="w-9 h-9 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-white font-bold"
-                                      onClick={() => setDiscountBuyQuantity(q => Math.max(1, q - 1))}
-                                      disabled={discountBuyQuantity <= 1}
-                                    >
-                                      −
-                                    </button>
-                                    <div className="min-w-[3rem] text-center text-white font-semibold">{discountBuyQuantity}</div>
-                                    <button
-                                      className="w-9 h-9 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-white font-bold"
-                                      onClick={() => setDiscountBuyQuantity(q => Math.min(selected.maxUnits, q + 1))}
-                                      disabled={discountBuyQuantity >= selected.maxUnits}
-                                    >
-                                      +
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="flex items-center justify-between text-sm">
-                                <div className="text-slate-300">
-                                  Total:
-                                </div>
-                                <div className="text-white font-semibold">
-                                  {formatMoneyFull(selected.discounted * (selected.singleUnit ? 1 : discountBuyQuantity))}
-                                </div>
-                              </div>
-
-                              <div className="flex flex-col sm:flex-row gap-2">
-                                <button
-                                  onClick={closeMarketSpecialAction}
-                                  className="flex-1 px-4 py-3 rounded-xl bg-slate-700/60 hover:bg-slate-700 text-white font-semibold"
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  onClick={executeDiscountBuy}
-                                  className="flex-1 px-4 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold"
-                                >
-                                  Buy on Sale
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
-              )}
-
-              {marketSpecialAction.type === 'PANIC_SELL' && (
-                <div className="space-y-4">
-                  {(() => {
-                    const assets = gameState.assets || [];
-                    if (assets.length === 0) {
-                      return (
-                        <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700 text-slate-300">
-                          You have no assets to sell.
-                        </div>
-                      );
-                    }
-
-                    const selectedIds = Object.entries(panicSellSelection).filter(([, v]) => !!v).map(([id]) => id);
-                    const preview = (() => {
-                      let net = 0;
-                      for (const id of selectedIds) {
-                        const a = assets.find(x => x.id === id);
-                        if (!a) continue;
-                        const qty = typeof a.quantity === 'number' ? a.quantity : 1;
-                        const gross = a.value * qty;
-                        const fireSale = Math.round(gross * (1 - marketSpecialAction.discount));
-
-                        const mtg = a.mortgageId
-                          ? (gameState.mortgages.find(m => m.id === a.mortgageId) || gameState.mortgages.find(m => m.assetId === id))
-                          : gameState.mortgages.find(m => m.assetId === id);
-
-                        if (mtg) {
-                          net += Math.max(0, fireSale - mtg.balance);
-                        } else {
-                          net += fireSale;
-                        }
-                      }
-                      return net;
-                    })();
-
-                    return (
-                      <>
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <button
-                            onClick={() => {
-                              const sel: Record<string, boolean> = {};
-                              assets.forEach(a => { sel[a.id] = true; });
-                              setPanicSellSelection(sel);
-                            }}
-                            className="px-4 py-2 rounded-xl bg-slate-700/60 hover:bg-slate-700 text-white font-semibold"
-                          >
-                            Select all
-                          </button>
-                          <button
-                            onClick={() => setPanicSellSelection({})}
-                            className="px-4 py-2 rounded-xl bg-slate-700/60 hover:bg-slate-700 text-white font-semibold"
-                          >
-                            Clear
-                          </button>
-                          <div className="sm:ml-auto px-4 py-2 rounded-xl bg-slate-800/40 border border-slate-700 text-slate-200">
-                            Est. cash received: <span className="text-white font-semibold">{formatMoneyFull(preview)}</span>
-                          </div>
-                        </div>
-
-                        <div className="grid gap-2">
-                          {assets.map(a => {
-                            const checked = !!panicSellSelection[a.id];
-                            const qty = typeof a.quantity === 'number' ? a.quantity : 1;
-                            const gross = a.value * qty;
-                            const fireSale = Math.round(gross * (1 - marketSpecialAction.discount));
-
-                            const mtg = a.mortgageId
-                              ? (gameState.mortgages.find(m => m.id === a.mortgageId) || gameState.mortgages.find(m => m.assetId === a.id))
-                              : gameState.mortgages.find(m => m.assetId === a.id);
-
-                            const net = mtg ? Math.max(0, fireSale - mtg.balance) : fireSale;
-
-                            return (
-                              <label
-                                key={a.id}
-                                className="flex items-start gap-3 p-3 rounded-xl bg-slate-800/40 border border-slate-700 hover:bg-slate-800/60 cursor-pointer"
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={checked}
-                                  onChange={(e) => setPanicSellSelection(prev => ({ ...prev, [a.id]: e.target.checked }))}
-                                  className="mt-1 w-5 h-5"
-                                />
-                                <div className="flex-1">
-                                  <div className="text-white font-semibold">{a.name}</div>
-                                  <div className="text-xs text-slate-400 mt-1">
-                                    Value: {formatMoneyFull(gross)} → Fire-sale: {formatMoneyFull(fireSale)}
-                                    {mtg ? ` • Mortgage: ${formatMoneyFull(mtg.balance)} • Net: ${formatMoneyFull(net)}` : ` • Net: ${formatMoneyFull(net)}`}
-                                  </div>
-                                </div>
-                              </label>
-                            );
-                          })}
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <button
-                            onClick={closeMarketSpecialAction}
-                            className="flex-1 px-4 py-3 rounded-xl bg-slate-700/60 hover:bg-slate-700 text-white font-semibold"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={executePanicSell}
-                            disabled={selectedIds.length === 0}
-                            className="flex-1 px-4 py-3 rounded-xl bg-rose-500 hover:bg-rose-600 disabled:bg-rose-500/40 text-white font-semibold"
-                          >
-                            Execute Fire Sale
-                          </button>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
-              )}
-        </Modal>
+        />
       )}
 
       {/* Event Image Lightbox */}
@@ -6015,156 +5627,21 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
       {/* Quick Tutorial Modal */}
       {showQuickTutorial && gameStarted && !gameState.pendingScenario && !gameState.isBankrupt && (
-        <Modal
-          isOpen={showQuickTutorial}
-          onClose={() => {
-            setShowQuickTutorial(false);
-            if (quickTutorialDontShow) {
-              try {
-                localStorage.setItem(QUICK_TUTORIAL_STORAGE_KEY, '1');
-              } catch (e) {
-                console.warn('Failed to save quick tutorial preference:', e);
-              }
-            }
-          }}
-          ariaLabel="Quick Tutorial"
-          overlayClassName="bg-black/70 items-center"
-          closeOnOverlayClick
-          closeOnEsc
-          contentClassName="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-3xl w-full"
-        >
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">Quick Tutorial</h2>
-              <label className="flex items-center gap-2 text-xs text-slate-300">
-                <input
-                  type="checkbox"
-                  className="rounded border-slate-600 bg-slate-900"
-                  checked={quickTutorialDontShow}
-                  onChange={(e) => setQuickTutorialDontShow(e.target.checked)}
-                />
-                Do not show again
-              </label>
-            </div>
-            <div className="rounded-xl border border-slate-700 bg-black/40 overflow-hidden aspect-video">
-              <video
-                ref={quickTutorialVideoRef}
-                className="w-full h-full object-contain"
-                preload="metadata"
-                controls
-                playsInline
-                muted
-                src={QUICK_TUTORIAL_SRC}
-                onPlay={(e) => {
-                  const vid = e.currentTarget;
-                  if (vid.muted) vid.muted = false;
-                }}
-              >
-                Your browser can’t play this video.
-              </video>
-            </div>
-            <div className="flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const vid = quickTutorialVideoRef.current;
-                  if (!vid) return;
-                  vid.muted = false;
-                  vid.play().catch(() => {
-                    window.open(QUICK_TUTORIAL_SRC, '_blank', 'noopener,noreferrer');
-                  });
-                }}
-                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold"
-              >
-                Play
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowQuickTutorial(false);
-                  if (quickTutorialDontShow) {
-                    try {
-                      localStorage.setItem(QUICK_TUTORIAL_STORAGE_KEY, '1');
-                    } catch (e) {
-                      console.warn('Failed to save quick tutorial preference:', e);
-                    }
-                  }
-                }}
-                className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </Modal>
+        <QuickTutorialModal onClose={() => setShowQuickTutorial(false)} />
       )}
 
       {/* Tutorial Modal - shown for new players */}
-      {gameStarted && showTutorial && !showQuickTutorial && !tutorialDismissed && !gameState.pendingScenario && !gameState.isBankrupt && tutorialStep < tutorialTips.length && (
-        <Modal
-          isOpen={gameStarted && showTutorial && !tutorialDismissed}
-          onClose={() => { setTutorialDismissed(true); setShowTutorial(false); markOnboardingSeen(); }}
-          ariaLabel="Tutorial"
-          overlayClassName="bg-black/60 items-end md:items-center"
-          closeOnOverlayClick
-          closeOnEsc
-          contentClassName="bg-gradient-to-br from-blue-900/90 to-slate-900/90 border border-blue-500/50 rounded-2xl p-6 max-w-md w-full backdrop-blur-sm"
-        >
-          <div className="flex items-start gap-4">
-            <div className="text-4xl">{tutorialTips[tutorialStep].title.split(' ')[0]}</div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-white mb-2">{tutorialTips[tutorialStep].title.split(' ').slice(1).join(' ')}</h3>
-              <p className="text-slate-300 text-sm mb-4">{tutorialTips[tutorialStep].message}</p>
-              {tutorialTips[tutorialStep].id === 'auto-invest' && (
-                <div className="grid gap-2 sm:grid-cols-3">
-                  {AUTO_INVEST_PRESETS.map((preset) => (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      onClick={() => {
-                        applyAutoInvestPreset(preset.id);
-                        setActiveTab(TABS.INVEST);
-                        handleV2Navigate('/money', 'invest');
-                      }}
-                      className="rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-100 hover:border-blue-400 hover:bg-blue-500/20"
-                    >
-                      {preset.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex gap-1">
-              {tutorialTips.map((_, idx) => (
-                <div key={idx} className={`w-2 h-2 rounded-full transition-all ${idx === tutorialStep ? 'bg-blue-400' : 'bg-slate-600'}`} />
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <button 
-                onClick={() => { setTutorialDismissed(true); setShowTutorial(false); markOnboardingSeen(); }}
-                className="px-4 py-2 text-slate-400 hover:text-white text-sm transition-all"
-              >
-                Skip Tutorial
-              </button>
-              <button 
-                onClick={() => {
-                  if (tutorialStep < tutorialTips.length - 1) {
-                    setTutorialStep(tutorialStep + 1);
-                  } else {
-                    setTutorialDismissed(true);
-                    setShowTutorial(false);
-                    markOnboardingSeen();
-                  }
-                }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium transition-all"
-              >
-                {tutorialStep < tutorialTips.length - 1 ? 'Next →' : 'Got it! 🎮'}
-              </button>
-            </div>
-          </div>
-        </Modal>
+      {gameStarted && showTutorial && !showQuickTutorial && !tutorialDismissed && !gameState.pendingScenario && !gameState.isBankrupt && tutorialStep < TUTORIAL_TIPS.length && (
+        <TutorialModal
+          step={tutorialStep}
+          onNext={() => setTutorialStep(tutorialStep + 1)}
+          onDismiss={() => { setTutorialDismissed(true); setShowTutorial(false); markOnboardingSeen(); }}
+          onApplyAutoInvestPreset={(presetId) => {
+            applyAutoInvestPreset(presetId);
+            setActiveTab(TABS.INVEST);
+            handleV2Navigate('/money', 'invest');
+          }}
+        />
       )}
 
       {/* Emergency Asset Sale Warning */}
@@ -6417,147 +5894,22 @@ const [gameState, setGameState] = useState<GameState>(() => {
         <GlossaryModal onClose={() => setShowGlossary(false)} />
       )}
       {dashboardModal && (
-        <Modal
-          isOpen={!!dashboardModal}
+        <DashboardDetailModal
+          kind={dashboardModal}
           onClose={() => setDashboardModal(null)}
-          ariaLabel="Dashboard details"
-          closeOnOverlayClick
-          closeOnEsc
-          contentClassName="bg-slate-800 border border-slate-700 rounded-2xl p-6 max-w-3xl w-full"
-        >
-          {dashboardModal === 'netWorth' && (
-            <div>
-              <h2 className="text-xl font-bold text-white mb-2">Net Worth Trend</h2>
-              <p className="text-slate-400 text-sm mb-4">
-                Latest: <span className="text-white font-semibold">{formatMoney(netWorth)}</span>
-              </p>
-              <div className="h-56">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={netWorthTrendData}>
-                    <defs>
-                      <linearGradient id="netWorthDetailGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#34d399" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="label" hide />
-                    <YAxis hide domain={['dataMin', 'dataMax']} />
-                    <RechartsTooltip
-                      contentStyle={{
-                        background: '#0f172a',
-                        border: '1px solid #1e293b',
-                        borderRadius: 8,
-                        fontSize: 12
-                      }}
-                      formatter={(val: number) => [formatMoneyFull(val), 'Net Worth']}
-                    />
-                    <Area type="monotone" dataKey="value" stroke="#34d399" fill="url(#netWorthDetailGradient)" strokeWidth={2} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-          {dashboardModal === 'cashFlow' && (
-            <div>
-              <h2 className="text-xl font-bold text-white mb-2">Cash Flow</h2>
-              <p className="text-slate-400 text-sm mb-4">
-                Latest net: <span className="text-white font-semibold">
-                  {latestCashFlowNet >= 0 ? '+' : '-'}{formatMoneyFull(Math.abs(latestCashFlowNet))}
-                </span>
-              </p>
-              <div className="h-56">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={cashFlowTrendData}>
-                    <XAxis dataKey="label" hide />
-                    <YAxis hide />
-                    <RechartsTooltip
-                      contentStyle={{
-                        background: '#0f172a',
-                        border: '1px solid #1e293b',
-                        borderRadius: 8,
-                        fontSize: 12
-                      }}
-                      formatter={(val: number, name: string) => [
-                        formatMoneyFull(val),
-                        name === 'income' ? 'Income' : 'Expenses'
-                      ]}
-                    />
-                    <Bar dataKey="income" fill="#34d399" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="expenses" fill="#f97316" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-          {dashboardModal === 'credit' && (
-            <div>
-              <h2 className="text-xl font-bold text-white mb-2">Credit Score History</h2>
-              <p className="text-slate-400 text-sm mb-4">
-                Current score: <span className={`font-semibold ${getCreditTierColor(creditTier)}`}>{creditScore}</span>
-                <span className="text-slate-500"> • {creditTier}</span>
-              </p>
-              <div className="h-56">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={creditTrendData}>
-                    <defs>
-                      <linearGradient id="creditDetailGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#38bdf8" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="label" hide />
-                    <YAxis hide domain={[300, 850]} />
-                    <RechartsTooltip
-                      contentStyle={{
-                        background: '#0f172a',
-                        border: '1px solid #1e293b',
-                        borderRadius: 8,
-                        fontSize: 12
-                      }}
-                      formatter={(val: number) => [Math.round(val).toString(), 'Score']}
-                    />
-                    <Area type="monotone" dataKey="value" stroke="#38bdf8" fill="url(#creditDetailGradient)" strokeWidth={2} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-          {dashboardModal === 'ai' && (
-            <div>
-              <h2 className="text-xl font-bold text-white mb-2">AI Disruption Level</h2>
-              <p className="text-slate-400 text-sm mb-4">
-                Current: <span className="text-white font-semibold">{Math.round(aiDisruptionLevel)}%</span>
-                <span className={`ml-2 font-semibold ${getAIRiskColor(aiImpact?.automationRisk || 'LOW')}`}>
-                  {aiImpact?.automationRisk || 'LOW'} risk
-                </span>
-              </p>
-              <div className="h-56">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={aiTrendData}>
-                    <defs>
-                      <linearGradient id="aiDetailGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="label" hide />
-                    <YAxis hide domain={[0, 100]} />
-                    <RechartsTooltip
-                      contentStyle={{
-                        background: '#0f172a',
-                        border: '1px solid #1e293b',
-                        borderRadius: 8,
-                        fontSize: 12
-                      }}
-                      formatter={(val: number) => [`${Math.round(val)}%`, 'Disruption']}
-                    />
-                    <Area type="monotone" dataKey="value" stroke="#f59e0b" fill="url(#aiDetailGradient)" strokeWidth={2} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-        </Modal>
+          netWorth={netWorth}
+          netWorthTrendData={netWorthTrendData}
+          latestCashFlowNet={latestCashFlowNet}
+          cashFlowTrendData={cashFlowTrendData}
+          creditScore={creditScore}
+          creditTier={creditTier}
+          creditTierColorClass={getCreditTierColor(creditTier)}
+          creditTrendData={creditTrendData}
+          aiDisruptionLevel={aiDisruptionLevel}
+          aiRiskLabel={aiImpact?.automationRisk || 'LOW'}
+          aiRiskColorClass={getAIRiskColor(aiImpact?.automationRisk || 'LOW')}
+          aiTrendData={aiTrendData}
+        />
       )}
       {uiV2Enabled ? (
         <>

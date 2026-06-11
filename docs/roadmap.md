@@ -164,6 +164,23 @@ returned `{valid:true, source:'gumroad'}`.
   side-hustle-upgrade, save-manager, tutorials, intro-video, dashboard
   detail — the gameplay-coupled ones, each needs its own pass.
 
+- **App.tsx split, slice 3** — done 2026-06-11 (same session):
+  SideHustleUpgradeModal (formatUpgradeEffects moved in),
+  MarketSpecialModal (controlled — selection state + execute handlers stay
+  in App; MarketSpecialAction type moved + re-exported),
+  DashboardDetailModal (pure display; recharts now imported ONLY there —
+  App.tsx no longer imports recharts at all), QuickTutorialModal (owns
+  dont-show checkbox + video ref + storage key, exported as
+  QUICK_TUTORIAL_STORAGE_KEY), TutorialModal (owns the static TUTORIAL_TIPS
+  array, exported — App reads .length for isTutorialActive). App.tsx
+  7889 → 7241 lines. Verified in preview as a FRESH user (localStorage
+  cleared): quick-tutorial video modal auto-opens → close → step tutorial
+  appears → Next advances → Skip persists tycoon_onboarding_seen_v1.
+  Dashboard-detail is compile-verified only (its tiles render in the
+  legacy md: overview, unreachable in the v2 shell). Suite 150 green.
+  Still inline: scenario, turn-preview, mortgage, save-manager,
+  intro-video — the truly gameplay-coupled set.
+
 ## Next build priorities (in order)
 
 1. **Finish v2 shell migration / split App.tsx** (the big one — plan it
