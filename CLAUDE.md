@@ -133,9 +133,19 @@ B2B classroom packs.
   adopts the code); fresh devices get a "Played before? Restore from Cloud"
   button since Manage Saves is hidden without local saves. `recordAutosave`
   auto-uploads when enabled (60s throttle). Round-trip verified live.
-- Still parked: Supabase **auth** accounts (magic link / anonymous) — needs
-  dashboard settings (Site URL, provider toggles) the MCP can't change.
-  Sync-code saves are designed to migrate cleanly under auth later.
+- **Accounts (Supabase auth, built 2026-06-11)**: dashboard configured by
+  Pieter (Site URL, redirect URLs, anonymous sign-ins ON). `services/auth.ts`
+  (supabase-js client, sessions persist + auto-refresh, detectSessionInUrl
+  for magic links). Model: silent ANONYMOUS account is created when cloud
+  sync is enabled; "Link email" upgrades the same user (updateUser →
+  confirmation email, id and saves carry over); "Sign in instead" sends a
+  magic link for existing accounts on new devices. `public.user_saves`:
+  one row per user, real RLS via auth.uid() (cross-user read/write verified
+  blocked live). `uploadCloudSave` prefers the account slot, falls back to
+  the sync code; Save Manager shows account status, link/sign-in/sign-out,
+  and "Restore from my account" (email accounts).
+- **Email caveat**: Supabase built-in mailer ≈ 2-4 emails/hour — fine for
+  testing; set up custom SMTP (e.g. Resend) before promoting email login.
 
 ## Learning counterfactuals (built 2026-06-11)
 

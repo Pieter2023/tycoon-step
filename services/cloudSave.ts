@@ -1,13 +1,17 @@
-// Cross-device cloud saves via a private sync code (no account needed yet).
+// Cross-device cloud saves.
 //
-// Each device generates a UUID sync code; backing up uploads the adult
-// autosave to Supabase keyed by that code, and entering the code on another
-// device pulls it down. Server side, the cloud_saves table is locked down
-// (RLS, no policies) — access only through SECURITY DEFINER RPCs that demand
-// the exact code, so saves can't be enumerated. Real accounts (Supabase auth)
-// can layer on top later without changing this shape.
+// Two storage paths, picked automatically:
+// - ACCOUNT (preferred): signed-in players (anonymous or email) get a
+//   user_saves row scoped by real RLS (auth.uid()). Linking an email makes
+//   it portable across devices via magic link.
+// - SYNC CODE (fallback / sharing): a UUID code keyed slot in cloud_saves,
+//   locked down to SECURITY DEFINER RPCs that demand the exact code.
+//
+// uploadCloudSave writes to the account when a session exists, else to the
+// sync-code slot; restore offers both.
 
 import { GameState } from '../types';
+import { getAccount, getSupabase } from './auth';
 
 const SUPABASE_URL = 'https://bvsqnhtlwklexyijvexw.supabase.co';
 // Publishable key — safe to ship in the client bundle (RPC-only access).
@@ -80,11 +84,51 @@ export const setCloudSyncEnabled = (enabled: boolean): void => {
   }
 };
 
-/** Uploads a game state to this device's cloud slot. Returns the server timestamp or null. */
+/** Uploads to the signed-in account's save slot (user_saves, RLS-scoped). */
+export const uploadAccountSave = async (
+  state: GameState,
+  summary?: CloudSaveSummary
+): Promise<string | null> => {
+  try {
+    const account = await getAccount();
+    if (!account) return null;
+    const updated_at = new Date().toISOString();
+    const { error } = await getSupabase()
+      .from('user_saves')
+      .upsert({ user_id: account.userId, state, summary: summary ?? null, updated_at });
+    return error ? null : updated_at;
+  } catch {
+    return null;
+  }
+};
+
+/** Fetches the signed-in account's save, if any. */
+export const fetchAccountSave = async (): Promise<CloudSave | null> => {
+  try {
+    const account = await getAccount();
+    if (!account) return null;
+    const { data, error } = await getSupabase()
+      .from('user_saves')
+      .select('state, summary, updated_at')
+      .eq('user_id', account.userId)
+      .maybeSingle();
+    if (error || !data?.state) return null;
+    return data as unknown as CloudSave;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Uploads a game state to the cloud: the account slot when signed in,
+ * otherwise this device's sync-code slot. Returns the server timestamp or null.
+ */
 export const uploadCloudSave = async (
   state: GameState,
   summary?: CloudSaveSummary
 ): Promise<string | null> => {
+  const viaAccount = await uploadAccountSave(state, summary);
+  if (viaAccount) return viaAccount;
   const code = getSyncCode();
   if (!code) return null;
   try {

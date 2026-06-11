@@ -108,17 +108,28 @@ returned `{valid:true, source:'gumroad'}`.
   round-trip verified against production Supabase. 8 new tests; suite
   23 files / 145.
 
+- **Supabase auth accounts** — done same day (Pieter configured the
+  dashboard): silent anonymous accounts on cloud-sync enable, email linking
+  (anonymous-upgrade via confirmation link), magic-link sign-in on new
+  devices, `user_saves` table with auth.uid() RLS (cross-user access
+  verified blocked). Cloud backups prefer the account slot; sync codes stay
+  as fallback/sharing. supabase-js added. NOTE: built-in mailer is rate
+  limited (~2-4 emails/hr) — add custom SMTP (Resend) before promoting
+  email login. Email flow needs a real-inbox test by Pieter.
+
 ## Next build priorities (in order)
 
-1. **Supabase auth accounts** — magic link / anonymous-upgrade so names and
-   saves follow a login instead of a sync code. BLOCKED on two Supabase
-   dashboard settings (Site URL + provider toggles) that the MCP can't
-   change — Pieter needs ~5 min in supabase.com/dashboard (project
-   `tycoon`). The sync-code tables migrate cleanly (add user_id columns).
-2. **Finish v2 shell migration** — App.tsx still renders legacy tab UI in
+1. **Test the email account flow end-to-end** (Pieter, ~3 min): Manage
+   Saves → Cloud Sync → enter your email → "Link email" → click the
+   confirmation link → panel should show your email; then on another
+   browser "Sign in instead" → magic link → "Restore from my account".
+2. **Custom SMTP (Resend)** before telling players about email login.
+3. **Daily leaderboard names → accounts** (optional polish): attach
+   user_id to daily_scores so names follow accounts.
+4. **Finish v2 shell migration** — App.tsx still renders legacy tab UI in
    places; also consider splitting App.tsx (8k lines) per
    `docs/implementation-plan.md`.
-3. **B2B classroom packs** — bulk codes via `ACCESS_CODES` already work;
+5. **B2B classroom packs** — bulk codes via `ACCESS_CODES` already work;
    needs a one-page offer + outreach to US personal-finance teachers
    (25+ states mandate the course), credit unions, fee-only advisors.
 

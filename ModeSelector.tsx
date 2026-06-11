@@ -14,7 +14,8 @@ import CustomAvatarBuilder, { CustomAvatarResult } from './components/customAvat
 import UnlockModal from './components/UnlockModal';
 import { AccessTier, getAccessTier, setAccessTier, validateAccessCode } from './services/accessControl';
 import { createDailyChallengeState, getDailyChallengeId, getDailyCharacter, getDailySeed, getDailyStreak, getPreviousChallengeId, recordDailyChallengePlayed } from './services/dailyChallenge';
-import { adoptSyncCode, fetchCloudSave, getSyncCode, isCloudSyncEnabled, isValidSyncCode, setCloudSyncEnabled, uploadCloudSave } from './services/cloudSave';
+import { adoptSyncCode, fetchAccountSave, fetchCloudSave, getSyncCode, isCloudSyncEnabled, isValidSyncCode, setCloudSyncEnabled, uploadCloudSave } from './services/cloudSave';
+import { AccountInfo, ensureSignedIn, getAccount, linkEmail, signInWithEmail, signOut } from './services/auth';
 
 type GameMode = 'select' | 'adult' | 'kids' | 'daily' | 'multiplayer-setup' | 'multiplayer-game';
 
@@ -86,12 +87,71 @@ const ModeSelector: React.FC = () => {
   const [showSaveManager, setShowSaveManager] = useState(false);
   const [saveSummaries, setSaveSummaries] = useState<SaveSummary[]>([]);
 
-  // Cloud sync (sync-code based; see services/cloudSave.ts)
+  // Cloud sync (account-first with sync-code fallback; see services/cloudSave.ts)
   const [cloudSyncOn, setCloudSyncOn] = useState(() => isCloudSyncEnabled());
   const [cloudStatus, setCloudStatus] = useState('');
   const [cloudBusy, setCloudBusy] = useState(false);
   const [restoreCode, setRestoreCode] = useState('');
   const [codeCopied, setCodeCopied] = useState(false);
+
+  // Account (anonymous by default; email makes it portable)
+  const [account, setAccount] = useState<AccountInfo | null>(null);
+  const [accountEmail, setAccountEmail] = useState('');
+  const [accountStatus, setAccountStatus] = useState('');
+  const [accountSaveStamp, setAccountSaveStamp] = useState<string | null>(null);
+
+  const refreshAccount = async () => {
+    const acct = await getAccount();
+    setAccount(acct);
+    if (acct) {
+      const save = await fetchAccountSave();
+      setAccountSaveStamp(save ? save.updated_at : null);
+    } else {
+      setAccountSaveStamp(null);
+    }
+  };
+
+  // Pick up magic-link redirects + existing sessions on load.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    refreshAccount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
+
+  const handleLinkEmail = async () => {
+    if (cloudBusy) return;
+    setCloudBusy(true);
+    setAccountStatus('Working…');
+    // Linking creates the silent account first if this device doesn't have one.
+    const result = account ? await linkEmail(accountEmail) : (await ensureSignedIn(), await linkEmail(accountEmail));
+    setCloudBusy(false);
+    setAccountStatus(result.message);
+    if (result.ok) refreshAccount();
+  };
+
+  const handleEmailSignIn = async () => {
+    if (cloudBusy) return;
+    setCloudBusy(true);
+    setAccountStatus('Working…');
+    const result = await signInWithEmail(accountEmail);
+    setCloudBusy(false);
+    setAccountStatus(result.message);
+  };
+
+  const handleAccountRestore = async () => {
+    if (cloudBusy) return;
+    setCloudBusy(true);
+    setCloudStatus('Fetching your account save…');
+    const cloud = await fetchAccountSave();
+    setCloudBusy(false);
+    if (!cloud) {
+      setCloudStatus('No save stored on this account yet.');
+      return;
+    }
+    saveAdultGame(cloud.state, 'autosave');
+    refreshSaves();
+    setCloudStatus(`Restored ${cloud.summary?.name || 'save'} (month ${cloud.state.month}) into Autosave — hit Continue Adult to play.`);
+  };
 
   const handleCloudBackup = async () => {
     if (cloudBusy) return;
@@ -1061,7 +1121,7 @@ const ModeSelector: React.FC = () => {
                 <p className="text-sm text-slate-400">Autosave resumes your last session. Manage Saves lets you load manual slots.</p>
               </div>
               <button
-                onClick={() => { refreshSaves(); setShowSaveManager(true); }}
+                onClick={() => { refreshSaves(); refreshAccount(); setShowSaveManager(true); }}
                 className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-bold text-white transition hover:border-slate-500"
               >
                 Manage Saves
@@ -1108,7 +1168,7 @@ const ModeSelector: React.FC = () => {
         {!adultAutosave && !kidsAutosave && (
           <div className="mb-6 flex justify-end">
             <button
-              onClick={() => { refreshSaves(); setShowSaveManager(true); }}
+              onClick={() => { refreshSaves(); refreshAccount(); setShowSaveManager(true); }}
               className="rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2 text-xs font-bold text-slate-300 transition hover:border-violet-400/60 hover:text-white"
             >
               ☁️ Played before? Restore from Cloud
@@ -1218,6 +1278,7 @@ const ModeSelector: React.FC = () => {
                           setCloudSyncEnabled(next);
                           setCloudSyncOn(next);
                           setCloudStatus(next ? 'Cloud backup on — autosaves upload automatically.' : 'Cloud backup off.');
+                          if (next) ensureSignedIn().then(() => refreshAccount());
                         }}
                         className={`px-3 py-1.5 rounded-full text-xs font-bold border transition ${
                           cloudSyncOn
@@ -1273,6 +1334,71 @@ const ModeSelector: React.FC = () => {
 
                     {cloudStatus && <p className="mt-2 text-xs text-slate-300">{cloudStatus}</p>}
                     <p className="mt-2 text-[11px] text-slate-500">Keep your code private — anyone who has it can load (and overwrite) this backup.</p>
+
+                    {/* Account */}
+                    <div className="mt-4 border-t border-slate-700 pt-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs text-slate-300">
+                          {account?.email
+                            ? <>Account: <span className="font-bold text-emerald-300">{account.email}</span></>
+                            : account
+                              ? 'Account: guest (this device only)'
+                              : 'Account: none yet'}
+                        </p>
+                        {account?.email && (
+                          <button
+                            onClick={async () => { await signOut(); setAccount(null); setAccountSaveStamp(null); setAccountStatus('Signed out.'); }}
+                            className="text-[11px] text-slate-400 hover:text-white underline"
+                          >
+                            Sign out
+                          </button>
+                        )}
+                      </div>
+
+                      {account?.email ? (
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <button
+                            onClick={handleAccountRestore}
+                            disabled={cloudBusy}
+                            className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold"
+                          >
+                            Restore from my account
+                          </button>
+                          {accountSaveStamp && (
+                            <span className="text-[11px] text-slate-400">Last backup: {new Date(accountSaveStamp).toLocaleString()}</span>
+                          )}
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-[11px] text-slate-500 mt-1">Link an email to carry your save to any device with a magic link — no password.</p>
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <input
+                              type="email"
+                              value={accountEmail}
+                              onChange={(e) => setAccountEmail(e.target.value)}
+                              placeholder="you@example.com"
+                              className="flex-1 min-w-[200px] px-3 py-2 bg-slate-900/70 border border-slate-700 rounded-lg text-white text-xs placeholder-slate-500 focus:outline-none focus:border-emerald-400"
+                            />
+                            <button
+                              onClick={handleLinkEmail}
+                              disabled={cloudBusy || !accountEmail.trim()}
+                              className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold"
+                            >
+                              Link email
+                            </button>
+                            <button
+                              onClick={handleEmailSignIn}
+                              disabled={cloudBusy || !accountEmail.trim()}
+                              className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white text-xs font-bold"
+                              title="Already linked an email on another device? Get a sign-in link."
+                            >
+                              Sign in instead
+                            </button>
+                          </div>
+                        </>
+                      )}
+                      {accountStatus && <p className="mt-2 text-xs text-slate-300">{accountStatus}</p>}
+                    </div>
                   </div>
 
                   <div className="flex justify-end">
