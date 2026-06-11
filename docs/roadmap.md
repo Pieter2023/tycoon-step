@@ -1,0 +1,57 @@
+# Roadmap
+
+**Last updated:** 2026-06-10 (post bug-fix + monetization session)
+
+## Recently shipped (2026-06-10)
+
+- Restored ~180 deleted public assets (event/EQ/quiz images, tutorial videos)
+- Quick Tutorial video: HEVC .mov → H.264 .mp4 (now plays in all browsers)
+- AI risk badge reflects current threat (phase pressure / disruption ramp),
+  not static career vulnerability
+- **Free demo + paid unlock gate** (see `docs/monetization-setup.md`):
+  server-validated access codes, Gumroad license support, 36-month demo,
+  unlock-mid-run modal, multiplayer gated to full version
+- Repo hygiene: untracked node_modules/dist/.env.local from git
+
+## Business setup — blocked on Pieter (do these to start selling)
+
+1. Create Gumroad product (~$9–15 USD), enable per-sale license keys
+2. Netlify env vars: `ACCESS_CODES` (keep `Bokke` for beta testers),
+   `GUMROAD_PRODUCT_ID`
+3. Put the Gumroad URL in `PURCHASE_URL` (`services/accessControl.ts`) so
+   unlock screens show a buy link
+4. **Rotate the OpenAI API key** (old key is in git history) and update it in
+   Netlify env + `.env.local`
+
+## Next build priorities (in order)
+
+1. **Daily challenge + share card** — the growth engine.
+   Same seed for everyone each day (engine already uses seeded RNG for tests),
+   fixed character/market/events, 10-year sprint (~15 min), score = net worth.
+   End-of-run shareable summary card: net-worth curve, 3 defining events,
+   "Financially free at 34" / score, with a link back to the game.
+   Solves session length, virality, and daily retention in one feature.
+2. **Run summary card for normal games** — same artifact on win/bankruptcy/quit;
+   put a "Send this to someone who needs it" CTA on the victory screen.
+3. **Learning counterfactuals** — after big decisions show the one-line
+   "what would have happened" (e.g. sold in a trough vs held); end-of-year
+   report comparing player vs a sensible benchmark. This is the feature
+   teachers/parents will share.
+4. **Cloud save + accounts (Supabase)** — unlocks daily-challenge leaderboard,
+   cross-device play, and knowing who players are. Park real-time multiplayer;
+   async leaderboard competition is 80% of the value for 5% of the work.
+5. **Finish v2 shell migration** — App.tsx still renders legacy tab UI in
+   places; also consider splitting App.tsx (8k lines) per
+   `docs/implementation-plan.md`.
+6. **B2B classroom packs** — bulk codes via `ACCESS_CODES` already work;
+   needs a one-page offer + outreach to US personal-finance teachers
+   (25+ states mandate the course), credit unions, fee-only advisors.
+
+## Known issues / debt
+
+- `App.tsx` ~8k lines single file; `App.tsx.backup`, `constants.ts.save`,
+  `tycoon-eq-upgrade-code-only.zip` are junk files on disk (now gitignored)
+- Build chunk-size warning (836KB main bundle) — code-split candidates exist
+- Multiplayer flow exists but is unpolished; deliberately deprioritized
+- Unlock state is client-side localStorage — fine at this price point;
+  revisit (signed tokens + accounts) only if piracy becomes measurable
