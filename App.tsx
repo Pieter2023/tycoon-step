@@ -24,9 +24,7 @@ import { GLOSSARY_ENTRIES, QUIZ_DEFINITIONS, getQuizDefinition } from './data/le
 
 import TabErrorBoundary from './components/TabErrorBoundary';
 import Modal from './components/Modal';
-import ChallengeShareCard from './components/ChallengeShareCard';
-import DailyLeaderboard from './components/DailyLeaderboard';
-import { getDailyStreak } from './services/dailyChallenge';
+import { VictoryModal, BankruptcyModal, ChallengeEndModal, RunSummaryModal, AnnualReportModal } from './components/modals';
 import { isCloudSyncEnabled, uploadCloudSave } from './services/cloudSave';
 import QuestLog from './components/QuestLog';
 import { Button, Badge, Card, Tooltip } from './components/ui';
@@ -1651,6 +1649,22 @@ const [gameState, setGameState] = useState<GameState>(() => {
       return false;
     }
   }, [autoTutorialPopups]);
+
+  // Shared restart for the win/bankruptcy end screens.
+  const handlePlayAgain = useCallback(() => {
+    setAutoPlaySpeed(null);
+    setGameStarted(false);
+    setShowCharacterSelect(true);
+    setMonthlyReport(null);
+    setActiveTab(TABS.OVERVIEW);
+    setTutorialStep(0);
+    setTutorialDismissed(false);
+    setShowTutorial(shouldShowOnboarding());
+    setGameState({
+      ...INITIAL_GAME_STATE,
+      quests: getInitialQuestState()
+    });
+  }, [shouldShowOnboarding]);
 
   useEffect(() => {
     try {
@@ -6251,283 +6265,42 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
       {/* Win Celebration Modal */}
       {gameState.hasWon && !gameState.challenge && (
-        <Modal
-          isOpen={gameState.hasWon}
-          onClose={() => undefined}
-          ariaLabel="Financial freedom achieved"
-          overlayClassName="bg-black/80"
-          closeOnOverlayClick={false}
-          closeOnEsc={false}
-          showCloseButton={false}
-          contentClassName="bg-transparent border-0 shadow-none max-w-md w-full"
-        >
-          <motion.div
-            initial={{ scale: 0.5 }}
-            animate={{ scale: 1 }}
-            className="bg-gradient-to-br from-amber-900/50 to-amber-800/50 border border-amber-500/50 rounded-2xl p-8 w-full text-center"
-          >
-            <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 1, repeat: Infinity }} 
-              className="text-7xl mb-4">👑</motion.div>
-            <h2 className="text-4xl font-bold text-amber-400 mb-2">Financial Freedom!</h2>
-            <p className="text-white mb-2">Your passive income covers {Math.round(FINANCIAL_FREEDOM_TARGET_MULTIPLIER * 100)}% of your expenses!</p>
-            <p className="text-amber-300/80 text-sm mb-6 italic">
-              {Math.floor(gameState.month / 12) < 5 
-                ? "🚀 Speed run champion! Did you even sleep?" 
-                : Math.floor(gameState.month / 12) < 10 
-                  ? "🎯 Impressive! You beat the system faster than most!"
-                  : Math.floor(gameState.month / 12) < 20
-                    ? "💪 Solid performance! Your future self is sending thank-you notes."
-                    : "🐢 Slow and steady wins the race! (The race was with a snail, but still!)"
-              }
-            </p>
-            <div className="bg-black/30 rounded-xl p-4 mb-6 grid grid-cols-2 gap-4 text-sm">
-              <div><p className="text-slate-400">Time</p><p className="text-white font-bold">{Math.floor(gameState.month / 12)}y {gameState.month % 12}m</p></div>
-              <div><p className="text-slate-400">Net Worth</p><p className="text-emerald-400 font-bold">{formatMoney(netWorth)}</p></div>
-              <div><p className="text-slate-400">Passive Income</p><p className="text-amber-400 font-bold">{formatMoney(cashFlow.passive)}/mo</p></div>
-              <div><p className="text-slate-400">Expenses</p><p className="text-white font-bold">{formatMoney(cashFlow.expenses)}/mo</p></div>
-            </div>
-            <p className="text-slate-400 text-xs mb-4">🏆 Game Over - You escaped the rat race!</p>
-            <button
-              onClick={() => { playClick(); setShowRunCard(true); }}
-              className="w-full py-3 mb-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold transition-all"
-            >
-              📤 Send this to someone who needs it
-            </button>
-            <button onClick={() => {
-              playClick();
-              setAutoPlaySpeed(null);
-              setGameStarted(false);
-              setShowCharacterSelect(true);
-              setMonthlyReport(null);
-              setActiveTab(TABS.OVERVIEW);
-              setTutorialStep(0);
-              setTutorialDismissed(false);
-              setShowTutorial(shouldShowOnboarding());
-              setGameState({
-                ...INITIAL_GAME_STATE,
-                quests: getInitialQuestState()
-              });
-            }}
-              className="w-full py-3 bg-amber-600 hover:bg-amber-500 rounded-xl font-bold transition-all">
-              🎮 Play Again
-            </button>
-          </motion.div>
-        </Modal>
+        <VictoryModal
+          gameState={gameState}
+          netWorth={netWorth}
+          passiveIncome={cashFlow.passive}
+          monthlyExpenses={cashFlow.expenses}
+          onShare={() => setShowRunCard(true)}
+          onPlayAgain={handlePlayAgain}
+        />
       )}
 
       {/* Daily Challenge end screen (run complete or bust) */}
       {gameState.challenge && (gameState.month > gameState.challenge.targetMonths || gameState.isBankrupt) && (
-        <Modal
-          isOpen
-          onClose={() => undefined}
-          ariaLabel="Daily challenge complete"
-          overlayClassName="bg-black/90"
-          closeOnOverlayClick={false}
-          closeOnEsc={false}
-          showCloseButton={false}
-          contentClassName="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-3xl w-full p-6"
-        >
-          <div className="text-center mb-4">
-            <h2 className="text-2xl font-bold text-white">
-              {gameState.isBankrupt ? 'Challenge over' : 'Challenge complete!'}
-            </h2>
-            <p className="text-slate-400 text-sm mt-1">
-              Daily Challenge · {gameState.challenge.id} — everyone plays the same world. Share your run:
-            </p>
-            {(() => {
-              const streak = getDailyStreak();
-              if (!streak || streak.streak < 2) return null;
-              return (
-                <p className="text-amber-300 text-sm font-bold mt-2">
-                  🔥 {streak.streak}-day streak{streak.best > streak.streak ? ` · best ${streak.best}` : ''} — come back tomorrow to keep it going!
-                </p>
-              );
-            })()}
-          </div>
-          <ChallengeShareCard
-            gameState={gameState}
-            netWorth={netWorth}
-            onClose={onBackToMenu}
-          />
-          <div className="mt-4 flex justify-center">
-            <DailyLeaderboard gameState={gameState} netWorth={netWorth} />
-          </div>
-        </Modal>
+        <ChallengeEndModal gameState={gameState} netWorth={netWorth} onBackToMenu={onBackToMenu} />
       )}
 
       {/* Bankruptcy Modal */}
       {gameState.isBankrupt && !gameState.challenge && (
-        <Modal
-          isOpen={gameState.isBankrupt}
-          onClose={() => undefined}
-          ariaLabel="Bankruptcy"
-          overlayClassName="bg-black/90"
-          closeOnOverlayClick={false}
-          closeOnEsc={false}
-          showCloseButton={false}
-          contentClassName="bg-transparent border-0 shadow-none max-w-md w-full"
-        >
-          <motion.div
-            initial={{ scale: 0.5 }}
-            animate={{ scale: 1 }}
-            className="bg-gradient-to-br from-red-900/50 to-slate-900/50 border border-red-500/50 rounded-2xl p-8 w-full text-center"
-          >
-            <motion.div 
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="text-7xl mb-4"
-            >💸</motion.div>
-            <h2 className="text-4xl font-bold text-red-400 mb-2">BROKE!</h2>
-            <p className="text-white mb-2">Your wallet has filed for emotional support.</p>
-            <p className="text-slate-400 text-sm mb-4 italic">
-              {Math.floor(gameState.month / 12) < 2 
-                ? "Speedrun bankruptcy! That's... actually impressive in a way? 😬"
-                : Math.floor(gameState.month / 12) < 5
-                  ? "The bank called. They said 'LOL.' Then hung up. 📞"
-                  : "Your credit score is now a cautionary tale told to finance students. 📚"}
-            </p>
-            <div className="bg-black/30 rounded-xl p-4 mb-6 text-sm">
-              <p className="text-slate-400 mb-2">📊 The Damage Report</p>
-              <div className="grid grid-cols-2 gap-2">
-                <div><p className="text-slate-400">Time Survived</p><p className="text-white font-bold">{Math.floor(gameState.month / 12)}y {gameState.month % 12}m</p></div>
-                <div><p className="text-slate-400">Credit Rating</p><p className="text-red-400 font-bold">{gameState.creditRating || 'N/A'} 📉</p></div>
-                <div><p className="text-slate-400">Missed Payments</p><p className="text-red-400 font-bold">{gameState.missedPayments || 0} 😅</p></div>
-                <div><p className="text-slate-400">Final Debt</p><p className="text-red-400 font-bold">{formatMoney(gameState.liabilities.reduce((s, l) => s + l.balance, 0))}</p></div>
-              </div>
-            </div>
-            <p className="text-yellow-400 text-sm mb-4">
-              💡 Pro tip: Emergency funds are like umbrellas. You never need one until you REALLY need one.
-            </p>
-            <button
-              onClick={() => { playClick(); setShowRunCard(true); }}
-              className="w-full py-3 mb-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-bold transition-all"
-            >
-              📤 Share the damage report
-            </button>
-            <button onClick={() => {
-              playClick();
-              setAutoPlaySpeed(null);
-              setGameStarted(false); 
-              setShowCharacterSelect(true); 
-              setMonthlyReport(null);
-              setActiveTab(TABS.OVERVIEW);
-              setTutorialStep(0);
-              setTutorialDismissed(false);
-              setShowTutorial(shouldShowOnboarding());
-              setGameState({
-                ...INITIAL_GAME_STATE,
-                quests: getInitialQuestState()
-              }); 
-            }} 
-              className="w-full py-3 bg-red-600 hover:bg-red-500 rounded-xl font-bold transition-all">
-              🎮 Redemption Arc Time
-            </button>
-          </motion.div>
-        </Modal>
+        <BankruptcyModal
+          gameState={gameState}
+          onShare={() => setShowRunCard(true)}
+          onPlayAgain={handlePlayAgain}
+        />
       )}
 
       {/* Run summary card (normal games: win, bankruptcy, or anytime via menu) */}
       {showRunCard && !gameState.challenge && gameState.character && (
-        <Modal
-          isOpen
-          onClose={() => setShowRunCard(false)}
-          ariaLabel="Run summary"
-          overlayClassName="bg-black/90"
-          contentClassName="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-3xl w-full p-6"
-        >
-          <div className="text-center mb-4">
-            <h2 className="text-2xl font-bold text-white">
-              {gameState.hasWon ? 'Financial freedom — pass it on' : gameState.isBankrupt ? 'The damage report' : 'Your run so far'}
-            </h2>
-            <p className="text-slate-400 text-sm mt-1">
-              {gameState.hasWon
-                ? 'Send this to someone who needs it — most people never see what the path looks like.'
-                : 'Download or share your story.'}
-            </p>
-          </div>
-          <ChallengeShareCard
-            gameState={gameState}
-            netWorth={netWorth}
-            onClose={() => setShowRunCard(false)}
-          />
-        </Modal>
+        <RunSummaryModal gameState={gameState} netWorth={netWorth} onClose={() => setShowRunCard(false)} />
       )}
 
       {/* Year in review (learning counterfactuals; normal games only) */}
-      {gameState.annualReport && !gameState.challenge && !gameState.isBankrupt && (() => {
-        const report = gameState.annualReport;
-        const nwDelta = report.endNetWorth - report.startNetWorth;
-        const investingEdge = report.marketGains + report.passiveIncome;
-        const cashOnlyNetWorth = report.endNetWorth - investingEdge;
-        const dismiss = () => setGameState(prev => ({ ...prev, annualReport: undefined }));
-        return (
-          <Modal
-            isOpen
-            onClose={dismiss}
-            ariaLabel="Year in review"
-            overlayClassName="bg-black/85"
-            contentClassName="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-lg w-full p-6"
-          >
-            <div className="text-center mb-5">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">Year in review</p>
-              <h2 className="text-2xl font-bold text-white mt-1">📅 Year {report.year} wrapped</h2>
-            </div>
-
-            <div className="bg-black/30 rounded-xl p-4 mb-4 grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <p className="text-slate-400">Net worth</p>
-                <p className="text-white font-bold">{formatMoney(report.startNetWorth)} → {formatMoney(report.endNetWorth)}</p>
-              </div>
-              <div>
-                <p className="text-slate-400">Change</p>
-                <p className={`font-bold ${nwDelta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {nwDelta >= 0 ? '+' : ''}{formatMoney(nwDelta)}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-400">Market gains</p>
-                <p className={`font-bold ${report.marketGains >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {report.marketGains >= 0 ? '+' : ''}{formatMoney(report.marketGains)}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-400">Passive income</p>
-                <p className="text-amber-400 font-bold">+{formatMoney(report.passiveIncome)}</p>
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-violet-400/30 bg-violet-400/10 p-4 mb-4">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-300 mb-1">What if you hadn't invested?</p>
-              <p className="text-sm text-slate-200">
-                Without your investments, you'd have ended the year at <span className="font-bold text-white">{formatMoney(cashOnlyNetWorth)}</span>.{' '}
-                {investingEdge > 0 ? (
-                  <>Your money earned <span className="font-bold text-emerald-300">{formatMoney(investingEdge)}</span> on its own — that's compounding working for you.</>
-                ) : investingEdge < 0 ? (
-                  <>Your portfolio lost <span className="font-bold text-red-300">{formatMoney(-investingEdge)}</span> this year. Paper losses only become real when you sell — downturns usually recover.</>
-                ) : (
-                  <>All of this year's progress came from work. Assets that pay you are how the climb gets easier.</>
-                )}
-              </p>
-            </div>
-
-            {report.hindsights.length > 0 && (
-              <div className="rounded-xl border border-slate-700 bg-slate-800/60 p-4 mb-4">
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400 mb-2">🎓 Hindsight</p>
-                {report.hindsights.map((h, i) => (
-                  <p key={i} className="text-sm text-slate-300 mb-1 last:mb-0">{h.text}</p>
-                ))}
-              </div>
-            )}
-
-            <button
-              onClick={dismiss}
-              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 rounded-xl font-bold text-white transition-all"
-            >
-              On to Year {report.year + 1} →
-            </button>
-          </Modal>
-        );
-      })()}
+      {gameState.annualReport && !gameState.challenge && !gameState.isBankrupt && (
+        <AnnualReportModal
+          report={gameState.annualReport}
+          onDismiss={() => setGameState(prev => ({ ...prev, annualReport: undefined }))}
+        />
+      )}
 
       {/* Quick Tutorial Modal */}
       {showQuickTutorial && gameStarted && !gameState.pendingScenario && !gameState.isBankrupt && (

@@ -29,6 +29,9 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 - `constants.ts` — careers, investments, events, education, difficulty settings
 - `data/events.json` — additional life events
 - `components/v2/` — newer shell UI (DesktopShell sidebar / MobileShell bottom-nav)
+- `components/modals/` — end-game modals extracted from App.tsx (victory,
+  bankruptcy, challenge-end, run-summary, annual-report); visibility
+  conditions still live in App.tsx render
 - `KidsApp.tsx` — separate simplified kids mode
 - `docs/architecture-map.md` — deeper technical map (from Dec 2025 discovery)
 
@@ -109,7 +112,8 @@ year-in-review), cloud saves (sync code + accounts), email login with custom
 SMTP. Working tree clean; remote main == working branch.
 
 Leaderboard→accounts linking also shipped 2026-06-11 (later session); suite
-now 23 files / 150 tests.
+now 23 files / 150 tests. App.tsx split slice 1 (end-game modals →
+`components/modals/`) shipped the same session.
 
 **The queue (details + cold-start context in `docs/roadmap.md`):**
 1. v2 shell migration / App.tsx split (big refactor — read

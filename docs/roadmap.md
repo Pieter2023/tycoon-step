@@ -139,6 +139,18 @@ returned `{valid:true, source:'gumroad'}`.
   Skipped optional extras (per-user uniqueness, streak column) — revisit if
   multi-device dupes ever show up on the board.
 
+- **App.tsx split, slice 1: end-game modals extracted** — done 2026-06-11
+  (same later session): new `components/modals/` (VictoryModal,
+  BankruptcyModal, ChallengeEndModal, RunSummaryModal, AnnualReportModal +
+  barrel). Visibility conditions stay in App.tsx; contents moved verbatim.
+  The duplicated restart block in win/bankruptcy collapsed into one
+  `handlePlayAgain` useCallback (placed AFTER `shouldShowOnboarding` —
+  it's a useCallback, so referencing it earlier in a deps array is a TDZ
+  crash). App.tsx 8467 → ~8240 lines. Suite still 23 files / 150 green;
+  run-summary modal verified in the preview browser (HUD menu → card
+  renders, console clean). Next slices: remaining inline modals
+  (mortgage / emergency-cash / quick-tutorial...), then per-tab extraction.
+
 ## Next build priorities (in order)
 
 1. **Finish v2 shell migration / split App.tsx** (the big one — plan it
