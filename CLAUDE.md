@@ -108,12 +108,13 @@ leaderboard), run summary card, learning counterfactuals (sell hindsights +
 year-in-review), cloud saves (sync code + accounts), email login with custom
 SMTP. Working tree clean; remote main == working branch.
 
+Leaderboard→accounts linking also shipped 2026-06-11 (later session); suite
+now 23 files / 150 tests.
+
 **The queue (details + cold-start context in `docs/roadmap.md`):**
-1. Daily leaderboard names → accounts (small: user_id column on
-   daily_scores + send it when signed in)
-2. v2 shell migration / App.tsx split (big refactor — read
+1. v2 shell migration / App.tsx split (big refactor — read
    `docs/implementation-plan.md` first; extract inline modals, then tabs)
-3. B2B classroom packs (one-page offer + outreach; bulk codes already work)
+2. B2B classroom packs (one-page offer + outreach; bulk codes already work)
 
 Day-to-day workflow that worked well: build → test (`npm run test:run`) →
 verify live in the preview browser (seed localStorage
@@ -131,6 +132,13 @@ the new bundle is served (grep a new string in the live JS).
   UPDATE/DELETE have no policies (verified live: PATCH/DELETE are no-ops).
   Value sanity enforced by CHECK constraints (name ≤20 chars, score bounds,
   outcome enum, challenge_id date format).
+- **Scores link to accounts (2026-06-11)**: nullable `user_id` column
+  (FK auth.users, on delete set null). Signed-in submits send the session
+  access token as the PostgREST Bearer + include user_id; insert policy is
+  `user_id is null or user_id = auth.uid()` so it can't be spoofed with the
+  bare anon key (all 4 paths verified live). On 401/403 (stale token) the
+  client retries unlinked. `getSessionAuth` in `services/auth.ts`; name
+  input prefills from the account email's local part when nothing is saved.
 - UI: `components/DailyLeaderboard.tsx` inside the challenge end overlay —
   name input (persisted `tycoon_player_name`), submit once
   (`tycoon_client_id` device id), today's top 10 + "You're #N today" rank.

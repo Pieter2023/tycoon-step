@@ -4,9 +4,14 @@
 // is designed to be public; row-level security only allows INSERT and SELECT
 // on daily_scores (no update/delete), and a unique (challenge_id, client_id)
 // constraint caps each device at one score per day. Good enough for a casual
-// async leaderboard; real accounts arrive with the Supabase auth milestone.
+// async leaderboard.
+//
+// Signed-in players also get a user_id on their rows: the request carries the
+// session token as Bearer, and RLS only accepts a user_id that matches
+// auth.uid() — so the column can't be spoofed with the bare anon key.
 
 import { GameState } from '../types';
+import { getSessionAuth } from './auth';
 
 const SUPABASE_URL = 'https://bvsqnhtlwklexyijvexw.supabase.co';
 // Publishable key — safe to ship in the client bundle (RLS enforced).
@@ -25,9 +30,9 @@ export interface LeaderboardEntry {
 
 export type SubmitResult = 'submitted' | 'already-submitted' | 'error';
 
-const headers = () => ({
+const headers = (accessToken?: string) => ({
   apikey: SUPABASE_ANON_KEY,
-  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+  Authorization: `Bearer ${accessToken || SUPABASE_ANON_KEY}`,
   'Content-Type': 'application/json'
 });
 
@@ -79,18 +84,26 @@ export const submitDailyScore = async (
   if (!name) return 'error';
   savePlayerName(name);
   try {
-    const res = await fetch(SCORES_ENDPOINT, {
-      method: 'POST',
-      headers: headers(),
-      body: JSON.stringify({
-        challenge_id: challenge.id,
-        player_name: name,
-        score: Math.round(netWorth),
-        months: Math.min(Math.max(0, gameState.month - 1), challenge.targetMonths),
-        outcome: challengeOutcome(gameState),
-        client_id: getClientId()
-      })
-    });
+    const row = {
+      challenge_id: challenge.id,
+      player_name: name,
+      score: Math.round(netWorth),
+      months: Math.min(Math.max(0, gameState.month - 1), challenge.targetMonths),
+      outcome: challengeOutcome(gameState),
+      client_id: getClientId()
+    };
+    const auth = await getSessionAuth();
+    const post = (token?: string, userId?: string) =>
+      fetch(SCORES_ENDPOINT, {
+        method: 'POST',
+        headers: headers(token),
+        body: JSON.stringify(userId ? { ...row, user_id: userId } : row)
+      });
+    let res = await post(auth?.accessToken, auth?.userId);
+    if (auth && (res.status === 401 || res.status === 403)) {
+      // Stale/expired session token — the score still counts, just unlinked.
+      res = await post();
+    }
     if (res.ok) return 'submitted';
     if (res.status === 409) return 'already-submitted'; // unique (challenge_id, client_id)
     return 'error';

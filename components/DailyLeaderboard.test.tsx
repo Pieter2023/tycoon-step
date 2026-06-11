@@ -4,6 +4,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import DailyLeaderboard from './DailyLeaderboard';
 import { GameState } from '../types';
+import { getAccount } from '../services/auth';
+
+vi.mock('../services/auth', () => ({
+  getAccount: vi.fn().mockResolvedValue(null),
+  getSessionAuth: vi.fn().mockResolvedValue(null)
+}));
 
 const challengeState = {
   challenge: { id: '2026-06-11', seed: 1, targetMonths: 120 },
@@ -19,7 +25,10 @@ const jsonResponse = (rows: unknown[]) => ({
   headers: new Headers({ 'content-range': '*/2' })
 });
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorage.clear();
+  vi.mocked(getAccount).mockResolvedValue(null);
+});
 afterEach(() => vi.unstubAllGlobals());
 
 describe('DailyLeaderboard', () => {
@@ -55,6 +64,24 @@ describe('DailyLeaderboard', () => {
     expect(screen.getByText(/You're #1 today/)).toBeTruthy();
     const post = fetchMock.mock.calls.find(c => c[1]?.method === 'POST');
     expect(post).toBeTruthy();
+  });
+
+  it('prefills the name from the account email when no name is saved', async () => {
+    vi.mocked(getAccount).mockResolvedValue({ userId: 'u1', email: 'pieter@example.com', isAnonymous: false });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse([])));
+    render(<DailyLeaderboard gameState={challengeState} netWorth={1} />);
+    await waitFor(() =>
+      expect((screen.getByPlaceholderText('Your name') as HTMLInputElement).value).toBe('pieter')
+    );
+  });
+
+  it('keeps the saved name over the account email', async () => {
+    localStorage.setItem('tycoon_player_name', 'SavedName');
+    vi.mocked(getAccount).mockResolvedValue({ userId: 'u1', email: 'pieter@example.com', isAnonymous: false });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse([])));
+    render(<DailyLeaderboard gameState={challengeState} netWorth={1} />);
+    await waitFor(() => expect(screen.getByText(/No scores yet/)).toBeTruthy());
+    expect((screen.getByPlaceholderText('Your name') as HTMLInputElement).value).toBe('SavedName');
   });
 
   it('shows the empty state when nobody has played yet', async () => {

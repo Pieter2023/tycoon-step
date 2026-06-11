@@ -8,6 +8,11 @@ import {
   submitDailyScore
 } from './leaderboard';
 import { GameState } from '../types';
+import { getSessionAuth } from './auth';
+
+vi.mock('./auth', () => ({
+  getSessionAuth: vi.fn().mockResolvedValue(null)
+}));
 
 const challengeState = (overrides: Partial<GameState> = {}): GameState => ({
   challenge: { id: '2026-06-11', seed: 1, targetMonths: 120 },
@@ -23,7 +28,10 @@ const mockFetch = (response: Partial<Response>) => {
   return fn;
 };
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorage.clear();
+  vi.mocked(getSessionAuth).mockResolvedValue(null);
+});
 afterEach(() => vi.unstubAllGlobals());
 
 describe('challengeOutcome', () => {
@@ -70,6 +78,34 @@ describe('submitDailyScore', () => {
     expect(await submitDailyScore(challengeState(), 100, '   ')).toBe('error');
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
     expect(await submitDailyScore(challengeState(), 100, 'Pieter')).toBe('error');
+  });
+
+  it('attaches user_id and the session token when signed in', async () => {
+    vi.mocked(getSessionAuth).mockResolvedValue({ userId: 'user-123', accessToken: 'jwt-abc' });
+    const fn = mockFetch({ ok: true, status: 201 });
+    expect(await submitDailyScore(challengeState(), 100, 'Pieter')).toBe('submitted');
+    const [, init] = fn.mock.calls[0];
+    expect(JSON.parse(init.body).user_id).toBe('user-123');
+    expect(init.headers.Authorization).toBe('Bearer jwt-abc');
+  });
+
+  it('omits user_id when signed out', async () => {
+    const fn = mockFetch({ ok: true, status: 201 });
+    await submitDailyScore(challengeState(), 100, 'Pieter');
+    expect('user_id' in JSON.parse(fn.mock.calls[0][1].body)).toBe(false);
+  });
+
+  it('retries unauthenticated when the session token is rejected', async () => {
+    vi.mocked(getSessionAuth).mockResolvedValue({ userId: 'user-123', accessToken: 'stale-jwt' });
+    const fn = vi.fn()
+      .mockResolvedValueOnce({ ok: false, status: 401 })
+      .mockResolvedValueOnce({ ok: true, status: 201 });
+    vi.stubGlobal('fetch', fn);
+    expect(await submitDailyScore(challengeState(), 100, 'Pieter')).toBe('submitted');
+    expect(fn).toHaveBeenCalledTimes(2);
+    const [, retryInit] = fn.mock.calls[1];
+    expect('user_id' in JSON.parse(retryInit.body)).toBe(false);
+    expect(retryInit.headers.Authorization).not.toBe('Bearer stale-jwt');
   });
 
   it('caps months at the challenge target', async () => {

@@ -8,6 +8,7 @@ import {
   getSavedPlayerName,
   submitDailyScore
 } from '../services/leaderboard';
+import { getAccount } from '../services/auth';
 
 // Daily-challenge leaderboard panel, shown inside the challenge end overlay.
 // Submit once per device per day (enforced server-side), then today's top 10.
@@ -46,6 +47,20 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ gameState, netWorth
   useEffect(() => {
     loadBoard();
   }, [loadBoard]);
+
+  // No saved name yet but signed in with an email — prefill from the address.
+  useEffect(() => {
+    if (getSavedPlayerName()) return;
+    let cancelled = false;
+    getAccount().then((account) => {
+      const local = account?.email?.split('@')[0];
+      if (cancelled || !local) return;
+      setName((current) => current || local.slice(0, 20));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

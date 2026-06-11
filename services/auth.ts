@@ -63,6 +63,22 @@ export const getAccount = async (): Promise<AccountInfo | null> => {
 };
 
 /**
+ * Session credentials for attaching auth to raw PostgREST calls (e.g. the
+ * leaderboard). Reads the cached session only — no network round-trip.
+ * Null when signed out or Supabase is unreachable.
+ */
+export const getSessionAuth = async (): Promise<{ userId: string; accessToken: string } | null> => {
+  try {
+    const { data } = await getSupabase().auth.getSession();
+    const session = data.session;
+    if (!session?.user) return null;
+    return { userId: session.user.id, accessToken: session.access_token };
+  } catch {
+    return null;
+  }
+};
+
+/**
  * Returns the current account, creating a silent anonymous one if needed.
  * Null only when Supabase is unreachable.
  */

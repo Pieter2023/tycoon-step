@@ -1,9 +1,7 @@
 # Roadmap
 
-**Last updated:** 2026-06-11, end of day (marathon session: daily-challenge
-follow-ups, run summary card, learning counterfactuals, full Supabase
-milestone — leaderboard, cloud saves, accounts, custom SMTP — all shipped,
-verified live, and deployed). Suite: 23 files / 145 tests green.
+**Last updated:** 2026-06-11 (post-marathon follow-up: leaderboard→accounts
+linking shipped + verified live). Suite: 23 files / 150 tests green.
 **Next session starts at "Next build priorities" below.**
 
 ## Recently shipped (2026-06-10)
@@ -128,18 +126,22 @@ returned `{valid:true, source:'gumroad'}`.
   landed from testing: emailRedirectTo uses window.location.origin, and
   getAccount uses getUser() for freshness. Email login is production-ready.
 
+- **Daily leaderboard names → accounts** — done 2026-06-11 (later session):
+  migration `daily_scores_user_id` adds nullable `user_id uuid references
+  auth.users on delete set null`; insert policy tightened to
+  `user_id is null or user_id = auth.uid()`. `submitDailyScore` sends the
+  session access token as Bearer + user_id when signed in (new
+  `getSessionAuth` in `services/auth.ts`), retries unlinked on 401/403;
+  signed-out flow unchanged. Name input prefills from the account email's
+  local part when no saved name. All four RLS paths verified against
+  production (anon+spoof 401, anon plain 201, own-uid 201, foreign-uid 403);
+  test rows + throwaway anon user cleaned up. Suite 23 files / 150 tests.
+  Skipped optional extras (per-user uniqueness, streak column) — revisit if
+  multi-device dupes ever show up on the board.
+
 ## Next build priorities (in order)
 
-1. **Daily leaderboard names → accounts** (small, ~1 session or less).
-   Today `daily_scores` rows carry a free-text `player_name` + device
-   `client_id`. Add a nullable `user_id uuid references auth.users` column
-   (migration via Supabase MCP, project ref `bvsqnhtlwklexyijvexw`), send it
-   from `services/leaderboard.ts` when a session exists (`getAccount()` in
-   `services/auth.ts`), and prefill the name input from the account. Keeps
-   working signed-out. Optional extras: unique-per-user-per-day instead of
-   per-device; show streak on the leaderboard row.
-
-2. **Finish v2 shell migration / split App.tsx** (the big one — plan it
+1. **Finish v2 shell migration / split App.tsx** (the big one — plan it
    first, likely multiple sessions). App.tsx is ~8.2k lines and still
    renders the legacy tab UI in places; `components/v2/` (DesktopShell /
    MobileShell) is the target shell. See `docs/implementation-plan.md` and
@@ -148,7 +150,7 @@ returned `{valid:true, source:'gumroad'}`.
    challenge-end are self-contained), then per-tab components, keeping the
    145-test suite green at every step. Don't mix this with feature work.
 
-3. **B2B classroom packs** (business + light code). Bulk access codes
+2. **B2B classroom packs** (business + light code). Bulk access codes
    already work via the `ACCESS_CODES` Netlify env var (comma-separated —
    add e.g. `SPRINGFIELD2026` for a school; remember warm functions cache
    env, so redeploy after changing). Needs: a one-page offer (positioning:
