@@ -208,6 +208,20 @@ returned `{valid:true, source:'gumroad'}`.
 
 ## Next build priorities (in order)
 
+- **App.tsx split, phase 2 mechanical wins** — done 2026-06-11 (same
+  session): dead scenarioImage parallax code deleted (incl. the unused
+  imageContainerRef prop on ScenarioModal), and **QW-3 shipped** — the
+  8-hook intro-video state machine is now `hooks/useTabIntroVideo.ts`
+  (helpers, autoplay effect, and <video> handlers moved verbatim; App
+  consumes one hook object). App.tsx 6348 → 6082 lines. Suite 150 green.
+  **Shell investigation findings** (for the decision below): `uiV2Enabled`
+  defaults TRUE in prod with no in-app toggle (override: localStorage
+  `tycoon_ui_v2` or env `VITE_UI_V2`); `MODE === 'test'` forces it FALSE,
+  so the integration tests run against the LEGACY shell — it is the test
+  harness. DashboardWidget drill-downs and intro-video Watch/Replay
+  affordances exist ONLY in the legacy branch, i.e. no production user
+  can reach them today.
+
 1. **App.tsx split, phase 2: v2 shell decision + state organization**
    (plan it first, likely multiple sessions). The modal phase is DONE
    (2026-06-11 — all 20 modals in `components/modals/`, App.tsx
