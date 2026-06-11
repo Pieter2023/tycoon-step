@@ -13,15 +13,23 @@
   unlock-mid-run modal, multiplayer gated to full version
 - Repo hygiene: untracked node_modules/dist/.env.local from git
 
-## Business setup — blocked on Pieter (do these to start selling)
+## Business setup — DONE 2026-06-10 (selling is live)
 
-1. Create Gumroad product (~$9–15 USD), enable per-sale license keys
-2. Netlify env vars: `ACCESS_CODES` (keep `Bokke` for beta testers),
-   `GUMROAD_PRODUCT_ID`
-3. Put the Gumroad URL in `PURCHASE_URL` (`services/accessControl.ts`) so
-   unlock screens show a buy link
-4. **Rotate the OpenAI API key** (old key is in git history) and update it in
-   Netlify env + `.env.local`
+1. ~~Create Gumroad product~~ ✓ "Tycoon — Full Version Unlock", $12 USD,
+   per-sale license keys ON: https://pieterrealtor.gumroad.com/l/tycoon
+   (product edit: gumroad.com/products/mziiqp/edit; payouts connected)
+2. ~~Netlify env vars~~ ✓ `ACCESS_CODES=Bokke` and `GUMROAD_PRODUCT_ID`
+   set on site tycoonjan22026; `/api/validate-access` verified live (Bokke → valid)
+3. ~~PURCHASE_URL~~ ✓ set in `services/accessControl.ts` (commit e013f7f,
+   made via GitHub web UI; deployed + verified in live bundle)
+4. ~~Rotate the OpenAI API key~~ ✓ rotated; new key in `.env.local` and in
+   Netlify env (`OPENAI_API_KEY`, secret, production + deploy-preview).
+   Avatar generation verified live (200 + image). Gotcha: Netlify functions
+   cache env on warm instances — trigger a redeploy after changing env vars.
+
+License flow tested end-to-end 2026-06-10: $0 creator test purchase via
+single-use 100%-off code → real key issued → `/api/validate-access`
+returned `{valid:true, source:'gumroad'}`.
 
 ## Next build priorities (in order)
 
