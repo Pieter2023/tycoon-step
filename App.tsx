@@ -43,7 +43,9 @@ import {
   QuickTutorialModal,
   QUICK_TUTORIAL_STORAGE_KEY,
   TutorialModal,
-  TUTORIAL_TIPS
+  TUTORIAL_TIPS,
+  MortgageModal,
+  MortgagePreview
 } from './components/modals';
 import { isCloudSyncEnabled, uploadCloudSave } from './services/cloudSave';
 import QuestLog from './components/QuestLog';
@@ -334,26 +336,7 @@ const getMortgageCreditAdjustments = (creditScore: number, optionId: string, dti
   return { downPaymentPercentDelta, rateAdjustment, minScore, approvalChance };
 };
 
-type MortgagePreview = {
-  id: string;
-  name: string;
-  description: string;
-  minScore: number;
-  incomeRequirement?: number;
-  netWorthRequirement?: number;
-  down: number;
-  loanAmount: number;
-  rate: number;
-  payment: number;
-  rentIncome: number;
-  maintenance: number;
-  cashflowImpact: number;
-  approvalChance: number;
-  canAfford: boolean;
-  meetsIncomeReq: boolean;
-  meetsNetWorthReq: boolean;
-  meetsCreditReq: boolean;
-};
+// MortgagePreview type now lives in components/modals/MortgageModal.
 
 const estimatePropertyMaintenance = (price: number) =>
   Math.max(0, Math.round(price * 0.01 / 12));
@@ -5455,134 +5438,19 @@ const [gameState, setGameState] = useState<GameState>(() => {
         };
 
         return (
-          <Modal
-            isOpen={!!showMortgageModal}
+          <MortgageModal
+            item={showMortgageModal}
+            price={price}
+            previews={previews}
+            selectedMortgage={selectedMortgage}
+            onSelectMortgage={setSelectedMortgage}
+            cash={gameState.cash}
+            cashFlowIncome={cashFlow.income}
+            cashFlowDebtPayments={cashFlow.debtPayments}
+            onReview={reviewMortgage}
+            onBuyCash={() => handleBuyAsset(showMortgageModal)}
             onClose={() => { setShowMortgageModal(null); setSelectedMortgage(''); }}
-            ariaLabel="Mortgage options"
-            overlayClassName="bg-black/80 backdrop-blur-sm"
-            closeOnOverlayClick
-            closeOnEsc
-            contentClassName="bg-slate-800 border border-slate-700 rounded-2xl p-6 max-w-md w-full"
-          >
-            <h2 className="text-xl font-bold text-white mb-2">🏠 Finance {showMortgageModal.name}</h2>
-            <p className="text-slate-400 mb-4">
-              Price: {formatMoneyFull(price)}
-            </p>
-
-            <div className="space-y-3 mb-4">
-              {previews.map((preview) => {
-                const {
-                  id,
-                  name,
-                  description,
-                  down,
-                  rate,
-                  payment,
-                  cashflowImpact,
-                  approvalChance,
-                  meetsIncomeReq,
-                  meetsNetWorthReq,
-                  meetsCreditReq,
-                  canAfford
-                } = preview;
-
-                return (
-                  <div
-                    key={id}
-                    onClick={() => canAfford && setSelectedMortgage(id)}
-                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                      selectedMortgage === id ? 'border-emerald-500 bg-emerald-900/20' :
-                      canAfford ? 'border-slate-600 hover:border-slate-500' :
-                      'border-slate-700 opacity-50 cursor-not-allowed'
-                    }`}
-                  >
-                    <div className="flex justify-between mb-1">
-                      <span className="text-white font-medium">{name}</span>
-                      <span className="text-emerald-400">{formatMoney(down)} down</span>
-                    </div>
-                    <p className="text-slate-400 text-xs">{description}</p>
-                    {!meetsCreditReq && (
-                      <p className="text-amber-400 text-xs mt-1">Requires credit score {preview.minScore}+</p>
-                    )}
-                    <div className="flex justify-between text-xs mt-2">
-                      <span className="text-slate-500">Rate: {formatPercent(rate)}</span>
-                      <span className="text-slate-500">Payment: {formatMoney(payment)}/mo</span>
-                    </div>
-                    <div className="flex justify-between text-xs mt-1">
-                      <span className={`font-medium ${cashflowImpact >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
-                        Cashflow: {cashflowImpact >= 0 ? '+' : '-'}{formatMoney(Math.abs(cashflowImpact))}/mo
-                      </span>
-                      <span className="text-slate-500 inline-flex items-center gap-1">
-                        Est. maint
-                        <Tooltip content="Estimated maintenance is 1% of purchase price per year.">
-                          <Info size={12} className="text-slate-400" />
-                        </Tooltip>
-                        : {formatMoney(preview.maintenance)}/mo
-                      </span>
-                    </div>
-                    <p className="text-slate-500 text-xs mt-1">
-                      Approval chance: {Math.round(approvalChance * 100)}% • DTI: {Math.round(((cashFlow.debtPayments + payment) / Math.max(1, cashFlow.income)) * 100)}%
-                    </p>
-                    {!meetsIncomeReq && preview.incomeRequirement !== undefined && (
-                      <p className="text-red-400 text-xs mt-1">Income required: {formatMoney(preview.incomeRequirement)}/mo</p>
-                    )}
-                    {!meetsNetWorthReq && preview.netWorthRequirement !== undefined && (
-                      <p className="text-red-400 text-xs mt-1">Net worth required: {formatMoney(preview.netWorthRequirement)}</p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {selectedPreview && (
-              <div className="mb-4 rounded-lg border border-slate-700 bg-slate-900/40 p-3">
-                <div className="flex items-center justify-between text-xs text-slate-400 uppercase tracking-wide">
-                  <span>Estimated impact</span>
-                  <span className={selectedPreview.cashflowImpact >= 0 ? 'text-emerald-300' : 'text-red-300'}>
-                    {selectedPreview.cashflowImpact >= 0 ? '+' : '-'}{formatMoney(Math.abs(selectedPreview.cashflowImpact))}/mo
-                  </span>
-                </div>
-                <div className="mt-2 text-sm text-slate-300 flex flex-wrap gap-3">
-                  <span>Rent: {formatMoney(selectedPreview.rentIncome)}/mo</span>
-                  <span>Mortgage: -{formatMoney(selectedPreview.payment)}/mo</span>
-                  <span>Maint: -{formatMoney(selectedPreview.maintenance)}/mo</span>
-                </div>
-                <p className={`mt-2 text-sm font-semibold ${selectedPreview.cashflowImpact >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
-                  This deal is cashflow {selectedPreview.cashflowImpact >= 0 ? 'positive' : 'negative'} by ~{formatMoney(Math.abs(selectedPreview.cashflowImpact))}/mo.
-                </p>
-                <div className="mt-3 text-xs text-slate-300">
-                  Buying this will reduce cash to <span className="text-white font-semibold">{formatMoneyFull(cashAfterDown || 0)}</span> and
-                  change monthly cashflow by <span className={selectedPreview.cashflowImpact >= 0 ? 'text-emerald-300' : 'text-red-300'}>
-                    {selectedPreview.cashflowImpact >= 0 ? '+' : '-'}{formatMoney(Math.abs(selectedPreview.cashflowImpact))}/mo
-                  </span>.
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => { setShowMortgageModal(null); setSelectedMortgage(''); }}
-                className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all touch-target"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={reviewMortgage}
-                disabled={!selectedMortgage}
-                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-500 rounded-lg font-medium transition-all touch-target"
-              >
-                Review Purchase
-              </button>
-            </div>
-
-            <button
-              onClick={() => handleBuyAsset(showMortgageModal)}
-              disabled={gameState.cash < price}
-              className="w-full mt-3 py-3 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-600/50 text-amber-400 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all touch-target"
-            >
-              Pay Full Cash ({formatMoney(price)})
-            </button>
-          </Modal>
+          />
         );
       })()}
 

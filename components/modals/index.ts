@@ -17,3 +17,5 @@ export { default as DashboardDetailModal } from './DashboardDetailModal';
 export type { DashboardModalKind } from './DashboardDetailModal';
 export { default as QuickTutorialModal, QUICK_TUTORIAL_STORAGE_KEY } from './QuickTutorialModal';
 export { default as TutorialModal, TUTORIAL_TIPS } from './TutorialModal';
+export { default as MortgageModal } from './MortgageModal';
+export type { MortgagePreview } from './MortgageModal';
