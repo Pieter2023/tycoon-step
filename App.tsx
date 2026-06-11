@@ -53,7 +53,8 @@ import {
   ScenarioModal,
   TabIntroVideoModal,
   TabIntroVideoConfig,
-  SaveManagerModal
+  SaveManagerModal,
+  TutorialVideosModal
 } from './components/modals';
 import { isCloudSyncEnabled, uploadCloudSave } from './services/cloudSave';
 import QuestLog from './components/QuestLog';
@@ -856,6 +857,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const [showAccessibility, setShowAccessibility] = useState(false);
   const [showQuestLog, setShowQuestLog] = useState(false);
   const [showGlossary, setShowGlossary] = useState(false);
+  const [showTutorialVideos, setShowTutorialVideos] = useState(false);
   const [showSideHustleUpgradeModal, setShowSideHustleUpgradeModal] = useState(false);
   const [showEventLab, setShowEventLab] = useState(false);
   const [showQuickTutorial, setShowQuickTutorial] = useState(false);
@@ -4734,6 +4736,16 @@ const [gameState, setGameState] = useState<GameState>(() => {
       {showGlossary && (
         <GlossaryModal onClose={() => setShowGlossary(false)} />
       )}
+      {showTutorialVideos && (
+        <TutorialVideosModal
+          configs={TAB_INTRO_VIDEO_CONFIG}
+          onWatch={(tabId) => {
+            setShowTutorialVideos(false);
+            introVideo.open(tabId, { autoplay: true });
+          }}
+          onClose={() => setShowTutorialVideos(false)}
+        />
+      )}
       {dashboardModal && (
         <DashboardDetailModal
           kind={dashboardModal}
@@ -4785,6 +4797,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           >
             {v2Path === '/play' && mobileTab === 'dashboard' && (
               <CommandDashboard
+                onOpenDetail={(kind) => setDashboardModal(kind)}
                 cashValue={gameState.cash}
                 netWorthValue={netWorth}
                 passiveValue={cashFlow.passive}
@@ -4854,6 +4867,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 onOpenRunCard={gameState.challenge ? undefined : () => setShowRunCard(true)}
                 onOpenQuests={() => setShowQuestLog(true)}
                 onOpenGlossary={() => setShowGlossary(true)}
+                onOpenTutorials={() => setShowTutorialVideos(true)}
                 onOpenAccessibility={() => setShowAccessibility(true)}
                 onToggleSound={toggleSound}
                 soundEnabled={soundEnabled}
@@ -5005,6 +5019,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           >
             {v2Path === '/play' && (
               <CommandDashboard
+                onOpenDetail={(kind) => setDashboardModal(kind)}
                 cashValue={gameState.cash}
                 netWorthValue={netWorth}
                 passiveValue={cashFlow.passive}
@@ -5154,6 +5169,16 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
               >
                 <BookOpen size={18} className="text-emerald-300" /> Glossary
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowTutorialVideos(true);
+                  setMobileOverflowOpen(false);
+                }}
+                className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
+              >
+                <Play size={18} className="text-sky-300" /> Tutorial videos
               </button>
               <button
                 type="button"
@@ -5396,6 +5421,18 @@ const [gameState, setGameState] = useState<GameState>(() => {
                                 className="justify-start"
                               >
                                 <BookOpen size={16} /> Glossary
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                fullWidth
+                                onClick={() => {
+                                  setShowTutorialVideos(true);
+                                  setHudMenuOpen(false);
+                                }}
+                                className="justify-start"
+                              >
+                                <Play size={16} /> Tutorial videos
                               </Button>
                               <Button
                                 variant="ghost"

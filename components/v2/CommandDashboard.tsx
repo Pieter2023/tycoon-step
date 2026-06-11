@@ -67,6 +67,8 @@ type CommandDashboardProps = {
   onOpenGoals: () => void;
   isProcessing: boolean;
   onShowToast?: (title: string, message: string, type: 'success' | 'info' | 'warning' | 'error') => void;
+  /** Open the drill-down chart modal (net worth / cash flow / credit / AI). */
+  onOpenDetail?: (kind: 'netWorth' | 'cashFlow' | 'credit' | 'ai') => void;
 };
 
 type AdvisorAction =
@@ -198,12 +200,23 @@ const MetricCard: React.FC<{
   trend: TrendPoint[];
   tone: MetricTone;
   gradientId: string;
-}> = ({ title, value, caption, delta, trendPositive = true, icon, trend, tone, gradientId }) => {
+  onClick?: () => void;
+}> = ({ title, value, caption, delta, trendPositive = true, icon, trend, tone, gradientId, onClick }) => {
   const classes = metricToneClasses[tone];
   return (
     <motion.div
       whileHover={{ y: -2 }}
-      className={`tycoon-card min-h-[178px] p-4 ${classes.frame}`}
+      className={`tycoon-card min-h-[178px] p-4 ${classes.frame} ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      } : undefined}
+      aria-label={onClick ? `${title} details` : undefined}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -643,6 +656,7 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
           trend={cashTrend}
           tone="cash"
           gradientId="cash-command-gradient"
+          onClick={props.onOpenDetail ? () => props.onOpenDetail!('cashFlow') : undefined}
         />
         <MetricCard
           title="Net Worth"
@@ -654,6 +668,7 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
           trend={netWorthTrend}
           tone="networth"
           gradientId="networth-command-gradient"
+          onClick={props.onOpenDetail ? () => props.onOpenDetail!('netWorth') : undefined}
         />
         <MetricCard
           title="Passive Income"
@@ -665,6 +680,7 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
           trend={passiveTrendData}
           tone="passive"
           gradientId="passive-command-gradient"
+          onClick={props.onOpenDetail ? () => props.onOpenDetail!('cashFlow') : undefined}
         />
       </section>
 

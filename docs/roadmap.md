@@ -222,6 +222,22 @@ returned `{valid:true, source:'gumroad'}`.
   affordances exist ONLY in the legacy branch, i.e. no production user
   can reach them today.
 
+- **Orphaned legacy features ported to v2** — done 2026-06-11 (same
+  session, Pieter's call: port rather than retire). (1) Dashboard
+  drill-downs: CommandDashboard metric cards (Cash/Net Worth/Passive) are
+  now clickable → DashboardDetailModal, which gained an internal
+  switcher row so all four charts (net worth / cash flow / credit / AI)
+  are reachable from any entry point. (2) Tutorial videos: new
+  `TutorialVideosModal` lists every TAB_INTRO_VIDEO_CONFIG entry
+  (title/description/duration/poster) and plays them via
+  `introVideo.open(tabId, {autoplay:true})`; reachable from the desktop
+  HUD menu, the mobile overflow, and MoreScreen. Verified live in v2:
+  card → modal → all four charts; menu → chooser → video AUTOPLAYS.
+  Legacy shell stays as the test harness (retire-later candidate).
+  Found while testing: `/images/financial-planner-poster-16x9.jpg` 404s
+  (lost in the asset restoration) — chooser hides broken thumbnails
+  gracefully; restoring the file is a spawned follow-up task.
+
 1. **App.tsx split, phase 2: v2 shell decision + state organization**
    (plan it first, likely multiple sessions). The modal phase is DONE
    (2026-06-11 — all 20 modals in `components/modals/`, App.tsx

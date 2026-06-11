@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Heart, LayoutGrid, LineChart, Save, Settings, TrendingUp, Trophy, Volume2, VolumeX, Briefcase } from 'lucide-react';
+import { BookOpen, Heart, LayoutGrid, LineChart, Play, Save, Settings, TrendingUp, Trophy, Volume2, VolumeX, Briefcase } from 'lucide-react';
 
 type MoreScreenProps = {
   onNavigate: (path: string) => void;
@@ -7,6 +7,7 @@ type MoreScreenProps = {
   onOpenRunCard?: () => void;
   onOpenQuests: () => void;
   onOpenGlossary: () => void;
+  onOpenTutorials?: () => void;
   onOpenAccessibility: () => void;
   onToggleSound: () => void;
   soundEnabled: boolean;
@@ -27,6 +28,7 @@ const MoreScreen: React.FC<MoreScreenProps> = ({
   onOpenRunCard,
   onOpenQuests,
   onOpenGlossary,
+  onOpenTutorials,
   onOpenAccessibility,
   onToggleSound,
   soundEnabled,
@@ -85,6 +87,12 @@ const MoreScreen: React.FC<MoreScreenProps> = ({
             <LayoutGrid size={18} className="text-emerald-300" />
             <span className="text-sm font-semibold text-white">Glossary</span>
           </button>
+          {onOpenTutorials && (
+            <button type="button" onClick={onOpenTutorials} className="glass-tile flex items-center gap-3 px-4 py-3">
+              <Play size={18} className="text-sky-300" />
+              <span className="text-sm font-semibold text-white">Tutorial videos</span>
+            </button>
+          )}
           <button type="button" onClick={onOpenAccessibility} className="glass-tile flex items-center gap-3 px-4 py-3">
             <Settings size={18} className="text-purple-300" />
             <span className="text-sm font-semibold text-white">Accessibility</span>

@@ -25,3 +25,4 @@ export { default as ScenarioModal } from './ScenarioModal';
 export { default as TabIntroVideoModal } from './TabIntroVideoModal';
 export type { TabIntroVideoConfig } from './TabIntroVideoModal';
 export { default as SaveManagerModal } from './SaveManagerModal';
+export { default as TutorialVideosModal } from './TutorialVideosModal';

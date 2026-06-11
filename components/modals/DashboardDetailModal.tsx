@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 import Modal from '../Modal';
 import { formatCurrencyCompactValue, formatCurrencyValue } from '../../i18n';
@@ -9,8 +9,9 @@ const formatMoneyFull = (val: number): string =>
 
 export type DashboardModalKind = 'netWorth' | 'cashFlow' | 'credit' | 'ai';
 
-// Drill-down charts for the dashboard tiles. Pure display — all series and
-// color classes are computed in App.
+// Drill-down charts for the dashboard tiles. All series and color classes
+// are computed in App; `kind` picks the initial chart and a switcher row
+// lets the player flip between all four without reopening.
 interface DashboardDetailModalProps {
   kind: DashboardModalKind;
   onClose: () => void;
@@ -50,7 +51,9 @@ const DashboardDetailModal: React.FC<DashboardDetailModalProps> = ({
   aiRiskLabel,
   aiRiskColorClass,
   aiTrendData
-}) => (
+}) => {
+  const [active, setActive] = useState<DashboardModalKind>(kind);
+  return (
   <Modal
     isOpen
     onClose={onClose}
@@ -59,7 +62,25 @@ const DashboardDetailModal: React.FC<DashboardDetailModalProps> = ({
     closeOnEsc
     contentClassName="bg-slate-800 border border-slate-700 rounded-2xl p-6 max-w-3xl w-full"
   >
-    {kind === 'netWorth' && (
+    <div className="flex flex-wrap gap-2 mb-4">
+      {([
+        ['netWorth', 'Net worth'],
+        ['cashFlow', 'Cash flow'],
+        ['credit', 'Credit'],
+        ['ai', 'AI risk']
+      ] as [DashboardModalKind, string][]).map(([k, label]) => (
+        <button
+          key={k}
+          onClick={() => setActive(k)}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            active === k ? 'bg-slate-600 text-white' : 'bg-slate-900/60 text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+    {active === 'netWorth' && (
       <div>
         <h2 className="text-xl font-bold text-white mb-2">Net Worth Trend</h2>
         <p className="text-slate-400 text-sm mb-4">
@@ -86,7 +107,7 @@ const DashboardDetailModal: React.FC<DashboardDetailModalProps> = ({
         </div>
       </div>
     )}
-    {kind === 'cashFlow' && (
+    {active === 'cashFlow' && (
       <div>
         <h2 className="text-xl font-bold text-white mb-2">Cash Flow</h2>
         <p className="text-slate-400 text-sm mb-4">
@@ -113,7 +134,7 @@ const DashboardDetailModal: React.FC<DashboardDetailModalProps> = ({
         </div>
       </div>
     )}
-    {kind === 'credit' && (
+    {active === 'credit' && (
       <div>
         <h2 className="text-xl font-bold text-white mb-2">Credit Score History</h2>
         <p className="text-slate-400 text-sm mb-4">
@@ -141,7 +162,7 @@ const DashboardDetailModal: React.FC<DashboardDetailModalProps> = ({
         </div>
       </div>
     )}
-    {kind === 'ai' && (
+    {active === 'ai' && (
       <div>
         <h2 className="text-xl font-bold text-white mb-2">AI Disruption Level</h2>
         <p className="text-slate-400 text-sm mb-4">
@@ -172,6 +193,7 @@ const DashboardDetailModal: React.FC<DashboardDetailModalProps> = ({
       </div>
     )}
   </Modal>
-);
+  );
+};
 
 export default DashboardDetailModal;
