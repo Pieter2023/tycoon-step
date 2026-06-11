@@ -31,14 +31,28 @@ License flow tested end-to-end 2026-06-10: $0 creator test purchase via
 single-use 100%-off code → real key issued → `/api/validate-access`
 returned `{valid:true, source:'gumroad'}`.
 
+## Recently shipped (2026-06-11)
+
+- **Daily challenge + share card** (built, needs push/deploy + playtest):
+  - `services/dailyChallenge.ts` — UTC-date challenge id → FNV-1a seed →
+    fixed daily character; 120-month run; `challenge` field on GameState.
+  - All sim randomness now flows through seedable `rand()` in gameLogic
+    (`seedSimForMonth` re-seeds per month from the challenge seed, so market
+    cycle + event draws match for all players; normal games stay Math.random).
+  - `components/ChallengeShareCard.tsx` — canvas 1200×630 card: outcome,
+    score, net-worth curve, 3 defining events, game link; download/share/copy.
+  - App.tsx: challenge end overlay at month 120 (or bankruptcy), win toast
+    instead of blocking victory modal, autosave disabled in challenge runs
+    (never clobbers adult autosave). ModeSelector: 4th card "Daily Challenge".
+  - Demo tier hits the standard 36-month wall mid-challenge (per Pieter:
+    challenge is demo-gated; share card doubles as upsell).
+  - Tests: services/dailyChallenge.test.ts (11) — suite now 18 files / 97.
+
 ## Next build priorities (in order)
 
-1. **Daily challenge + share card** — the growth engine.
-   Same seed for everyone each day (engine already uses seeded RNG for tests),
-   fixed character/market/events, 10-year sprint (~15 min), score = net worth.
-   End-of-run shareable summary card: net-worth curve, 3 defining events,
-   "Financially free at 34" / score, with a link back to the game.
-   Solves session length, virality, and daily retention in one feature.
+1. **Daily challenge follow-ups** — playtest a full run; daily-streak nudge;
+   consider OG meta tags for shared links; leaderboard arrives with Supabase
+   (priority 4).
 2. **Run summary card for normal games** — same artifact on win/bankruptcy/quit;
    put a "Send this to someone who needs it" CTA on the victory screen.
 3. **Learning counterfactuals** — after big decisions show the one-line

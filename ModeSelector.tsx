@@ -1,7 +1,7 @@
 // Mode Selector with Multiplayer Support - v3.4.3
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, BookOpen, BriefcaseBusiness, LineChart, ShieldCheck, Trophy, Users, WalletCards } from 'lucide-react';
+import { ArrowRight, BookOpen, BriefcaseBusiness, CalendarDays, LineChart, ShieldCheck, Trophy, Users, WalletCards } from 'lucide-react';
 import App from './App';
 import KidsApp from './KidsApp';
 import { KidsGameState } from './kidsTypes';
@@ -13,8 +13,9 @@ import { useI18n } from './i18n';
 import CustomAvatarBuilder, { CustomAvatarResult } from './components/customAvatar/CustomAvatarBuilder';
 import UnlockModal from './components/UnlockModal';
 import { AccessTier, getAccessTier, setAccessTier, validateAccessCode } from './services/accessControl';
+import { createDailyChallengeState, getDailyChallengeId, getDailyCharacter, getDailySeed } from './services/dailyChallenge';
 
-type GameMode = 'select' | 'adult' | 'kids' | 'multiplayer-setup' | 'multiplayer-game';
+type GameMode = 'select' | 'adult' | 'kids' | 'daily' | 'multiplayer-setup' | 'multiplayer-game';
 
 const AUTH_KEY = 'tycoon_authenticated';
 
@@ -70,6 +71,9 @@ const ModeSelector: React.FC = () => {
   const [setupStep, setSetupStep] = useState<'count' | 'configure'>('count');
   const [multiplayerState, setMultiplayerState] = useState<MultiplayerState | null>(null);
   const [customAvatarPlayerIndex, setCustomAvatarPlayerIndex] = useState<number | null>(null);
+
+  // Daily challenge (seeded, ephemeral — no saves)
+  const [dailyState, setDailyState] = useState<GameState | null>(null);
 
   // Save / Load (single player)
   const SAVE_SLOTS: SaveSlotId[] = ['autosave', 'slot1', 'slot2', 'slot3'];
@@ -812,6 +816,17 @@ const ModeSelector: React.FC = () => {
     );
   }
 
+  if (mode === 'daily' && dailyState) {
+    return (
+      <App
+        key={dailyState.challenge?.id}
+        onBackToMenu={() => { setDailyState(null); setAccessTierState(getAccessTier()); setMode('select'); }}
+        initialGameState={dailyState}
+        accessTier={accessTier}
+      />
+    );
+  }
+
   if (mode === 'kids') {
     return (
       <KidsApp
@@ -839,6 +854,18 @@ const ModeSelector: React.FC = () => {
       tone: 'border-emerald-400/25 hover:border-emerald-300/70',
       iconTone: 'bg-emerald-400 text-slate-950',
       bullets: ['Command center', 'Investing engine', 'Career and lifestyle pressure']
+    },
+    {
+      title: 'Daily Challenge',
+      eyebrow: getDailyChallengeId(),
+      body: `Everyone plays the same seeded world today as ${getDailyCharacter(getDailySeed()).name}. 10-year sprint — score is your final net worth.`,
+      Icon: CalendarDays,
+      onClick: () => { setDailyState(createDailyChallengeState()); setMode('daily'); },
+      cta: "Play today's run",
+      image: '/event-images/business_expansion_opportunity.webp',
+      tone: 'border-violet-400/25 hover:border-violet-300/70',
+      iconTone: 'bg-violet-300 text-slate-950',
+      bullets: ['Same world for everyone', '~15 minute sprint', 'Share your run card']
     },
     {
       title: 'Kids Mode',

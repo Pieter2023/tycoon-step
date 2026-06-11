@@ -24,6 +24,7 @@ import { GLOSSARY_ENTRIES, QUIZ_DEFINITIONS, getQuizDefinition } from './data/le
 
 import TabErrorBoundary from './components/TabErrorBoundary';
 import Modal from './components/Modal';
+import ChallengeShareCard from './components/ChallengeShareCard';
 import QuestLog from './components/QuestLog';
 import { Button, Badge, Card, Tooltip } from './components/ui';
 import type { AppShellNavItem } from './components/ui/AppShell';
@@ -2211,6 +2212,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
   const recordAutosave = useCallback((state: GameState) => {
     if (isMultiplayer) return;
+    // Daily challenge runs are ephemeral sprints — never clobber the player's
+    // adult-mode autosave with them.
+    if (state.challenge) return;
     saveAdultGame(state, 'autosave');
     const now = Date.now();
     setLastAutosaveAt(now);
@@ -2659,6 +2663,12 @@ const [gameState, setGameState] = useState<GameState>(() => {
       setShowDemoLimitModal(true);
       return;
     }
+    // Daily challenge: the run is over once the target month is reached —
+    // the end screen takes it from here.
+    if (gameState.challenge && gameState.month > gameState.challenge.targetMonths) {
+      setAutoPlaySpeed(null);
+      return;
+    }
     setIsProcessing(true);
     playTick();
 
@@ -2680,7 +2690,14 @@ const [gameState, setGameState] = useState<GameState>(() => {
         playVictory();
         maybeConfetti({ particleCount: 300, spread: 120, origin: { y: 0.5 } });
         setShowConfetti(true);
-        showSuccess('🎉 Financial Freedom Achieved!', 'You\'ve reached your goal! Passive income covers 110% of expenses.', { duration: 8000 });
+        if (newState.challenge) {
+          // No blocking modal in challenge mode — the sprint continues to the
+          // target month; the share card celebrates the win at the end.
+          const remaining = Math.max(0, newState.challenge.targetMonths - newState.month + 1);
+          showSuccess('🎉 Financially free!', `Locked in for the score card — keep building for ${remaining} more months.`, { duration: 8000 });
+        } else {
+          showSuccess('🎉 Financial Freedom Achieved!', 'You\'ve reached your goal! Passive income covers 110% of expenses.', { duration: 8000 });
+        }
       }
 
       if (report.promoted) {
@@ -6194,7 +6211,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
       })()}
 
       {/* Win Celebration Modal */}
-      {gameState.hasWon && (
+      {gameState.hasWon && !gameState.challenge && (
         <Modal
           isOpen={gameState.hasWon}
           onClose={() => undefined}
@@ -6253,8 +6270,36 @@ const [gameState, setGameState] = useState<GameState>(() => {
         </Modal>
       )}
 
+      {/* Daily Challenge end screen (run complete or bust) */}
+      {gameState.challenge && (gameState.month > gameState.challenge.targetMonths || gameState.isBankrupt) && (
+        <Modal
+          isOpen
+          onClose={() => undefined}
+          ariaLabel="Daily challenge complete"
+          overlayClassName="bg-black/90"
+          closeOnOverlayClick={false}
+          closeOnEsc={false}
+          showCloseButton={false}
+          contentClassName="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-3xl w-full p-6"
+        >
+          <div className="text-center mb-4">
+            <h2 className="text-2xl font-bold text-white">
+              {gameState.isBankrupt ? 'Challenge over' : 'Challenge complete!'}
+            </h2>
+            <p className="text-slate-400 text-sm mt-1">
+              Daily Challenge · {gameState.challenge.id} — everyone plays the same world. Share your run:
+            </p>
+          </div>
+          <ChallengeShareCard
+            gameState={gameState}
+            netWorth={netWorth}
+            onClose={onBackToMenu}
+          />
+        </Modal>
+      )}
+
       {/* Bankruptcy Modal */}
-      {gameState.isBankrupt && (
+      {gameState.isBankrupt && !gameState.challenge && (
         <Modal
           isOpen={gameState.isBankrupt}
           onClose={() => undefined}

@@ -562,6 +562,21 @@ export interface GameState {
   creditLastChangeReasons?: string[];
 
   // ============================================
+  // Daily Challenge (seeded, fixed-length runs)
+  // ============================================
+  // Present only on daily-challenge runs. `seed` drives the sim RNG so the
+  // world unfolds identically for everyone; the run ends after `targetMonths`
+  // and the score is final net worth (see services/dailyChallenge.ts).
+  challenge?: {
+    id: string;           // UTC date, e.g. "2026-06-11"
+    seed: number;         // 32-bit seed derived from id
+    targetMonths: number; // run length (120)
+  };
+  // Title + month of life events faced during a challenge run (for the
+  // shareable summary card's "defining events").
+  challengeEvents?: { month: number; title: string }[];
+
+  // ============================================
   // Monthly Actions (Adult mode)
   // ============================================
   // Actions are a small set of intentional choices players can take each month

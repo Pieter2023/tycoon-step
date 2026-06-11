@@ -46,7 +46,7 @@ const businessRandom = () => {
     devBusinessSeed = (devBusinessSeed * 9301 + 49297) % 233280;
     return devBusinessSeed / 233280;
   }
-  return Math.random();
+  return rand();
 };
 
 export const __testOnly_setBusinessSeed = (seed: number) => {
@@ -56,6 +56,42 @@ export const __testOnly_setBusinessSeed = (seed: number) => {
 };
 
 export const __testOnly_nextBusinessRandom = () => businessRandom();
+
+// ============================================================
+// Seedable simulation RNG (Daily Challenge)
+// ============================================================
+// All randomness in this module flows through rand(). Normally it is
+// Math.random, but daily-challenge runs re-seed it at the start of every
+// processTurn with hash(challengeSeed, month) so the market cycle and event
+// draws are identical for every player on the same day. Re-seeding per month
+// (rather than once per run) keeps players in sync even though they consume
+// different numbers of rolls via different choices.
+const mulberry32 = (seed: number): (() => number) => {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+};
+
+let simRng: (() => number) | null = null;
+
+export const seedSimForMonth = (baseSeed: number, month: number) => {
+  // Mix month into the seed (splitmix-style avalanche) for a fresh stream.
+  let s = (baseSeed ^ Math.imul(month + 1, 0x9e3779b9)) >>> 0;
+  s ^= s >>> 16;
+  s = Math.imul(s, 0x85ebca6b) >>> 0;
+  simRng = mulberry32(s);
+};
+
+export const clearSimSeed = () => {
+  simRng = null;
+};
+
+const rand = (): number => (simRng ? simRng() : Math.random());
 
 // Applies temporary income disruptions (e.g., vacancy, strike) to owned assets.
 const getAssetIncomeMultiplier = (state: GameState, assetId: string): number => {
@@ -921,7 +957,7 @@ const calculateSideHustleIncomeBreakdown = (state: GameState): { total: number; 
   for (const hustle of state.activeSideHustles) {
     const aiPenalty = 1 - (hustle.aiVulnerability * disruptionLevel / 200);
     const midpoint = (hustle.incomeRange.min + hustle.incomeRange.max) / 2;
-    const variance = (hustle.incomeRange.max - hustle.incomeRange.min) * (Math.random() - 0.5) * 0.5;
+    const variance = (hustle.incomeRange.max - hustle.incomeRange.min) * (rand() - 0.5) * 0.5;
     const baseIncome = midpoint + variance;
     const effects = getSideHustleUpgradeEffects(hustle);
     const adjustedIncome = Math.round(baseIncome * Math.max(0.3, aiPenalty) * effects.incomeMultiplier);
@@ -1201,7 +1237,7 @@ export const calculateMonthlyCashFlow = (state: GameState): {
 };
 
 // Deterministic cash flow estimate used for UI previews, quest calculations, and save summaries.
-// IMPORTANT: This function must never call Math.random().
+// IMPORTANT: This function must never call rand().
 export const calculateMonthlyCashFlowEstimate = (state: GameState): {
   salary: number;
   sideHustleIncome: number;
@@ -1297,13 +1333,13 @@ export const updateMarketCycle = (state: GameState): GameState => {
   // Check for phase transition
   const transitionChance = newState.marketCycle.monthsInPhase / newState.marketCycle.nextPhaseIn;
   
-  if (Math.random() < transitionChance * 0.3) {
+  if (rand() < transitionChance * 0.3) {
     const phases: MarketCyclePhase[] = ['EXPANSION', 'PEAK', 'CONTRACTION', 'TROUGH'];
     const currentIdx = phases.indexOf(newState.marketCycle.phase);
     newState.marketCycle.phase = phases[(currentIdx + 1) % 4];
     newState.marketCycle.monthsInPhase = 0;
-    newState.marketCycle.intensity = 0.3 + Math.random() * 0.5;
-    newState.marketCycle.nextPhaseIn = 12 + Math.floor(Math.random() * 24);
+    newState.marketCycle.intensity = 0.3 + rand() * 0.5;
+    newState.marketCycle.nextPhaseIn = 12 + Math.floor(rand() * 24);
     
     const trendMap: { [key in MarketCyclePhase]: MarketTrend } = {
       'EXPANSION': 'BULL',
@@ -1315,9 +1351,9 @@ export const updateMarketCycle = (state: GameState): GameState => {
     newState.economy = { ...newState.economy, marketTrend: trendMap[newState.marketCycle.phase] };
     
     // Check for recession
-    if (newState.marketCycle.phase === 'CONTRACTION' && Math.random() < 0.4) {
+    if (newState.marketCycle.phase === 'CONTRACTION' && rand() < 0.4) {
       newState.economy.recession = true;
-      newState.economy.recessionMonths = 12 + Math.floor(Math.random() * 12);
+      newState.economy.recessionMonths = 12 + Math.floor(rand() * 12);
     }
   }
   
@@ -1360,7 +1396,7 @@ export const updateAssetPrices = (state: GameState): GameState => {
     // Volatility effect - SIGNIFICANTLY reduced
     // Max swing is now ±2% for high volatility assets, ±0.5% for low volatility
     const volatilityMult = (diffSettings.volatilityMultiplier || 1) * 0.1; // Reduce by 90%
-    const volatilityEffect = (Math.random() - 0.5) * 2 * asset.volatility * volatilityMult;
+    const volatilityEffect = (rand() - 0.5) * 2 * asset.volatility * volatilityMult;
     priceChange += volatilityEffect;
     
     // Sector performance adjustment
@@ -1568,7 +1604,7 @@ export const checkPromotion = (state: GameState): { promoted: boolean; newState:
     promoChance *= 0.5;
   }
   
-  if (Math.random() > promoChance) {
+  if (rand() > promoChance) {
     return { promoted: false, newState: state };
   }
   
@@ -1601,7 +1637,7 @@ export const checkPromotion = (state: GameState): { promoted: boolean; newState:
 const formatUSD = (value: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
 
-const pickRandom = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+const pickRandom = <T,>(arr: T[]): T => arr[Math.floor(rand() * arr.length)];
 
 const tailorAssetOwnerEvent = (base: Scenario, state: GameState): Scenario => {
   const businesses = (state.assets || []).filter(a => a.type === AssetType.BUSINESS && (a.quantity || 1) > 0);
@@ -1613,7 +1649,7 @@ const tailorAssetOwnerEvent = (base: Scenario, state: GameState): Scenario => {
       const biz = pickRandom(businesses);
       const qty = biz.quantity || 1;
       const monthly = Math.max(0, Math.round((biz.cashFlow || 0) * qty));
-      const months = 2 + Math.floor(Math.random() * 2); // 2-3 months
+      const months = 2 + Math.floor(rand() * 2); // 2-3 months
 
       const negotiateCost = clamp(Math.round(Math.max(2500, monthly * 0.6)), 2500, 30000);
       const tempStaffCost = clamp(Math.round(Math.max(5000, monthly * 1.2)), 5000, 50000);
@@ -1682,7 +1718,7 @@ const tailorAssetOwnerEvent = (base: Scenario, state: GameState): Scenario => {
       const biz = pickRandom(businesses);
       const qty = biz.quantity || 1;
       const monthly = Math.max(0, Math.round((biz.cashFlow || 0) * qty));
-      const fraudLoss = clamp(Math.round(Math.max(3000, monthly * (2 + Math.random() * 2))), 3000, 75000);
+      const fraudLoss = clamp(Math.round(Math.max(3000, monthly * (2 + rand() * 2))), 3000, 75000);
       const auditCost = clamp(Math.round(Math.max(2000, fraudLoss * 0.25)), 2000, 20000);
 
       return {
@@ -1799,7 +1835,7 @@ const tailorAssetOwnerEvent = (base: Scenario, state: GameState): Scenario => {
       const biz = pickRandom(businesses);
       const fine = clamp(Math.round(Math.max(5000, biz.value * 0.05)), 5000, 100000);
       const appealCost = clamp(Math.round(Math.max(2000, fine * 0.2)), 2000, 25000);
-      const appealSuccess = Math.random() < 0.45;
+      const appealSuccess = rand() < 0.45;
 
       return {
         ...base,
@@ -1866,7 +1902,7 @@ const tailorAssetOwnerEvent = (base: Scenario, state: GameState): Scenario => {
       const prop = pickRandom(properties);
       const qty = prop.quantity || 1;
       const monthlyRent = Math.max(0, Math.round((prop.cashFlow || 0) * qty));
-      const months = 2 + Math.floor(Math.random() * 3); // 2-4 months
+      const months = 2 + Math.floor(rand() * 3); // 2-4 months
       const evictionCost = clamp(Math.round(Math.max(600, monthlyRent * 0.6)), 600, 6000);
       const cashForKeys = clamp(Math.round(Math.max(500, monthlyRent * 0.5)), 500, 4000);
 
@@ -2054,7 +2090,7 @@ const tailorAssetOwnerEvent = (base: Scenario, state: GameState): Scenario => {
     case 'rental_vacancy': {
       if (properties.length === 0) return base;
       const prop = pickRandom(properties);
-      const months = 1 + Math.floor(Math.random() * 3); // 1-3 months
+      const months = 1 + Math.floor(rand() * 3); // 1-3 months
       const renovationCost = clamp(Math.round(Math.max(2000, prop.value * 0.02)), 2000, 35000);
 
       return {
@@ -2270,7 +2306,7 @@ export const generateLifeEvent = (state: GameState): Scenario | null => {
     .filter((event): event is Scenario => !!event)
     .filter(isEligible);
   if (queuedEvents.length > 0) {
-    return queuedEvents[Math.floor(Math.random() * queuedEvents.length)];
+    return queuedEvents[Math.floor(rand() * queuedEvents.length)];
   }
   
   // Track months since last event for "drought breaker"
@@ -2281,7 +2317,7 @@ export const generateLifeEvent = (state: GameState): Scenario | null => {
   
   // Base 35% chance per month (increased from 15% for more engagement)
   // If drought, 100% chance
-  if (!droughtForce && Math.random() > 0.35 * eventFreq) {
+  if (!droughtForce && rand() > 0.35 * eventFreq) {
     return null;
   }
 
@@ -2341,7 +2377,7 @@ export const generateLifeEvent = (state: GameState): Scenario | null => {
   });
 
   const totalWeight = weighted.reduce((sum, x) => sum + x.weight, 0);
-  let random = Math.random() * totalWeight;
+  let random = rand() * totalWeight;
 
   for (const item of weighted) {
     random -= item.weight;
@@ -2350,7 +2386,7 @@ export const generateLifeEvent = (state: GameState): Scenario | null => {
     }
   }
   
-  return tailorAssetOwnerEvent(eligible[Math.floor(Math.random() * eligible.length)], state);
+  return tailorAssetOwnerEvent(eligible[Math.floor(rand() * eligible.length)], state);
 };
 
 // ============================================
@@ -2361,7 +2397,7 @@ const generateNegotiationResult = (negotiateType: string, state: GameState): Sce
   const perkBonus = getCharacterPerkEffects(state).negotiationBonus ?? 0;
   const networkingBonus = (state.stats.networking || 50) / 100 + perkBonus;
   const baseSuccessChance = 0.5 + (clamp(networkingBonus, 0, 1) * 0.3); // 50-80% base chance
-  const isSuccessful = Math.random() < baseSuccessChance;
+  const isSuccessful = rand() < baseSuccessChance;
   
   const negotiations: { [key: string]: { success: Scenario; failure: Scenario } } = {
     'salary_raise_15': {
@@ -2673,7 +2709,7 @@ export const applyScenarioOutcome = (state: GameState, outcome: any): GameState 
   // Handle marriage
   if (outcome.marriageChange) {
     const names = ['Taylor', 'Jordan', 'Casey', 'Morgan', 'Riley', 'Quinn', 'Avery', 'Cameron'];
-    const spouseIncome = Math.round((state.career?.salary || 4000) * (0.6 + Math.random() * 0.8));
+    const spouseIncome = Math.round((state.career?.salary || 4000) * (0.6 + rand() * 0.8));
     
     newState.family = {
       ...newState.family,
@@ -2696,14 +2732,14 @@ export const applyScenarioOutcome = (state: GameState, outcome: any): GameState 
   // Handle wedding (after engagement)
   if (state.pendingScenario?.id === 'wedding_planning' && state.family?.isEngaged) {
     const names = ['Taylor', 'Jordan', 'Casey', 'Morgan', 'Riley', 'Quinn', 'Avery', 'Cameron'];
-    const spouseIncome = Math.round((state.career?.salary || 4000) * (0.6 + Math.random() * 0.8));
-    const spouseCareer = ['TECH', 'HEALTHCARE', 'FINANCE', 'CREATIVE', 'GOVERNMENT'][Math.floor(Math.random() * 5)] as CareerPath;
+    const spouseIncome = Math.round((state.career?.salary || 4000) * (0.6 + rand() * 0.8));
+    const spouseCareer = ['TECH', 'HEALTHCARE', 'FINANCE', 'CREATIVE', 'GOVERNMENT'][Math.floor(rand() * 5)] as CareerPath;
     
     newState.family = {
       ...newState.family,
       isEngaged: false,
       spouse: {
-        name: names[Math.floor(Math.random() * names.length)],
+        name: names[Math.floor(rand() * names.length)],
         income: spouseIncome,
         careerPath: spouseCareer,
         marriedMonth: state.month
@@ -2716,7 +2752,7 @@ export const applyScenarioOutcome = (state: GameState, outcome: any): GameState 
     const childNames = ['Emma', 'Liam', 'Olivia', 'Noah', 'Ava', 'Ethan', 'Sophia', 'Mason', 'Isabella', 'Lucas'];
     const newChild: Child = {
       id: 'child-' + Date.now(),
-      name: childNames[Math.floor(Math.random() * childNames.length)],
+      name: childNames[Math.floor(rand() * childNames.length)],
       birthMonth: state.month + 9, // Born in 9 months
       age: 0,
       inSchool: false,
@@ -2758,7 +2794,7 @@ export const applyScenarioOutcome = (state: GameState, outcome: any): GameState 
     const incomeMultiplier = clamp(typeof d.incomeMultiplier === 'number' ? d.incomeMultiplier : 1, 0, 1);
 
     const disruption = {
-      id: `disruption-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      id: `disruption-${Date.now()}-${rand().toString(36).slice(2, 7)}`,
       assetId: d.assetId,
       monthsRemaining: months,
       incomeMultiplier,
@@ -2924,7 +2960,7 @@ export const applyMonthlyAction = (
       applyStats({ networking: +12, stress: +5, happiness: +2, energy: -5 });
 
       // Small chance of an immediate referral (fun moment)
-      if (Math.random() < 0.2) {
+      if (rand() < 0.2) {
         newState.cash += 500;
         applyStats({ networking: +3 });
         description = 'You met someone who sent you a warm referral (+$500) and expanded your network.';
@@ -3096,7 +3132,15 @@ export const calculateCreditScoreUpdate = (
 };
 export const processTurn = (state: GameState): { newState: GameState; monthlyReport: MonthlyReport } => {
   let newState = { ...state };
-  
+
+  // Daily challenge: deterministic world. Re-seed the sim RNG for this month
+  // so market transitions and event draws match for everyone on today's seed.
+  if (state.challenge) {
+    seedSimForMonth(state.challenge.seed, state.month);
+  } else {
+    clearSimSeed();
+  }
+
   // Initialize credit rating if not set
   if (!newState.creditRating) {
     newState.creditRating = 650; // Starting credit rating
@@ -3348,6 +3392,13 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
     const event = generateLifeEvent(newState);
     if (event) {
       newState.pendingScenario = event;
+      // Daily challenge: remember faced events for the share card.
+      if (newState.challenge) {
+        newState.challengeEvents = [
+          ...(newState.challengeEvents || []),
+          { month: newState.month, title: event.title }
+        ].slice(-200);
+      }
       if (newState.eventQueue && newState.eventQueue.length > 0) {
         newState.eventQueue = newState.eventQueue.filter(entry => !(entry.id === event.id && entry.minMonth <= newState.month));
       }
@@ -3386,11 +3437,12 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
   // 15. Trim events
   newState.events = newState.events.slice(0, 50);
   
-  // 16. Track net worth history (keep last 60 months = 5 years)
+  // 16. Track net worth history (keep last 60 months = 5 years; challenges
+  // keep the full run so the share card can draw the whole curve)
   newState.netWorthHistory = [
     ...(state.netWorthHistory || []),
     { month: newState.month, value: newNetWorth }
-  ].slice(-60);
+  ].slice(newState.challenge ? -(newState.challenge.targetMonths + 1) : -60);
 
   // 16.5 Job loss shock countdown
   // Decrement AFTER cashflow is calculated (so you lose income for the full N months).
