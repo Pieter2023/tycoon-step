@@ -13,7 +13,11 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 ## Architecture (key files)
 
-- `App.tsx` — the entire adult game UI (~8k lines, single file; refactor candidate).
+- `App.tsx` — the adult game's state + orchestration (~6.3k lines after the
+  2026-06-11 modal extraction). All modals live in `components/modals/`;
+  all tab content is extracted AND lazy-loaded from `components/tabs/`.
+  What's left inside: ~4.4k lines of state/handlers, the v2 shell wiring,
+  and the ~800-line legacy header/tab-nav branch (`uiV2Enabled` false).
   Early returns: splash → character select → main render. Passing an
   `initialGameState` **with a character** skips character select entirely.
 - `ModeSelector.tsx` — entry point: access gate → mode cards
@@ -116,13 +120,16 @@ leaderboard), run summary card, learning counterfactuals (sell hindsights +
 year-in-review), cloud saves (sync code + accounts), email login with custom
 SMTP. Working tree clean; remote main == working branch.
 
-Leaderboard→accounts linking also shipped 2026-06-11 (later session); suite
-now 23 files / 150 tests. App.tsx split slice 1 (end-game modals →
-`components/modals/`) shipped the same session.
+Also shipped 2026-06-11 (later sessions): leaderboard→accounts linking
+(suite 23 files / 150 tests), and the **entire modal extraction phase of
+the App.tsx split** — all 20 modals now live in `components/modals/`
+(8 commits, one per risky modal), App.tsx 8467 → 6348 lines, suite green
+and verified live at every step.
 
 **The queue (details + cold-start context in `docs/roadmap.md`):**
-1. v2 shell migration / App.tsx split (big refactor — read
-   `docs/implementation-plan.md` first; extract inline modals, then tabs)
+1. App.tsx split, next phase: the v2-shell-vs-legacy decision (retire or
+   extract the ~800-line legacy header/tab-nav branch), then
+   state/handler organization (plan it fresh; don't mix with feature work)
 2. B2B classroom packs (one-page offer + outreach; bulk codes already work)
 
 Day-to-day workflow that worked well: build → test (`npm run test:run`) →

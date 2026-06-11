@@ -4,6 +4,26 @@
 **Date:** 2025-12-30
 **Status:** Discovery Complete - Ready for Prioritization
 
+> **Status update (2026-06-11):** this plan is from the Dec 2025 discovery;
+> much of it has since shipped. Done: **QW-8** (vitest is set up — the
+> suite is now 23 files / 150 tests), **M-4** (gameLogic has solid
+> coverage), **QW-7** (TABS/TabId constants exist in types.ts), **QW-6**
+> (TabErrorBoundary exists), **M-1** (all tab content extracted to
+> `components/tabs/` — 9 files — AND lazy-loaded via React.lazy, which
+> also covers the spirit of **M-5**), **M-2** (a `components/ui/` library
+> exists: Button/Badge/Card/Tooltip/Toast/AppShell + shared Modal), and
+> the **modal-extraction half of L-1** — all 20 inline modals moved to
+> `components/modals/` (App.tsx 8467 → 6348 lines; one commit per
+> gameplay modal). Still open and still accurate: QW-3 (useVideoPlayer
+> consolidation — the 8-hook video state machine survives in App.tsx, now
+> feeding the extracted TabIntroVideoModal via props), M-3/L-2 (state
+> management — the 44+ useState hooks remain), L-3 (strict TS), QW-4
+> (Tailwind config), M-6 (KidsApp is still statically imported by
+> ModeSelector). Remaining L-1 work: the ~800-line legacy header/tab-nav
+> shell branch (`uiV2Enabled` false) vs the `components/v2/` shells.
+> Line counts and the "no tests" claims below are HISTORICAL — see
+> `docs/roadmap.md` for current state.
+
 ---
 
 ## Quick Reference

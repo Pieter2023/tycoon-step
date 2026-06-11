@@ -1,8 +1,12 @@
 # 💰 Tycoon: Financial Freedom Simulator v3.4.3
 
-A fun and educational financial simulation game with **TWO modes**:
+A fun and educational financial simulation game with **four modes**:
 - **Adult Mode**: Full realistic financial simulation with careers, real estate, stocks, education, and life events
-- **Kids Mode** (NEW!): Simplified money management game for ages 8-10
+- **Daily Challenge**: everyone plays the same seeded world each day — a 10-year sprint scored by final net worth, with a shareable run card, streaks, and a daily leaderboard
+- **Kids Mode**: Simplified money management game for ages 8-10
+- **Multiplayer**: race friends to financial freedom at the same table (full version)
+
+Progress can sync across devices via cloud saves (private sync code or an email-linked account).
 
 ## 🔓 Access Model
 
@@ -134,4 +138,6 @@ Toggle sound on/off with the speaker icon. Fun sound effects for money earned, p
 
 ---
 
-**Version 2.4** - Kids Mode, Mode Selector, Bug Fixes
+**v3.4.x** — Daily Challenge + leaderboard, cloud saves & accounts, run
+summary cards, learning counterfactuals (sell hindsights + year-in-review),
+free demo / paid unlock, Kids Mode, Multiplayer

@@ -1,7 +1,9 @@
 # Roadmap
 
-**Last updated:** 2026-06-11 (post-marathon follow-up: leaderboard→accounts
-linking shipped + verified live). Suite: 23 files / 150 tests green.
+**Last updated:** 2026-06-11, late session (leaderboard→accounts linking +
+the FULL modal-extraction phase of the App.tsx split shipped, verified
+live, and deployed; App.tsx 8467 → 6348 lines). Suite: 23 files / 150
+tests green.
 **Next session starts at "Next build priorities" below.**
 
 ## Recently shipped (2026-06-10)
@@ -199,19 +201,32 @@ returned `{valid:true, source:'gumroad'}`.
   App.tsx: 7241 → 6348 lines** (8467 at day start; 19 files in
   components/modals/). Dead code spotted for a future sweep: the
   scenarioImage parallax springs/handlers in App.tsx are defined but
-  never attached to any element. Next: per-tab content extraction
-  (components/tabs/), then the v2-shell-vs-legacy-tabs decision.
+  never attached to any element. (Correction discovered while updating
+  docs: tab content was already fully extracted + lazy-loaded in
+  components/tabs/ — the next phase is the v2 shell decision and state
+  organization, not tabs; see "Next build priorities".)
 
 ## Next build priorities (in order)
 
-1. **Finish v2 shell migration / split App.tsx** (the big one — plan it
-   first, likely multiple sessions). App.tsx is ~8.2k lines and still
-   renders the legacy tab UI in places; `components/v2/` (DesktopShell /
-   MobileShell) is the target shell. See `docs/implementation-plan.md` and
-   `docs/architecture-map.md` before touching anything. Suggested approach:
-   extract the big inline modals first (victory/bankruptcy/annual-report/
-   challenge-end are self-contained), then per-tab components, keeping the
-   145-test suite green at every step. Don't mix this with feature work.
+1. **App.tsx split, phase 2: v2 shell decision + state organization**
+   (plan it first, likely multiple sessions). The modal phase is DONE
+   (2026-06-11 — all 20 modals in `components/modals/`, App.tsx
+   8467 → 6348 lines; see "Recently shipped" above for the slice-by-slice
+   record and what stayed controlled vs. moved). Tab content was ALREADY
+   fully extracted and lazy-loaded (`components/tabs/`, 9 files) before
+   this push — don't re-plan that. What actually remains in App.tsx:
+   - the **legacy-vs-v2 shell duality**: an ~800-line legacy header +
+     tab-nav + main-content branch renders when `uiV2Enabled` is false;
+     DashboardWidget tiles and tab-header Watch buttons only exist there.
+     Decide whether v2 absorbs those affordances or the legacy branch is
+     retired/extracted wholesale.
+   - ~4.4k lines of state + handlers (44+ useState hooks) — the M-3/L-2
+     state-management question from `docs/implementation-plan.md`.
+   - the 8-hook video state machine (QW-3 `useVideoPlayer` consolidation,
+     now feeding TabIntroVideoModal via props).
+   - dead scenarioImage parallax code (safe delete).
+   Same working rules: one slice per commit, suite green at every step,
+   verify live in the preview, don't mix with feature work.
 
 2. **B2B classroom packs** (business + light code). Bulk access codes
    already work via the `ACCESS_CODES` Netlify env var (comma-separated —
@@ -224,8 +239,12 @@ returned `{valid:true, source:'gumroad'}`.
 
 ## Known issues / debt
 
-- `App.tsx` ~8k lines single file; `App.tsx.backup`, `constants.ts.save`,
-  `tycoon-eq-upgrade-code-only.zip` are junk files on disk (now gitignored)
+- `App.tsx` ~6.3k lines (down from ~8.5k; legacy shell branch + state
+  organization pending);
+  `App.tsx.backup`, `constants.ts.save`, `tycoon-eq-upgrade-code-only.zip`
+  are junk files on disk (now gitignored)
+- Dead code in App.tsx: scenarioImage parallax motion values/springs/
+  handlers are defined but never attached (feature was removed upstream)
 - Build chunk-size warning (836KB main bundle) — code-split candidates exist
 - Multiplayer flow exists but is unpolished; deliberately deprioritized
 - Unlock state is client-side localStorage — fine at this price point;

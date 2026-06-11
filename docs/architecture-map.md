@@ -4,6 +4,22 @@
 **Last Updated:** 2025-12-30
 **Document Type:** Technical Discovery & Planning
 
+> **Status update (2026-06-11):** this map is from the Dec 2025 discovery
+> and is partially stale. What changed since: App.tsx is ~6.3k lines (was
+> 6.5k→8.5k→6.3k; ALL modals now live in `components/modals/` — 20 files);
+> a real test suite exists (vitest, 23 files / 150 tests — section 9's
+> "no tests" is historical); `components/` grew `ui/` (Button/Modal/Card/
+> Badge/Tooltip/Toast/AppShell), `tabs/`, `v2/` (DesktopShell/MobileShell
+> — the newer shell), `modals/`, and `customAvatar/`; services grew
+> `dailyChallenge`, `leaderboard`, `cloudSave`, `auth`, `accessControl`,
+> `tabState` (Supabase: daily leaderboard, cloud saves, accounts); entry
+> flow gained a server-validated access gate + Gumroad monetization and a
+> Daily Challenge mode (seeded determinism through gameLogic's `rand()`).
+> Section 10's "tab content not lazy-loaded" is fixed — all tab content
+> is extracted to `components/tabs/` (9 files) and React.lazy'd. The
+> state-management picture (44+ useState hooks in App.tsx) is still
+> accurate. For current state always start at CLAUDE.md + docs/roadmap.md.
+
 ---
 
 ## 1. Technology Stack
