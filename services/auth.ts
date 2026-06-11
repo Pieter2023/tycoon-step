@@ -45,8 +45,18 @@ const toAccount = (session: Session | null): AccountInfo | null => {
 /** Current account, or null when signed out / unreachable. */
 export const getAccount = async (): Promise<AccountInfo | null> => {
   try {
-    const { data } = await getSupabase().auth.getSession();
-    return toAccount(data.session);
+    const supa = getSupabase();
+    const { data } = await supa.auth.getSession();
+    if (!data.session?.user) return null;
+    // getSession serves the cached user, which goes stale after an email is
+    // confirmed in another tab — ask the server for the authoritative record.
+    const { data: fresh, error } = await supa.auth.getUser();
+    if (error || !fresh.user) return toAccount(data.session);
+    return {
+      userId: fresh.user.id,
+      email: fresh.user.email || null,
+      isAnonymous: !!fresh.user.is_anonymous
+    };
   } catch {
     return null;
   }
@@ -79,7 +89,10 @@ export const linkEmail = async (email: string): Promise<{ ok: boolean; message: 
   }
   try {
     await ensureSignedIn();
-    const { error } = await getSupabase().auth.updateUser({ email: address });
+    const { error } = await getSupabase().auth.updateUser(
+      { email: address },
+      { emailRedirectTo: window.location.origin }
+    );
     if (error) {
       if (/already.*registered|exists/i.test(error.message)) {
         return { ok: false, message: 'That email already has an account — use "sign in" instead.' };
@@ -101,7 +114,7 @@ export const signInWithEmail = async (email: string): Promise<{ ok: boolean; mes
   try {
     const { error } = await getSupabase().auth.signInWithOtp({
       email: address,
-      options: { shouldCreateUser: true }
+      options: { shouldCreateUser: true, emailRedirectTo: window.location.origin }
     });
     if (error) return { ok: false, message: error.message };
     return { ok: true, message: `Magic link sent to ${address} — open it on this device.` };

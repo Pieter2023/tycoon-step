@@ -119,11 +119,15 @@ returned `{valid:true, source:'gumroad'}`.
 
 ## Next build priorities (in order)
 
-1. **Test the email account flow end-to-end** (Pieter, ~3 min): Manage
-   Saves → Cloud Sync → enter your email → "Link email" → click the
-   confirmation link → panel should show your email; then on another
-   browser "Sign in instead" → magic link → "Restore from my account".
-2. **Custom SMTP (Resend)** before telling players about email login.
+1. ~~Test the email account flow end-to-end~~ ✓ done 2026-06-11 with a real
+   inbox (pieterhouseofrealtors@gmail.com): link-email confirmation upgraded
+   the guest account, magic link signed into a second browser, "Restore from
+   my account" pulled the save down. Two fixes landed from the test:
+   emailRedirectTo now uses window.location.origin, and getAccount uses
+   getUser() so a confirmation done in another tab shows up immediately.
+   Test account deleted afterwards — the email is free to use for real.
+2. **Custom SMTP (Resend)** before telling players about email login
+   (built-in mailer ≈ 2-4 emails/hour).
 3. **Daily leaderboard names → accounts** (optional polish): attach
    user_id to daily_scores so names follow accounts.
 4. **Finish v2 shell migration** — App.tsx still renders legacy tab UI in
