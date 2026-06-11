@@ -144,8 +144,21 @@ B2B classroom packs.
   blocked live). `uploadCloudSave` prefers the account slot, falls back to
   the sync code; Save Manager shows account status, link/sign-in/sign-out,
   and "Restore from my account" (email accounts).
-- **Email caveat**: Supabase built-in mailer ≈ 2-4 emails/hour — fine for
-  testing; set up custom SMTP (e.g. Resend) before promoting email login.
+- **Email flow verified end-to-end 2026-06-11** with a real inbox
+  (pieterhouseofrealtors@gmail.com — that's the Gmail connected to Claude's
+  MCP): link-email confirmation upgraded a guest account, magic link signed
+  into a second browser, account restore worked. Test user deleted after.
+- **Custom SMTP (Resend) — IN PROGRESS, needs Pieter's paste**: Supabase
+  built-in mailer ≈ 2-4 emails/hour. Resend account exists
+  (pieterhouseofrealtors), verified domains: **prismaiservices.ca** and
+  rentalpropdocs.co.za (houseofrealtors.co.za FAILED verification). Chosen
+  sender: `noreply@prismaiservices.ca`. Exact values for the Supabase form
+  (Authentication → Emails → SMTP Settings on project tycoon): host
+  `smtp.resend.com`, port `465`, username `resend`, password = a Resend API
+  key (resend.com/api-keys, "Sending access" permission). After saving, bump
+  Auth → Rate Limits → email rate (default becomes 30/hr). Claude cannot
+  paste API keys into fields — Pieter does that step. VERIFY after: trigger
+  a magic link and check the From address is Tycoon <noreply@prismaiservices.ca>.
 
 ## Learning counterfactuals (built 2026-06-11)
 
