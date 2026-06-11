@@ -14,7 +14,7 @@ export const DEMO_MONTH_LIMIT = 36;
 
 // Where players buy an access code. Leave empty to hide buy links in the UI
 // until the store page exists.
-export const PURCHASE_URL = '';
+export const PURCHASE_URL = 'https://pieterrealtor.gumroad.com/l/tycoon';
 
 export const getAccessTier = (): AccessTier => {
   try {
