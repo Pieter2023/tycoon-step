@@ -19,3 +19,5 @@ export { default as QuickTutorialModal, QUICK_TUTORIAL_STORAGE_KEY } from './Qui
 export { default as TutorialModal, TUTORIAL_TIPS } from './TutorialModal';
 export { default as MortgageModal } from './MortgageModal';
 export type { MortgagePreview } from './MortgageModal';
+export { default as TurnPreviewModal } from './TurnPreviewModal';
+export type { TurnPreviewData, TurnPreviewLine } from './TurnPreviewModal';
