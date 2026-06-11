@@ -25,6 +25,7 @@ import { GLOSSARY_ENTRIES, QUIZ_DEFINITIONS, getQuizDefinition } from './data/le
 import TabErrorBoundary from './components/TabErrorBoundary';
 import Modal from './components/Modal';
 import ChallengeShareCard from './components/ChallengeShareCard';
+import DailyLeaderboard from './components/DailyLeaderboard';
 import { getDailyStreak } from './services/dailyChallenge';
 import QuestLog from './components/QuestLog';
 import { Button, Badge, Card, Tooltip } from './components/ui';
@@ -6335,6 +6336,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
             netWorth={netWorth}
             onClose={onBackToMenu}
           />
+          <div className="mt-4 flex justify-center">
+            <DailyLeaderboard gameState={gameState} netWorth={netWorth} />
+          </div>
         </Modal>
       )}
 

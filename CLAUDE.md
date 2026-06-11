@@ -8,7 +8,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (20 files / 123 tests, all green as of 2026-06-11)
+- `npm run test:run` — vitest suite (22 files / 137 tests, all green as of 2026-06-11)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)
@@ -107,6 +107,23 @@ playtest, streak nudge, OG tags), the run summary card for normal games,
 and learning counterfactuals all done later that day. See `docs/roadmap.md`
 for the queue: Supabase accounts + daily leaderboard, v2 shell migration,
 B2B classroom packs.
+
+## Daily leaderboard / Supabase (built 2026-06-11)
+
+- Supabase project **tycoon** (ref `bvsqnhtlwklexyijvexw`, us-east-1, $10/mo
+  on Pieter's org). Table `public.daily_scores`: one row per
+  (challenge_id, client_id) — unique constraint = one score per device/day.
+- Client talks straight to PostgREST with the **publishable** key (hardcoded
+  in `services/leaderboard.ts` — safe by design). RLS: SELECT + INSERT only;
+  UPDATE/DELETE have no policies (verified live: PATCH/DELETE are no-ops).
+  Value sanity enforced by CHECK constraints (name ≤20 chars, score bounds,
+  outcome enum, challenge_id date format).
+- UI: `components/DailyLeaderboard.tsx` inside the challenge end overlay —
+  name input (persisted `tycoon_player_name`), submit once
+  (`tycoon_client_id` device id), today's top 10 + "You're #N today" rank.
+  Degrades gracefully offline ("Leaderboard unavailable").
+- Tests: `services/leaderboard.test.ts`, `components/DailyLeaderboard.test.tsx`.
+- Still parked for the full milestone: Supabase auth accounts + cloud saves.
 
 ## Learning counterfactuals (built 2026-06-11)
 

@@ -90,11 +90,21 @@ returned `{valid:true, source:'gumroad'}`.
   - Tests: `services/counterfactuals.test.ts` (13) — suite 20 files / 123.
     Verified live in dev: modal math correct, hindsight event fired at +12mo.
 
+- **Daily-challenge leaderboard** (the 80%-value slice of the Supabase
+  milestone) — done same day: Supabase project `tycoon`
+  (ref bvsqnhtlwklexyijvexw, us-east-1, $10/mo), `daily_scores` table with
+  insert/select-only RLS + one-score-per-device-per-day unique constraint
+  (PATCH/DELETE verified blocked live). `services/leaderboard.ts` (publishable
+  key, PostgREST direct), `components/DailyLeaderboard.tsx` in the challenge
+  end overlay: submit name + score, today's top 10, "You're #N today".
+  14 new tests; suite 22 files / 137.
+
 ## Next build priorities (in order)
 
-1. **Cloud save + accounts (Supabase)** — unlocks daily-challenge leaderboard,
-   cross-device play, and knowing who players are. Park real-time multiplayer;
-   async leaderboard competition is 80% of the value for 5% of the work.
+1. **Supabase accounts + cloud saves** — the rest of the milestone: auth
+   (magic link or anonymous-upgrade), cross-device saves, names tied to
+   accounts instead of localStorage. Leaderboard table is ready to gain a
+   user_id column later.
 2. **Finish v2 shell migration** — App.tsx still renders legacy tab UI in
    places; also consider splitting App.tsx (8k lines) per
    `docs/implementation-plan.md`.
