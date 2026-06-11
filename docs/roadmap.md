@@ -181,6 +181,27 @@ returned `{valid:true, source:'gumroad'}`.
   Still inline: scenario, turn-preview, mortgage, save-manager,
   intro-video — the truly gameplay-coupled set.
 
+- **App.tsx split, slices 4–8: gameplay modals, one commit each** — done
+  2026-06-11 (same session). MortgageModal (presentational; App keeps
+  buildMortgagePreview + the confirm-dialog step; covered by the
+  existing integration test), TurnPreviewModal (Quick Fixes UI in the
+  component; goTo/useAction side effects stay as an App prelude;
+  verified live — Next → preview → Advance Month), ScenarioModal
+  (category emoji/bg ternary chains → lookup maps; coach ref + dead
+  parallax ref passed as props; verified live — event fired, image
+  lightbox opened, choice resolved into the timeline),
+  TabIntroVideoModal (fully controlled; the 8-hook video state machine
+  stays in App pending the QW-3 useVideoPlayer consolidation;
+  compile-verified — Watch entry points only render in month-1/legacy
+  states), SaveManagerModal (controlled; label drafts + import state
+  stay in App because handleImportSave reads them; verified live —
+  save to slot, load, manager closes). **All modals are now out of
+  App.tsx: 7241 → 6348 lines** (8467 at day start; 19 files in
+  components/modals/). Dead code spotted for a future sweep: the
+  scenarioImage parallax springs/handlers in App.tsx are defined but
+  never attached to any element. Next: per-tab content extraction
+  (components/tabs/), then the v2-shell-vs-legacy-tabs decision.
+
 ## Next build priorities (in order)
 
 1. **Finish v2 shell migration / split App.tsx** (the big one — plan it

@@ -24,3 +24,4 @@ export type { TurnPreviewData, TurnPreviewLine } from './TurnPreviewModal';
 export { default as ScenarioModal } from './ScenarioModal';
 export { default as TabIntroVideoModal } from './TabIntroVideoModal';
 export type { TabIntroVideoConfig } from './TabIntroVideoModal';
+export { default as SaveManagerModal } from './SaveManagerModal';

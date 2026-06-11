@@ -29,12 +29,13 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 - `constants.ts` — careers, investments, events, education, difficulty settings
 - `data/events.json` — additional life events
 - `components/v2/` — newer shell UI (DesktopShell sidebar / MobileShell bottom-nav)
-- `components/modals/` — modals extracted from App.tsx (victory, bankruptcy,
-  challenge-end, run-summary, annual-report, confirm-dialog, accessibility,
-  image-lightbox, emergency-cash, glossary, side-hustle-upgrade,
-  market-special, dashboard-detail, quick-tutorial, tutorial); visibility
-  conditions still live in App.tsx render. Owns the ConfirmDialogConfig,
-  AccessibilityPrefs, MarketSpecialAction types + TUTORIAL_TIPS and
+- `components/modals/` — ALL of App.tsx's modals now live here (20 of them:
+  end-game, utility, event/onboarding, and the gameplay set — scenario,
+  turn-preview, mortgage, market-special, save-manager, tab-intro-video).
+  Visibility conditions + state stay in App.tsx render (the gameplay ones
+  are controlled components). Owns the ConfirmDialogConfig,
+  AccessibilityPrefs, MarketSpecialAction, MortgagePreview,
+  TurnPreviewData, TabIntroVideoConfig types + TUTORIAL_TIPS and
   QUICK_TUTORIAL_STORAGE_KEY. App.tsx no longer imports recharts.
 - `KidsApp.tsx` — separate simplified kids mode
 - `docs/architecture-map.md` — deeper technical map (from Dec 2025 discovery)
