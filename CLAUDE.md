@@ -148,17 +148,14 @@ B2B classroom packs.
   (pieterhouseofrealtors@gmail.com — that's the Gmail connected to Claude's
   MCP): link-email confirmation upgraded a guest account, magic link signed
   into a second browser, account restore worked. Test user deleted after.
-- **Custom SMTP (Resend) — IN PROGRESS, needs Pieter's paste**: Supabase
-  built-in mailer ≈ 2-4 emails/hour. Resend account exists
-  (pieterhouseofrealtors), verified domains: **prismaiservices.ca** and
-  rentalpropdocs.co.za (houseofrealtors.co.za FAILED verification). Chosen
-  sender: `noreply@prismaiservices.ca`. Exact values for the Supabase form
-  (Authentication → Emails → SMTP Settings on project tycoon): host
-  `smtp.resend.com`, port `465`, username `resend`, password = a Resend API
-  key (resend.com/api-keys, "Sending access" permission). After saving, bump
-  Auth → Rate Limits → email rate (default becomes 30/hr). Claude cannot
-  paste API keys into fields — Pieter does that step. VERIFY after: trigger
-  a magic link and check the From address is Tycoon <noreply@prismaiservices.ca>.
+- **Custom SMTP (Resend) — LIVE 2026-06-11**: auth emails send from
+  `Tycoon <noreply@prismaiservices.ca>` via smtp.resend.com:465 (username
+  `resend`, password = Resend API key `tycoon-supabase-smtp`, set in
+  Supabase → Authentication → Emails → SMTP Settings). Verified live.
+  Rate limit 30 emails/hr (adjustable under Auth → Rate Limits). Resend
+  verified domains: prismaiservices.ca, rentalpropdocs.co.za
+  (houseofrealtors.co.za failed verification — fix DNS if it's ever wanted
+  as the sender). Email login is production-ready.
 
 ## Learning counterfactuals (built 2026-06-11)
 

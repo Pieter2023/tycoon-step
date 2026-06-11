@@ -126,19 +126,11 @@ returned `{valid:true, source:'gumroad'}`.
    emailRedirectTo now uses window.location.origin, and getAccount uses
    getUser() so a confirmation done in another tab shows up immediately.
    Test account deleted afterwards — the email is free to use for real.
-2. **Custom SMTP (Resend) — 90-second manual step for Pieter** (Claude can't
-   paste API keys; automation also fights his password-manager extension):
-   a. resend.com/api-keys → Create API key (name `tycoon-supabase-smtp`,
-      permission "Sending access") → copy it.
-   b. supabase.com/dashboard → project **tycoon** → Authentication →
-      Emails → SMTP Settings → toggle ON and fill:
-      Sender email `noreply@prismaiservices.ca` (verified Resend domain) ·
-      Sender name `Tycoon` · Host `smtp.resend.com` · Port `465` ·
-      Username `resend` · Password = the API key → Save.
-   c. Optional: Authentication → Rate Limits → raise email rate (default
-      becomes 30/hr once custom SMTP is on).
-   d. Tell Claude — verification = send a magic link, check the From
-      address is Tycoon <noreply@prismaiservices.ca>.
+2. ~~Custom SMTP (Resend)~~ ✓ done 2026-06-11: Pieter pasted the Resend API
+   key into Supabase SMTP settings; verified live — auth email arrived from
+   `noreply@prismaiservices.ca` via Resend. Rate limit now 30 emails/hr
+   (raise under Authentication → Rate Limits if ever needed). Email login
+   is fully production-ready.
 3. **Daily leaderboard names → accounts** (optional polish): attach
    user_id to daily_scores so names follow accounts.
 4. **Finish v2 shell migration** — App.tsx still renders legacy tab UI in
