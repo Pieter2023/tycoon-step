@@ -74,19 +74,31 @@ returned `{valid:true, source:'gumroad'}`.
   ("Run summary card"). Tests in `components/ChallengeShareCard.test.ts`
   (suite 19 files / 110 tests).
 
+- **Learning counterfactuals** (former priority 1) — done same day:
+  - **Sell hindsights**: selling an asset creates a "ghost holding"
+    (`GameState.soldPositions`) that tracks what it would be worth if held,
+    on the market's expected path (no rand() draws — daily-challenge
+    determinism proven by test). 12 months later a 🎓 Hindsight one-liner
+    lands in the event feed ("would be worth $X today (+45%). Selling in a
+    downturn locks in losses").
+  - **Year-in-review modal** (normal games only): each January, net worth
+    start→end, market gains + passive income for the year, and the benchmark
+    "without your investments you'd have ended at $X — your money earned $Y
+    on its own". Hindsights resolved during the year are repeated there.
+    Autoplay pauses while it's up. Powered by `GameState.yearStats`
+    accumulators (reset each January) + transient `annualReport`.
+  - Tests: `services/counterfactuals.test.ts` (13) — suite 20 files / 123.
+    Verified live in dev: modal math correct, hindsight event fired at +12mo.
+
 ## Next build priorities (in order)
 
-1. **Learning counterfactuals** — after big decisions show the one-line
-   "what would have happened" (e.g. sold in a trough vs held); end-of-year
-   report comparing player vs a sensible benchmark. This is the feature
-   teachers/parents will share.
-2. **Cloud save + accounts (Supabase)** — unlocks daily-challenge leaderboard,
+1. **Cloud save + accounts (Supabase)** — unlocks daily-challenge leaderboard,
    cross-device play, and knowing who players are. Park real-time multiplayer;
    async leaderboard competition is 80% of the value for 5% of the work.
-3. **Finish v2 shell migration** — App.tsx still renders legacy tab UI in
+2. **Finish v2 shell migration** — App.tsx still renders legacy tab UI in
    places; also consider splitting App.tsx (8k lines) per
    `docs/implementation-plan.md`.
-4. **B2B classroom packs** — bulk codes via `ACCESS_CODES` already work;
+3. **B2B classroom packs** — bulk codes via `ACCESS_CODES` already work;
    needs a one-page offer + outreach to US personal-finance teachers
    (25+ states mandate the course), credit unions, fee-only advisors.
 

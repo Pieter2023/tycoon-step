@@ -8,7 +8,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (19 files / 110 tests, all green as of 2026-06-11)
+- `npm run test:run` — vitest suite (20 files / 123 tests, all green as of 2026-06-11)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)
@@ -103,6 +103,22 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 ## Current state & next steps
 
 Daily challenge shipped + verified live 2026-06-11; follow-ups (full-run
-playtest, streak nudge, OG tags) and the run summary card for normal games
-done later that day. See `docs/roadmap.md` for the queue: learning
-counterfactuals, Supabase accounts + daily leaderboard.
+playtest, streak nudge, OG tags), the run summary card for normal games,
+and learning counterfactuals all done later that day. See `docs/roadmap.md`
+for the queue: Supabase accounts + daily leaderboard, v2 shell migration,
+B2B classroom packs.
+
+## Learning counterfactuals (built 2026-06-11)
+
+- **Sell hindsights**: `handleSellAsset` (App.tsx) records a "ghost holding"
+  in `GameState.soldPositions`; `updateSoldPositions` (gameLogic) grows it on
+  the market's *expected* path — deliberately NO `rand()` calls so
+  daily-challenge worlds stay in sync (regression test proves it). At
+  +12 months a 🎓 Hindsight event (type NEWS) lands in the feed.
+- **Year-in-review**: `GameState.yearStats` accumulates market gains
+  (in `updateAssetPrices`) + passive income (in `processTurn`); at each
+  January boundary `processTurn` emits transient `GameState.annualReport`
+  (normal games only — never for challenges). App.tsx shows the modal,
+  pauses autoplay, clears the field on dismiss; processTurn also clears it
+  every turn so a saved-undismissed report can't reappear forever.
+- Tests: `services/counterfactuals.test.ts`.

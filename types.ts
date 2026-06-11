@@ -614,6 +614,54 @@ export interface GameState {
   compoundInterestCourse?: CompoundInterestCourseState;
   autoInvest?: AutoInvestSettings;
   lastMonthlyReport?: MonthlyReport;
+
+  // ============================================
+  // Learning counterfactuals
+  // ============================================
+  // "Ghost holdings": when the player sells an asset we keep tracking what it
+  // would be worth had they held, on the market's expected path (no RNG draws,
+  // so daily-challenge determinism is preserved). 12 months after the sale a
+  // one-line hindsight event lands in the feed and the position is dropped.
+  soldPositions?: SoldPosition[];
+  // Rolling accumulators for the current game year (reset each January).
+  yearStats?: YearStats;
+  // Present only on the turn that crosses a year boundary; App.tsx shows the
+  // year-in-review modal and clears it on dismiss. Skipped for challenge runs.
+  annualReport?: AnnualReport;
+}
+
+export interface SoldPosition {
+  id: string;
+  name: string;
+  assetType: AssetType;
+  saleMonth: number;
+  /** What the player actually pocketed (gross, incl. negotiation bonus). */
+  saleValue: number;
+  /** Expected market value of the position today, had they held. */
+  heldValue: number;
+  industry?: string;
+  marketPhaseAtSale: string;
+}
+
+export interface YearStats {
+  /** Net worth at the start of the current game year. */
+  startNetWorth: number;
+  /** Sum of asset market-value changes this year (player's whole portfolio). */
+  marketGains: number;
+  /** Passive income collected this year. */
+  passiveIncome: number;
+  /** Resolved sell counterfactuals this year (for the annual report). */
+  hindsights: { month: number; text: string }[];
+}
+
+export interface AnnualReport {
+  /** The game year that just ended (1-based). */
+  year: number;
+  startNetWorth: number;
+  endNetWorth: number;
+  marketGains: number;
+  passiveIncome: number;
+  hindsights: { month: number; text: string }[];
 }
 
 export interface EQCourseState {

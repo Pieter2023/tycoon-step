@@ -5,7 +5,7 @@ import {
   GameState, Asset, Liability, Scenario, MarketTrend, MarketCyclePhase, AssetType,
   CareerPath, EducationCategory, EducationLevel, Mortgage, SideHustle, MonthlyReport,
   Child, Spouse, LifeEventCategory, MonthlyActionId, QuestState, QuestReward, QuestDefinition,
-  MarketItem
+  MarketItem, SoldPosition
 } from '../types';
 import { 
   CAREER_PATHS, LIFESTYLE_OPTS, DIFFICULTY_SETTINGS, AI_CAREER_IMPACT,
@@ -1386,7 +1386,8 @@ export const updateAssetPrices = (state: GameState): GameState => {
   
   // Recession impact is mild
   const recessionMult = state.economy?.recession ? 0.998 : 1.0;
-  
+
+  let marketGainsThisMonth = 0;
   newState.assets = state.assets.map(asset => {
     const newAsset = { ...asset };
     
@@ -1423,6 +1424,9 @@ export const updateAssetPrices = (state: GameState): GameState => {
     // Minimum value is 50% of cost basis, prevents assets from going to near-zero
     newAsset.value = Math.max(Math.round(asset.costBasis * 0.5), Math.round(asset.value * (1 + priceChange)));
     newAsset.priceHistory = [...asset.priceHistory, { month: state.month, value: newAsset.value }].slice(-24);
+
+    const qty = typeof asset.quantity === 'number' ? asset.quantity : 1;
+    marketGainsThisMonth += (newAsset.value - asset.value) * qty;
     
     // Update cash flow based on current value
     if (asset.baseYield) {
@@ -1440,7 +1444,116 @@ export const updateAssetPrices = (state: GameState): GameState => {
       age: v.age + (1/12)
     }));
   }
-  
+
+  // Year-in-review accumulator (vehicle depreciation excluded on purpose —
+  // the report is about investment performance, not consumption).
+  if (newState.yearStats) {
+    newState.yearStats = {
+      ...newState.yearStats,
+      marketGains: newState.yearStats.marketGains + marketGainsThisMonth
+    };
+  }
+
+  return newState;
+};
+
+// ============================================
+// LEARNING COUNTERFACTUALS (ghost holdings)
+// ============================================
+
+const fmtUSD = (v: number): string => `$${Math.round(v).toLocaleString('en-US')}`;
+
+const SOLD_POSITION_HORIZON = 12; // months until the hindsight line fires
+const MAX_SOLD_POSITIONS = 10;
+
+export { MAX_SOLD_POSITIONS };
+
+/**
+ * Expected monthly price change for a ghost holding — mirrors
+ * updateAssetPrices but takes the expected path (no volatility draw).
+ * Deliberately consumes NO rand() calls: extra draws would shift the RNG
+ * sequence and desync daily-challenge worlds between players.
+ */
+export const expectedHeldGrowth = (
+  state: GameState,
+  position: Pick<SoldPosition, 'assetType' | 'industry'>
+): number => {
+  const cycleMultipliers: { [key in MarketCyclePhase]: number } = {
+    'EXPANSION': 1.005,
+    'PEAK': 1.002,
+    'CONTRACTION': 0.997,
+    'TROUGH': 0.999
+  };
+  const baseMult = cycleMultipliers[state.marketCycle.phase] || 1;
+  const recessionMult = state.economy?.recession ? 0.998 : 1.0;
+  let priceChange = baseMult * recessionMult - 1;
+  const sectorMult = state.economy?.sectorPerformance?.[position.industry || 'diversified'] || 1;
+  priceChange *= sectorMult;
+  if (position.assetType === 'REAL_ESTATE') {
+    priceChange *= 0.3;
+    priceChange += 0.003;
+  }
+  if (position.assetType === 'BUSINESS') {
+    priceChange *= 0.5;
+    priceChange += 0.002;
+  }
+  return Math.max(-0.05, Math.min(0.05, priceChange));
+};
+
+/** One-line lesson for a resolved sell, phrased for the event feed. */
+export const buildHindsightText = (position: SoldPosition): string => {
+  const delta = position.heldValue - position.saleValue;
+  const pct = position.saleValue > 0 ? delta / position.saleValue : 0;
+  const pctLabel = `${pct >= 0 ? '+' : ''}${Math.round(pct * 100)}%`;
+  const soldInDownturn = position.marketPhaseAtSale === 'CONTRACTION' || position.marketPhaseAtSale === 'TROUGH';
+  if (pct >= 0.05) {
+    const lesson = soldInDownturn
+      ? 'Selling in a downturn locks in losses — markets usually recover.'
+      : 'Time in the market tends to beat timing the market.';
+    return `The ${position.name} you sold for ${fmtUSD(position.saleValue)} would be worth ${fmtUSD(position.heldValue)} today (${pctLabel}). ${lesson}`;
+  }
+  if (pct <= -0.05) {
+    return `Selling ${position.name} for ${fmtUSD(position.saleValue)} turned out well — it would be worth ${fmtUSD(position.heldValue)} today (${pctLabel}).`;
+  }
+  return `Selling ${position.name} barely mattered — it would be worth about the same today (${pctLabel}).`;
+};
+
+/**
+ * Advances ghost holdings one month along the expected market path; 12 months
+ * after a sale, drops a one-line hindsight into the event feed (and into the
+ * year stats so the annual report can repeat it).
+ */
+export const updateSoldPositions = (state: GameState): GameState => {
+  if (!state.soldPositions || state.soldPositions.length === 0) return state;
+  const newState = { ...state };
+  const remaining: SoldPosition[] = [];
+
+  for (const position of state.soldPositions) {
+    const grown: SoldPosition = {
+      ...position,
+      heldValue: Math.round(position.heldValue * (1 + expectedHeldGrowth(state, position)))
+    };
+    if (newState.month - grown.saleMonth < SOLD_POSITION_HORIZON) {
+      remaining.push(grown);
+      continue;
+    }
+    const text = buildHindsightText(grown);
+    newState.events = [{
+      id: `hindsight-${grown.id}`,
+      month: newState.month,
+      title: `🎓 Hindsight: ${grown.name}`,
+      description: text,
+      type: 'NEWS' as const
+    }, ...(newState.events || [])];
+    if (newState.yearStats) {
+      newState.yearStats = {
+        ...newState.yearStats,
+        hindsights: [...newState.yearStats.hindsights, { month: newState.month, text }]
+      };
+    }
+  }
+
+  newState.soldPositions = remaining;
   return newState;
 };
 
@@ -3152,10 +3265,32 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
   
   // 1. Advance time
   newState.month++;
+  // annualReport only lives for the boundary turn (App clears it on dismiss,
+  // this clears it for anyone who saved without dismissing).
+  newState.annualReport = undefined;
   if (newState.month % 12 === 1 && newState.month > 1) {
     newState.year = (newState.year || 2025) + 1;
     // Reset annual tax flag
     newState.eventTracker = { ...newState.eventTracker, taxesPaidThisYear: false };
+
+    // Year-in-review: close out the year's stats. The net worth here is as of
+    // the end of the year just finished (this turn's changes haven't run yet).
+    const endNetWorth = calculateNetWorth(state);
+    if (newState.yearStats && !newState.challenge) {
+      newState.annualReport = {
+        year: Math.floor((newState.month - 2) / 12) + 1,
+        startNetWorth: newState.yearStats.startNetWorth,
+        endNetWorth,
+        marketGains: Math.round(newState.yearStats.marketGains),
+        passiveIncome: Math.round(newState.yearStats.passiveIncome),
+        hindsights: newState.yearStats.hindsights
+      };
+    }
+    newState.yearStats = { startNetWorth: endNetWorth, marketGains: 0, passiveIncome: 0, hindsights: [] };
+  }
+  if (!newState.yearStats) {
+    // First turn (or legacy save): start accumulating from here.
+    newState.yearStats = { startNetWorth: calculateNetWorth(state), marketGains: 0, passiveIncome: 0, hindsights: [] };
   }
   
   // 2. Update AI disruption
@@ -3166,6 +3301,10 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
   
   // 4. Update asset prices (affected by economy)
   newState = updateAssetPrices(newState);
+
+  // 4.5 Ghost holdings: track what sold assets would be worth if held
+  // (deterministic — consumes no rand(), safe for daily challenges).
+  newState = updateSoldPositions(newState);
   
   // 5. Update education progress
   newState = updateEducation(newState);
@@ -3182,6 +3321,14 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
   const totalExpenses = cashFlow.expenses + businessUpdate.maintenanceCost;
   const netCashFlow = cashFlow.income - totalExpenses;
   const previousNetWorth = calculateNetWorth(state);
+
+  // Year-in-review accumulator
+  if (newState.yearStats) {
+    newState.yearStats = {
+      ...newState.yearStats,
+      passiveIncome: newState.yearStats.passiveIncome + cashFlow.passive
+    };
+  }
   
   // Check if player can afford expenses
   const projectedCash = newState.cash + netCashFlow;

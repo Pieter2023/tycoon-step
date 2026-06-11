@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useMotionValue, useSpring, useReducedMotion } 
 import { GameState, AssetType, MarketItem, Lifestyle, Character, Asset, SideHustle, EducationOption, Liability, PlayerConfig, MonthlyActionId, TABS, TabId, SideHustleUpgradeOption, EducationLevel, PlayerStats } from './types';
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, ALL_LIFE_EVENTS, AUTO_INVEST_PRESETS } from './constants';
-import { processTurn, calculateMonthlyCashFlowEstimate, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier, checkPromotion } from './services/gameLogic';
+import { processTurn, calculateMonthlyCashFlowEstimate, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier, checkPromotion, MAX_SOLD_POSITIONS } from './services/gameLogic';
 import { playMoneyGain, playMoneyLoss, playClick, playPurchase, playSell, playAchievement, playLevelUp, playVictory, playWarning, playTick, playNotification, playError, setMuted } from './services/audioService';
 import {
   saveAdultGame,
@@ -840,6 +840,12 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const [hudMenuOpen, setHudMenuOpen] = useState(false);
   // Run summary card for normal games (win / bankruptcy / anytime via HUD menu)
   const [showRunCard, setShowRunCard] = useState(false);
+
+  // Pause autoplay while the year-in-review modal is up so it can be read.
+  useEffect(() => {
+    if (gameState.annualReport && !gameState.challenge) setAutoPlaySpeed(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState.annualReport]);
   const tabUiStateRef = useRef<Record<TabId, TabUiState>>(createTabUiStateMap());
   const pendingScrollRestoreRef = useRef<TabId | null>(null);
   const prevTabRef = useRef<TabId>(activeTab);
@@ -3815,12 +3821,28 @@ const [gameState, setGameState] = useState<GameState>(() => {
         ? prev.mortgages.filter(m => m.id !== mortgage.id)
         : prev.mortgages;
 
+      // Ghost holding: keep tracking what this position would be worth if
+      // held — fuels the "Hindsight" counterfactual 12 months from now.
+      // heldValue starts at market value (negotiation bonus excluded: holding
+      // wouldn't have earned it... but the player DID pocket saleValue).
+      const soldPosition = {
+        id: `sold-${assetId}-${prev.month}`,
+        name: asset.name,
+        assetType: asset.type,
+        saleMonth: prev.month,
+        saleValue,
+        heldValue: baseSaleValue,
+        industry: asset.industry,
+        marketPhaseAtSale: prev.marketCycle.phase
+      };
+
       return {
         ...prev,
         cash: prev.cash + netProceeds,
         assets: prev.assets.filter(a => a.id !== assetId),
         liabilities: nextLiabilities,
         mortgages: nextMortgages,
+        soldPositions: [...(prev.soldPositions || []), soldPosition].slice(-MAX_SOLD_POSITIONS),
         events: [{
           id: Date.now().toString(),
           month: prev.month,
@@ -6413,6 +6435,82 @@ const [gameState, setGameState] = useState<GameState>(() => {
           />
         </Modal>
       )}
+
+      {/* Year in review (learning counterfactuals; normal games only) */}
+      {gameState.annualReport && !gameState.challenge && !gameState.isBankrupt && (() => {
+        const report = gameState.annualReport;
+        const nwDelta = report.endNetWorth - report.startNetWorth;
+        const investingEdge = report.marketGains + report.passiveIncome;
+        const cashOnlyNetWorth = report.endNetWorth - investingEdge;
+        const dismiss = () => setGameState(prev => ({ ...prev, annualReport: undefined }));
+        return (
+          <Modal
+            isOpen
+            onClose={dismiss}
+            ariaLabel="Year in review"
+            overlayClassName="bg-black/85"
+            contentClassName="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-lg w-full p-6"
+          >
+            <div className="text-center mb-5">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">Year in review</p>
+              <h2 className="text-2xl font-bold text-white mt-1">📅 Year {report.year} wrapped</h2>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4 grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-slate-400">Net worth</p>
+                <p className="text-white font-bold">{formatMoney(report.startNetWorth)} → {formatMoney(report.endNetWorth)}</p>
+              </div>
+              <div>
+                <p className="text-slate-400">Change</p>
+                <p className={`font-bold ${nwDelta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {nwDelta >= 0 ? '+' : ''}{formatMoney(nwDelta)}
+                </p>
+              </div>
+              <div>
+                <p className="text-slate-400">Market gains</p>
+                <p className={`font-bold ${report.marketGains >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {report.marketGains >= 0 ? '+' : ''}{formatMoney(report.marketGains)}
+                </p>
+              </div>
+              <div>
+                <p className="text-slate-400">Passive income</p>
+                <p className="text-amber-400 font-bold">+{formatMoney(report.passiveIncome)}</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-violet-400/30 bg-violet-400/10 p-4 mb-4">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-300 mb-1">What if you hadn't invested?</p>
+              <p className="text-sm text-slate-200">
+                Without your investments, you'd have ended the year at <span className="font-bold text-white">{formatMoney(cashOnlyNetWorth)}</span>.{' '}
+                {investingEdge > 0 ? (
+                  <>Your money earned <span className="font-bold text-emerald-300">{formatMoney(investingEdge)}</span> on its own — that's compounding working for you.</>
+                ) : investingEdge < 0 ? (
+                  <>Your portfolio lost <span className="font-bold text-red-300">{formatMoney(-investingEdge)}</span> this year. Paper losses only become real when you sell — downturns usually recover.</>
+                ) : (
+                  <>All of this year's progress came from work. Assets that pay you are how the climb gets easier.</>
+                )}
+              </p>
+            </div>
+
+            {report.hindsights.length > 0 && (
+              <div className="rounded-xl border border-slate-700 bg-slate-800/60 p-4 mb-4">
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400 mb-2">🎓 Hindsight</p>
+                {report.hindsights.map((h, i) => (
+                  <p key={i} className="text-sm text-slate-300 mb-1 last:mb-0">{h.text}</p>
+                ))}
+              </div>
+            )}
+
+            <button
+              onClick={dismiss}
+              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 rounded-xl font-bold text-white transition-all"
+            >
+              On to Year {report.year + 1} →
+            </button>
+          </Modal>
+        );
+      })()}
 
       {/* Quick Tutorial Modal */}
       {showQuickTutorial && gameStarted && !gameState.pendingScenario && !gameState.isBankrupt && (
