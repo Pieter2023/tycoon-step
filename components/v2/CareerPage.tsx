@@ -53,7 +53,7 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
       <section className="glass-panel p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${gameState.character?.avatarColor || 'from-slate-500 to-slate-600'} flex items-center justify-center text-2xl`}>
+            <div className={`h-14 w-14 rounded-lg bg-gradient-to-br ${gameState.character?.avatarColor || 'from-slate-500 to-slate-600'} flex items-center justify-center text-2xl`}>
               {CAREER_PATHS[careerPath]?.icon || '💼'}
             </div>
             <div>
@@ -65,7 +65,7 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
           <button
             type="button"
             onClick={() => setShowDetails(true)}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
           >
             View full career details
             <ChevronRight size={14} />
@@ -150,7 +150,7 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
             return (
               <div
                 key={level.title}
-                className={`flex items-center gap-3 rounded-2xl border p-3 ${
+                className={`flex items-center gap-3 rounded-lg border p-3 ${
                   isCurrent ? 'border-emerald-500/40 bg-emerald-600/10' : 'border-slate-800/60 bg-slate-900/40'
                 }`}
               >

@@ -1,6 +1,7 @@
 // Mode Selector with Multiplayer Support - v3.4.3
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, BookOpen, BriefcaseBusiness, LineChart, ShieldCheck, Trophy, Users, WalletCards } from 'lucide-react';
 import App from './App';
 import KidsApp from './KidsApp';
 import { KidsGameState } from './kidsTypes';
@@ -10,11 +11,12 @@ import { CAREER_PATHS, CHARACTERS, DIFFICULTY_SETTINGS, INITIAL_GAME_STATE } fro
 import { calculateMonthlyCashFlowEstimate, calculateNetWorth } from './services/gameLogic';
 import { useI18n } from './i18n';
 import CustomAvatarBuilder, { CustomAvatarResult } from './components/customAvatar/CustomAvatarBuilder';
+import UnlockModal from './components/UnlockModal';
+import { AccessTier, getAccessTier, setAccessTier, validateAccessCode } from './services/accessControl';
 
 type GameMode = 'select' | 'adult' | 'kids' | 'multiplayer-setup' | 'multiplayer-game';
 
 const AUTH_KEY = 'tycoon_authenticated';
-const CORRECT_PASSWORD = 'Bokke';
 
 const PLAYER_COLORS = [
   { bg: 'from-emerald-500 to-teal-600', border: 'border-emerald-500' },
@@ -58,6 +60,9 @@ const ModeSelector: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isValidating, setIsValidating] = useState(false);
+  const [accessTier, setAccessTierState] = useState<AccessTier>(() => getAccessTier());
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
   
   // Multiplayer state
   const [numPlayers, setNumPlayers] = useState(2);
@@ -107,16 +112,34 @@ const ModeSelector: React.FC = () => {
   }, [mode]);
 
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === CORRECT_PASSWORD) {
+    if (isValidating) return;
+    setIsValidating(true);
+    setError('');
+    const ok = await validateAccessCode(password);
+    setIsValidating(false);
+    if (ok) {
       safeLocalStorageSet(AUTH_KEY, 'true');
+      setAccessTier('full');
+      setAccessTierState('full');
       setIsAuthenticated(true);
-      setError('');
     } else {
       setError(t('modeSelector.auth.incorrectPassword'));
       setPassword('');
     }
+  };
+
+  const handleDemoStart = () => {
+    safeLocalStorageSet(AUTH_KEY, 'true');
+    setAccessTier('demo');
+    setAccessTierState('demo');
+    setIsAuthenticated(true);
+  };
+
+  const handleUnlocked = () => {
+    setAccessTierState('full');
+    setShowUnlockModal(false);
   };
 
   const handleLogout = () => {
@@ -278,7 +301,7 @@ const ModeSelector: React.FC = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-white text-xl">{t('modeSelector.loading')}</div>
       </div>
     );
@@ -287,14 +310,14 @@ const ModeSelector: React.FC = () => {
   // Login Screen
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="max-w-md w-full"
         >
           <div className="text-center mb-8">
-            <img src="/logo.jpg" alt="Tycoon" className="w-48 h-48 mx-auto rounded-2xl shadow-2xl mb-4" 
+            <img src="/favicon.svg" alt="Tycoon" className="w-24 h-24 mx-auto rounded-xl shadow-2xl mb-4" 
                  onError={(e) => { e.currentTarget.style.display = 'none'; }} />
             <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-green-300 to-cyan-300 mb-2">
               {t('modeSelector.title')}
@@ -331,13 +354,29 @@ const ModeSelector: React.FC = () => {
 
               <motion.button
                 type="submit"
+                disabled={isValidating}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold rounded-xl hover:from-emerald-600 hover:to-cyan-600 transition-all"
+                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold rounded-xl hover:from-emerald-600 hover:to-cyan-600 transition-all disabled:opacity-60 disabled:cursor-wait"
               >
-                {t('modeSelector.auth.enter')}
+                {isValidating ? t('modeSelector.auth.checking') : t('modeSelector.auth.enter')}
               </motion.button>
             </form>
+
+            <div className="flex items-center gap-3 my-5">
+              <div className="flex-1 h-px bg-slate-700" />
+              <span className="text-slate-500 text-xs uppercase tracking-wider">{t('modeSelector.auth.or')}</span>
+              <div className="flex-1 h-px bg-slate-700" />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleDemoStart}
+              className="w-full py-3 bg-slate-700/60 border border-slate-600 text-white font-bold rounded-xl hover:bg-slate-700 transition-all"
+            >
+              {t('modeSelector.auth.tryDemo')}
+            </button>
+            <p className="text-slate-500 text-xs text-center mt-2">{t('modeSelector.auth.demoHint')}</p>
           </div>
 
           <p className="text-center text-slate-500 text-sm mt-6">
@@ -548,7 +587,7 @@ const ModeSelector: React.FC = () => {
       }
     }
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
+      <div className="min-h-screen bg-slate-950 p-4">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <motion.div
@@ -766,8 +805,9 @@ const ModeSelector: React.FC = () => {
   if (mode === 'adult') {
     return (
       <App
-        onBackToMenu={() => setMode('select')}
+        onBackToMenu={() => { setAccessTierState(getAccessTier()); setMode('select'); }}
         initialGameState={adultResumeState || undefined}
+        accessTier={accessTier}
       />
     );
   }
@@ -781,39 +821,160 @@ const ModeSelector: React.FC = () => {
     );
   }
 
+  const launchStats = [
+    { label: 'Financial systems', value: '45+', icon: WalletCards },
+    { label: 'Life events', value: '80+', icon: ShieldCheck },
+    { label: 'Skill paths', value: '4', icon: BookOpen }
+  ];
+
+  const modeCards = [
+    {
+      title: 'Adult Simulation',
+      eyebrow: 'Full Experience',
+      body: 'Build income, manage debt, invest through cycles, and beat career disruption.',
+      Icon: BriefcaseBusiness,
+      onClick: () => { setAdultResumeState(null); setMode('adult'); },
+      cta: 'Start adult game',
+      image: '/event-images/ai_opportunity.webp',
+      tone: 'border-emerald-400/25 hover:border-emerald-300/70',
+      iconTone: 'bg-emerald-400 text-slate-950',
+      bullets: ['Command center', 'Investing engine', 'Career and lifestyle pressure']
+    },
+    {
+      title: 'Kids Mode',
+      eyebrow: 'Ages 8-10',
+      body: 'A simpler financial game focused on saving, goals, and money basics.',
+      Icon: BookOpen,
+      onClick: () => { setKidsResumeState(null); setMode('kids'); },
+      cta: 'Start kids game',
+      image: '/event-images/child_school.webp',
+      tone: 'border-cyan-400/25 hover:border-cyan-300/70',
+      iconTone: 'bg-cyan-300 text-slate-950',
+      bullets: ['Simple choices', 'Goal saving', 'Family friendly pacing']
+    },
+    {
+      title: 'Multiplayer',
+      eyebrow: '2-4 Players',
+      body: 'Run the race with different careers, difficulties, and strategy styles.',
+      Icon: Users,
+      onClick: () => {
+        if (accessTier === 'demo') {
+          setShowUnlockModal(true);
+          return;
+        }
+        setMode('multiplayer-setup');
+      },
+      cta: accessTier === 'demo' ? 'Unlock to play' : 'Set up match',
+      image: '/event-images/business_opportunity.webp',
+      tone: 'border-amber-400/25 hover:border-amber-300/70',
+      iconTone: 'bg-amber-300 text-slate-950',
+      bullets: ['Shared table play', 'Different starts', 'First to freedom wins']
+    }
+  ];
+
   // Mode Selection Screen
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-      <div className="max-w-5xl w-full">
-        {/* Title with Logo */}
+    <div className="min-h-screen bg-slate-950 p-4 text-white">
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-7xl flex-col">
         <motion.div
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="grid flex-1 items-center gap-8 py-6 lg:grid-cols-[1.08fr_0.92fr]"
         >
-          <img src="/logo.jpg" alt="Tycoon" className="w-40 h-40 mx-auto rounded-2xl shadow-2xl mb-4" 
-               onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-          <h1 className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-green-300 to-cyan-300 mb-4">
-            💰 TYCOON 💰
-          </h1>
-          <p className="text-xl text-white/70">Build Your Financial Empire</p>
+          <section>
+            <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.18em] text-emerald-200">
+              <LineChart size={15} />
+              Financial freedom simulator
+            </div>
+            <h1 className="mt-5 max-w-3xl text-5xl font-black leading-[0.95] tracking-normal text-white sm:text-6xl lg:text-7xl">
+              Build the life, not just the balance sheet.
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+              Tycoon turns investing, career risk, debt, education, and life events into one clear decision loop. Make the next month matter.
+            </p>
+
+            <div className="mt-7 grid gap-3 sm:grid-cols-3">
+              {launchStats.map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <div key={stat.label} className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+                    <div className="flex items-center justify-between">
+                      <Icon size={17} className="text-emerald-300" />
+                      <span className="text-2xl font-black text-white">{stat.value}</span>
+                    </div>
+                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">{stat.label}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="overflow-hidden rounded-lg border border-slate-800 bg-slate-900/60 shadow-[0_28px_70px_rgba(0,0,0,0.35)]">
+            <div className="relative h-72">
+              <img
+                src="/event-images/market_crash_opportunity.webp"
+                alt="Tycoon market opportunity"
+                className="h-full w-full object-cover"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-5">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200">Core loop</p>
+                <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs font-bold text-slate-200">
+                  <div className="rounded-md border border-white/10 bg-white/10 px-2 py-2">Earn</div>
+                  <div className="rounded-md border border-white/10 bg-white/10 px-2 py-2">Invest</div>
+                  <div className="rounded-md border border-white/10 bg-white/10 px-2 py-2">Advance</div>
+                </div>
+              </div>
+            </div>
+          </section>
         </motion.div>
+
+        {/* Demo banner */}
+        {accessTier === 'demo' && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-5 py-4"
+          >
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-300">Demo mode</p>
+              <p className="text-sm text-slate-300 mt-1">You're playing the free demo — 3 in-game years of the adult simulation. Unlock the full game for unlimited play and multiplayer.</p>
+            </div>
+            <button
+              onClick={() => setShowUnlockModal(true)}
+              className="rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 px-5 py-2.5 text-sm font-bold text-white transition hover:from-emerald-600 hover:to-cyan-600"
+            >
+              Unlock Full Game
+            </button>
+          </motion.div>
+        )}
+
+        <UnlockModal
+          open={showUnlockModal}
+          title="Unlock the Full Game"
+          description="Enter your access code to remove all limits."
+          perks={['Unlimited in-game years', 'Multiplayer for 2-4 players', 'All future updates']}
+          onUnlocked={handleUnlocked}
+          onClose={() => setShowUnlockModal(false)}
+        />
 
         {/* Continue Panel */}
         {(adultAutosave || kidsAutosave) && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-slate-800/70 backdrop-blur-sm border border-slate-700 rounded-2xl p-5 mb-6"
+            className="mb-6 rounded-lg border border-slate-800 bg-slate-900/70 p-5 backdrop-blur-sm"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-white font-bold text-lg">Continue where you left off</h3>
-                <p className="text-slate-400 text-sm">Autosave resumes your last session. Use Manage Saves to load manual slots.</p>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">Resume</p>
+                <h3 className="mt-1 text-lg font-bold text-white">Continue where you left off</h3>
+                <p className="text-sm text-slate-400">Autosave resumes your last session. Manage Saves lets you load manual slots.</p>
               </div>
               <button
                 onClick={() => { refreshSaves(); setShowSaveManager(true); }}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-white text-sm font-medium transition-all"
+                className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-bold text-white transition hover:border-slate-500"
               >
                 Manage Saves
               </button>
@@ -828,9 +989,9 @@ const ModeSelector: React.FC = () => {
                     setAdultResumeState(loaded);
                     setMode('adult');
                   }}
-                  className="text-left p-4 rounded-2xl bg-gradient-to-r from-emerald-600/30 to-cyan-600/20 border border-emerald-500/30 hover:border-emerald-500/60 transition-all"
+                  className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 p-4 text-left transition hover:border-emerald-300/70"
                 >
-                  <p className="text-white font-bold">▶ Continue (Adult)</p>
+                  <p className="flex items-center gap-2 font-bold text-white"><ArrowRight size={16} /> Continue Adult</p>
                   <p className="text-slate-300 text-sm mt-1">Year {Math.ceil((adultAutosave.month || 1) / 12)} • Month {(((adultAutosave.month || 1) - 1) % 12) + 1}</p>
                   <p className="text-slate-400 text-xs mt-1">Cash: ${(adultAutosave.cash || 0).toLocaleString()} • Net Worth: ${(adultAutosave.netWorth || 0).toLocaleString()}</p>
                 </button>
@@ -844,9 +1005,9 @@ const ModeSelector: React.FC = () => {
                     setKidsResumeState(loaded);
                     setMode('kids');
                   }}
-                  className="text-left p-4 rounded-2xl bg-gradient-to-r from-pink-500/30 to-indigo-500/20 border border-pink-400/30 hover:border-pink-400/60 transition-all"
+                  className="rounded-lg border border-cyan-400/25 bg-cyan-400/10 p-4 text-left transition hover:border-cyan-300/70"
                 >
-                  <p className="text-white font-bold">▶ Continue (Kids)</p>
+                  <p className="flex items-center gap-2 font-bold text-white"><ArrowRight size={16} /> Continue Kids</p>
                   <p className="text-slate-300 text-sm mt-1">Week {kidsAutosave.week || 1}</p>
                   <p className="text-slate-400 text-xs mt-1">Cash: ${(kidsAutosave.cashOnHand || 0).toLocaleString()} {kidsAutosave.savingsGoalName ? `• Goal: ${kidsAutosave.savingsGoalName}` : ''}</p>
                 </button>
@@ -958,112 +1119,65 @@ const ModeSelector: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Mode Selection */}
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Kids Mode */}
-          <motion.button
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            whileHover={{ scale: 1.03, y: -5 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => { setKidsResumeState(null); setMode('kids'); }}
-            className="relative bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-500 rounded-3xl p-6 text-left overflow-hidden group"
-          >
-            <div className="absolute inset-0 opacity-30">
-              <div className="absolute top-4 right-4 text-5xl animate-bounce">🎮</div>
+        <div className="mb-8">
+          <div className="mb-4 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Choose a mode</p>
+              <h2 className="mt-1 text-2xl font-bold text-white">Start with the version that fits the table.</h2>
             </div>
-            
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-4xl">🧒</span>
-                <div>
-                  <h2 className="text-xl font-bold text-white">Kids Mode</h2>
-                  <p className="text-white/70 text-sm">Ages 8-10</p>
-                </div>
-              </div>
-              
-              <ul className="space-y-1 text-white/90 text-sm mb-4">
-                <li>✓ Fun & simple</li>
-                <li>✓ Learn basics</li>
-                <li>✓ Save for goals</li>
-              </ul>
-              
-              <div className="bg-white/20 rounded-xl px-4 py-2 inline-block">
-                <span className="text-white font-medium">Play Solo →</span>
-              </div>
+            <div className="hidden items-center gap-2 text-xs font-semibold text-slate-500 sm:flex">
+              <Trophy size={15} className="text-amber-300" />
+              Progress saves automatically
             </div>
-          </motion.button>
+          </div>
 
-          {/* Adult Single Player */}
-          <motion.button
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            whileHover={{ scale: 1.03, y: -5 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => { setAdultResumeState(null); setMode('adult'); }}
-            className="relative bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 rounded-3xl p-6 text-left overflow-hidden group"
-          >
-            <div className="absolute inset-0 opacity-30">
-              <div className="absolute top-4 right-4 text-5xl">📈</div>
-            </div>
-            
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-4xl">👔</span>
-                <div>
-                  <h2 className="text-xl font-bold text-white">Single Player</h2>
-                  <p className="text-white/70 text-sm">Full Experience</p>
-                </div>
-              </div>
-              
-              <ul className="space-y-1 text-white/90 text-sm mb-4">
-                <li>✓ Full simulation</li>
-                <li>✓ Invest & grow</li>
-                <li>✓ Life events</li>
-              </ul>
-              
-              <div className="bg-white/20 rounded-xl px-4 py-2 inline-block">
-                <span className="text-white font-medium">Play Solo →</span>
-              </div>
-            </div>
-          </motion.button>
-
-          {/* Multiplayer */}
-          <motion.button
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            whileHover={{ scale: 1.03, y: -5 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => setMode('multiplayer-setup')}
-            className="relative bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-3xl p-6 text-left overflow-hidden group"
-          >
-            <div className="absolute inset-0 opacity-30">
-              <div className="absolute top-4 right-4 text-5xl">🏆</div>
-            </div>
-            
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-4xl">👥</span>
-                <div>
-                  <h2 className="text-xl font-bold text-white">Multiplayer</h2>
-                  <p className="text-white/70 text-sm">2-4 Players</p>
-                </div>
-              </div>
-              
-              <ul className="space-y-1 text-white/90 text-sm mb-4">
-                <li>✓ Play with family</li>
-                <li>✓ Different difficulties</li>
-                <li>✓ First to freedom wins!</li>
-              </ul>
-              
-              <div className="bg-white/20 rounded-xl px-4 py-2 inline-block">
-                <span className="text-white font-medium">Setup Game →</span>
-              </div>
-            </div>
-          </motion.button>
+          <div className="grid gap-4 md:grid-cols-3">
+            {modeCards.map((card, index) => {
+              const Icon = card.Icon;
+              return (
+                <motion.button
+                  key={card.title}
+                  initial={{ opacity: 0, y: 22 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.12 + index * 0.08 }}
+                  whileHover={{ y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={card.onClick}
+                  className={`group overflow-hidden rounded-lg border bg-slate-900/70 text-left shadow-[0_18px_45px_rgba(0,0,0,0.22)] transition ${card.tone}`}
+                >
+                  <div className="relative h-36 overflow-hidden">
+                    <img
+                      src={card.image}
+                      alt=""
+                      className="h-full w-full object-cover opacity-75 transition duration-500 group-hover:scale-105 group-hover:opacity-95"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/25 to-transparent" />
+                    <div className={`absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-lg ${card.iconTone}`}>
+                      <Icon size={20} />
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">{card.eyebrow}</p>
+                    <h3 className="mt-2 text-xl font-bold text-white">{card.title}</h3>
+                    <p className="mt-2 min-h-[72px] text-sm leading-6 text-slate-300">{card.body}</p>
+                    <div className="mt-4 space-y-2">
+                      {card.bullets.map((bullet) => (
+                        <div key={bullet} className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                          {bullet}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-5 inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/10 px-3 py-2 text-sm font-bold text-white">
+                      {card.cta}
+                      <ArrowRight size={15} />
+                    </div>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Footer */}

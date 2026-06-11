@@ -74,10 +74,10 @@ const ActionsScreen: React.FC<ActionsScreenProps> = ({
               key={item.id}
               type="button"
               onClick={() => setFilter(item.id)}
-              className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+              className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition ${
                 filter === item.id
-                  ? 'border-white/80 bg-white text-slate-950'
-                  : 'border-slate-700/70 text-slate-200 hover:border-white/30'
+                  ? 'border-emerald-400/30 bg-emerald-400 text-slate-950'
+                  : 'border-slate-700/70 text-slate-200 hover:border-emerald-400/40'
               }`}
             >
               {item.label}
@@ -94,7 +94,7 @@ const ActionsScreen: React.FC<ActionsScreenProps> = ({
                 onSelectAction(action.id);
               }}
               disabled={action.disabled}
-              className={`rounded-2xl border p-4 text-left transition ${
+              className={`rounded-lg border p-4 text-left transition ${
                 action.disabled
                   ? 'cursor-not-allowed border-slate-800/60 bg-slate-900/30 text-slate-500'
                   : 'border-slate-700/70 bg-slate-900/60 hover:border-emerald-400/50'

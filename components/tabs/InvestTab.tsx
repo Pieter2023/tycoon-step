@@ -261,6 +261,13 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
 
         <div className="flex items-center gap-2">
           <Button
+            onClick={toggleBatchBuyMode}
+            variant={batchBuyMode ? 'primary' : 'secondary'}
+            size="md"
+          >
+            {batchBuyMode ? 'Batch Buy: ON' : 'Batch Buy'}
+          </Button>
+          <Button
             onClick={() => {
               setCompareMode((prev) => !prev);
               if (compareMode) {
@@ -376,6 +383,7 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                 <button
                   key={preset.id}
                   type="button"
+                  aria-label={`Apply ${preset.label} auto-invest preset`}
                   onClick={() => applyPreset(preset.id)}
                   className="glass-tile px-3 py-3 text-left transition hover:border-emerald-400/50 hover:shadow-[0_0_18px_rgba(52,211,153,0.25)]"
                 >
@@ -655,7 +663,7 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                     💵 Cash
                   </Button>
                 </div>
-              ) : isBatchBuyEligible(item) ? (
+              ) : batchBuyMode && isBatchBuyEligible(item) ? (
                 isLocked ? (
                   <div className="w-full py-2.5 rounded-lg text-sm font-medium bg-slate-800 text-slate-500 border border-slate-700 text-center">
                     Education Required

@@ -786,10 +786,18 @@ export const updateAIDisruption = (state: GameState): GameState => {
       }
     }
     
+    // Risk must track the threat the player is living through right now, not
+    // the career's static vulnerability (that's already shown as "AI-Proof" at
+    // character select): pressure from the current AI phase (salary already
+    // being squeezed) or the disruption ramp scaled by this career's exposure,
+    // whichever is worse.
+    const phasePressure = Math.max(0, 1 - salaryImpact);
+    const rampPressure = impact.vulnerability * (level / 100);
+    const threat = Math.max(phasePressure, rampPressure);
     let riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'LOW';
-    if (impact.vulnerability >= 0.6) riskLevel = 'CRITICAL';
-    else if (impact.vulnerability >= 0.4) riskLevel = 'HIGH';
-    else if (impact.vulnerability >= 0.2) riskLevel = 'MEDIUM';
+    if (threat >= 0.30) riskLevel = 'CRITICAL';
+    else if (threat >= 0.15) riskLevel = 'HIGH';
+    else if (threat >= 0.05) riskLevel = 'MEDIUM';
     
     affectedIndustries[career] = {
       jobLossPercent: impact.vulnerability * level,

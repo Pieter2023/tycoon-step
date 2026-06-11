@@ -10,10 +10,11 @@ import {
   XAxis,
   YAxis
 } from 'recharts';
-import { Banknote, LineChart, PieChart as PieChartIcon, Wallet } from 'lucide-react';
+import { Activity, ArrowRight, Banknote, LineChart, PieChart as PieChartIcon, ShieldCheck, Target, TrendingUp, Wallet } from 'lucide-react';
 import InvestTab from '../tabs/InvestTab';
 import PortfolioTab from '../tabs/PortfolioTab';
 import BankTab from '../tabs/BankTab';
+import { FINANCIAL_FREEDOM_TARGET_MULTIPLIER } from '../../constants';
 import { AssetType, GameState, TABS, TabId } from '../../types';
 
 type MoneyPageLayoutProps = {
@@ -101,6 +102,33 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
     return gameState.assets.reduce((sum, asset) => sum + asset.value * asset.quantity, 0);
   }, [gameState.assets]);
 
+  const netMonthlyCashFlow = cashFlow.income - cashFlow.expenses;
+  const runwayMonths = cashFlow.expenses > 0 ? gameState.cash / cashFlow.expenses : 12;
+  const passiveTarget = Math.max(1, cashFlow.expenses * FINANCIAL_FREEDOM_TARGET_MULTIPLIER);
+  const passiveCoverage = Math.min(1, Math.max(0, cashFlow.passive / passiveTarget));
+  const savingsRate = cashFlow.income > 0 ? netMonthlyCashFlow / cashFlow.income : 0;
+
+  const reportRows = [
+    {
+      label: 'Runway',
+      value: runwayMonths >= 12 ? '12+ mo' : `${runwayMonths.toFixed(1)} mo`,
+      progress: Math.min(100, (runwayMonths / 6) * 100),
+      tone: runwayMonths >= 3 ? 'bg-emerald-400' : runwayMonths >= 1.5 ? 'bg-amber-400' : 'bg-rose-400'
+    },
+    {
+      label: 'Passive coverage',
+      value: `${Math.round(passiveCoverage * 100)}%`,
+      progress: passiveCoverage * 100,
+      tone: passiveCoverage >= 0.7 ? 'bg-emerald-400' : 'bg-cyan-400'
+    },
+    {
+      label: 'Savings rate',
+      value: formatPercent(savingsRate, 0),
+      progress: Math.min(100, Math.max(0, savingsRate * 100)),
+      tone: savingsRate >= 0.25 ? 'bg-emerald-400' : savingsRate >= 0.1 ? 'bg-amber-400' : 'bg-rose-400'
+    }
+  ];
+
   const handleLegacyTabChange = (tabId: TabId) => {
     if (tabId === TABS.INVEST) setActiveTab('invest');
     if (tabId === TABS.ASSETS) setActiveTab('portfolio');
@@ -108,14 +136,48 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
   };
 
   const tabButtonClass = (tab: string) =>
-    `rounded-full px-4 py-2 text-xs font-semibold border transition ${
+    `rounded-lg px-4 py-2 text-xs font-bold border transition ${
       activeTab === tab
-        ? 'border-white/80 bg-white text-slate-900 shadow-[0_0_18px_rgba(255,255,255,0.2)]'
-        : 'border-slate-700/70 text-slate-200 hover:border-white/40 hover:text-white'
+        ? 'border-emerald-400/30 bg-emerald-400 text-slate-950 shadow-[0_10px_24px_rgba(52,211,153,0.14)]'
+        : 'border-slate-700/70 text-slate-200 hover:border-emerald-400/40 hover:text-white'
     }`;
 
   return (
     <div className="space-y-8">
+      <section className="tycoon-panel p-5">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="tycoon-kicker">Capital HQ</p>
+            <h2 className="mt-2 text-3xl font-bold text-white">Turn cash into freedom, deliberately.</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+              The money screen now works like an operating dashboard: protect runway, deploy capital, and keep debt from stealing momentum.
+            </p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[520px]">
+            <div className="rounded-lg border border-slate-800 bg-slate-950/35 p-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+                <ShieldCheck size={14} className="text-emerald-300" /> Runway
+              </div>
+              <p className="mt-2 text-lg font-bold text-white">{runwayMonths >= 12 ? '12+' : runwayMonths.toFixed(1)} mo</p>
+            </div>
+            <div className="rounded-lg border border-slate-800 bg-slate-950/35 p-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+                <Target size={14} className="text-cyan-300" /> Passive target
+              </div>
+              <p className="mt-2 text-lg font-bold text-white">{formatMoney(passiveTarget)}/mo</p>
+            </div>
+            <div className="rounded-lg border border-slate-800 bg-slate-950/35 p-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+                <TrendingUp size={14} className={netMonthlyCashFlow >= 0 ? 'text-emerald-300' : 'text-rose-300'} /> Monthly delta
+              </div>
+              <p className={`mt-2 text-lg font-bold ${netMonthlyCashFlow >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>
+                {netMonthlyCashFlow >= 0 ? '+' : ''}{formatMoney(netMonthlyCashFlow)}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 glass-panel p-6">
           <div className="flex items-center justify-between">
@@ -237,10 +299,48 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
           <BankTab {...bankTabProps} />
         )}
         {activeTab === 'reports' && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-400">
-            Reports coming soon. Your investment performance and cashflow summaries will live here.
-            <div className="mt-4 text-xs">
-              Current interest rate: <span className="text-white">{formatPercent(gameState.economy?.interestRate || 0.065)}</span>
+          <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
+            <div className="tycoon-card p-5">
+              <div className="flex items-center gap-2">
+                <Activity size={17} className="text-emerald-300" />
+                <h3 className="text-lg font-semibold text-white">Capital Diagnosis</h3>
+              </div>
+              <div className="mt-5 space-y-4">
+                {reportRows.map((row) => (
+                  <div key={row.label}>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-400">{row.label}</span>
+                      <span className="font-semibold text-white">{row.value}</span>
+                    </div>
+                    <div className="mt-2 h-2 rounded-full bg-slate-800">
+                      <div className={`h-full rounded-full ${row.tone}`} style={{ width: `${row.progress}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="tycoon-card p-5">
+              <div className="flex items-center gap-2">
+                <Target size={17} className="text-cyan-300" />
+                <h3 className="text-lg font-semibold text-white">Decision Rules</h3>
+              </div>
+              <div className="mt-4 space-y-3 text-sm leading-6 text-slate-300">
+                <p>Keep at least 3 months of runway before using leverage aggressively.</p>
+                <p>Convert surplus cash into diversified assets once runway is healthy.</p>
+                <p>If monthly delta turns negative, pause new risk and fix burn rate first.</p>
+              </div>
+              <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/35 px-3 py-2 text-xs text-slate-400">
+                Current interest rate: <span className="font-semibold text-white">{formatPercent(gameState.economy?.interestRate || 0.065)}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab('invest')}
+                className="mt-5 inline-flex items-center gap-2 rounded-md bg-emerald-400 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-emerald-300"
+              >
+                Review investments
+                <ArrowRight size={15} />
+              </button>
             </div>
           </div>
         )}

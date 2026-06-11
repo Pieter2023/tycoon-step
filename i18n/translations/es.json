@@ -127,7 +127,10 @@
   "quests.difficulty.EASY": "FACIL",
   "quests.difficulty.MEDIUM": "MEDIA",
   "quests.difficulty.HARD": "DIFICIL",
-  "quests.viewCompleted": { "one": "Ver metas completadas ({count})", "other": "Ver metas completadas ({count})" },
+  "quests.viewCompleted": {
+    "one": "Ver metas completadas ({count})",
+    "other": "Ver metas completadas ({count})"
+  },
   "quests.track.CAREER": "Carrera",
   "quests.track.INVESTOR": "Inversor",
   "quests.track.ENTREPRENEUR": "Emprendedor",
@@ -232,12 +235,12 @@
   "modeSelector.loading": "Cargando...",
   "modeSelector.title": "💰 TYCOON 💰",
   "modeSelector.subtitle": "Construye tu imperio financiero",
-  "modeSelector.auth.title": "Ingresa el codigo de acceso",
-  "modeSelector.auth.subtitle": "Este juego esta en beta privada",
-  "modeSelector.auth.placeholder": "Ingresa la clave...",
-  "modeSelector.auth.enter": "Entrar al juego",
+  "modeSelector.auth.title": "Desbloquea el juego completo",
+  "modeSelector.auth.subtitle": "Ingresa tu codigo de acceso o prueba la demo gratis",
+  "modeSelector.auth.placeholder": "Ingresa el codigo de acceso...",
+  "modeSelector.auth.enter": "Desbloquear y jugar",
   "modeSelector.createdBy": "Creado por",
-  "modeSelector.auth.incorrectPassword": "Contrasena incorrecta",
+  "modeSelector.auth.incorrectPassword": "Ese codigo no funciono. Revisalo e intentalo de nuevo.",
   "modeSelector.multiplayer.allPlayersNeedNames": "Todos deben ingresar su nombre",
   "events.biz_partner_intro.title": "🤝 Partnership Pitch",
   "events.biz_partner_intro.description": "A former colleague wants to join forces to grow a new venture together.",
@@ -617,5 +620,9 @@
   "quiz.sales_q15.option_b": "Delivering what you promised and staying engaged through a strong handoff and early check-ins.",
   "quiz.sales_q15.option_c": "Pushing upgrades immediately.",
   "quiz.sales_q15.option_d": "Keeping the contract terms vague.",
-  "quiz.sales_q15.feedback_b": "Correct: outcomes and follow-through create durable trust and expansion opportunities."
+  "quiz.sales_q15.feedback_b": "Correct: outcomes and follow-through create durable trust and expansion opportunities.",
+  "modeSelector.auth.checking": "Verificando...",
+  "modeSelector.auth.or": "o",
+  "modeSelector.auth.tryDemo": "Prueba la demo gratis",
+  "modeSelector.auth.demoHint": "3 anos de juego de la simulacion adulta, mas el modo ninos completo. Sin codigo."
 }

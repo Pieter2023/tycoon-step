@@ -127,7 +127,10 @@
   "quests.difficulty.EASY": "EASY",
   "quests.difficulty.MEDIUM": "MEDIUM",
   "quests.difficulty.HARD": "HARD",
-  "quests.viewCompleted": { "one": "View completed goals ({count})", "other": "View completed goals ({count})" },
+  "quests.viewCompleted": {
+    "one": "View completed goals ({count})",
+    "other": "View completed goals ({count})"
+  },
   "quests.track.CAREER": "Career",
   "quests.track.INVESTOR": "Investor",
   "quests.track.ENTREPRENEUR": "Entrepreneur",
@@ -232,12 +235,12 @@
   "modeSelector.loading": "Loading...",
   "modeSelector.title": "💰 TYCOON 💰",
   "modeSelector.subtitle": "Build Your Financial Empire",
-  "modeSelector.auth.title": "Enter Access Code",
-  "modeSelector.auth.subtitle": "This game is in private beta",
-  "modeSelector.auth.placeholder": "Enter password...",
-  "modeSelector.auth.enter": "Enter Game",
+  "modeSelector.auth.title": "Unlock the Full Game",
+  "modeSelector.auth.subtitle": "Enter your access code, or try the free demo",
+  "modeSelector.auth.placeholder": "Enter access code...",
+  "modeSelector.auth.enter": "Unlock & Play",
   "modeSelector.createdBy": "Created by",
-  "modeSelector.auth.incorrectPassword": "Incorrect password",
+  "modeSelector.auth.incorrectPassword": "That code didn't work. Check it and try again.",
   "modeSelector.multiplayer.allPlayersNeedNames": "All players must enter their name",
   "events.biz_partner_intro.title": "🤝 Partnership Pitch",
   "events.biz_partner_intro.description": "A former colleague wants to join forces to grow a new venture together.",
@@ -617,5 +620,9 @@
   "quiz.sales_q15.option_b": "Deliver what you promised and stay engaged through handoff and early check-ins.",
   "quiz.sales_q15.option_c": "Pushing upgrades immediately after signatures dry.",
   "quiz.sales_q15.option_d": "Keeping contract terms vague for flexibility.",
-  "quiz.sales_q15.feedback_b": "Correct: outcomes and follow-through create durable trust and expansion opportunities."
+  "quiz.sales_q15.feedback_b": "Correct: outcomes and follow-through create durable trust and expansion opportunities.",
+  "modeSelector.auth.checking": "Checking...",
+  "modeSelector.auth.or": "or",
+  "modeSelector.auth.tryDemo": "Try the Free Demo",
+  "modeSelector.auth.demoHint": "3 in-game years of the adult simulation, plus full kids mode. No code needed."
 }

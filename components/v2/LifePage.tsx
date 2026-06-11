@@ -63,10 +63,10 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
   }, [gameState.family]);
 
   const tabButtonClass = (tab: string) =>
-    `rounded-full px-4 py-2 text-xs font-semibold border transition ${
+    `rounded-lg px-4 py-2 text-xs font-bold border transition ${
       activeTab === tab
-        ? 'border-white/80 bg-white text-slate-900 shadow-[0_0_18px_rgba(255,255,255,0.2)]'
-        : 'border-slate-700/70 text-slate-200 hover:border-white/40 hover:text-white'
+        ? 'border-emerald-400/30 bg-emerald-400 text-slate-950 shadow-[0_10px_24px_rgba(52,211,153,0.14)]'
+        : 'border-slate-700/70 text-slate-200 hover:border-emerald-400/40 hover:text-white'
     }`;
 
   return (
@@ -91,7 +91,7 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
               setActiveTab('lifestyle');
               setOpenDetail('lifestyle');
             }}
-            className="mt-4 rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
+            className="mt-4 rounded-md border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
           >
             View details
           </button>
@@ -108,7 +108,7 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
               setActiveTab('sidehustles');
               setOpenDetail('sidehustles');
             }}
-            className="mt-4 rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
+            className="mt-4 rounded-md border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
           >
             View details
           </button>
@@ -125,7 +125,7 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
               setActiveTab('family');
               setOpenDetail('family');
             }}
-            className="mt-4 rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
+            className="mt-4 rounded-md border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
           >
             View details
           </button>
@@ -154,7 +154,7 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
           <button
             type="button"
             onClick={() => setOpenDetail(activeTab)}
-            className="rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
+            className="rounded-md border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
           >
             Open details
           </button>

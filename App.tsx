@@ -42,6 +42,8 @@ import ActionsScreen from './components/v2/ActionsScreen';
 import ProfileScreen from './components/v2/ProfileScreen';
 import MoreScreen from './components/v2/MoreScreen';
 import { getMonthlyActionsSummary } from './services/monthlyActions';
+import UnlockModal from './components/UnlockModal';
+import { AccessTier, DEMO_MONTH_LIMIT, getAccessTier } from './services/accessControl';
 
 // New Components for Enhanced UI
 import CollapsibleSection from './components/ui/CollapsibleSection';
@@ -49,7 +51,7 @@ import { ToastContainer, useToast } from './components/ui/Toast';
 import Confetti from './components/Confetti';
 import KeyboardShortcutsOverlay from './components/KeyboardShortcutsOverlay';
 import CharacterSelect from './components/CharacterSelect';
-import DashboardScreenEnhanced from './components/v2/DashboardScreenEnhanced';
+import CommandDashboard from './components/v2/CommandDashboard';
 
 // Hooks
 import { useKeyboardShortcuts, createGameShortcuts } from './hooks/useKeyboardShortcuts';
@@ -481,7 +483,7 @@ const NEGOTIATIONS_INTRO_VIDEO_STORAGE_KEY = 'tycoon_seen_negotiations_intro_vid
 const NEGOTIATIONS_INTRO_VIDEO_SRC = '/videos/tycoon-master-negotiations.mp4';
 
 const QUICK_TUTORIAL_STORAGE_KEY = 'tycoon_quick_tutorial_seen_v1';
-const QUICK_TUTORIAL_SRC = '/videos/quick-tutorial.mov';
+const QUICK_TUTORIAL_SRC = '/videos/quick-tutorial.mp4';
 
 const AUTO_TUTORIAL_POPUPS_STORAGE_KEY = 'tycoon_auto_tutorial_popups_v1';
 const ONBOARDING_SEEN_STORAGE_KEY = 'tycoon_onboarding_seen_v1';
@@ -503,7 +505,14 @@ const readUiV2Preference = () => {
   } catch (e) {
     // Ignore localStorage access errors.
   }
-  return normalizeFlag(import.meta.env.VITE_UI_V2);
+  if (import.meta.env.MODE === 'test') {
+    return false;
+  }
+  const envValue = import.meta.env.VITE_UI_V2;
+  if (typeof envValue === 'string' && envValue.length > 0) {
+    return normalizeFlag(envValue);
+  }
+  return true;
 };
 const LAST_SAVE_SLOT_STORAGE_KEY = 'tycoon_last_save_slot_v1';
 const SELF_LEARN_HINT_STORAGE_KEY = 'tycoon_self_learn_hint_v1';
@@ -748,6 +757,7 @@ interface AppProps {
   playerConfig?: PlayerConfig;
   isMultiplayer?: boolean;
   onTurnComplete?: (newState: GameState) => void;
+  accessTier?: AccessTier;
 }
 
 const createTabUiStateMap = (): Record<TabId, TabUiState> =>
@@ -756,8 +766,10 @@ const createTabUiStateMap = (): Record<TabId, TabUiState> =>
     return acc;
   }, {} as Record<TabId, TabUiState>);
 
-const App: React.FC<AppProps> = ({ onBackToMenu, initialGameState, playerConfig, isMultiplayer, onTurnComplete }) => {
+const App: React.FC<AppProps> = ({ onBackToMenu, initialGameState, playerConfig, isMultiplayer, onTurnComplete, accessTier }) => {
   const { t, locale, setLocale, formatNumber } = useI18n();
+  const [tier, setTier] = useState<AccessTier>(accessTier ?? getAccessTier());
+  const [showDemoLimitModal, setShowDemoLimitModal] = useState(false);
   const renderStart = import.meta.env.DEV ? performance.now() : 0;
   const isResumingFromSave = !isMultiplayer && !!initialGameState && !!initialGameState.character;
   const [gameStarted, setGameStarted] = useState(isMultiplayer ? true : isResumingFromSave);
@@ -1644,6 +1656,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
   useEffect(() => {
     if (!gameStarted || isMultiplayer) return;
+    if (import.meta.env.MODE === 'test') return;
+    if (isResumingFromSave || !autoTutorialPopups || hideTipsEverywhere) return;
     try {
       const seen = localStorage.getItem(QUICK_TUTORIAL_STORAGE_KEY) === '1';
       if (!seen) setShowQuickTutorial(true);
@@ -1651,7 +1665,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
       console.warn('Failed to read quick tutorial preference:', e);
       setShowQuickTutorial(true);
     }
-  }, [gameStarted, isMultiplayer]);
+  }, [autoTutorialPopups, gameStarted, hideTipsEverywhere, isMultiplayer, isResumingFromSave]);
 
   useEffect(() => {
     try {
@@ -2640,6 +2654,11 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
   const advanceMonth = useCallback((opts?: { showSummaryToast?: boolean }) => {
     if (isProcessing || gameState.pendingScenario || gameState.pendingSideHustleUpgrade) return;
+    if (tier === 'demo' && !isMultiplayer && gameState.month > DEMO_MONTH_LIMIT) {
+      setAutoPlaySpeed(null);
+      setShowDemoLimitModal(true);
+      return;
+    }
     setIsProcessing(true);
     playTick();
 
@@ -2706,7 +2725,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
         }
       }
     }, 150);
-  }, [autoPlaySpeed, gameState, isProcessing, isMultiplayer, onTurnComplete, multiplayerTurnsTaken, recordAutosave]);
+  }, [autoPlaySpeed, gameState, isProcessing, isMultiplayer, onTurnComplete, multiplayerTurnsTaken, recordAutosave, tier]);
 
   const hideTurnPreview = useCallback(() => {
     setShowTurnPreview(false);
@@ -4600,6 +4619,20 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
       {/* Confetti Celebration Effect */}
       <Confetti active={!!confettiConfig} origin={confettiConfig ? { x: confettiConfig.origin.x, y: confettiConfig.origin.y } : undefined} />
+
+      {/* Demo limit — unlock to keep playing this run */}
+      <UnlockModal
+        open={showDemoLimitModal}
+        title="That's the end of the free demo"
+        description="You've played 3 in-game years. Unlock the full game to keep building this exact run — your progress is saved."
+        perks={['Unlimited in-game years', 'Multiplayer for 2-4 players', 'All future updates']}
+        onUnlocked={() => {
+          setTier('full');
+          setShowDemoLimitModal(false);
+          showSuccess('Full game unlocked!', 'All limits removed. Enjoy the climb to financial freedom!', { duration: 6000 });
+        }}
+        onClose={() => setShowDemoLimitModal(false)}
+      />
 
       {/* Keyboard Shortcuts Overlay */}
       <KeyboardShortcutsOverlay 
@@ -6911,6 +6944,11 @@ const [gameState, setGameState] = useState<GameState>(() => {
             nextMonthDisabled={isProcessing || !!gameState.pendingScenario}
             onNextMonth={handleNextTurn}
             onOpenOverflow={() => setMobileOverflowOpen(true)}
+            activePath={v2Path}
+            onNavigatePath={(path) => {
+              setV2Path(path);
+              if (path === '/play') setMobileTab('dashboard');
+            }}
             activeTab={v2Path === '/play' ? mobileTab : 'more'}
             onSelectTab={(tab) => {
               setMobileTab(tab);
@@ -6920,7 +6958,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
             }}
           >
             {v2Path === '/play' && mobileTab === 'dashboard' && (
-              <DashboardScreenEnhanced
+              <CommandDashboard
                 cashValue={gameState.cash}
                 netWorthValue={netWorth}
                 passiveValue={cashFlow.passive}
@@ -7139,7 +7177,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
             }
           >
             {v2Path === '/play' && (
-              <DashboardScreenEnhanced
+              <CommandDashboard
                 cashValue={gameState.cash}
                 netWorthValue={netWorth}
                 passiveValue={cashFlow.passive}
