@@ -5,3 +5,9 @@ coverage/
 .DS_Store
 .env.local
 redesign-mockup/
+
+# Local-only files
+.claude/
+*.backup
+*.save
+devserver.log
