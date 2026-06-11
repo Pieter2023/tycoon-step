@@ -838,6 +838,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
   });
   const [hudPanelOpen, setHudPanelOpen] = useState(false);
   const [hudMenuOpen, setHudMenuOpen] = useState(false);
+  // Run summary card for normal games (win / bankruptcy / anytime via HUD menu)
+  const [showRunCard, setShowRunCard] = useState(false);
   const tabUiStateRef = useRef<Record<TabId, TabUiState>>(createTabUiStateMap());
   const pendingScrollRestoreRef = useRef<TabId | null>(null);
   const prevTabRef = useRef<TabId>(activeTab);
@@ -6249,11 +6251,17 @@ const [gameState, setGameState] = useState<GameState>(() => {
               <div><p className="text-slate-400">Expenses</p><p className="text-white font-bold">{formatMoney(cashFlow.expenses)}/mo</p></div>
             </div>
             <p className="text-slate-400 text-xs mb-4">🏆 Game Over - You escaped the rat race!</p>
-            <button onClick={() => { 
+            <button
+              onClick={() => { playClick(); setShowRunCard(true); }}
+              className="w-full py-3 mb-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold transition-all"
+            >
+              📤 Send this to someone who needs it
+            </button>
+            <button onClick={() => {
               playClick();
               setAutoPlaySpeed(null);
-              setGameStarted(false); 
-              setShowCharacterSelect(true); 
+              setGameStarted(false);
+              setShowCharacterSelect(true);
               setMonthlyReport(null);
               setActiveTab(TABS.OVERVIEW);
               setTutorialStep(0);
@@ -6262,8 +6270,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
               setGameState({
                 ...INITIAL_GAME_STATE,
                 quests: getInitialQuestState()
-              }); 
-            }} 
+              });
+            }}
               className="w-full py-3 bg-amber-600 hover:bg-amber-500 rounded-xl font-bold transition-all">
               🎮 Play Again
             </button>
@@ -6351,7 +6359,13 @@ const [gameState, setGameState] = useState<GameState>(() => {
             <p className="text-yellow-400 text-sm mb-4">
               💡 Pro tip: Emergency funds are like umbrellas. You never need one until you REALLY need one.
             </p>
-            <button onClick={() => { 
+            <button
+              onClick={() => { playClick(); setShowRunCard(true); }}
+              className="w-full py-3 mb-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-bold transition-all"
+            >
+              📤 Share the damage report
+            </button>
+            <button onClick={() => {
               playClick();
               setAutoPlaySpeed(null);
               setGameStarted(false); 
@@ -6370,6 +6384,33 @@ const [gameState, setGameState] = useState<GameState>(() => {
               🎮 Redemption Arc Time
             </button>
           </motion.div>
+        </Modal>
+      )}
+
+      {/* Run summary card (normal games: win, bankruptcy, or anytime via menu) */}
+      {showRunCard && !gameState.challenge && gameState.character && (
+        <Modal
+          isOpen
+          onClose={() => setShowRunCard(false)}
+          ariaLabel="Run summary"
+          overlayClassName="bg-black/90"
+          contentClassName="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-3xl w-full p-6"
+        >
+          <div className="text-center mb-4">
+            <h2 className="text-2xl font-bold text-white">
+              {gameState.hasWon ? 'Financial freedom — pass it on' : gameState.isBankrupt ? 'The damage report' : 'Your run so far'}
+            </h2>
+            <p className="text-slate-400 text-sm mt-1">
+              {gameState.hasWon
+                ? 'Send this to someone who needs it — most people never see what the path looks like.'
+                : 'Download or share your story.'}
+            </p>
+          </div>
+          <ChallengeShareCard
+            gameState={gameState}
+            netWorth={netWorth}
+            onClose={() => setShowRunCard(false)}
+          />
         </Modal>
       )}
 
@@ -7080,6 +7121,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
               <MoreScreen
                 onNavigate={(path) => setV2Path(path as typeof v2Path)}
                 onOpenSaveManager={openSaveManager}
+                onOpenRunCard={gameState.challenge ? undefined : () => setShowRunCard(true)}
                 onOpenQuests={() => setShowQuestLog(true)}
                 onOpenGlossary={() => setShowGlossary(true)}
                 onOpenAccessibility={() => setShowAccessibility(true)}
@@ -7351,6 +7393,18 @@ const [gameState, setGameState] = useState<GameState>(() => {
               >
                 <SaveIcon size={18} className="text-cyan-300" /> Save / Load
               </button>
+              {!gameState.challenge && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowRunCard(true);
+                    setMobileOverflowOpen(false);
+                  }}
+                  className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
+                >
+                  <LineChart size={18} className="text-violet-300" /> Run summary card
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -7558,6 +7612,21 @@ const [gameState, setGameState] = useState<GameState>(() => {
                                   className="justify-start"
                                 >
                                   <Home size={16} /> Back to Menu
+                                </Button>
+                              )}
+                              {!isMultiplayer && !gameState.challenge && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  fullWidth
+                                  onClick={() => {
+                                    playClick();
+                                    setShowRunCard(true);
+                                    setHudMenuOpen(false);
+                                  }}
+                                  className="justify-start"
+                                >
+                                  <LineChart size={16} /> Run summary card
                                 </Button>
                               )}
                               {!isMultiplayer && (

@@ -8,7 +8,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (18 files / 105 tests, all green as of 2026-06-11)
+- `npm run test:run` — vitest suite (19 files / 110 tests, all green as of 2026-06-11)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)
@@ -22,7 +22,10 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
   All randomness flows through module-level `rand()` (seedable; see Daily Challenge).
 - `services/storageService.ts` — saves in localStorage key `tycoon_saves_v2`
 - `services/dailyChallenge.ts` — daily challenge seed/state factory
-- `components/ChallengeShareCard.tsx` — canvas share card (1200×630)
+- `components/ChallengeShareCard.tsx` — canvas share card (1200×630), used by
+  BOTH the daily challenge end screen and normal games' "Run summary card"
+  (branches on `gameState.challenge`; normal-game entry points: victory modal,
+  bankruptcy modal, HUD menu, mobile overflow, MoreScreen)
 - `constants.ts` — careers, investments, events, education, difficulty settings
 - `data/events.json` — additional life events
 - `components/v2/` — newer shell UI (DesktopShell sidebar / MobileShell bottom-nav)
@@ -100,6 +103,6 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 ## Current state & next steps
 
 Daily challenge shipped + verified live 2026-06-11; follow-ups (full-run
-playtest, streak nudge, OG tags) done later that day. See `docs/roadmap.md`
-for the queue: run summary card for normal games, learning counterfactuals,
-Supabase accounts + daily leaderboard.
+playtest, streak nudge, OG tags) and the run summary card for normal games
+done later that day. See `docs/roadmap.md` for the queue: learning
+counterfactuals, Supabase accounts + daily leaderboard.

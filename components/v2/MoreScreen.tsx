@@ -1,9 +1,10 @@
 import React from 'react';
-import { BookOpen, Heart, LayoutGrid, Save, Settings, TrendingUp, Trophy, Volume2, VolumeX, Briefcase } from 'lucide-react';
+import { BookOpen, Heart, LayoutGrid, LineChart, Save, Settings, TrendingUp, Trophy, Volume2, VolumeX, Briefcase } from 'lucide-react';
 
 type MoreScreenProps = {
   onNavigate: (path: string) => void;
   onOpenSaveManager: () => void;
+  onOpenRunCard?: () => void;
   onOpenQuests: () => void;
   onOpenGlossary: () => void;
   onOpenAccessibility: () => void;
@@ -23,6 +24,7 @@ type MoreScreenProps = {
 const MoreScreen: React.FC<MoreScreenProps> = ({
   onNavigate,
   onOpenSaveManager,
+  onOpenRunCard,
   onOpenQuests,
   onOpenGlossary,
   onOpenAccessibility,
@@ -69,6 +71,12 @@ const MoreScreen: React.FC<MoreScreenProps> = ({
             <Save size={18} className="text-cyan-300" />
             <span className="text-sm font-semibold text-white">Save / Load</span>
           </button>
+          {onOpenRunCard && (
+            <button type="button" onClick={onOpenRunCard} className="glass-tile flex items-center gap-3 px-4 py-3">
+              <LineChart size={18} className="text-violet-300" />
+              <span className="text-sm font-semibold text-white">Run summary card</span>
+            </button>
+          )}
           <button type="button" onClick={onOpenQuests} className="glass-tile flex items-center gap-3 px-4 py-3">
             <Trophy size={18} className="text-amber-300" />
             <span className="text-sm font-semibold text-white">Quests</span>

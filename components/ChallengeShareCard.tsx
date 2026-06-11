@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { GameState } from '../types';
+import { DIFFICULTY_SETTINGS } from '../constants';
 
-// Shareable end-of-run summary card for the Daily Challenge.
+// Shareable end-of-run summary card. Originally built for the Daily
+// Challenge; normal games (no gameState.challenge) reuse it on win,
+// bankruptcy, or whenever the player opens "Run summary".
 // Draws a 1200x630 (OG-image sized) canvas: score, net-worth curve,
 // defining events, and a link back to the game. No extra deps.
 
@@ -31,6 +34,19 @@ export const pickDefiningEvents = (
   return [first, mid, last];
 };
 
+/**
+ * Chronological {month, title} list for the card. Challenge runs record
+ * challengeEvents purpose-built for this; normal games fall back to the
+ * event feed (newest-first, capped at 50) minus routine noise.
+ */
+export const pickRunEvents = (gameState: GameState): { month: number; title: string }[] => {
+  if (gameState.challenge) return gameState.challengeEvents || [];
+  return (gameState.events || [])
+    .filter(e => e.type !== 'NEWS' && e.type !== 'DECISION' && e.type !== 'WARNING')
+    .map(e => ({ month: e.month, title: e.title }))
+    .sort((a, b) => a.month - b.month);
+};
+
 interface ChallengeShareCardProps {
   gameState: GameState;
   netWorth: number;
@@ -56,12 +72,13 @@ const drawCard = (canvas: HTMLCanvasElement, gameState: GameState, netWorth: num
   }
 
   // Header
+  const difficultyLabel = DIFFICULTY_SETTINGS[gameState.difficulty as keyof typeof DIFFICULTY_SETTINGS]?.label || '';
   ctx.fillStyle = '#34d399';
   ctx.font = 'bold 30px system-ui, -apple-system, sans-serif';
-  ctx.fillText('TYCOON · DAILY CHALLENGE', 60, 78);
+  ctx.fillText(ch ? 'TYCOON · DAILY CHALLENGE' : 'TYCOON · FREEDOM RUN', 60, 78);
   ctx.fillStyle = '#94a3b8';
   ctx.font = '26px system-ui, -apple-system, sans-serif';
-  ctx.fillText(ch?.id || '', 60, 116);
+  ctx.fillText(ch ? ch.id : difficultyLabel, 60, 116);
 
   // Character (right-aligned header)
   const charName = gameState.character?.name || 'Player';
@@ -72,7 +89,7 @@ const drawCard = (canvas: HTMLCanvasElement, gameState: GameState, netWorth: num
   ctx.textAlign = 'left';
 
   // Outcome line
-  const months = Math.min(gameState.month - 1, ch?.targetMonths || 120);
+  const months = ch ? Math.min(gameState.month - 1, ch.targetMonths) : Math.max(1, gameState.month - 1);
   let outcome: string;
   let outcomeColor = '#34d399';
   if (gameState.isBankrupt) {
@@ -81,8 +98,11 @@ const drawCard = (canvas: HTMLCanvasElement, gameState: GameState, netWorth: num
   } else if (gameState.hasWon) {
     const winMonth = gameState.prestige?.fastestWin || months;
     outcome = `Financially free in ${yearsMonths(winMonth)}`;
-  } else {
+  } else if (ch) {
     outcome = `Survived the 10-year sprint`;
+    outcomeColor = '#facc15';
+  } else {
+    outcome = `Still building after ${yearsMonths(months)}`;
     outcomeColor = '#facc15';
   }
   ctx.fillStyle = outcomeColor;
@@ -95,7 +115,8 @@ const drawCard = (canvas: HTMLCanvasElement, gameState: GameState, netWorth: num
   ctx.fillText(fmtMoney(netWorth), 60, 280);
   ctx.fillStyle = '#94a3b8';
   ctx.font = '24px system-ui, -apple-system, sans-serif';
-  ctx.fillText('FINAL NET WORTH', 62, 316);
+  const runOver = !!ch || gameState.hasWon || gameState.isBankrupt;
+  ctx.fillText(runOver ? 'FINAL NET WORTH' : 'NET WORTH SO FAR', 62, 316);
 
   // Net worth curve (right block)
   const history = gameState.netWorthHistory || [];
@@ -140,11 +161,17 @@ const drawCard = (canvas: HTMLCanvasElement, gameState: GameState, netWorth: num
 
     ctx.fillStyle = '#64748b';
     ctx.font = '20px system-ui, -apple-system, sans-serif';
-    ctx.fillText('NET WORTH OVER 10 YEARS', chartX, chartY + chartH + 34);
+    // Normal games only keep the last 60 months of history; say what the curve shows.
+    const chartLabel = ch
+      ? 'NET WORTH OVER 10 YEARS'
+      : history.length < months
+        ? `NET WORTH — LAST ${yearsMonths(history.length).toUpperCase()}`
+        : `NET WORTH OVER ${yearsMonths(months).toUpperCase()}`;
+    ctx.fillText(chartLabel, chartX, chartY + chartH + 34);
   }
 
   // Defining events
-  const defining = pickDefiningEvents(gameState.challengeEvents);
+  const defining = pickDefiningEvents(pickRunEvents(gameState));
   ctx.fillStyle = '#94a3b8';
   ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
   ctx.fillText('THE RUN IN 3 MOMENTS', 60, 420);
@@ -159,7 +186,7 @@ const drawCard = (canvas: HTMLCanvasElement, gameState: GameState, netWorth: num
   });
   if (defining.length === 0) {
     ctx.fillStyle = '#64748b';
-    ctx.fillText('A quiet decade — steady hands.', 60, 462);
+    ctx.fillText(ch ? 'A quiet decade — steady hands.' : 'A quiet run — steady hands.', 60, 462);
   }
 
   // Footer
@@ -167,7 +194,10 @@ const drawCard = (canvas: HTMLCanvasElement, gameState: GameState, netWorth: num
   ctx.fillRect(0, CARD_H - 64, CARD_W, 64);
   ctx.fillStyle = '#34d399';
   ctx.font = 'bold 26px system-ui, -apple-system, sans-serif';
-  ctx.fillText(`Play today's challenge → ${GAME_URL.replace('https://', '')}`, 60, CARD_H - 22);
+  const footer = ch
+    ? `Play today's challenge → ${GAME_URL.replace('https://', '')}`
+    : `Think you can do it faster? → ${GAME_URL.replace('https://', '')}`;
+  ctx.fillText(footer, 60, CARD_H - 22);
 };
 
 const ChallengeShareCard: React.FC<ChallengeShareCardProps> = ({ gameState, netWorth, onClose }) => {
@@ -181,8 +211,13 @@ const ChallengeShareCard: React.FC<ChallengeShareCardProps> = ({ gameState, netW
       ? 'I went bankrupt'
       : gameState.hasWon
         ? `I hit financial freedom in ${yearsMonths(gameState.prestige?.fastestWin || gameState.month - 1)}`
-        : 'I survived the 10-year sprint';
-    return `Tycoon Daily Challenge ${ch?.id}: ${outcome} — final net worth ${fmtMoney(netWorth)}. Same world, your choices: ${GAME_URL}`;
+        : ch
+          ? 'I survived the 10-year sprint'
+          : `I'm ${yearsMonths(Math.max(1, gameState.month - 1))} into the climb`;
+    if (ch) {
+      return `Tycoon Daily Challenge ${ch.id}: ${outcome} — final net worth ${fmtMoney(netWorth)}. Same world, your choices: ${GAME_URL}`;
+    }
+    return `Tycoon: ${outcome} — net worth ${fmtMoney(netWorth)}. Think you can do it faster? ${GAME_URL}`;
   }, [gameState, netWorth]);
 
   useEffect(() => {
@@ -194,7 +229,9 @@ const ChallengeShareCard: React.FC<ChallengeShareCardProps> = ({ gameState, netW
     }
   }, [gameState, netWorth]);
 
-  const fileName = `tycoon-daily-${gameState.challenge?.id || 'run'}.png`;
+  const fileName = gameState.challenge
+    ? `tycoon-daily-${gameState.challenge.id}.png`
+    : 'tycoon-run-summary.png';
 
   const handleDownload = () => {
     const canvas = canvasRef.current;

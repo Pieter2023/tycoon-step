@@ -65,21 +65,28 @@ returned `{valid:true, source:'gumroad'}`.
     revisit with Supabase (priority 3).
   - Leaderboard still arrives with Supabase (priority 3).
 
+- **Run summary card for normal games** (former priority 1) — done same day:
+  `ChallengeShareCard` generalized (header/outcome/footer/share-text branch on
+  `gameState.challenge`; `pickRunEvents` falls back to the event feed minus
+  NEWS/DECISION/WARNING noise). Reachable from the victory modal
+  ("Send this to someone who needs it"), the bankruptcy modal ("Share the
+  damage report"), and anytime via HUD menu + mobile overflow + MoreScreen
+  ("Run summary card"). Tests in `components/ChallengeShareCard.test.ts`
+  (suite 19 files / 110 tests).
+
 ## Next build priorities (in order)
 
-1. **Run summary card for normal games** — same artifact on win/bankruptcy/quit;
-   put a "Send this to someone who needs it" CTA on the victory screen.
-2. **Learning counterfactuals** — after big decisions show the one-line
+1. **Learning counterfactuals** — after big decisions show the one-line
    "what would have happened" (e.g. sold in a trough vs held); end-of-year
    report comparing player vs a sensible benchmark. This is the feature
    teachers/parents will share.
-3. **Cloud save + accounts (Supabase)** — unlocks daily-challenge leaderboard,
+2. **Cloud save + accounts (Supabase)** — unlocks daily-challenge leaderboard,
    cross-device play, and knowing who players are. Park real-time multiplayer;
    async leaderboard competition is 80% of the value for 5% of the work.
-4. **Finish v2 shell migration** — App.tsx still renders legacy tab UI in
+3. **Finish v2 shell migration** — App.tsx still renders legacy tab UI in
    places; also consider splitting App.tsx (8k lines) per
    `docs/implementation-plan.md`.
-5. **B2B classroom packs** — bulk codes via `ACCESS_CODES` already work;
+4. **B2B classroom packs** — bulk codes via `ACCESS_CODES` already work;
    needs a one-page offer + outreach to US personal-finance teachers
    (25+ states mandate the course), credit unions, fee-only advisors.
 
