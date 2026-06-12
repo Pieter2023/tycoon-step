@@ -51,6 +51,9 @@ is a feature for teachers.)
 
 ## Outreach
 
+**Ready-to-paste drafts live in `docs/outreach-drafts.md`** (NGPF post,
+Reddit post, three email variants, pilot-reply snippet, sending notes).
+
 **Positioning line:** 26+ US states now require a personal-finance course
 to graduate; teachers are hunting for materials that aren't worksheets.
 Tycoon's hooks for them: sell hindsights + year-in-review (built-in
