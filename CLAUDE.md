@@ -20,10 +20,14 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
   phase-3 hooks own the big state clusters. **The legacy shell is GONE
   (retired 2026-06-12)** — the v2 shell renders unconditionally; there
   is no `uiV2Enabled`/`tycoon_ui_v2` flag anymore, and the integration
-  tests drive the v2 shell. `navigateToTab` writes BOTH the v2 router
-  (v2Path + forced tabs) and the `activeTab` mirror (coach gates and
-  tab-keyed config still read it — full retirement is a queued
-  follow-up). Early returns: splash → character select → main render.
+  tests drive the v2 shell. **The `activeTab` mirror is RETIRED
+  (2026-06-12)**: `navigateToTab` writes only the v2 router (v2Path +
+  the hoisted moneyTab/lifeTab sub-tab state — Money/Life page layouts
+  are controlled components now; the old never-cleared `forcedTab`
+  signals are gone). `activeTab` is a useMemo over that router state
+  (`TabId | null`; null = Reports/Family, surfaces with no legacy id)
+  read by the coach gates. Early returns: splash → character select →
+  main render.
   Passing an `initialGameState` **with a character** skips character
   select entirely.
 - `ModeSelector.tsx` — entry point: access gate → mode cards
@@ -52,9 +56,16 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
   MarketSpecialAction, MortgagePreview, TurnPreviewData,
   TabIntroVideoConfig types + TUTORIAL_TIPS and
   QUICK_TUTORIAL_STORAGE_KEY. App.tsx no longer imports recharts.
-- `hooks/useTabIntroVideo.ts` — the intro-video state machine (QW-3);
-  `hooks/useKeyboardShortcuts.ts` predates it. The hook-extraction
-  pattern is the template for the phase-3 state cleanup.
+- `hooks/useTabIntroVideo.ts` — the intro-video state machine (QW-3).
+  The hook-extraction pattern is the template for the phase-3 state
+  cleanup.
+- `hooks/useKeyboardShortcuts.ts` — THE single keydown system (the
+  four old copies — legacy hook call, v2 inline effect, Enter/Shift+A
+  effect, static overlay list — were merged 2026-06-12). One
+  `createGameShortcuts` config in App.tsx drives both the listener and
+  the "?" overlay. Nav actions use `navigateToTab`; unmodified letter
+  shortcuts refuse shifted presses (exact-key exception keeps '?'
+  working); enabled only when `gameStarted && !showCharacterSelect`.
 - `hooks/useSaveLoad.ts` — phase-3 slice 1: the whole save/load cluster
   (Save Manager state, slot summaries/labels, autosave bookkeeping +
   throttled cloud upload via `recordAutosave`, export/import, all slot
@@ -85,8 +96,9 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
   one-time Self Learn hint, and the "Re-open Preview" pill (state +
   25s timer). The ribbon JSX is a FLOATING overlay in App.tsx (fixed
   top-center, gate `coachHint.tabId === activeTab`) rendered over both
-  shells since the legacy retirement. Exports CoachTarget/CoachHintData
-  types + SELF_LEARN_HINT_STORAGE_KEY.
+  shells since the legacy retirement. `activeTab` arrives as
+  `TabId | null` (derived from the v2 router; null = Reports/Family).
+  Exports CoachTarget/CoachHintData types + SELF_LEARN_HINT_STORAGE_KEY.
 - `hooks/useBatchBuy.ts` — phase-3 slice 5 (phase 3 COMPLETE): cart
   mode/quantities, the priced cart memo, and all handlers. Handlers are
   deliberately PLAIN functions (no useCallback) — InvestTab's "Buy Nx"
@@ -187,6 +199,12 @@ intro-video Continue, invest-quiz trigger), the shared Quick-actions menu
 (both shells: Save/Load…Mute, Back to Menu), desktop Year/Month indicator,
 multi-item batch checkout in InvestTab, and the **B2B educator offer**
 (live page at /educators + `docs/b2b-classroom-packs.md` playbook).
+Late 2026-06-12: both deferred refactors landed — the keyboard merge
+(four binding copies → one; this FIXED keyboard nav in production, the
+legacy listener had been swallowing i/p/b/c/e/s/l before the v2-aware
+one ran) and the activeTab retirement (derived from v2Path + hoisted
+moneyTab/lifeTab; forcedTab signals gone; sub-tabs persist across page
+switches now). Both verified live via the preview browser.
 
 **No queued build work.** Open threads, in priority order:
 1. **B2B outreach (Pieter, not code)** — next actions in
@@ -194,11 +212,7 @@ multi-item batch checkout in InvestTab, and the **B2B educator offer**
    product, post the demo to the NGPF teacher community, work the email
    template down the target list. Fulfillment = add code to
    `ACCESS_CODES` + redeploy (warm functions cache env!).
-2. Deferred refactors (small, optional): merge the two keyboard systems
-   (`useKeyboardShortcuts` + the inline keydown effect both bind keys);
-   fully retire `activeTab` (derive location from v2Path + page-local
-   tab state; today it's a mirror written by `navigateToTab`).
-3. Multiplayer polish — deliberately deprioritized.
+2. Multiplayer polish — deliberately deprioritized.
 
 If something looks broken at cold start: `docs/roadmap.md` has the full
 slice-by-slice history (what moved where and why, sunset list, every

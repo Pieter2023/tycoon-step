@@ -14,9 +14,10 @@ packs — live offer page at /educators + docs/b2b-classroom-packs.md
 playbook. App.tsx 8467 → ~4.4k lines across the whole refactor
 (6082 → 4406 this session). Working tree clean; remote main == branch.
 **Next session: no queued build work.** Open threads: Pieter's B2B
-outreach (playbook has next actions); deferred refactors (keyboard-system
-merge, full activeTab retirement); multiplayer polish remains
-deprioritized. Slice history + sunset lists below.
+outreach (playbook has next actions); multiplayer polish remains
+deprioritized. Late 2026-06-12: both deferred refactors landed —
+keyboard-system merge + full activeTab retirement (see below).
+Slice history + sunset lists below.
 
 ## Cold-start context for the next session (refreshed 2026-06-12 EOD)
 
@@ -31,9 +32,21 @@ deprioritized. Slice history + sunset lists below.
   - ~~`uiV2Enabled`~~ GONE (2026-06-12): no flag, no `tycoon_ui_v2` key;
     all five integration tests drive the v2 shell (AccessibilitySmoke
     stubs matchMedia per-test to pick DesktopShell vs MobileShell).
-  - `activeTab` survives as a logical-location mirror written by
-    `navigateToTab` (coach-ribbon/highlight gates read it). Full
-    retirement is a deferred follow-up — don't "clean it up" casually.
+  - ~~`activeTab` mirror~~ RETIRED (late 2026-06-12): it's now a
+    useMemo over the v2 router (v2Path + moneyTab/lifeTab, which are
+    hoisted to App — Money/Life page layouts are controlled via
+    `activeTab`/`onTabChange` props; the never-cleared `forcedTab`
+    signals are gone). Type is `TabId | null` (null = Money/Reports and
+    Life/Family, surfaces with no legacy TabId — coach gates never
+    match there, by design). Side effects: sub-tabs persist across
+    page switches; re-navigating to an already-selected sub-tab works.
+  - Keyboard input is ONE system (late 2026-06-12): a single
+    `createGameShortcuts` config in App.tsx feeds both
+    `useKeyboardShortcuts` and the "?" overlay. Before the merge there
+    were FOUR copies, and the legacy listener preventDefault-ed every
+    key first — keyboard nav (i/p/b/c/e/s/l) was silently broken in
+    the v2 shell. Enter confirms the turn preview; Shift+A toggles
+    autoplay; unmodified letters refuse shifted presses.
   - The extracted gameplay modals are CONTROLLED components — state and
     side effects deliberately stayed in App (see the slice notes below
     for what stayed where and why). Same for the hooks: each hook's
@@ -52,9 +65,9 @@ deprioritized. Slice history + sunset lists below.
   - The headless preview browser reports width 0 → MobileShell; use
     preview_resize (e.g. 1440px) to exercise DesktopShell.
 - **Recommended next moves:** none queued — see "Next build priorities"
-  item 3 for Pieter's B2B outreach actions, and the deferred-refactor
-  list (keyboard-system merge, activeTab retirement) if build work is
-  wanted.
+  item 3 for Pieter's B2B outreach actions. (The former deferred
+  refactors — keyboard-system merge, activeTab retirement — both
+  landed late 2026-06-12.)
 
 ## Recently shipped (2026-06-10)
 
@@ -420,8 +433,10 @@ returned `{valid:true, source:'gumroad'}`.
      Mute/Unmute + Back to Menu (recordAutosave first; hidden in
      multiplayer / without onBackToMenu — the legacy conditions).
      AccessibilitySmoke now asserts the full menu on BOTH shells
-     (suite 23 files / 161). Still queued: merge the two keyboard
-     systems, full activeTab retirement.
+     (suite 23 files / 161). ~~Still queued: merge the two keyboard
+     systems, full activeTab retirement~~ — both DONE late 2026-06-12
+     (see cold-start notes; the keyboard merge also fixed v2 keyboard
+     nav, which the legacy listener had been swallowing).
 
 3. **B2B classroom packs — assets SHIPPED 2026-06-12**; what remains is
    the actual outreach (Pieter's court).
@@ -446,11 +461,11 @@ returned `{valid:true, source:'gumroad'}`.
 - `App.tsx` ~4.4k lines (down from ~8.5k; refactor complete).
   `App.tsx.backup`, `constants.ts.save`, `tycoon-eq-upgrade-code-only.zip`
   are junk files on disk (gitignored)
-- Two keyboard systems both bind keys (`hooks/useKeyboardShortcuts` +
-  App's inline keydown effect) — pre-existing; merge is a deferred
-  follow-up. Known quirk: Shift+A triggers both the autoplay toggle and
-  the plain-'a' Actions binding.
-- `activeTab` mirror (see cold-start notes) — deferred retirement.
+- ~~Two keyboard systems~~ MERGED late 2026-06-12 (single
+  useKeyboardShortcuts config; the Shift+A double-fire quirk is fixed —
+  unmodified letters refuse shifted presses).
+- ~~`activeTab` mirror~~ RETIRED late 2026-06-12 (derived from the v2
+  router; see cold-start notes).
 - `services/tabState.ts` is orphaned (only its own test imports it) —
   delete with its test whenever convenient.
 - `hideTipsEverywhere` pref persists but has no UI writer since the
