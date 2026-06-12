@@ -12,7 +12,6 @@ const ONBOARDING_SEEN_STORAGE_KEY = 'tycoon_onboarding_seen_v1';
 describe('glossary and quiz (v2 shell)', () => {
   beforeEach(() => {
     localStorage.setItem(ONBOARDING_SEEN_STORAGE_KEY, '1');
-    localStorage.setItem('tycoon_ui_v2', '1');
     localStorage.removeItem('tycoon_quiz_seen_v1');
     Object.defineProperty(window, 'scrollTo', {
       value: vi.fn(),

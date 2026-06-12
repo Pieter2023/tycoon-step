@@ -25,10 +25,10 @@ Details under "Next build priorities" item 1.
   in App.tsx (~6.1k lines): ~4k lines of state/handlers (44+ useState),
   the v2 shell wiring, and the ~800-line legacy shell branch.
 - **Key facts you'd otherwise rediscover the hard way:**
-  - `uiV2Enabled` (App.tsx ~line 460): prod default TRUE, `MODE==='test'`
-    forces FALSE → the integration tests (MortgageModal,
-    GameMathRegression) run against the LEGACY shell. Retiring legacy =
-    first migrate those tests to v2 selectors.
+  - ~~`uiV2Enabled`~~ GONE (2026-06-12): the legacy shell is retired,
+    v2 renders unconditionally, and all five integration tests drive
+    the v2 shell. `activeTab` survives as a logical-location mirror
+    written by `navigateToTab` (coach gates read it).
   - The extracted gameplay modals are CONTROLLED components — state and
     side effects deliberately stayed in App (see the slice notes below
     for what stayed where and why).
@@ -371,13 +371,40 @@ returned `{valid:true, source:'gumroad'}`.
      closed, console clean. Remaining clusters: autoplay (speed,
      preferences, block-list), coach/tutorial, batch-buy.
 
-2. **Retire the legacy shell** (unblocks deleting ~800 lines). Now that
-   its features are ported to v2, the legacy branch only serves the test
-   harness (`MODE==='test'` forces `uiV2Enabled=false`). Steps: make the
-   two integration tests (test/MortgageModal.test.tsx,
-   test/GameMathRegression.test.tsx) drive the v2 shell (set
-   `tycoon_ui_v2=1` in test setup + update selectors), confirm green,
-   then delete the legacy branch + DashboardWidget/Watch remnants.
+2. ~~Retire the legacy shell~~ **DONE 2026-06-12** (three commits:
+   v2 nav/quiz fixes → five-test migration → deletion).
+   - **Prep fixes (production v2 bugs found by the mapping workflow):**
+     TurnPreview quick-fix goTo + intro-video Continue only wrote the
+     legacy activeTab (silent no-op in v2) → new `navigateToTab`
+     dual-writes both routers; invest-quiz trigger gated on
+     activeTab===INVEST (unreachable in v2) → re-keyed on the invest
+     filter changing. DesktopShell gained a Year/Month indicator.
+   - **Test migration (correction: FIVE App-mount tests, not two):**
+     MortgageModal + GlossaryQuiz + GameMathRegression +
+     TabScrollRestore (renamed: invest state persistence; window-scroll
+     restore assertions dropped — v2 never had the behavior) +
+     AccessibilitySmoke (rewritten against the v2 mobile chrome).
+   - **Deletion:** the ~810-line legacy fragment, the whole
+     uiV2Enabled/readUiV2Preference/tycoon_ui_v2 plumbing (v2 renders
+     unconditionally now), the keyboard effect's legacy arms, and the
+     dead-code sweep (scroll-restore machinery, Event Lab dev tool,
+     confetti-on-next-month, batch cart bar + mobile bottom stats bar
+     [both redundant], TAB_SHORTCUTS, lazy tab decls, ~15 unused
+     imports). Files deleted: HelpDrawer, DashboardWidget, OverviewTab,
+     Confetti. App.tsx 5479 → 4421 lines.
+   - **Ported:** coach ribbon → floating overlay over both shells
+     (hints were firing invisibly in v2); TabErrorBoundary wraps all 8
+     v2 page renders (tab crash no longer white-screens); InvestTab's
+     cart strip gained Review & Buy / Clear buttons (the review found
+     the deleted cart bar was the ONLY multi-item checkout — the strip
+     was display-only; multi-item flow verified live, TOTAL correct).
+   - **Sunset (retired with the shell, resurrectable from git):**
+     HelpDrawer tips surface + hide-tips toggle UI, DashboardWidget 2x2
+     grid, Event Lab (commit d9531bd has it last), per-tab scroll
+     memory, confetti-on-next-month, legacy 9-tab nav + KPI header.
+   - **Spawned follow-ups:** desktop-v2 utility menu (Save/Load etc.
+     are mobile-only today), Back-to-Menu missing everywhere in v2,
+     merge the two keyboard systems, full activeTab retirement.
 
 3. **B2B classroom packs** (business + light code). Bulk access codes
    already work via the `ACCESS_CODES` Netlify env var (comma-separated —

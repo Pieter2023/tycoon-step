@@ -33,7 +33,6 @@ const renderApp = (initialGameState = buildInitialState()) =>
 const setBaseStorage = () => {
   localStorage.clear();
   localStorage.setItem(ONBOARDING_SEEN_STORAGE_KEY, '1');
-  localStorage.setItem('tycoon_ui_v2', '1');
 };
 
 // v2: the KPI MetricCards live in CommandDashboard inside <main>.

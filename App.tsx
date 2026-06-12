@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { GameState, AssetType, MarketItem, Lifestyle, Character, Asset, SideHustle, EducationOption, Liability, PlayerConfig, MonthlyActionId, TABS, TabId, EducationLevel, PlayerStats } from './types';
-import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, ALL_LIFE_EVENTS, AUTO_INVEST_PRESETS } from './constants';
+import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, AUTO_INVEST_PRESETS } from './constants';
 import { processTurn, calculateMonthlyCashFlowEstimate, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier, checkPromotion, MAX_SOLD_POSITIONS } from './services/gameLogic';
 import { playMoneyGain, playMoneyLoss, playClick, playPurchase, playSell, playAchievement, playLevelUp, playVictory, playWarning, playTick, playNotification, playError, setMuted } from './services/audioService';
 import { SaveSlotId } from './services/storageService';
 import confetti from 'canvas-confetti';
 import { useI18n, formatCurrencyCompactValue, formatCurrencyValue, formatPercentValue } from './i18n';
-import { DEFAULT_TAB_UI_STATE, hydrateTabUiState, TabUiState } from './services/tabState';
 import { GLOSSARY_ENTRIES, QUIZ_DEFINITIONS, getQuizDefinition } from './data/learning';
 
 import TabErrorBoundary from './components/TabErrorBoundary';
@@ -49,12 +48,8 @@ import {
   TutorialVideosModal
 } from './components/modals';
 import QuestLog from './components/QuestLog';
-import { Button, Badge, Card, Tooltip } from './components/ui';
 import type { AppShellNavItem } from './components/ui/AppShell';
 import CustomAvatarBuilder, { CustomAvatarResult } from './components/customAvatar/CustomAvatarBuilder';
-import HelpDrawer from './components/HelpDrawer';
-import DashboardWidget from './components/DashboardWidget';
-import SelfLearnTab from './components/tabs/SelfLearnTab';
 import { MoneyPageLayout } from './components/v2/MoneyPage';
 import { CareerPageLayout } from './components/v2/CareerPage';
 import { LearnPageLayout } from './components/v2/LearnPage';
@@ -73,7 +68,6 @@ import { AccessTier, DEMO_MONTH_LIMIT, getAccessTier } from './services/accessCo
 // New Components for Enhanced UI
 import CollapsibleSection from './components/ui/CollapsibleSection';
 import { ToastContainer, useToast } from './components/ui/Toast';
-import Confetti from './components/Confetti';
 import KeyboardShortcutsOverlay from './components/KeyboardShortcutsOverlay';
 import CharacterSelect from './components/CharacterSelect';
 import CommandDashboard from './components/v2/CommandDashboard';
@@ -81,22 +75,14 @@ import CommandDashboard from './components/v2/CommandDashboard';
 // Hooks
 import { useKeyboardShortcuts, createGameShortcuts } from './hooks/useKeyboardShortcuts';
 
-import { 
-  Play, Pause, FastForward, TrendingUp, DollarSign, Home, Briefcase, 
-  GraduationCap, Heart, PiggyBank, LineChart, AlertTriangle, CheckCircle,
-  X, Clock, Wallet, ArrowUpRight, ArrowDownRight, Sparkles, Volume2, VolumeX, 
-  Bot, CreditCard, Coffee, Banknote, Plus, Minus, Save as SaveIcon, FolderOpen as FolderOpenIcon, Trash2,
-  Users, BookOpen, Zap, HeartPulse, Trophy, Info, Settings, MoreHorizontal, Keyboard
+import {
+  Play, Pause, FastForward, Briefcase,
+  GraduationCap, PiggyBank, LineChart, AlertTriangle, CheckCircle,
+  X, Wallet, Sparkles, Volume2, VolumeX,
+  Bot, Coffee, Plus, Save as SaveIcon,
+  Users, BookOpen, Trophy, Info, Settings
 } from 'lucide-react';
 
-const OverviewTab = lazy(() => import('./components/tabs/OverviewTab'));
-const InvestTab = lazy(() => import('./components/tabs/InvestTab'));
-const PortfolioTab = lazy(() => import('./components/tabs/PortfolioTab'));
-const BankTab = lazy(() => import('./components/tabs/BankTab'));
-const CareerTab = lazy(() => import('./components/tabs/CareerTab'));
-const EducationTab = lazy(() => import('./components/tabs/EducationTab'));
-const SideHustlesTab = lazy(() => import('./components/tabs/SideHustlesTab'));
-const LifestyleTab = lazy(() => import('./components/tabs/LifestyleTab'));
 
 // ============================================
 // UTILITY FUNCTIONS
@@ -109,16 +95,6 @@ const formatMoneyFull = (val: number): string =>
 const formatPercent = (val: number): string => formatPercentValue(val, 1);
 
 const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
-
-const TAB_SHORTCUTS: Partial<Record<TabId, string>> = {
-  [TABS.INVEST]: 'I',
-  [TABS.ASSETS]: 'P',
-  [TABS.BANK]: 'B',
-  [TABS.CAREER]: 'C',
-  [TABS.EDUCATION]: 'E',
-  [TABS.SIDEHUSTLE]: 'S',
-  [TABS.LIFESTYLE]: 'L'
-};
 
 const getAssetIcon = (type: AssetType) => {
   const icons: Record<AssetType, string> = {
@@ -177,27 +153,6 @@ const getHustleUpgradeLabel = (hustle: SideHustle, index: number, optionId?: str
 // TurnPreviewLine/TurnPreviewData types now live in components/modals/TurnPreviewModal.
 
 // ConfirmDialogConfig and AccessibilityPrefs now live in components/modals/.
-
-const getRiskColor = (risk: string) => {
-  const colors: Record<string, string> = {
-    'VERY_LOW': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-    'LOW': 'bg-green-500/20 text-green-400 border-green-500/30',
-    'MEDIUM': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    'HIGH': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-    'VERY_HIGH': 'bg-red-500/20 text-red-400 border-red-500/30',
-    'EXTREME': 'bg-purple-500/20 text-purple-400 border-purple-500/30'
-  };
-  return colors[risk] || 'bg-slate-500/20 text-slate-400';
-};
-
-const getTierColor = (tier: string) => {
-  const colors: Record<string, string> = {
-    'STARTER': 'bg-sky-500/20 text-sky-300 border-sky-500/30',
-    'MID': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-    'ADVANCED': 'bg-violet-500/20 text-violet-300 border-violet-500/30'
-  };
-  return colors[tier] || 'bg-slate-500/20 text-slate-400';
-};
 
 const getRiskRating = (item: MarketItem): 'LOW' | 'MEDIUM' | 'HIGH' => {
   if (item.riskRating) return item.riskRating;
@@ -422,29 +377,7 @@ const QUICK_TUTORIAL_SRC = '/videos/quick-tutorial.mp4';
 
 const CASH_FLOW_HISTORY_STORAGE_KEY = 'tycoon_cash_flow_history_v1_';
 const AI_DISRUPTION_HISTORY_STORAGE_KEY = 'tycoon_ai_disruption_history_v1_';
-const UI_V2_STORAGE_KEY = 'tycoon_ui_v2';
 
-const normalizeFlag = (value?: string | null) => {
-  if (!value) return false;
-  return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
-};
-
-const readUiV2Preference = () => {
-  try {
-    const stored = localStorage.getItem(UI_V2_STORAGE_KEY);
-    if (stored !== null) return normalizeFlag(stored);
-  } catch (e) {
-    // Ignore localStorage access errors.
-  }
-  if (import.meta.env.MODE === 'test') {
-    return false;
-  }
-  const envValue = import.meta.env.VITE_UI_V2;
-  if (typeof envValue === 'string' && envValue.length > 0) {
-    return normalizeFlag(envValue);
-  }
-  return true;
-};
 const LAST_SAVE_SLOT_STORAGE_KEY = 'tycoon_last_save_slot_v1';
 
 const resolveSaveSlot = (raw: string | null): SaveSlotId => {
@@ -626,12 +559,6 @@ const FloatingNumber: React.FC<{ value: number; onComplete: () => void }> = ({ v
   );
 };
 
-const TabLoading: React.FC<{ label: string }> = ({ label }) => (
-  <div className="flex items-center justify-center py-12 text-slate-400 text-sm">
-    Loading {label}...
-  </div>
-);
-
 // ============================================
 // MAIN APP COMPONENT
 // ============================================
@@ -644,14 +571,8 @@ interface AppProps {
   accessTier?: AccessTier;
 }
 
-const createTabUiStateMap = (): Record<TabId, TabUiState> =>
-  Object.values(TABS).reduce((acc, tabId) => {
-    acc[tabId] = { ...DEFAULT_TAB_UI_STATE };
-    return acc;
-  }, {} as Record<TabId, TabUiState>);
-
 const App: React.FC<AppProps> = ({ onBackToMenu, initialGameState, playerConfig, isMultiplayer, onTurnComplete, accessTier }) => {
-  const { t, locale, setLocale, formatNumber } = useI18n();
+  const { t, locale } = useI18n();
   const [tier, setTier] = useState<AccessTier>(accessTier ?? getAccessTier());
   const [showDemoLimitModal, setShowDemoLimitModal] = useState(false);
   const renderStart = import.meta.env.DEV ? performance.now() : 0;
@@ -728,14 +649,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
       return {};
     }
   });
-  const [hudPanelOpen, setHudPanelOpen] = useState(false);
-  const [hudMenuOpen, setHudMenuOpen] = useState(false);
   // Run summary card for normal games (win / bankruptcy / anytime via HUD menu)
   const [showRunCard, setShowRunCard] = useState(false);
 
-  const tabUiStateRef = useRef<Record<TabId, TabUiState>>(createTabUiStateMap());
-  const pendingScrollRestoreRef = useRef<TabId | null>(null);
-  const prevTabRef = useRef<TabId>(activeTab);
 
 
   const [floatingNumbers, setFloatingNumbers] = useState<{ id: string; value: number }[]>([]);
@@ -807,16 +723,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const [showGlossary, setShowGlossary] = useState(false);
   const [showTutorialVideos, setShowTutorialVideos] = useState(false);
   const [showSideHustleUpgradeModal, setShowSideHustleUpgradeModal] = useState(false);
-  const [showEventLab, setShowEventLab] = useState(false);
-  const [eventLabEventId, setEventLabEventId] = useState(ALL_LIFE_EVENTS[0]?.id || '');
-  const [eventLabOptionIdx, setEventLabOptionIdx] = useState(0);
-  const [eventLabSimulation, setEventLabSimulation] = useState<{
-    cashDelta: number;
-    statsDelta: Partial<PlayerStats>;
-    liabilitiesDelta: number;
-    assetsDelta: number;
-    message?: string;
-  } | null>(null);
   const [accessibilityPrefs, setAccessibilityPrefs] = useState<AccessibilityPrefs>(() => {
     try {
       const raw = localStorage.getItem('tycoon_accessibility_v1');
@@ -858,10 +764,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('compact');
 
   // Monthly actions selected tracking
-  const [monthlyActionsSelected, setMonthlyActionsSelected] = useState<Set<string>>(new Set());
-
-  // Confetti configuration for origin point
-  const [confettiConfig, setConfettiConfig] = useState<{ origin: { x: number; y: number } } | null>(null);
 
   // ============================================
   // TAB INTRO VIDEOS (config-driven onboarding popups)
@@ -985,7 +887,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
     coachHighlight,
     showReopenPreviewPill,
     setShowReopenPreviewPill,
-    coachMonthlyActionsRef,
     coachLifestyleGridRef,
     coachAssetsSellRef,
     coachSideHustlesRef,
@@ -1056,7 +957,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
     importPayload,
     setImportPayload,
     importError,
-    autosaveStatus,
     recordAutosave,
     refreshSaveSummaries,
     openSaveManager,
@@ -1084,8 +984,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const {
     autoTutorialPopups,
     setAutoTutorialPopups,
-    hideTipsEverywhere,
-    setHideTipsEverywhere,
     showTutorial,
     setShowTutorial,
     tutorialStep,
@@ -1098,48 +996,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
     markOnboardingSeen,
     shouldShowOnboarding
   } = useTutorial({ gameStarted, isMultiplayer, isResumingFromSave });
-
-  useEffect(() => {
-    const prevTab = prevTabRef.current;
-    if (prevTab === activeTab) return;
-
-    const prevState = tabUiStateRef.current[prevTab] ?? DEFAULT_TAB_UI_STATE;
-    const prevFilters = prevTab === TABS.INVEST
-      ? {
-          investmentFilter,
-          investmentTierFilter,
-          investmentSearch
-        }
-      : {};
-
-    tabUiStateRef.current[prevTab] = hydrateTabUiState({
-      ...prevState,
-      ...prevFilters,
-      scrollY: window.scrollY || 0
-    });
-
-    prevTabRef.current = activeTab;
-
-    const nextState = tabUiStateRef.current[activeTab];
-    if (activeTab === TABS.INVEST && nextState) {
-      setInvestmentFilter(nextState.investmentFilter);
-      setInvestmentTierFilter(nextState.investmentTierFilter);
-      setInvestmentSearch(nextState.investmentSearch);
-    }
-
-    pendingScrollRestoreRef.current = activeTab;
-  }, [activeTab, investmentFilter, investmentSearch, investmentTierFilter]);
-
-  useEffect(() => {
-    if (activeTab !== TABS.INVEST) return;
-    const prevState = tabUiStateRef.current[activeTab] ?? DEFAULT_TAB_UI_STATE;
-    tabUiStateRef.current[activeTab] = hydrateTabUiState({
-      ...prevState,
-      investmentFilter,
-      investmentTierFilter,
-      investmentSearch
-    });
-  }, [activeTab, investmentFilter, investmentSearch, investmentTierFilter]);
 
   // Quiz trigger keys on the invest filter changing (the filter buttons only
   // exist inside InvestTab, so a non-ALL filter proves the invest surface is
@@ -1247,36 +1103,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
     });
   }, [aiDisruptionHistoryStorageKey, gameState.aiDisruption?.disruptionLevel, gameState.month, isMultiplayer]);
 
-  const isScrollRestoreBlocked =
-    !!gameState.pendingScenario ||
-    !!gameState.pendingSideHustleUpgrade ||
-    !!marketSpecialAction ||
-    !!confirmDialog ||
-    !!showMortgageModal ||
-    !!introVideo.tabId ||
-    showSaveManager ||
-    showQuestLog ||
-    !!imageLightbox ||
-    showAccessibility ||
-    showTurnPreview ||
-    showSideHustleUpgradeModal ||
-    showTutorial ||
-    gameState.hasWon ||
-    gameState.isBankrupt;
-
-  useEffect(() => {
-    if (isScrollRestoreBlocked) return;
-    const tabId = pendingScrollRestoreRef.current;
-    if (!tabId || tabId !== activeTab) return;
-    const saved = tabUiStateRef.current[tabId];
-    const scrollY = saved?.scrollY ?? 0;
-
-    window.requestAnimationFrame(() => {
-      window.scrollTo({ top: scrollY, behavior: 'auto' });
-    });
-    pendingScrollRestoreRef.current = null;
-  }, [activeTab, isScrollRestoreBlocked]);
-
   // ============================================
   // DERIVED VALUES
   // ============================================
@@ -1284,9 +1110,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   // IMPORTANT: Use the deterministic cash flow estimate for UI so UI renders don't consume randomness.
   const cashFlow = useMemo(() => calculateMonthlyCashFlowEstimate(gameState), [gameState]);
   const activeQuiz = useMemo(() => (activeQuizId ? getQuizDefinition(activeQuizId) : null), [activeQuizId]);
-  const activeTabVideo = TAB_INTRO_VIDEO_CONFIG[activeTab];
-  const activeTabQuickTips = activeTabVideo?.quickTips || [];
-  const uiV2Enabled = useMemo(() => readUiV2Preference(), []);
   const [v2Path, setV2Path] = useState<'/play' | '/money' | '/career' | '/learn' | '/life'>('/play');
   const [mobileTab, setMobileTab] = useState<'dashboard' | 'actions' | 'profile' | 'more'>('dashboard');
   const [mobileOverflowOpen, setMobileOverflowOpen] = useState(false);
@@ -1398,10 +1221,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const latestCashFlowNet = latestCashFlowEntry
     ? latestCashFlowEntry.income - latestCashFlowEntry.expenses
     : 0;
-  const eventLabEvent = useMemo(
-    () => ALL_LIFE_EVENTS.find(event => event.id === eventLabEventId) || ALL_LIFE_EVENTS[0],
-    [eventLabEventId]
-  );
   const questState = gameState.quests || getInitialQuestState(gameState.character?.id);
   const readyQuestCount = questState.readyToClaim?.length || 0;
 
@@ -2073,30 +1892,14 @@ const [gameState, setGameState] = useState<GameState>(() => {
       }
       const key = event.key.toLowerCase();
       const openActions = () => {
-        if (uiV2Enabled) {
-          setV2Path('/play');
-        } else {
-          setActiveTab(TABS.OVERVIEW);
-        }
+        navigateToTab(TABS.OVERVIEW);
         setOpenActionsSignal((prev) => prev + 1);
       };
       const openMoneyTab = (tab: 'invest' | 'portfolio' | 'bank') => {
-        if (uiV2Enabled) {
-          setV2Path('/money');
-          setForcedMoneyTab(tab);
-        } else {
-          const tabId = tab === 'invest' ? TABS.INVEST : tab === 'portfolio' ? TABS.ASSETS : TABS.BANK;
-          setActiveTab(tabId);
-        }
+        navigateToTab(tab === 'invest' ? TABS.INVEST : tab === 'portfolio' ? TABS.ASSETS : TABS.BANK);
       };
       const openLifeTab = (tab: 'lifestyle' | 'sidehustles') => {
-        if (uiV2Enabled) {
-          setV2Path('/life');
-          setForcedLifeTab(tab);
-        } else {
-          const tabId = tab === 'lifestyle' ? TABS.LIFESTYLE : TABS.SIDEHUSTLE;
-          setActiveTab(tabId);
-        }
+        navigateToTab(tab === 'lifestyle' ? TABS.LIFESTYLE : TABS.SIDEHUSTLE);
       };
 
       switch (key) {
@@ -2130,13 +1933,11 @@ const [gameState, setGameState] = useState<GameState>(() => {
           break;
         case 'c':
           event.preventDefault();
-          if (uiV2Enabled) setV2Path('/career');
-          else setActiveTab(TABS.CAREER);
+          navigateToTab(TABS.CAREER);
           break;
         case 'e':
           event.preventDefault();
-          if (uiV2Enabled) setV2Path('/learn');
-          else setActiveTab(TABS.EDUCATION);
+          navigateToTab(TABS.EDUCATION);
           break;
         case 's':
           event.preventDefault();
@@ -2153,7 +1954,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [autoPlaySpeed, confirmTurnPreview, handleNextTurn, showTurnPreview, turnPreview, uiV2Enabled]);
+  }, [autoPlaySpeed, confirmTurnPreview, handleNextTurn, navigateToTab, showTurnPreview, turnPreview]);
 
   // Auto-play
   // Autoplay should feel "hands-off": it temporarily pauses itself while any blocking UI is open
@@ -2299,42 +2100,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
       outcome.cashChange > 0 ? playMoneyGain(outcome.cashChange) : playMoneyLoss();
     }
   };
-
-  const runEventLabSimulation = useCallback(() => {
-    if (!eventLabEvent) return;
-    const option = eventLabEvent.options[eventLabOptionIdx];
-    if (!option) return;
-    const clone = JSON.parse(JSON.stringify(gameState)) as GameState;
-    clone.pendingScenario = eventLabEvent;
-    const result = applyScenarioOutcome(clone, option.outcome);
-    const statsDelta: Partial<PlayerStats> = {};
-    (['happiness', 'health', 'energy', 'stress', 'networking', 'financialIQ', 'fulfillment'] as const).forEach(key => {
-      const nextVal = result.stats?.[key] ?? clone.stats?.[key];
-      const prevVal = gameState.stats?.[key];
-      if (typeof nextVal === 'number' && typeof prevVal === 'number') {
-        const delta = Math.round(nextVal - prevVal);
-        if (delta !== 0) statsDelta[key] = delta;
-      }
-    });
-
-    setEventLabSimulation({
-      cashDelta: Math.round(result.cash - gameState.cash),
-      statsDelta,
-      liabilitiesDelta: (result.liabilities?.length || 0) - (gameState.liabilities?.length || 0),
-      assetsDelta: (result.assets?.length || 0) - (gameState.assets?.length || 0),
-      message: t(option.outcome.message)
-    });
-  }, [eventLabEvent, eventLabOptionIdx, gameState]);
-
-  const injectEventLab = useCallback(() => {
-    if (!eventLabEvent) return;
-    if (gameState.pendingScenario) {
-      showNotif(t('events.eventAlreadyActiveTitle'), t('events.eventAlreadyActiveBody'), 'warning');
-      return;
-    }
-    setGameState(prev => ({ ...prev, pendingScenario: eventLabEvent }));
-    setShowEventLab(false);
-  }, [eventLabEvent, gameState.pendingScenario]);
 
   // ============================================
   // SPECIAL MARKET EVENT FLOWS
@@ -2610,48 +2375,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
     showNotif('Monthly Action Used', message, 'success');
   };
-
-  const handleUseMonthlyActions = useCallback((actionIds: MonthlyActionId[]) => {
-    if (actionIds.length === 0) return;
-    if (isProcessing) return;
-    if (gameState.pendingScenario) {
-      showNotif('Resolve Event First', 'Please respond to the current event before taking Monthly Actions.', 'warning');
-      return;
-    }
-    if (gameState.isBankrupt) {
-      showNotif('Game Over', 'You are bankrupt and can no longer take actions.', 'error');
-      return;
-    }
-
-    playClick();
-
-    let workingState = gameState;
-    let appliedCount = 0;
-
-    actionIds.forEach((actionId) => {
-      const beforeCash = workingState.cash;
-      const { newState, message } = applyMonthlyAction(workingState, actionId);
-      if (newState === workingState) {
-        showNotif('Cannot Do That', message, 'warning');
-        return;
-      }
-
-      appliedCount += 1;
-      workingState = newState;
-
-      const cashDelta = newState.cash - beforeCash;
-      if (Math.abs(cashDelta) >= 1) {
-        setFloatingNumbers(p => [...p, { id: Date.now().toString(), value: cashDelta }]);
-        cashDelta > 0 ? playMoneyGain(cashDelta) : playMoneyLoss();
-      }
-
-      showNotif('Monthly Action Used', message, 'success');
-    });
-
-    if (appliedCount === 0) return;
-    setGameState(workingState);
-    recordAutosave(workingState);
-  }, [gameState, isProcessing, playClick, playMoneyGain, playMoneyLoss, recordAutosave, showNotif]);
 
   const monthlyActionsSummary = useMemo(
     () => getMonthlyActionsSummary(gameState, isProcessing),
@@ -3752,7 +3475,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
       <ToastContainer toasts={toasts} onDismiss={removeToast} />
 
       {/* Confetti Celebration Effect */}
-      <Confetti active={!!confettiConfig} origin={confettiConfig ? { x: confettiConfig.origin.x, y: confettiConfig.origin.y } : undefined} />
 
       {/* Demo limit — unlock to keep playing this run */}
       <UnlockModal
@@ -4157,7 +3879,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
           aiTrendData={aiTrendData}
         />
       )}
-      {uiV2Enabled ? (
         <>
           {isMobileViewport && (
             <MobileShell
@@ -4276,61 +3997,69 @@ const [gameState, setGameState] = useState<GameState>(() => {
               />
             )}
             {v2Path === '/money' && (
-              <MoneyPageLayout
-                gameState={gameState}
-                netWorth={netWorth}
-                cashFlow={cashFlow}
-                formatMoney={formatMoney}
-                formatMoneyFull={formatMoneyFull}
-                formatPercent={formatPercent}
-                investTabProps={investTabProps}
-                portfolioTabProps={portfolioTabProps}
-                bankTabProps={bankTabProps}
-                showQuiz={!!activeQuiz}
-                forcedTab={forcedMoneyTab || undefined}
-              />
+              <TabErrorBoundary tabName="Money">
+  <MoneyPageLayout
+                  gameState={gameState}
+                  netWorth={netWorth}
+                  cashFlow={cashFlow}
+                  formatMoney={formatMoney}
+                  formatMoneyFull={formatMoneyFull}
+                  formatPercent={formatPercent}
+                  investTabProps={investTabProps}
+                  portfolioTabProps={portfolioTabProps}
+                  bankTabProps={bankTabProps}
+                  showQuiz={!!activeQuiz}
+                  forcedTab={forcedMoneyTab || undefined}
+                />
+              </TabErrorBoundary>
             )}
             {v2Path === '/career' && (
-              <CareerPageLayout
-                gameState={gameState}
-                careerPath={careerPath}
-                cashFlow={cashFlow}
-                formatMoney={formatMoney}
-                aiImpact={aiImpact}
-                isProcessing={isProcessing}
-                onPromote={handleManualPromotion}
-                onNavigate={handleV2Navigate}
-              />
+              <TabErrorBoundary tabName="Career">
+  <CareerPageLayout
+                  gameState={gameState}
+                  careerPath={careerPath}
+                  cashFlow={cashFlow}
+                  formatMoney={formatMoney}
+                  aiImpact={aiImpact}
+                  isProcessing={isProcessing}
+                  onPromote={handleManualPromotion}
+                  onNavigate={handleV2Navigate}
+                />
+              </TabErrorBoundary>
             )}
             {v2Path === '/learn' && (
-              <LearnPageLayout
-                gameState={gameState}
-                careerPath={careerPath}
-                formatMoney={formatMoney}
-                handleEnrollEducation={handleEnrollEducation}
-                coachLifestyleGridRef={coachLifestyleGridRef}
-                coachHighlight={coachHighlight}
-                setGameState={setGameState}
-              />
+              <TabErrorBoundary tabName="Learn">
+  <LearnPageLayout
+                  gameState={gameState}
+                  careerPath={careerPath}
+                  formatMoney={formatMoney}
+                  handleEnrollEducation={handleEnrollEducation}
+                  coachLifestyleGridRef={coachLifestyleGridRef}
+                  coachHighlight={coachHighlight}
+                  setGameState={setGameState}
+                />
+              </TabErrorBoundary>
             )}
             {v2Path === '/life' && (
-              <LifePageLayout
-                gameState={gameState}
-                cashFlow={cashFlow}
-                formatMoney={formatMoney}
-                handleChangeLifestyle={handleChangeLifestyle}
-                coachLifestyleGridRef={coachLifestyleGridRef}
-                coachHighlight={coachHighlight}
-                coachHint={coachHint}
-                InfoTip={InfoTip}
-                getHustleUpgradeLabel={getHustleUpgradeLabel}
-                getNextHustleMilestone={getNextHustleMilestone}
-                handleStartSideHustle={handleStartSideHustle}
-                handleStopSideHustle={handleStopSideHustle}
-                setShowSideHustleUpgradeModal={setShowSideHustleUpgradeModal}
-                coachSideHustlesRef={coachSideHustlesRef}
-                forcedTab={forcedLifeTab || undefined}
-              />
+              <TabErrorBoundary tabName="Life">
+  <LifePageLayout
+                  gameState={gameState}
+                  cashFlow={cashFlow}
+                  formatMoney={formatMoney}
+                  handleChangeLifestyle={handleChangeLifestyle}
+                  coachLifestyleGridRef={coachLifestyleGridRef}
+                  coachHighlight={coachHighlight}
+                  coachHint={coachHint}
+                  InfoTip={InfoTip}
+                  getHustleUpgradeLabel={getHustleUpgradeLabel}
+                  getNextHustleMilestone={getNextHustleMilestone}
+                  handleStartSideHustle={handleStartSideHustle}
+                  handleStopSideHustle={handleStopSideHustle}
+                  setShowSideHustleUpgradeModal={setShowSideHustleUpgradeModal}
+                  coachSideHustlesRef={coachSideHustlesRef}
+                  forcedTab={forcedLifeTab || undefined}
+                />
+              </TabErrorBoundary>
             )}
             </MobileShell>
           )}
@@ -4450,61 +4179,69 @@ const [gameState, setGameState] = useState<GameState>(() => {
               />
             )}
             {v2Path === '/money' && (
-              <MoneyPageLayout
-                gameState={gameState}
-                netWorth={netWorth}
-                cashFlow={cashFlow}
-                formatMoney={formatMoney}
-                formatMoneyFull={formatMoneyFull}
-                formatPercent={formatPercent}
-                investTabProps={investTabProps}
-                portfolioTabProps={portfolioTabProps}
-                bankTabProps={bankTabProps}
-                showQuiz={!!activeQuiz}
-                forcedTab={forcedMoneyTab || undefined}
-              />
+              <TabErrorBoundary tabName="Money">
+  <MoneyPageLayout
+                  gameState={gameState}
+                  netWorth={netWorth}
+                  cashFlow={cashFlow}
+                  formatMoney={formatMoney}
+                  formatMoneyFull={formatMoneyFull}
+                  formatPercent={formatPercent}
+                  investTabProps={investTabProps}
+                  portfolioTabProps={portfolioTabProps}
+                  bankTabProps={bankTabProps}
+                  showQuiz={!!activeQuiz}
+                  forcedTab={forcedMoneyTab || undefined}
+                />
+              </TabErrorBoundary>
             )}
             {v2Path === '/career' && (
-              <CareerPageLayout
-                gameState={gameState}
-                careerPath={careerPath}
-                cashFlow={cashFlow}
-                formatMoney={formatMoney}
-                aiImpact={aiImpact}
-                isProcessing={isProcessing}
-                onPromote={handleManualPromotion}
-                onNavigate={handleV2Navigate}
-              />
+              <TabErrorBoundary tabName="Career">
+  <CareerPageLayout
+                  gameState={gameState}
+                  careerPath={careerPath}
+                  cashFlow={cashFlow}
+                  formatMoney={formatMoney}
+                  aiImpact={aiImpact}
+                  isProcessing={isProcessing}
+                  onPromote={handleManualPromotion}
+                  onNavigate={handleV2Navigate}
+                />
+              </TabErrorBoundary>
             )}
             {v2Path === '/learn' && (
-              <LearnPageLayout
-                gameState={gameState}
-                careerPath={careerPath}
-                formatMoney={formatMoney}
-                handleEnrollEducation={handleEnrollEducation}
-                coachLifestyleGridRef={coachLifestyleGridRef}
-                coachHighlight={coachHighlight}
-                setGameState={setGameState}
-              />
+              <TabErrorBoundary tabName="Learn">
+  <LearnPageLayout
+                  gameState={gameState}
+                  careerPath={careerPath}
+                  formatMoney={formatMoney}
+                  handleEnrollEducation={handleEnrollEducation}
+                  coachLifestyleGridRef={coachLifestyleGridRef}
+                  coachHighlight={coachHighlight}
+                  setGameState={setGameState}
+                />
+              </TabErrorBoundary>
             )}
             {v2Path === '/life' && (
-              <LifePageLayout
-                gameState={gameState}
-                cashFlow={cashFlow}
-                formatMoney={formatMoney}
-                handleChangeLifestyle={handleChangeLifestyle}
-                coachLifestyleGridRef={coachLifestyleGridRef}
-                coachHighlight={coachHighlight}
-                coachHint={coachHint}
-                InfoTip={InfoTip}
-                getHustleUpgradeLabel={getHustleUpgradeLabel}
-                getNextHustleMilestone={getNextHustleMilestone}
-                handleStartSideHustle={handleStartSideHustle}
-                handleStopSideHustle={handleStopSideHustle}
-                setShowSideHustleUpgradeModal={setShowSideHustleUpgradeModal}
-                coachSideHustlesRef={coachSideHustlesRef}
-                forcedTab={forcedLifeTab || undefined}
-              />
+              <TabErrorBoundary tabName="Life">
+  <LifePageLayout
+                  gameState={gameState}
+                  cashFlow={cashFlow}
+                  formatMoney={formatMoney}
+                  handleChangeLifestyle={handleChangeLifestyle}
+                  coachLifestyleGridRef={coachLifestyleGridRef}
+                  coachHighlight={coachHighlight}
+                  coachHint={coachHint}
+                  InfoTip={InfoTip}
+                  getHustleUpgradeLabel={getHustleUpgradeLabel}
+                  getNextHustleMilestone={getNextHustleMilestone}
+                  handleStartSideHustle={handleStartSideHustle}
+                  handleStopSideHustle={handleStopSideHustle}
+                  setShowSideHustleUpgradeModal={setShowSideHustleUpgradeModal}
+                  coachSideHustlesRef={coachSideHustlesRef}
+                  forcedTab={forcedLifeTab || undefined}
+                />
+              </TabErrorBoundary>
             )}
             </DesktopShell>
           )}
@@ -4588,819 +4325,55 @@ const [gameState, setGameState] = useState<GameState>(() => {
             </div>
           </Modal>
         </>
-      ) : (
-        <>
-          {/* Header */}
-          <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-lg border-b border-slate-800">
-            <div className="max-w-7xl mx-auto px-4 py-3">
-              <div className="flex flex-col gap-3">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${gameState.character?.avatarColor || 'from-slate-500 to-slate-600'} flex items-center justify-center text-2xl overflow-hidden`}>
-                      {gameState.character?.avatarImage ? (
-                        <img
-                          src={gameState.character.avatarImage}
-                          alt={gameState.character.name || 'Avatar'}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        gameState.character?.avatarEmoji || '👤'
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-white font-semibold text-sm">{playerConfig?.name || gameState.character?.name || 'Player'}</p>
-                      <p className="text-slate-400 text-xs">Year {Math.ceil(gameState.month / 12)} • Month {((gameState.month - 1) % 12) + 1}</p>
-                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                        {gameState.character?.perk && (
-                          <div
-                            className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-800/80 border border-slate-700 text-[11px] text-slate-200"
-                            title={gameState.character.perk.description}
-                          >
-                            <Sparkles size={12} />
-                            <span>{gameState.character.perk.name}</span>
-                          </div>
-                        )}
-                        {isMultiplayer && (
-                          <div className="bg-amber-500/20 border border-amber-500/50 rounded-lg px-2 py-0.5">
-                            <p className="text-amber-400 text-[11px] font-medium">Turn {multiplayerTurnsTaken + 1}/{MULTIPLAYER_TURNS_PER_ROUND}</p>
-                          </div>
-                        )}
-                        {gameState.aiDisruption && gameState.aiDisruption.disruptionLevel > 20 && (
-                          <div className={`hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] ${
-                            aiImpact?.automationRisk === 'CRITICAL' ? 'bg-red-900/30 text-red-400' : 
-                            aiImpact?.automationRisk === 'HIGH' ? 'bg-orange-900/30 text-orange-400' : 
-                            'bg-amber-900/30 text-amber-400'}`}>
-                            <Bot size={12} />
-                            <span>AI Risk: {aiImpact?.automationRisk || 'LOW'}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-3 flex-1 lg:px-6">
-                    <Card className="p-3 border-emerald-500/20 bg-emerald-950/30">
-                      <p className="text-[11px] uppercase tracking-wide text-emerald-300/80">Cash</p>
-                      <p className="text-xl font-semibold text-emerald-100">{formatMoney(gameState.cash)}</p>
-                    </Card>
-                    <Card className="p-3 border-slate-700 bg-slate-900/60">
-                      <p className="text-[11px] uppercase tracking-wide text-slate-400">Net Worth</p>
-                      <p className="text-xl font-semibold text-white">{formatMoney(netWorth)}</p>
-                    </Card>
-                    <Card className="p-3 border-amber-500/20 bg-amber-950/30">
-                      <p className="text-[11px] uppercase tracking-wide text-amber-300/80">Passive / mo</p>
-                      <p className="text-xl font-semibold text-amber-100">{formatMoney(cashFlow.passive)}</p>
-                    </Card>
+      {/* Coach Ribbon (Step 12) — floats over both shells; ported from the
+          retired legacy shell so hints are no longer invisible in v2. */}
+      <AnimatePresence>
+        {coachHint && coachHint.tabId === activeTab && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className="fixed left-1/2 top-20 z-40 w-[min(560px,calc(100vw-2rem))] -translate-x-1/2 bg-slate-800/95 backdrop-blur border border-emerald-700/30 rounded-2xl p-4 shadow-2xl"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center">
+                <Sparkles size={18} className="text-emerald-300" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-white">{coachHint.title}</p>
+                    <p className="text-sm text-slate-300 mt-0.5">{coachHint.message}</p>
                   </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                    <div className="flex items-center gap-2">
-                      <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                        <Button
-                          variant="primary"
-                          size="lg"
-                          onClick={() => {
-                            handleNextTurn();
-                            setConfettiConfig({ origin: { x: 0.9, y: 0.9 } });
-                          }}
-                          disabled={isProcessing || !!gameState.pendingScenario}
-                          title="Next Month (N)"
-                        >
-                          {isProcessing ? <Clock size={18} className="animate-spin" /> : <Play size={18} />}
-                          <span>Next Month</span>
-                        </Button>
-                      </motion.div>
-                      <Button
-                        variant="secondary"
-                        size="md"
-                        onClick={toggleAutoplay}
-                        title={`${autoplayTooltip} • Shortcut: T`}
-                        aria-label="Autoplay toggle"
-                        aria-pressed={autoplayEnabled}
-                        className={autoplayEnabled ? 'border-amber-500/40 text-amber-200 bg-amber-600/20' : ''}
-                      >
-                        {autoplayEnabled ? <FastForward size={16} /> : <Pause size={16} />}
-                        <span className="text-sm font-semibold">Autoplay</span>
-                        <span className={`text-xs font-semibold ${autoplayEnabled ? 'text-amber-200' : 'text-slate-400'}`}>
-                          {autoplayEnabled ? 'ON' : 'OFF'}
-                        </span>
-                      </Button>
-                    </div>
-                    {!isMultiplayer && (
-                      <label className="flex items-center gap-2 text-[11px] text-slate-400 select-none">
-                        <input
-                          type="checkbox"
-                          className="rounded border-slate-600 bg-slate-900"
-                          checked={showNextMonthPreview}
-                          onChange={(e) => setShowNextMonthPreview(e.target.checked)}
-                        />
-                        Show month preview
-                      </label>
-                    )}
-                    <div className="hidden sm:flex items-center gap-1">
-                      {AUTOPLAY_SPEED_OPTIONS.map((speed) => {
-                        const label = AUTOPLAY_SPEED_LABELS[speed] || '1x';
-                        const isActive = autoPlaySpeed === speed;
-                        return (
-                          <button
-                            key={speed}
-                            onClick={() => setAutoPlaySpeed(speed)}
-                            disabled={!autoplayEnabled}
-                            aria-pressed={isActive}
-                            className={`px-2 py-1 rounded-lg text-xs font-semibold border transition-all ${
-                              !autoplayEnabled
-                                ? 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
-                                : isActive
-                                  ? 'bg-amber-600/30 border-amber-500/50 text-amber-100'
-                                  : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white'
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="sm:hidden"
-                        onClick={() => setHudPanelOpen((prev) => !prev)}
-                        aria-expanded={hudPanelOpen}
-                        aria-label="Toggle finance dashboard"
-                      >
-                        {hudPanelOpen ? 'Hide KPIs' : 'Show KPIs'}
-                      </Button>
-                      <div className="relative">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => setHudMenuOpen((prev) => !prev)}
-                          aria-label="Open dashboard menu"
-                          aria-expanded={hudMenuOpen}
-                        >
-                          <MoreHorizontal size={18} />
-                        </Button>
-                        {hudMenuOpen && (
-                          <>
-                            <div className="fixed inset-0 z-40" onClick={() => setHudMenuOpen(false)} />
-                            <div className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-700 bg-slate-900 shadow-xl p-2 z-50">
-                              <div className="px-2 py-1 text-[11px] text-slate-500">
-                                {autosaveStatus}
-                              </div>
-                              {onBackToMenu && !isMultiplayer && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  fullWidth
-                                  onClick={() => {
-                                    playClick();
-                                    recordAutosave(gameState);
-                                    onBackToMenu();
-                                    setHudMenuOpen(false);
-                                  }}
-                                  className="justify-start"
-                                >
-                                  <Home size={16} /> Back to Menu
-                                </Button>
-                              )}
-                              {!isMultiplayer && !gameState.challenge && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  fullWidth
-                                  onClick={() => {
-                                    playClick();
-                                    setShowRunCard(true);
-                                    setHudMenuOpen(false);
-                                  }}
-                                  className="justify-start"
-                                >
-                                  <LineChart size={16} /> Run summary card
-                                </Button>
-                              )}
-                              {!isMultiplayer && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  fullWidth
-                                  onClick={() => {
-                                    openSaveManager();
-                                    setHudMenuOpen(false);
-                                  }}
-                                  className="justify-start"
-                                >
-                                  <SaveIcon size={16} /> Save / Load
-                                </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                fullWidth
-                                onClick={() => {
-                                  setShowQuestLog(true);
-                                  setHudMenuOpen(false);
-                                }}
-                                className="justify-start"
-                              >
-                                <Trophy size={16} /> Quests
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                fullWidth
-                                onClick={() => {
-                                  setShowGlossary(true);
-                                  setHudMenuOpen(false);
-                                }}
-                                className="justify-start"
-                              >
-                                <BookOpen size={16} /> Glossary
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                fullWidth
-                                onClick={() => {
-                                  setShowTutorialVideos(true);
-                                  setHudMenuOpen(false);
-                                }}
-                                className="justify-start"
-                              >
-                                <Play size={16} /> Tutorial videos
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                fullWidth
-                                onClick={() => {
-                                  toggleSound();
-                                  setHudMenuOpen(false);
-                                }}
-                                className="justify-start"
-                              >
-                                {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-                                {soundEnabled ? 'Mute sound' : 'Unmute sound'}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                fullWidth
-                                onClick={() => {
-                                  setShowAccessibility(true);
-                                  setHudMenuOpen(false);
-                                }}
-                                className="justify-start"
-                              >
-                                <Settings size={16} /> Accessibility
-                              </Button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  <button
+                    onClick={() => setCoachHint(null)}
+                    className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-700/40"
+                    aria-label="Dismiss coach tip"
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
 
-                <div className="hidden md:block">
-                  <div className="grid grid-cols-2 gap-3">
-                    <DashboardWidget
-                      title="Net Worth Trend"
-                      data={netWorthTrendData}
-                      unit="$"
-                      onClick={() => setDashboardModal('netWorth')}
-                      valueLabel={formatMoney(netWorth)}
-                      caption="Last 12 months"
-                      ariaLabel="View net worth trend details"
-                      variant="line"
-                    />
-                    <DashboardWidget
-                      title="Cash Flow"
-                      data={cashFlowTrendData}
-                      unit="$"
-                      onClick={() => setDashboardModal('cashFlow')}
-                      valueLabel={`${latestCashFlowNet >= 0 ? '+' : '-'}${formatMoneyFull(Math.abs(latestCashFlowNet))}`}
-                      caption="Income vs expenses"
-                      ariaLabel="View cash flow details"
-                      variant="bar"
-                    />
-                    <DashboardWidget
-                      title="Credit Score History"
-                      data={creditTrendData}
-                      unit="pts"
-                      onClick={() => setDashboardModal('credit')}
-                      valueLabel={`${creditScore} ${creditTier}`}
-                      caption="Last 12 months"
-                      ariaLabel="View credit score details"
-                      variant="line"
-                    />
-                    <DashboardWidget
-                      title="AI Disruption Level"
-                      data={aiTrendData}
-                      unit="%"
-                      onClick={() => setDashboardModal('ai')}
-                      valueLabel={`${Math.round(aiDisruptionLevel)}%`}
-                      caption={`Risk: ${aiImpact?.automationRisk || 'LOW'}`}
-                      ariaLabel="View AI disruption details"
-                      variant="line"
-                    />
-                  </div>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {coachHint.allowReopenPreview && (
+                    <button
+                      onClick={openTurnPreviewNow}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold"
+                    >
+                      Re-open Preview
+                    </button>
+                  )}
+                  <span className="text-xs text-slate-500 self-center">Tip disappears in a few seconds.</span>
                 </div>
-
-                {hudPanelOpen && (
-                  <div className="md:hidden rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                    <div className="grid grid-cols-1 gap-3">
-                      <Card className="p-3 border-emerald-500/20 bg-emerald-950/30">
-                        <p className="text-[11px] uppercase tracking-wide text-emerald-300/80">Cash</p>
-                        <p className="text-xl font-semibold text-emerald-100">{formatMoney(gameState.cash)}</p>
-                      </Card>
-                      <Card className="p-3 border-slate-700 bg-slate-900/60">
-                        <p className="text-[11px] uppercase tracking-wide text-slate-400">Net Worth</p>
-                        <p className="text-xl font-semibold text-white">{formatMoney(netWorth)}</p>
-                      </Card>
-                      <Card className="p-3 border-amber-500/20 bg-amber-950/30">
-                        <p className="text-[11px] uppercase tracking-wide text-amber-300/80">Passive / mo</p>
-                        <p className="text-xl font-semibold text-amber-100">{formatMoney(cashFlow.passive)}</p>
-                      </Card>
-                    </div>
-                    <div className="mt-4 grid grid-cols-1 gap-3">
-                      <DashboardWidget
-                        title="Net Worth Trend"
-                        data={netWorthTrendData}
-                        unit="$"
-                        onClick={() => setDashboardModal('netWorth')}
-                        valueLabel={formatMoney(netWorth)}
-                        caption="Last 12 months"
-                        ariaLabel="View net worth trend details"
-                        variant="line"
-                      />
-                      <DashboardWidget
-                        title="Cash Flow"
-                        data={cashFlowTrendData}
-                        unit="$"
-                        onClick={() => setDashboardModal('cashFlow')}
-                        valueLabel={`${latestCashFlowNet >= 0 ? '+' : '-'}${formatMoneyFull(Math.abs(latestCashFlowNet))}`}
-                        caption="Income vs expenses"
-                        ariaLabel="View cash flow details"
-                        variant="bar"
-                      />
-                      <DashboardWidget
-                        title="Credit Score History"
-                        data={creditTrendData}
-                        unit="pts"
-                        onClick={() => setDashboardModal('credit')}
-                        valueLabel={`${creditScore} ${creditTier}`}
-                        caption="Last 12 months"
-                        ariaLabel="View credit score details"
-                        variant="line"
-                      />
-                      <DashboardWidget
-                        title="AI Disruption Level"
-                        data={aiTrendData}
-                        unit="%"
-                        onClick={() => setDashboardModal('ai')}
-                        valueLabel={`${Math.round(aiDisruptionLevel)}%`}
-                        caption={`Risk: ${aiImpact?.automationRisk || 'LOW'}`}
-                        ariaLabel="View AI disruption details"
-                        variant="line"
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
-          </header>
-
-          {/* Main Content */}
-          <main className="max-w-7xl mx-auto px-4 py-4">
-        {/* Tab Navigation */}
-        <div className="sticky top-0 z-40 -mx-4 px-4 pt-[calc(env(safe-area-inset-top)+0.5rem)] pb-2 bg-slate-900/95 backdrop-blur border-b border-slate-800/70 md:static md:mx-0 md:px-0 md:pt-0 md:pb-0 md:bg-transparent md:border-b-0">
-          <div className="flex flex-wrap gap-2 mb-3 md:mb-4 pb-2">
-
-          {([
-            { id: TABS.OVERVIEW, label: t('tabs.overview'), icon: LineChart },
-            { id: TABS.INVEST, label: t('tabs.invest'), icon: TrendingUp },
-            { id: TABS.ASSETS, label: t('tabs.portfolio'), icon: Wallet },
-            { id: TABS.BANK, label: t('tabs.bank'), icon: Banknote },
-            { id: TABS.CAREER, label: t('tabs.career'), icon: Briefcase },
-            { id: TABS.EDUCATION, label: t('tabs.education'), icon: GraduationCap },
-            { id: TABS.SELF_LEARN, label: t('tabs.selfLearn'), icon: BookOpen },
-            { id: TABS.SIDEHUSTLE, label: t('tabs.sideHustles'), icon: Coffee },
-            { id: TABS.LIFESTYLE, label: t('tabs.lifestyle'), icon: Heart },
-          ] as const).map(tab => {
-            const shortcut = TAB_SHORTCUTS[tab.id];
-            return (
-            <div key={tab.id} className="flex items-center gap-1">
-              <motion.button whileTap={{ scale: 0.98 }}
-                onClick={() => { playClick(); setActiveTab(tab.id); }}
-                title={shortcut ? `${tab.label} (${shortcut})` : tab.label}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium whitespace-nowrap transition-all touch-target ${
-                  activeTab === tab.id
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'} ${tab.id === TABS.SELF_LEARN ? coachHighlight('self-learn-tab') : ''}`}>
-                <tab.icon size={18} />{tab.label}
-                {tab.id === TABS.SELF_LEARN && (
-                  <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-400/40">
-                    New
-                  </span>
-                )}
-              </motion.button>
-            </div>
-          );
-          })}
-        
-          </div>
-        </div>
-
-        {/* Coach Ribbon (Step 12) */}
-        <AnimatePresence>
-          {coachHint && coachHint.tabId === activeTab && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18, ease: 'easeOut' }}
-              className="mb-4 bg-slate-800/60 border border-emerald-700/30 rounded-2xl p-4"
-              role="status"
-              aria-live="polite"
-            >
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center">
-                  <Sparkles size={18} className="text-emerald-300" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-white">{coachHint.title}</p>
-                      <p className="text-sm text-slate-300 mt-0.5">{coachHint.message}</p>
-                    </div>
-                    <button
-                      onClick={() => setCoachHint(null)}
-                      className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-700/40"
-                      aria-label="Dismiss coach tip"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {coachHint.allowReopenPreview && (
-                      <button
-                        onClick={openTurnPreviewNow}
-                        className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold"
-                      >
-                        Re-open Preview
-                      </button>
-                    )}
-                    <span className="text-xs text-slate-500 self-center">Tip disappears in a few seconds.</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ============================================ */}
-        {/* TAB GUIDE VIDEOS */}
-        {/* ============================================ */}
-        {activeTabVideo && (
-          <div className={`mb-3 ${hideTipsEverywhere ? 'flex justify-end' : ''}`}>
-            <HelpDrawer
-              title="Help & tips"
-              summary={activeTabVideo.title}
-              isGloballyHidden={hideTipsEverywhere}
-              content={(
-                <div className="space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-slate-900/50 border border-slate-700 flex items-center justify-center">
-                        {activeTabVideo.icon ?? <BookOpen size={18} className="text-emerald-300" />}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-white">{activeTabVideo.title}</p>
-                        {activeTabVideo.description && (
-                          <p className="text-xs text-slate-400">{activeTabVideo.description}</p>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => introVideo.open(activeTab, { autoplay: true })}
-                      className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold flex items-center gap-2"
-                    >
-                      <Play size={16} /> Watch video
-                    </button>
-                  </div>
-
-                  {activeTabQuickTips.length > 0 && (
-                    <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-3">
-                      <p className="text-xs font-semibold text-slate-200 mb-2">Quick tips</p>
-                      <ul className="text-sm text-slate-300 space-y-1">
-                        {activeTabQuickTips.map((tip) => (
-                          <li key={tip}>• {tip}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {introVideo.minimizedTabVideos[activeTab] && (
-                    <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        {activeTabVideo.poster ? (
-                          <img
-                            src={activeTabVideo.poster}
-                            alt={`${activeTabVideo.title} video thumbnail`}
-                            className="w-24 h-14 rounded-lg object-cover border border-slate-700"
-                          />
-                        ) : (
-                          <div className="w-24 h-14 rounded-lg bg-slate-900/60 border border-slate-700 flex items-center justify-center">
-                            <Play size={16} className="text-slate-300" />
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-white truncate">{activeTabVideo.title}</p>
-                          <p className="text-xs text-slate-400 truncate">Finished — replay anytime.</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => introVideo.open(activeTab, { autoplay: true })}
-                          className="px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold flex items-center gap-2"
-                        >
-                          <Play size={16} /> Replay
-                        </button>
-                        <button
-                          onClick={() => introVideo.setMinimizedTabVideos((prev) => ({ ...prev, [activeTab]: false }))}
-                          className="p-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200"
-                          aria-label="Hide video"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-end">
-                    <button
-                      onClick={() => setHideTipsEverywhere((prev) => !prev)}
-                      className="text-xs text-slate-400 hover:text-white"
-                    >
-                      {hideTipsEverywhere ? 'Show tips everywhere' : 'Hide tips everywhere'}
-                    </button>
-                  </div>
-                </div>
-              )}
-            />
-          </div>
+          </motion.div>
         )}
-
-        {/* ============================================ */}
-        {/* OVERVIEW TAB */}
-        {/* ============================================ */}
-        {activeTab === TABS.OVERVIEW && (
-          <TabErrorBoundary tabName={t('tabs.overview')}>
-            <Suspense fallback={<TabLoading label={t('tabs.overview')} />}>
-              <OverviewTab
-                t={t}
-                formatNumber={formatNumber}
-                formatPercent={formatPercent}
-                formatMoney={formatMoney}
-                formatMoneyFull={formatMoneyFull}
-                gameState={gameState}
-                isProcessing={isProcessing}
-                coachMonthlyActionsRef={coachMonthlyActionsRef}
-                coachHighlight={coachHighlight}
-                InfoTip={InfoTip}
-                creditTier={creditTier}
-                creditScore={creditScore}
-                getCreditTierColor={getCreditTierColor}
-                handleClaimQuest={handleClaimQuest}
-                showEventLab={showEventLab}
-                setShowEventLab={setShowEventLab}
-                eventLabEvent={eventLabEvent}
-                eventLabOptionIdx={eventLabOptionIdx}
-                setEventLabEventId={setEventLabEventId}
-                setEventLabOptionIdx={setEventLabOptionIdx}
-                eventLabSimulation={eventLabSimulation}
-                setEventLabSimulation={setEventLabSimulation}
-                runEventLabSimulation={runEventLabSimulation}
-                injectEventLab={injectEventLab}
-                aiImpact={aiImpact}
-                careerPath={careerPath}
-                getAIRiskColor={getAIRiskColor}
-                netWorth={netWorth}
-                monthlyReport={monthlyReport}
-                cashFlow={cashFlow}
-                monthlyActionsSummary={monthlyActionsSummary}
-                handleUseMonthlyActions={handleUseMonthlyActions}
-                openActionsSignal={openActionsSignal}
-              />
-            </Suspense>
-          </TabErrorBoundary>
-        )}
-
-        {/* ============================================ */}
-        {/* INVEST TAB */}
-        {/* ============================================ */}
-        {activeTab === TABS.INVEST && (
-          <TabErrorBoundary tabName={t('tabs.invest')}>
-            <Suspense fallback={<TabLoading label={t('tabs.invest')} />}>
-              <InvestTab
-                formatMoney={formatMoney}
-                formatMoneyFull={formatMoneyFull}
-                formatPercent={formatPercent}
-                gameState={gameState}
-                investmentFilter={investmentFilter}
-                setInvestmentFilter={setInvestmentFilter}
-                investmentTierFilter={investmentTierFilter}
-                setInvestmentTierFilter={setInvestmentTierFilter}
-                investmentSearch={investmentSearch}
-                setInvestmentSearch={setInvestmentSearch}
-                filteredInvestments={filteredInvestments}
-                batchBuyMode={batchBuyMode}
-                toggleBatchBuyMode={toggleBatchBuyMode}
-                clearBatchBuyCart={clearBatchBuyCart}
-                batchBuyQuantities={batchBuyQuantities}
-                setBatchBuyQuantities={setBatchBuyQuantities}
-                batchBuyCart={batchBuyCart}
-                openBatchBuyConfirm={openBatchBuyConfirm}
-                autoInvest={autoInvest}
-                onUpdateAutoInvest={updateAutoInvest}
-                onOpenGlossary={() => setShowGlossary(true)}
-                handleBuyAsset={handleBuyAsset}
-                hasRequiredEducationForInvestment={hasRequiredEducationForInvestment}
-                getAssetIcon={getAssetIcon}
-                getItemTier={getItemTier}
-                getRiskRating={getRiskRating}
-                isProcessing={isProcessing}
-                playClick={playClick}
-                setShowMortgageModal={setShowMortgageModal}
-                setSelectedMortgage={setSelectedMortgage}
-                isBatchBuyEligible={isBatchBuyEligible}
-                setBatchQty={setBatchQty}
-                showQuiz={!!activeQuiz && activeTab === TABS.INVEST}
-                quizTitle={activeQuiz?.title}
-                quizIntro={activeQuiz?.intro}
-                quizQuestions={activeQuiz?.questions || []}
-                quizAnswers={quizAnswers}
-                onSelectQuizAnswer={handleSelectQuizAnswer}
-                onSubmitQuiz={handleSubmitQuiz}
-                onSkipQuiz={() => {
-                  if (activeQuizId) markQuizSeen(activeQuizId);
-                }}
-              />
-            </Suspense>
-          </TabErrorBoundary>
-        )}
-
-        {/* ============================================ */}
-        {/* PORTFOLIO TAB */}
-        {/* ============================================ */}
-        {activeTab === TABS.ASSETS && (
-          <TabErrorBoundary tabName={t('tabs.portfolio')}>
-            <Suspense fallback={<TabLoading label={t('tabs.portfolio')} />}>
-              <PortfolioTab
-                gameState={gameState}
-                cashFlow={cashFlow}
-                formatMoney={formatMoney}
-                formatPercent={formatPercent}
-                getAssetIcon={getAssetIcon}
-                getBusinessIncomeRange={getBusinessIncomeRange}
-                getOpsUpgradeCost={getOpsUpgradeCost}
-                handleRefinanceMortgage={handleRefinanceMortgage}
-                handleSellAsset={handleSellAsset}
-                handleBusinessOpsUpgrade={handleBusinessOpsUpgrade}
-                handlePayDebt={handlePayDebt}
-                creditScore={creditScore}
-                activeTab={activeTab}
-                coachHint={coachHint}
-                setActiveTab={setActiveTab}
-              />
-            </Suspense>
-          </TabErrorBoundary>
-        )}
-
-        {/* ============================================ */}
-        {/* BANK TAB - LOANS */}
-        {/* ============================================ */}
-        {activeTab === TABS.BANK && (
-          <TabErrorBoundary tabName={t('tabs.bank')}>
-            <Suspense fallback={<TabLoading label={t('tabs.bank')} />}>
-              <BankTab
-                gameState={gameState}
-                creditTier={creditTier}
-                creditScore={creditScore}
-                formatMoney={formatMoney}
-                formatPercent={formatPercent}
-                getCreditTierColor={getCreditTierColor}
-                coachBankLoansRef={coachBankLoansRef}
-                coachHighlight={coachHighlight}
-                adjustedLoanOptions={adjustedLoanOptions}
-                calculateLoanPayment={calculateLoanPayment}
-                handleTakeLoan={handleTakeLoan}
-                handlePayDebt={handlePayDebt}
-              />
-            </Suspense>
-          </TabErrorBoundary>
-        )}
-
-        {/* ============================================ */}
-        {/* CAREER TAB */}
-        {/* ============================================ */}
-        {activeTab === TABS.CAREER && (
-          <TabErrorBoundary tabName={t('tabs.career')}>
-            <Suspense fallback={<TabLoading label={t('tabs.career')} />}>
-              <CareerTab
-                gameState={gameState}
-                careerPath={careerPath}
-                cashFlow={cashFlow}
-                formatMoney={formatMoney}
-                aiImpact={aiImpact}
-                isProcessing={isProcessing}
-                onPromote={handleManualPromotion}
-                onOpenSideHustles={() => setActiveTab(TABS.SIDEHUSTLE)}
-              />
-            </Suspense>
-          </TabErrorBoundary>
-        )}
-
-        {/* ============================================ */}
-        {/* EDUCATION TAB */}
-        {/* ============================================ */}
-        {activeTab === TABS.EDUCATION && (
-          <TabErrorBoundary tabName={t('tabs.education')}>
-            <Suspense fallback={<TabLoading label={t('tabs.education')} />}>
-              <EducationTab
-                gameState={gameState}
-                careerPath={careerPath}
-                formatMoney={formatMoney}
-                handleEnrollEducation={handleEnrollEducation}
-                coachLifestyleGridRef={coachLifestyleGridRef}
-                coachHighlight={coachHighlight}
-              />
-            </Suspense>
-          </TabErrorBoundary>
-        )}
-
-        {/* ============================================ */}
-        {/* SELF LEARN TAB */}
-        {/* ============================================ */}
-        {activeTab === TABS.SELF_LEARN && (
-          <TabErrorBoundary tabName={t('tabs.selfLearn')}>
-            <Suspense fallback={<TabLoading label={t('tabs.selfLearn')} />}>
-              <SelfLearnTab
-                gameState={gameState}
-                setGameState={setGameState}
-                formatMoney={formatMoney}
-              />
-            </Suspense>
-          </TabErrorBoundary>
-        )}
-
-        {/* ============================================ */}
-        {/* SIDE HUSTLES TAB */}
-        {/* ============================================ */}
-        {activeTab === TABS.SIDEHUSTLE && (
-          <TabErrorBoundary tabName={t('tabs.sideHustles')}>
-            <Suspense fallback={<TabLoading label={t('tabs.sideHustles')} />}>
-              <SideHustlesTab
-                gameState={gameState}
-                cashFlow={cashFlow}
-                formatMoney={formatMoney}
-                getHustleUpgradeLabel={getHustleUpgradeLabel}
-                getNextHustleMilestone={getNextHustleMilestone}
-                handleStartSideHustle={handleStartSideHustle}
-                handleStopSideHustle={handleStopSideHustle}
-                setShowSideHustleUpgradeModal={setShowSideHustleUpgradeModal}
-                coachSideHustlesRef={coachSideHustlesRef}
-                coachHighlight={coachHighlight}
-              />
-            </Suspense>
-          </TabErrorBoundary>
-        )}
-
-        {/* ============================================ */}
-        {/* LIFESTYLE TAB */}
-        {/* ============================================ */}
-        {activeTab === TABS.LIFESTYLE && (
-          <TabErrorBoundary tabName={t('tabs.lifestyle')}>
-            <Suspense fallback={<TabLoading label={t('tabs.lifestyle')} />}>
-              <LifestyleTab
-                gameState={gameState}
-                formatMoney={formatMoney}
-                handleChangeLifestyle={handleChangeLifestyle}
-                coachLifestyleGridRef={coachLifestyleGridRef}
-                coachHighlight={coachHighlight}
-                coachHint={coachHint}
-                activeTab={activeTab}
-                InfoTip={InfoTip}
-              />
-            </Suspense>
-          </TabErrorBoundary>
-        )}
-
-        </main>
-      </>
-      )}
+      </AnimatePresence>
 
       {/* Re-open Preview Pill (Step 12) */}
       <AnimatePresence>
@@ -5441,72 +4414,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
       </AnimatePresence>
 
 
-      {/* Batch Buy Cart Bar */}
-      <AnimatePresence>
-        {activeTab === TABS.INVEST && batchBuyMode && batchBuyCart.totalUnits > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
-            transition={{ duration: 0.18 }}
-            className="fixed left-1/2 -translate-x-1/2 bottom-[calc(env(safe-area-inset-bottom)+5.25rem)] md:bottom-6 z-[45] w-[min(42rem,calc(100vw-2rem))]"
-          >
-            <div
-              className={`rounded-2xl border backdrop-blur px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3 ${
-                batchBuyCart.canAfford ? 'bg-slate-900/90 border-slate-700' : 'bg-rose-900/30 border-rose-500/50'
-              }`}
-            >
-              <div className="flex-1">
-                <div className="text-white font-semibold">Batch Cart</div>
-                <div className="text-xs text-slate-300 mt-0.5">
-                  {batchBuyCart.totalUnits} units • Total {formatMoneyFull(batchBuyCart.totalCost)} • Cash {formatMoneyFull(gameState.cash)}
-                </div>
-                {!batchBuyCart.canAfford && (
-                  <div className="text-xs text-rose-200 mt-1">
-                    You&apos;re short by {formatMoneyFull(batchBuyCart.totalCost - gameState.cash)}.
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={clearBatchBuyCart}
-                  className="px-4 py-2 rounded-xl bg-slate-700/60 hover:bg-slate-700 text-white font-semibold transition"
-                >
-                  Clear
-                </button>
-                <button
-                  onClick={openBatchBuyConfirm}
-                  disabled={!batchBuyCart.canAfford}
-                  className={`px-4 py-2 rounded-xl font-semibold transition ${
-                    batchBuyCart.canAfford ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                  }`}
-                >
-                  Review &amp; Buy
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Mobile Bottom Stats Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 px-4 py-3 z-30">
-        <div className="flex justify-around">
-          <div className="text-center">
-            <p className="text-xs text-slate-400">Cash</p>
-            <p className="text-emerald-400 font-bold">{formatMoney(gameState.cash)}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-slate-400">Net Worth</p>
-            <p className="text-white font-bold">{formatMoney(netWorth)}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-slate-400">Passive</p>
-            <p className="text-amber-400 font-bold">{formatMoney(cashFlow.passive)}/mo</p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

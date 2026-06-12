@@ -8,19 +8,24 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (23 files / 145 tests, all green as of 2026-06-11)
+- `npm run test:run` — vitest suite (23 files / 160 tests, all green as of
+  2026-06-12; ALL integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)
 
-- `App.tsx` — the adult game's state + orchestration (~5.9k lines; phase-3
-  state extraction in progress). All modals live in `components/modals/`;
-  all tab content is extracted AND lazy-loaded from `components/tabs/`.
-  What's left inside: state/handlers (still 40+ useState — phase-3
-  target), the v2 shell wiring, and the ~800-line legacy header/tab-nav
-  branch (`uiV2Enabled` false — kept as the test harness).
-  Early returns: splash → character select → main render. Passing an
-  `initialGameState` **with a character** skips character select entirely.
+- `App.tsx` — the adult game's state + orchestration (~4.4k lines).
+  All modals live in `components/modals/`; tab content lives in
+  `components/tabs/` (imported statically by the v2 pages). The five
+  phase-3 hooks own the big state clusters. **The legacy shell is GONE
+  (retired 2026-06-12)** — the v2 shell renders unconditionally; there
+  is no `uiV2Enabled`/`tycoon_ui_v2` flag anymore, and the integration
+  tests drive the v2 shell. `navigateToTab` writes BOTH the v2 router
+  (v2Path + forced tabs) and the `activeTab` mirror (coach gates and
+  tab-keyed config still read it — full retirement is a queued
+  follow-up). Early returns: splash → character select → main render.
+  Passing an `initialGameState` **with a character** skips character
+  select entirely.
 - `ModeSelector.tsx` — entry point: access gate → mode cards
   (adult / daily challenge / kids / multiplayer)
 - `services/gameLogic.ts` — all simulation logic; `processTurn` is the monthly tick.
@@ -182,8 +187,16 @@ read that first in a new session):**
    → 5885), tutorial (`useTutorial`, → 5809), coach hints
    (`useCoachHints`, → 5682), batch-buy (`useBatchBuy`, → 5479).
    Next up: retire the legacy shell (item 2 below)
-2. Retire the legacy shell (~800 lines): first migrate the two integration
-   tests to the v2 shell (they currently force `uiV2Enabled=false`)
+2. ~~Retire the legacy shell~~ **DONE 2026-06-12** — all five App-mount
+   tests migrated to v2 selectors, then the branch + dead code deleted
+   (App.tsx 5479 → ~4.4k; HelpDrawer/DashboardWidget/OverviewTab/
+   Confetti files removed). Ported in the process: coach ribbon (now a
+   floating overlay in v2), TurnPreview quick-fix navigation +
+   intro-video Continue (were silently broken in v2), invest-quiz
+   trigger (was unreachable in v2), desktop Year/Month indicator,
+   TabErrorBoundary around the v2 pages. Sunset list + spawned
+   follow-ups (desktop utility menu, Back-to-Menu in v2, keyboard-system
+   merge, activeTab retirement) in docs/roadmap.md.
 3. B2B classroom packs (one-page offer + outreach; bulk codes already work)
 
 Day-to-day workflow that worked well: build → test (`npm run test:run`) →

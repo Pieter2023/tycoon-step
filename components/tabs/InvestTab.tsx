@@ -282,8 +282,32 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
         </div>
       </div>
       {batchBuyCart.totalUnits > 0 && (
-        <div className="mb-4 text-xs text-slate-500">
-          Cart total: {batchBuyCart.totalUnits} • {formatMoneyFull(batchBuyCart.totalCost)}
+        <div className={`mb-4 flex flex-wrap items-center gap-3 rounded-xl border px-3 py-2 ${
+          batchBuyCart.canAfford ? 'border-slate-700 bg-slate-900/60' : 'border-rose-500/50 bg-rose-900/20'
+        }`}>
+          <div className="text-xs text-slate-400">
+            Cart total: <span className="text-white font-semibold">{batchBuyCart.totalUnits}</span> • {formatMoneyFull(batchBuyCart.totalCost)}
+            {!batchBuyCart.canAfford && <span className="text-rose-300 ml-2">Not enough cash</span>}
+          </div>
+          <div className="flex gap-2 ml-auto">
+            <button
+              type="button"
+              onClick={clearBatchBuyCart}
+              className="px-3 py-1.5 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-white text-xs font-semibold"
+            >
+              Clear
+            </button>
+            <button
+              type="button"
+              onClick={openBatchBuyConfirm}
+              disabled={!batchBuyCart.canAfford}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
+                batchBuyCart.canAfford ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+              }`}
+            >
+              Review &amp; Buy
+            </button>
+          </div>
         </div>
       )}
 

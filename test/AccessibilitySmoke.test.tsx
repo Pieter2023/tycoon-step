@@ -27,7 +27,6 @@ const useMobileViewport = () => {
 
 it('exposes accessible names for the v2 mobile chrome controls', async () => {
   localStorage.setItem(ONBOARDING_SEEN_STORAGE_KEY, '1');
-  localStorage.setItem('tycoon_ui_v2', '1');
   useMobileViewport();
 
   const initialGameState = { ...INITIAL_GAME_STATE, character: CHARACTERS[0] };
