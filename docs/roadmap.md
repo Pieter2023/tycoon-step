@@ -1,20 +1,22 @@
 # Roadmap
 
-**Last updated:** 2026-06-11, end of day. Shipped today (all verified live
-+ deployed, suite 23 files / 150 tests green throughout):
-leaderboard→accounts linking; the FULL modal-extraction phase of the
-App.tsx split (20 modals → components/modals/, one commit per gameplay
-modal); phase-2 mechanical wins (dead parallax code deleted, QW-3
-useTabIntroVideo hook); legacy-only features ported to v2 (clickable
-dashboard metric cards → drill-down modal with 4-chart switcher; Tutorial
-videos chooser in HUD menu / mobile overflow / MoreScreen); regenerated
-the missing portfolio poster (ffmpeg blur-fill from the video — it was
-never in git history). App.tsx 8467 → ~6.1k lines. Working tree clean;
-remote main == working branch.
-**Next session: read "Cold-start context" + "Next build priorities" below.**
-**Update (2026-06-11, late session):** phase-3 COMPLETE (all 5 slices) — the
-save/load, autoplay, tutorial, coach-hints + batch-buy clusters are now hooks (App.tsx 6082 → 5479).
-Details under "Next build priorities" item 1.
+**Last updated:** 2026-06-12. **The entire 3-item queue is DONE** (all
+verified live + deployed, suite 23 files / 161 tests green throughout):
+(1) phase-3 state organization — all 5 clusters are hooks (useSaveLoad,
+useAutoplay, useTutorial, useCoachHints, useBatchBuy); (2) the legacy
+shell is RETIRED — all five integration tests drive v2, the
+uiV2Enabled/tycoon_ui_v2 plumbing is gone, ~2,300 lines + 4 orphan files
+deleted, coach ribbon ported as a floating overlay, three production v2
+bugs fixed (quick-fix nav, intro-video Continue, quiz trigger),
+multi-item batch checkout restored, desktop got a Year/Month indicator +
+the shared Quick-actions menu (Mute + Back-to-Menu); (3) B2B classroom
+packs — live offer page at /educators + docs/b2b-classroom-packs.md
+playbook. App.tsx 8467 → ~4.4k lines across the whole refactor
+(6082 → 4406 this session). Working tree clean; remote main == branch.
+**Next session: no queued build work.** Open threads: Pieter's B2B
+outreach (playbook has next actions); deferred refactors (keyboard-system
+merge, full activeTab retirement); multiplayer polish remains
+deprioritized. Slice history + sunset lists below.
 
 ## Cold-start context for the next session (written 2026-06-11 EOD)
 
