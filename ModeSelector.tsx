@@ -1486,12 +1486,20 @@ const ModeSelector: React.FC = () => {
           <p className="text-slate-500 text-sm mb-2">
             Created by <span className="text-slate-400 font-medium">Pieter van der Walt</span>
           </p>
-          <button
-            onClick={handleLogout}
-            className="text-slate-600 hover:text-slate-400 text-xs transition-colors"
-          >
-            Logout
-          </button>
+          <div className="flex items-center justify-center gap-4">
+            <a
+              href="/educators.html"
+              className="text-slate-600 hover:text-emerald-400 text-xs transition-colors"
+            >
+              For educators
+            </a>
+            <button
+              onClick={handleLogout}
+              className="text-slate-600 hover:text-slate-400 text-xs transition-colors"
+            >
+              Logout
+            </button>
+          </div>
         </motion.div>
       </div>
     </div>

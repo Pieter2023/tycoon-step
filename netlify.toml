@@ -23,6 +23,11 @@
   to = "/.netlify/functions/:splat"
   status = 200
 
+[[redirects]]
+  from = "/educators"
+  to = "/educators.html"
+  status = 200
+
 [context.production]
   [[context.production.redirects]]
     from = "/*"

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tycoon for Educators — Personal Finance Your Class Will Actually Play</title>
+  <meta name="description" content="A month-by-month financial life simulator for the classroom. Students earn, invest, face life events, and learn from their own decisions. Classroom packs for up to 35 students." />
+  <meta property="og:title" content="Tycoon for Educators" />
+  <meta property="og:description" content="Personal finance your class will actually play. Classroom packs, zero setup, no student accounts required." />
+  <meta property="og:image" content="https://tycoonjan22026.netlify.app/og-image.jpg" />
+  <meta property="og:url" content="https://tycoonjan22026.netlify.app/educators.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0c1210;
+      --ink-2: #111917;
+      --paper: #ece8dd;
+      --paper-dim: rgba(236, 232, 221, 0.64);
+      --paper-faint: rgba(236, 232, 221, 0.38);
+      --rule: rgba(236, 232, 221, 0.12);
+      --rule-strong: rgba(236, 232, 221, 0.22);
+      --emerald: #34d399;
+      --emerald-deep: #059669;
+      --amber: #fbbf24;
+      --serif: 'Fraunces', Georgia, serif;
+      --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--ink);
+      color: var(--paper);
+      font-family: var(--serif);
+      font-weight: 300;
+      font-size: 17px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    /* Ledger ruling + grain atmosphere */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        repeating-linear-gradient(to bottom, transparent 0 47px, var(--rule) 47px 48px),
+        radial-gradient(1200px 600px at 80% -10%, rgba(52, 211, 153, 0.07), transparent 60%),
+        radial-gradient(900px 500px at -10% 100%, rgba(251, 191, 36, 0.05), transparent 60%);
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.35;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    main { position: relative; z-index: 1; max-width: 1060px; margin: 0 auto; padding: 0 28px; }
+
+    .mono { font-family: var(--mono); }
+    .eyebrow {
+      font-family: var(--mono); font-size: 12px; font-weight: 600;
+      letter-spacing: 0.28em; text-transform: uppercase; color: var(--emerald);
+    }
+    .rule-row {
+      display: flex; align-items: center; gap: 16px; margin-bottom: 28px;
+    }
+    .rule-row::after { content: ''; flex: 1; height: 1px; background: var(--rule-strong); }
+    .folio {
+      font-family: var(--mono); font-size: 11px; color: var(--paper-faint); letter-spacing: 0.18em;
+    }
+
+    /* ---------- Hero ---------- */
+    header { padding: 64px 0 88px; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: baseline;
+      border-bottom: 1px solid var(--rule-strong); padding-bottom: 18px; margin-bottom: 72px;
+    }
+    .masthead .brand { font-weight: 900; font-size: 22px; letter-spacing: -0.01em; }
+    .masthead .brand span { color: var(--emerald); }
+    .masthead nav { display: flex; gap: 26px; }
+    .masthead a {
+      color: var(--paper-dim); text-decoration: none;
+      font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    }
+    .masthead a:hover { color: var(--emerald); }
+
+    h1 {
+      font-size: clamp(44px, 7.2vw, 84px);
+      font-weight: 900; line-height: 1.02; letter-spacing: -0.025em;
+      max-width: 14ch;
+    }
+    h1 em { font-style: italic; font-weight: 300; color: var(--emerald); }
+    .lede {
+      margin-top: 30px; max-width: 54ch; font-size: 20px; color: var(--paper-dim); font-weight: 300;
+    }
+    .lede strong { color: var(--paper); font-weight: 600; }
+
+    .hero-cta { margin-top: 44px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+    .btn {
+      display: inline-block; text-decoration: none; font-family: var(--mono);
+      font-size: 14px; font-weight: 600; letter-spacing: 0.04em;
+      padding: 15px 28px; border-radius: 2px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+    .btn-primary {
+      background: var(--emerald); color: #06281c;
+      box-shadow: 0 0 0 1px var(--emerald), 6px 6px 0 0 rgba(52, 211, 153, 0.22);
+    }
+    .btn-primary:hover { transform: translate(-2px, -2px); box-shadow: 0 0 0 1px var(--emerald), 9px 9px 0 0 rgba(52, 211, 153, 0.28); }
+    .btn-ghost {
+      color: var(--paper); border: 1px solid var(--rule-strong);
+    }
+    .btn-ghost:hover { border-color: var(--emerald); color: var(--emerald); }
+
+    .hero-stats {
+      margin-top: 76px; display: grid; grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid var(--rule-strong); border-bottom: 1px solid var(--rule-strong);
+    }
+    .hero-stats > div { padding: 26px 20px 26px 0; }
+    .hero-stats > div + div { border-left: 1px solid var(--rule); padding-left: 24px; }
+    .stat-num {
+      font-family: var(--mono); font-size: clamp(28px, 4vw, 44px); font-weight: 600; color: var(--amber);
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-label { margin-top: 6px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--paper-faint); }
+
+    /* staggered reveal */
+    @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+    .r1, .r2, .r3, .r4, .r5 { animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+    .r2 { animation-delay: 0.1s; } .r3 { animation-delay: 0.2s; }
+    .r4 { animation-delay: 0.32s; } .r5 { animation-delay: 0.45s; }
+    @media (prefers-reduced-motion: reduce) { .r1,.r2,.r3,.r4,.r5 { animation: none; } }
+
+    /* ---------- Sections ---------- */
+    section { padding: 72px 0; }
+    h2 {
+      font-size: clamp(30px, 4.4vw, 46px); font-weight: 900; letter-spacing: -0.02em;
+      line-height: 1.1; max-width: 22ch;
+    }
+    .section-intro { margin-top: 16px; max-width: 58ch; color: var(--paper-dim); }
+
+    .pedagogy {
+      margin-top: 52px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
+      background: var(--rule); border: 1px solid var(--rule);
+    }
+    .pedagogy article {
+      background: var(--ink-2); padding: 34px 30px;
+      transition: background 0.2s ease;
+    }
+    .pedagogy article:hover { background: #15201c; }
+    .pedagogy .num {
+      font-family: var(--mono); font-size: 12px; color: var(--emerald); letter-spacing: 0.2em;
+    }
+    .pedagogy h3 { font-size: 23px; font-weight: 600; margin: 14px 0 10px; letter-spacing: -0.01em; }
+    .pedagogy p { color: var(--paper-dim); font-size: 16px; }
+    .pedagogy p strong { color: var(--paper); font-weight: 600; }
+
+    /* ---------- Setup strip ---------- */
+    .setup {
+      border: 1px solid var(--rule-strong); padding: 40px 36px;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px;
+      background: linear-gradient(180deg, rgba(52,211,153,0.05), transparent);
+    }
+    .setup h3 { font-family: var(--mono); font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--emerald); margin-bottom: 12px; }
+    .setup p { font-size: 15.5px; color: var(--paper-dim); }
+
+    /* ---------- Pricing ---------- */
+    .tiers { margin-top: 52px; display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 20px; align-items: stretch; }
+    .tier {
+      border: 1px solid var(--rule-strong); padding: 34px 30px; display: flex; flex-direction: column;
+      background: var(--ink-2);
+    }
+    .tier.featured {
+      border-color: var(--amber); position: relative;
+      box-shadow: 8px 8px 0 0 rgba(251, 191, 36, 0.14);
+    }
+    .tier.featured::before {
+      content: 'MOST CLASSROOMS'; position: absolute; top: -11px; left: 26px;
+      background: var(--amber); color: #2a1d00; font-family: var(--mono);
+      font-size: 10px; font-weight: 600; letter-spacing: 0.18em; padding: 4px 10px;
+    }
+    .tier h3 { font-size: 21px; font-weight: 600; }
+    .tier .price { font-family: var(--mono); font-size: 46px; font-weight: 600; margin: 18px 0 4px; font-variant-numeric: tabular-nums; }
+    .tier .price small { font-size: 14px; color: var(--paper-faint); font-weight: 400; }
+    .tier ul { list-style: none; margin: 22px 0 28px; flex: 1; }
+    .tier li { padding: 8px 0; border-top: 1px dashed var(--rule); color: var(--paper-dim); font-size: 15.5px; }
+    .tier li::before { content: '— '; color: var(--emerald); }
+    .tier .btn { text-align: center; }
+
+    /* ---------- FAQ ---------- */
+    details {
+      border-top: 1px solid var(--rule-strong);
+    }
+    details:last-of-type { border-bottom: 1px solid var(--rule-strong); }
+    summary {
+      cursor: pointer; list-style: none; padding: 22px 4px;
+      font-size: 19px; font-weight: 600; letter-spacing: -0.01em;
+      display: flex; justify-content: space-between; align-items: center; gap: 18px;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: '+'; font-family: var(--mono); color: var(--emerald); font-size: 22px; flex-shrink: 0; }
+    details[open] summary::after { content: '–'; }
+    details .a { padding: 0 4px 26px; color: var(--paper-dim); max-width: 68ch; }
+    details .a code { font-family: var(--mono); font-size: 14px; color: var(--amber); }
+
+    /* ---------- Footer CTA ---------- */
+    .closer { text-align: center; padding: 100px 0 60px; }
+    .closer h2 { margin: 0 auto; }
+    .closer .lede { margin: 22px auto 0; }
+    footer {
+      border-top: 1px solid var(--rule-strong); margin-top: 60px; padding: 28px 0 48px;
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+      font-family: var(--mono); font-size: 12px; color: var(--paper-faint); letter-spacing: 0.08em;
+    }
+    footer a { color: var(--paper-dim); text-decoration: none; }
+    footer a:hover { color: var(--emerald); }
+
+    @media (max-width: 760px) {
+      .hero-stats { grid-template-columns: 1fr; }
+      .hero-stats > div + div { border-left: none; border-top: 1px solid var(--rule); padding-left: 0; padding-top: 22px; }
+      .pedagogy { grid-template-columns: 1fr; }
+      .setup { grid-template-columns: 1fr; }
+      .tiers { grid-template-columns: 1fr; }
+      .masthead nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="masthead r1">
+        <div class="brand">TYCOON<span>.</span></div>
+        <nav>
+          <a href="#why">Why it teaches</a>
+          <a href="#setup">Setup</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+      </div>
+
+      <p class="eyebrow r2">For educators · Grades 9–12 &amp; intro college</p>
+      <h1 class="r2" style="margin-top: 18px;">The personal-finance mandate, made <em>playable.</em></h1>
+      <p class="lede r3">
+        Tycoon is a month-by-month financial life simulator. Students pick a character,
+        earn a salary, face rent and recessions and surprise transmission failures — and win when
+        <strong>passive income covers 110% of their expenses</strong>. No lecture required:
+        the consequences do the teaching.
+      </p>
+      <div class="hero-cta r4">
+        <a class="btn btn-primary" href="#pricing">Get a Classroom Pack</a>
+        <a class="btn btn-ghost" href="https://tycoonjan22026.netlify.app/" target="_blank" rel="noopener">Play the free demo →</a>
+      </div>
+
+      <div class="hero-stats r5">
+        <div>
+          <div class="stat-num">3 yrs</div>
+          <div class="stat-label">of simulated decisions, free in the demo</div>
+        </div>
+        <div>
+          <div class="stat-num">80+</div>
+          <div class="stat-label">life events — layoffs, windfalls, scams, markets</div>
+        </div>
+        <div>
+          <div class="stat-num">0</div>
+          <div class="stat-label">installs, student accounts, or IT tickets</div>
+        </div>
+      </div>
+    </header>
+
+    <section id="why">
+      <div class="rule-row"><span class="folio">№ 01</span></div>
+      <h2>Built like a game. Structured like a lesson.</h2>
+      <p class="section-intro">
+        More than half of US states now require a personal-finance course to graduate.
+        Tycoon turns that requirement into something students ask to keep playing —
+        and every mechanic doubles as a debrief prompt.
+      </p>
+      <div class="pedagogy">
+        <article>
+          <span class="num mono">A.</span>
+          <h3>Hindsight, automated</h3>
+          <p>When a student panic-sells an asset, Tycoon quietly keeps a ghost of it. Twelve months
+          later: <strong>"Your old index fund would be worth $4,200 today (+38%)."</strong>
+          Counterfactual learning, without you building the spreadsheet.</p>
+        </article>
+        <article>
+          <span class="num mono">B.</span>
+          <h3>The Year-in-Review</h3>
+          <p>Every January the game stops and shows each student their own annual report —
+          market gains, passive income earned, and what their net worth would have been if they
+          had never invested. <strong>A built-in reflection assignment.</strong></p>
+        </article>
+        <article>
+          <span class="num mono">C.</span>
+          <h3>One world, whole class</h3>
+          <p>The Daily Challenge gives everyone the <strong>same seeded economy and the same character</strong> —
+          identical market, identical events. Differences in outcome are pure decision-making.
+          The leaderboard makes the debrief run itself.</p>
+        </article>
+        <article>
+          <span class="num mono">D.</span>
+          <h3>Checks for understanding</h3>
+          <p>Risk &amp; diversification quizzes appear right when students first browse stocks.
+          A plain-English glossary, mortgage maths shown line-by-line before every purchase,
+          and an EQ course round out the <strong>teachable surface</strong>.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="setup">
+      <div class="rule-row"><span class="folio">№ 02</span></div>
+      <h2>Monday-morning proof.</h2>
+      <p class="section-intro" style="margin-bottom: 40px;">Designed for the reality of a school computer lab.</p>
+      <div class="setup">
+        <div>
+          <h3>Runs anywhere</h3>
+          <p>Any browser, including Chromebooks. Nothing to install, nothing to update.
+          One link gets the whole class in.</p>
+        </div>
+        <div>
+          <h3>No student data</h3>
+          <p>No student accounts or emails required — progress saves on the device.
+          Nothing for your privacy office to review.</p>
+        </div>
+        <div>
+          <h3>One class code</h3>
+          <p>Your Classroom Pack is a single access code. Students enter it once and the
+          full game unlocks — no per-seat license wrangling.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing">
+      <div class="rule-row"><span class="folio">№ 03</span></div>
+      <h2>Priced for a department budget, not a district RFP.</h2>
+      <div class="tiers">
+        <div class="tier">
+          <h3>Free Demo</h3>
+          <div class="price">$0</div>
+          <ul>
+            <li>First 3 simulated years (36 months)</li>
+            <li>Full kids mode included</li>
+            <li>Perfect for a one-week unit trial</li>
+          </ul>
+          <a class="btn btn-ghost" href="https://tycoonjan22026.netlify.app/" target="_blank" rel="noopener">Start playing</a>
+        </div>
+        <div class="tier featured">
+          <h3>Classroom Pack</h3>
+          <div class="price">$99 <small>/ school year</small></div>
+          <ul>
+            <li>Up to 35 students, full game</li>
+            <li>One shared class code — 2-minute setup</li>
+            <li>Daily Challenge + class leaderboard</li>
+            <li>All learning features unlocked</li>
+            <li>Email support from the developer</li>
+          </ul>
+          <a class="btn btn-primary" href="mailto:pieter@houseofrealtors.co.za?subject=Tycoon%20Classroom%20Pack&body=Hi%20Pieter%2C%0A%0AI%27d%20like%20a%20Classroom%20Pack%20for%20my%20class.%0A%0ASchool%3A%20%0AClass%20size%3A%20%0AStart%20date%3A%20">Get your class code</a>
+        </div>
+        <div class="tier">
+          <h3>School License</h3>
+          <div class="price">$399 <small>/ school year</small></div>
+          <ul>
+            <li>Unlimited classrooms, one campus</li>
+            <li>Codes per teacher or per period</li>
+            <li>Priority support</li>
+          </ul>
+          <a class="btn btn-ghost" href="mailto:pieter@houseofrealtors.co.za?subject=Tycoon%20School%20License">Talk to us</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="rule-row"><span class="folio">№ 04</span></div>
+      <h2 style="margin-bottom: 44px;">Questions teachers ask.</h2>
+      <details open>
+        <summary>What do students actually do in the game?</summary>
+        <div class="a">Each turn is one month. Students manage a salary and budget, choose investments
+        (index funds to real estate, with mortgages amortised properly), respond to life events,
+        invest in education and side hustles, and balance energy, stress, and happiness. A run to
+        financial freedom takes roughly 2–6 class periods depending on difficulty.</div>
+      </details>
+      <details>
+        <summary>How does the class code work?</summary>
+        <div class="a">You receive one code (for example <code>LINCOLN-HS-2026</code>). Students open the game
+        in a browser, enter the code once, and the full version unlocks on that device for the year.
+        No accounts, no roster upload.</div>
+      </details>
+      <details>
+        <summary>What about student privacy?</summary>
+        <div class="a">The game requires no student names, emails, or accounts. Progress is stored locally
+        on each device. Optional cloud backup exists but is off by default and never required for class use.</div>
+      </details>
+      <details>
+        <summary>Does it map to curriculum standards?</summary>
+        <div class="a">Tycoon covers budgeting, compound growth, diversification and risk, credit scores and
+        borrowing, insurance decisions, income taxes on windfalls, career investment, and inflation — the
+        core strands of state personal-finance standards and the NGPF course arc. Pair any unit with the
+        in-game glossary and quizzes for assessment.</div>
+      </details>
+      <details>
+        <summary>Is there homework potential?</summary>
+        <div class="a">The Daily Challenge resets every 24 hours with a fresh seeded world — same for every
+        player on Earth. It takes about 15 minutes and produces a shareable result card, which makes it a
+        naturally self-grading bell-ringer or homework loop.</div>
+      </details>
+      <details>
+        <summary>Can I try before buying?</summary>
+        <div class="a">Yes — the free demo is the real game for the first 36 simulated months, which
+        comfortably covers a trial unit. No sign-up needed.</div>
+      </details>
+    </section>
+
+    <div class="closer">
+      <p class="eyebrow">Ready when you are</p>
+      <h2 style="max-width: 16ch; margin-top: 14px; margin-left:auto; margin-right:auto;">Give your class three simulated years of consequences.</h2>
+      <p class="lede" style="max-width: 44ch;">One email gets you a class code, usually the same day.</p>
+      <div class="hero-cta" style="justify-content: center;">
+        <a class="btn btn-primary" href="mailto:pieter@houseofrealtors.co.za?subject=Tycoon%20Classroom%20Pack">Email for a class code</a>
+        <a class="btn btn-ghost" href="https://tycoonjan22026.netlify.app/" target="_blank" rel="noopener">Try the demo first</a>
+      </div>
+    </div>
+
+    <footer>
+      <span>TYCOON — Financial Freedom Simulator</span>
+      <span><a href="https://tycoonjan22026.netlify.app/">Play the game</a> · <a href="https://pieterrealtor.gumroad.com/l/tycoon" rel="noopener">Individual copies $12</a></span>
+    </footer>
+  </main>
+</body>
+</html>

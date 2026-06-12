@@ -412,14 +412,23 @@ returned `{valid:true, source:'gumroad'}`.
      (suite 23 files / 161). Still queued: merge the two keyboard
      systems, full activeTab retirement.
 
-3. **B2B classroom packs** (business + light code). Bulk access codes
-   already work via the `ACCESS_CODES` Netlify env var (comma-separated —
-   add e.g. `SPRINGFIELD2026` for a school; remember warm functions cache
-   env, so redeploy after changing). Needs: a one-page offer (positioning:
-   25+ US states mandate personal-finance courses), pricing for class sets,
-   outreach list (teachers, credit unions, fee-only advisors). The learning
-   counterfactuals + year-in-review features are the teacher-facing hook;
-   the run summary card is the shareable artifact.
+3. **B2B classroom packs — assets SHIPPED 2026-06-12**; what remains is
+   the actual outreach (Pieter's court).
+   - **Live offer page**: /educators (static `public/educators.html`,
+     "ledger editorial" design — Fraunces + IBM Plex Mono; netlify.toml
+     redirect for the clean URL; linked from the ModeSelector footer
+     "For educators"). Tiers: Free Demo / Classroom Pack $99/yr (35
+     students, one code) / School License $399/yr. CTAs are mailto:
+     pieter@houseofrealtors.co.za (swap if a dedicated address is made).
+   - **Playbook**: `docs/b2b-classroom-packs.md` — pricing rationale,
+     3-minute fulfillment runbook (ACCESS_CODES + the redeploy gotcha,
+     code naming, reply snippet, sales ledger), optional $99 Gumroad
+     product setup, outreach targets (NGPF community first, then
+     Reddit/CTE associations/Jump$tart/credit unions) + email template
+     with a free-pilot close.
+   - Next actions for Pieter: (1) optionally create the $99 Gumroad
+     "Classroom Pack" product, (2) post the demo to the NGPF community,
+     (3) work the email template down the target list.
 
 ## Known issues / debt
 
