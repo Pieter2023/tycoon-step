@@ -4,6 +4,13 @@
 **Last Updated:** 2025-12-30
 **Document Type:** Technical Discovery & Planning
 
+> **FINAL status (2026-06-12): HISTORICAL DOCUMENT.** The refactor this
+> map planned is complete — the 44+ useState problem is solved (five
+> cluster hooks in `hooks/`), the legacy shell is deleted, tabs are
+> statically imported by the v2 pages (no longer lazy), and the suite is
+> 23 files / 161 tests. Do not act on anything below; current truth is
+> CLAUDE.md + docs/roadmap.md.
+
 > **Status update (2026-06-11):** this map is from the Dec 2025 discovery
 > and is partially stale. What changed since: App.tsx is ~6.3k lines (was
 > 6.5k→8.5k→6.3k; ALL modals now live in `components/modals/` — 20 files);

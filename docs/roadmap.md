@@ -18,22 +18,29 @@ outreach (playbook has next actions); deferred refactors (keyboard-system
 merge, full activeTab retirement); multiplayer polish remains
 deprioritized. Slice history + sunset lists below.
 
-## Cold-start context for the next session (written 2026-06-11 EOD)
+## Cold-start context for the next session (refreshed 2026-06-12 EOD)
 
-- **Where the refactor stands:** every modal is out of App.tsx
-  (`components/modals/`, 21 files incl. TutorialVideosModal); all tab
-  content was already extracted + lazy-loaded (`components/tabs/`); the
-  intro-video state machine is `hooks/useTabIntroVideo.ts`. What's left
-  in App.tsx (~6.1k lines): ~4k lines of state/handlers (44+ useState),
-  the v2 shell wiring, and the ~800-line legacy shell branch.
+- **Where the refactor stands: FINISHED.** App.tsx (~4.4k lines, from
+  8,467) is state + orchestration only: modals in `components/modals/`
+  (21 files), tab content in `components/tabs/` (statically imported by
+  the `components/v2/` pages), five state clusters in `hooks/`
+  (useSaveLoad, useAutoplay+useAutoplayScheduler, useTutorial,
+  useCoachHints, useBatchBuy; useTabIntroVideo predates them). The
+  legacy shell is DELETED — v2 renders unconditionally.
 - **Key facts you'd otherwise rediscover the hard way:**
-  - ~~`uiV2Enabled`~~ GONE (2026-06-12): the legacy shell is retired,
-    v2 renders unconditionally, and all five integration tests drive
-    the v2 shell. `activeTab` survives as a logical-location mirror
-    written by `navigateToTab` (coach gates read it).
+  - ~~`uiV2Enabled`~~ GONE (2026-06-12): no flag, no `tycoon_ui_v2` key;
+    all five integration tests drive the v2 shell (AccessibilitySmoke
+    stubs matchMedia per-test to pick DesktopShell vs MobileShell).
+  - `activeTab` survives as a logical-location mirror written by
+    `navigateToTab` (coach-ribbon/highlight gates read it). Full
+    retirement is a deferred follow-up — don't "clean it up" casually.
   - The extracted gameplay modals are CONTROLLED components — state and
     side effects deliberately stayed in App (see the slice notes below
-    for what stayed where and why).
+    for what stayed where and why). Same for the hooks: each hook's
+    header comment names its deliberate quirks (TDZ call-site
+    constraints, effect-order dependencies, plain-function handlers).
+  - `tycoon_onboarding_seen_v1` semantics are a HARD test contract
+    (5 integration tests seed it to suppress the tutorial overlay).
   - Verification workflow that works: seed localStorage
     `tycoon_authenticated=true` + `tycoon_access_tier=full` (+
     `tycoon_onboarding_seen_v1=1`, `tycoon_quick_tutorial_seen_v1=1` to
@@ -42,10 +49,12 @@ deprioritized. Slice history + sunset lists below.
     matches `ls dist/assets/index-*.js` after a local build.
   - QuestLog has a button with the same label as the claim-all confirm
     dialog's button — scripted clicks must target the modal's instance.
-- **Recommended next moves (in order):** see "Next build priorities" —
-  state organization is the big one; start by grouping related useState
-  clusters into hooks (the useTabIntroVideo pattern worked well) rather
-  than a big-bang context/Zustand rewrite.
+  - The headless preview browser reports width 0 → MobileShell; use
+    preview_resize (e.g. 1440px) to exercise DesktopShell.
+- **Recommended next moves:** none queued — see "Next build priorities"
+  item 3 for Pieter's B2B outreach actions, and the deferred-refactor
+  list (keyboard-system merge, activeTab retirement) if build work is
+  wanted.
 
 ## Recently shipped (2026-06-10)
 
@@ -432,15 +441,25 @@ returned `{valid:true, source:'gumroad'}`.
      "Classroom Pack" product, (2) post the demo to the NGPF community,
      (3) work the email template down the target list.
 
-## Known issues / debt
+## Known issues / debt (refreshed 2026-06-12)
 
-- `App.tsx` ~5.9k lines (down from ~8.5k; legacy shell branch + remaining
-  state clusters pending);
+- `App.tsx` ~4.4k lines (down from ~8.5k; refactor complete).
   `App.tsx.backup`, `constants.ts.save`, `tycoon-eq-upgrade-code-only.zip`
-  are junk files on disk (now gitignored)
-- Dead code in App.tsx: scenarioImage parallax motion values/springs/
-  handlers are defined but never attached (feature was removed upstream)
-- Build chunk-size warning (836KB main bundle) — code-split candidates exist
+  are junk files on disk (gitignored)
+- Two keyboard systems both bind keys (`hooks/useKeyboardShortcuts` +
+  App's inline keydown effect) — pre-existing; merge is a deferred
+  follow-up. Known quirk: Shift+A triggers both the autoplay toggle and
+  the plain-'a' Actions binding.
+- `activeTab` mirror (see cold-start notes) — deferred retirement.
+- `services/tabState.ts` is orphaned (only its own test imports it) —
+  delete with its test whenever convenient.
+- `hideTipsEverywhere` pref persists but has no UI writer since the
+  legacy tips toggle sunset — if a stuck device ever suppresses the
+  quick-tutorial, clear `tycoon_hide_tips_v1`; consider porting the
+  toggle into AccessibilityModal.
+- Build chunk-size warning (~1.1MB main bundle) — code-split candidates
+  exist (recharts already split)
 - Multiplayer flow exists but is unpolished; deliberately deprioritized
+  (no v2 "Turn X/3" chip — sunset with the legacy shell)
 - Unlock state is client-side localStorage — fine at this price point;
   revisit (signed tokens + accounts) only if piracy becomes measurable

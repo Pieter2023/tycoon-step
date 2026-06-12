@@ -38,4 +38,3 @@ Use this list to verify critical flows after UI refactors or logic changes.
 
 ## UI v2 Toggle
 - Enable UI v2 and confirm all five top-level pages render (Play, Money, Career, Learn, Life).
-- Disable UI v2 and confirm the legacy tabbed UI still works.

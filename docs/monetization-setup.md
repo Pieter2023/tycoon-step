@@ -46,6 +46,11 @@ No extra infrastructure needed: generate a batch of codes (e.g.
 `RIVERSIDE-HS-01` … `-30`), append them to `ACCESS_CODES`, invoice the school
 directly. One code per seat or one shared code per classroom — your choice.
 
+**As of 2026-06-12 this is a real offer**: live page at
+https://tycoonjan22026.netlify.app/educators (Classroom Pack $99/yr for
+35 students, School License $399/yr) — full pricing rationale,
+fulfillment runbook, and outreach plan in `docs/b2b-classroom-packs.md`.
+
 ## 4. Local development
 
 Plain `vite dev` doesn't serve Netlify functions. In dev builds only, the code

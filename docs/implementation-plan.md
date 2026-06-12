@@ -4,6 +4,14 @@
 **Date:** 2025-12-30
 **Status:** Discovery Complete - Ready for Prioritization
 
+> **FINAL status (2026-06-12): HISTORICAL DOCUMENT — every tracked item
+> is now done or deliberately closed.** QW-3 shipped as
+> `hooks/useTabIntroVideo.ts`; M-3/L-2 shipped as five cluster hooks
+> (phase 3); the legacy-shell half of L-1 is DELETED (v2 renders
+> unconditionally). Still open by choice: L-3 (strict TS), QW-4
+> (Tailwind config), M-6 (KidsApp static import). Current truth is
+> CLAUDE.md + docs/roadmap.md.
+
 > **Status update (2026-06-11):** this plan is from the Dec 2025 discovery;
 > much of it has since shipped. Done: **QW-8** (vitest is set up — the
 > suite is now 23 files / 150 tests), **M-4** (gameLogic has solid

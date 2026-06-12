@@ -8,7 +8,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (23 files / 160 tests, all green as of
+- `npm run test:run` — vitest suite (23 files / 161 tests, all green as of
   2026-06-12; ALL integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
@@ -35,10 +35,14 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 - `components/ChallengeShareCard.tsx` — canvas share card (1200×630), used by
   BOTH the daily challenge end screen and normal games' "Run summary card"
   (branches on `gameState.challenge`; normal-game entry points: victory modal,
-  bankruptcy modal, HUD menu, mobile overflow, MoreScreen)
+  bankruptcy modal, the shared Quick-actions menu, MoreScreen)
 - `constants.ts` — careers, investments, events, education, difficulty settings
 - `data/events.json` — additional life events
-- `components/v2/` — newer shell UI (DesktopShell sidebar / MobileShell bottom-nav)
+- `components/v2/` — THE shell UI (DesktopShell sidebar / MobileShell
+  bottom-nav; `isMobileViewport` via matchMedia picks one). Both share
+  the "Quick actions" overflow Modal in App.tsx (`overflowMenuOpen`,
+  aria "More options"/"Quick actions"): Save/Load, Run summary card,
+  Quests, Glossary, Tutorial videos, Accessibility, Mute, Back to Menu.
 - `components/modals/` — ALL of App.tsx's modals now live here (21 files:
   end-game, utility, event/onboarding, the gameplay set — scenario,
   turn-preview, mortgage, market-special, save-manager, tab-intro-video —
@@ -79,8 +83,9 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 - `hooks/useCoachHints.ts` — phase-3 slice 4: coach ribbon state +
   5s auto-clear, the five section focus refs + scroll-into-view, the
   one-time Self Learn hint, and the "Re-open Preview" pill (state +
-  25s timer; pill/ribbon JSX stays in App — note the ribbon only
-  renders in the legacy shell). Exports CoachTarget/CoachHintData
+  25s timer). The ribbon JSX is a FLOATING overlay in App.tsx (fixed
+  top-center, gate `coachHint.tabId === activeTab`) rendered over both
+  shells since the legacy retirement. Exports CoachTarget/CoachHintData
   types + SELF_LEARN_HINT_STORAGE_KEY.
 - `hooks/useBatchBuy.ts` — phase-3 slice 5 (phase 3 COMPLETE): cart
   mode/quantities, the priced cart memo, and all handlers. Handlers are
@@ -89,9 +94,15 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
   fresh-per-render closures. No recordAutosave on purpose: batch buys
   persist indirectly via the event-sync effect seeing the prepended
   📦 event. Has a local formatMoneyFull copy (importing App's would be
-  a cycle). The fixed Batch Cart bar JSX stays in App (reads activeTab).
+  a cycle). Checkout UI lives in InvestTab's cart strip (Review & Buy /
+  Clear) — the old fixed cart bar died with the legacy shell.
 - `KidsApp.tsx` — separate simplified kids mode
-- `docs/architecture-map.md` — deeper technical map (from Dec 2025 discovery)
+- `public/educators.html` — standalone B2B offer page at /educators
+  (netlify.toml redirect; linked from the ModeSelector footer);
+  playbook in `docs/b2b-classroom-packs.md`
+- `docs/architecture-map.md`, `docs/implementation-plan.md`,
+  `docs/ui-refactor-map.md` — HISTORICAL (pre-refactor snapshots; each
+  carries a banner). This file + `docs/roadmap.md` are the current truth.
 
 ## Daily Challenge (built 2026-06-11, live)
 
@@ -161,49 +172,45 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
   `git checkout main` / `reset --hard` across that boundary locally**; it will
   try to delete those from disk. Update remote main via push (cmd above).
 
-## Current state & next steps
+## Current state & next steps (2026-06-12 EOD)
 
-Everything through the Supabase milestone is **shipped, verified live, and
-deployed** as of end-of-day 2026-06-11: daily challenge (+ streaks, OG tags,
-leaderboard), run summary card, learning counterfactuals (sell hindsights +
-year-in-review), cloud saves (sync code + accounts), email login with custom
-SMTP. Working tree clean; remote main == working branch.
+**Everything in the roadmap queue is shipped, verified live, and deployed.**
+Working tree clean; remote main == working branch. The feature surface:
+daily challenge (+ streaks, OG tags, leaderboard with account linking),
+run summary card, learning counterfactuals (sell hindsights +
+year-in-review), cloud saves (sync code + accounts), email login with
+custom SMTP — all from 2026-06-11. From 2026-06-12: the App.tsx refactor
+finished (modals → `components/modals/`, tabs → `components/tabs/`, five
+state clusters → `hooks/`, **legacy shell deleted**; 8467 → ~4.4k lines),
+three production v2 bugs fixed along the way (TurnPreview quick-fix nav,
+intro-video Continue, invest-quiz trigger), the shared Quick-actions menu
+(both shells: Save/Load…Mute, Back to Menu), desktop Year/Month indicator,
+multi-item batch checkout in InvestTab, and the **B2B educator offer**
+(live page at /educators + `docs/b2b-classroom-packs.md` playbook).
 
-Also shipped 2026-06-11 (later sessions): leaderboard→accounts linking
-(suite 23 files / 150 tests); the **entire modal extraction phase of the
-App.tsx split** (all 20 modals → `components/modals/`, one commit per
-risky modal, App.tsx 8467 → ~6.1k lines); phase-2 cleanup (dead parallax
-code, QW-3 `hooks/useTabIntroVideo.ts`); **legacy-only features ported to
-v2** (clickable dashboard metric cards → drill-down modal with a 4-chart
-switcher; "Tutorial videos" chooser in HUD menu / mobile overflow /
-MoreScreen — the 7 tutorial videos are finally reachable by players);
-regenerated the missing portfolio poster. All verified live at every step.
+**No queued build work.** Open threads, in priority order:
+1. **B2B outreach (Pieter, not code)** — next actions in
+   `docs/b2b-classroom-packs.md`: optional $99 Gumroad "Classroom Pack"
+   product, post the demo to the NGPF teacher community, work the email
+   template down the target list. Fulfillment = add code to
+   `ACCESS_CODES` + redeploy (warm functions cache env!).
+2. Deferred refactors (small, optional): merge the two keyboard systems
+   (`useKeyboardShortcuts` + the inline keydown effect both bind keys);
+   fully retire `activeTab` (derive location from v2Path + page-local
+   tab state; today it's a mirror written by `navigateToTab`).
+3. Multiplayer polish — deliberately deprioritized.
 
-**The queue (details + COLD-START CONTEXT section in `docs/roadmap.md` —
-read that first in a new session):**
-1. ~~App.tsx split, phase 3: state organization~~ **COMPLETE 2026-06-12**
-   — all five clusters extracted into hooks, one verified slice each:
-   save/load (`useSaveLoad`, 6082 → 5906), autoplay (`useAutoplay`,
-   → 5885), tutorial (`useTutorial`, → 5809), coach hints
-   (`useCoachHints`, → 5682), batch-buy (`useBatchBuy`, → 5479).
-   Next up: retire the legacy shell (item 2 below)
-2. ~~Retire the legacy shell~~ **DONE 2026-06-12** — all five App-mount
-   tests migrated to v2 selectors, then the branch + dead code deleted
-   (App.tsx 5479 → ~4.4k; HelpDrawer/DashboardWidget/OverviewTab/
-   Confetti files removed). Ported in the process: coach ribbon (now a
-   floating overlay in v2), TurnPreview quick-fix navigation +
-   intro-video Continue (were silently broken in v2), invest-quiz
-   trigger (was unreachable in v2), desktop Year/Month indicator,
-   TabErrorBoundary around the v2 pages. Sunset list + spawned
-   follow-ups (desktop utility menu, Back-to-Menu in v2, keyboard-system
-   merge, activeTab retirement) in docs/roadmap.md.
-3. B2B classroom packs (one-page offer + outreach; bulk codes already work)
+If something looks broken at cold start: `docs/roadmap.md` has the full
+slice-by-slice history (what moved where and why, sunset list, every
+verification), and `git log --oneline -30` reads as a narrative.
 
 Day-to-day workflow that worked well: build → test (`npm run test:run`) →
 verify live in the preview browser (seed localStorage
-`tycoon_authenticated=true` + `tycoon_access_tier=full`, clean up after) →
-update CLAUDE.md + roadmap → commit → push to main (auto-deploys) → confirm
-the new bundle is served (grep a new string in the live JS).
+`tycoon_authenticated=true` + `tycoon_access_tier=full`, plus
+`tycoon_onboarding_seen_v1=1` + `tycoon_quick_tutorial_seen_v1=1` to
+suppress tutorials; clean up keys after) → update CLAUDE.md + roadmap →
+commit → push to main (auto-deploys) → confirm the new bundle is served
+(poll the live HTML for the new `dist/assets/index-*.js` filename).
 
 ## Daily leaderboard / Supabase (built 2026-06-11)
 

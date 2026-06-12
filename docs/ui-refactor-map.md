@@ -1,5 +1,13 @@
 # UI Refactor Map
 
+> **HISTORICAL DOCUMENT (banner added 2026-06-12).** Written before the
+> v2 shell became the only shell. Stale claims below: the legacy tab nav
+> is deleted (v2Path + MoneyPage/LifePage internal tabs navigate;
+> `activeTab` is only a mirror), `OverviewTab.tsx` no longer exists
+> (CommandDashboard is the v2 overview), and the `tycoon_ui_v2` /
+> Ctrl+Shift+U toggle is gone. Current truth: CLAUDE.md + docs/roadmap.md.
+
+
 ## Current Navigation
 - Navigation is custom tab state in `App.tsx` (no React Router). `activeTab` drives which tab component renders.
 - Tab ids come from `TABS` in `types.ts`.
