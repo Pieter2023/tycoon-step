@@ -12,6 +12,7 @@ const ONBOARDING_SEEN_STORAGE_KEY = 'tycoon_onboarding_seen_v1';
 describe('mortgage modal', () => {
   beforeEach(() => {
     localStorage.setItem(ONBOARDING_SEEN_STORAGE_KEY, '1');
+    localStorage.setItem('tycoon_ui_v2', '1');
     Object.defineProperty(window, 'scrollTo', {
       value: vi.fn(),
       configurable: true
@@ -31,7 +32,7 @@ describe('mortgage modal', () => {
       </I18nProvider>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /^invest$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^money invest/i }));
 
     await screen.findByText(/batch buy/i);
     const main = await screen.findByRole('main');

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { vi } from 'vitest';
 import { INITIAL_GAME_STATE, CHARACTERS } from '../constants';
 import { I18nProvider } from '../i18n';
@@ -9,9 +9,10 @@ vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
 
 const ONBOARDING_SEEN_STORAGE_KEY = 'tycoon_onboarding_seen_v1';
 
-describe('glossary and quiz', () => {
+describe('glossary and quiz (v2 shell)', () => {
   beforeEach(() => {
     localStorage.setItem(ONBOARDING_SEEN_STORAGE_KEY, '1');
+    localStorage.setItem('tycoon_ui_v2', '1');
     localStorage.removeItem('tycoon_quiz_seen_v1');
     Object.defineProperty(window, 'scrollTo', {
       value: vi.fn(),
@@ -19,7 +20,7 @@ describe('glossary and quiz', () => {
     });
   });
 
-  it('opens the glossary from the HUD menu', async () => {
+  it('opens the glossary from the invest tab link', async () => {
     const initialGameState = { ...INITIAL_GAME_STATE, character: CHARACTERS[0] };
     render(
       <I18nProvider>
@@ -27,11 +28,14 @@ describe('glossary and quiz', () => {
       </I18nProvider>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /open dashboard menu/i }));
-    fireEvent.click(screen.getByRole('button', { name: /glossary/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^money invest/i }));
+    await screen.findByText(/batch buy/i);
 
-    expect(await screen.findByRole('dialog', { name: /glossary/i })).toBeInTheDocument();
-    expect(screen.getByText(/yield/i)).toBeInTheDocument();
+    const glossaryLinks = screen.getAllByRole('button', { name: /glossary: apy/i });
+    fireEvent.click(glossaryLinks[0]);
+
+    const dialog = await screen.findByRole('dialog', { name: /glossary/i });
+    expect(within(dialog).getAllByText(/yield/i).length).toBeGreaterThan(0);
   });
 
   it('shows and allows skipping the invest quiz', async () => {
@@ -42,7 +46,7 @@ describe('glossary and quiz', () => {
       </I18nProvider>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /^invest$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^money invest/i }));
     await screen.findByText(/batch buy/i);
 
     fireEvent.click(screen.getByRole('button', { name: /bonds/i }));

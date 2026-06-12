@@ -33,12 +33,12 @@ const renderApp = (initialGameState = buildInitialState()) =>
 const setBaseStorage = () => {
   localStorage.clear();
   localStorage.setItem(ONBOARDING_SEEN_STORAGE_KEY, '1');
-  localStorage.setItem('tycoon_ui_v2', '0');
+  localStorage.setItem('tycoon_ui_v2', '1');
 };
 
-const expectHeaderKpi = (header: HTMLElement, label: string, value: string) => {
-  const headerScope = within(header);
-  const labelNode = headerScope.getByText(label, { selector: 'p' });
+// v2: the KPI MetricCards live in CommandDashboard inside <main>.
+const expectKpi = (scope: HTMLElement, label: string, value: string) => {
+  const labelNode = within(scope).getByText(label, { selector: 'p' });
   const card = labelNode.parentElement;
   expect(card).not.toBeNull();
   expect(within(card as HTMLElement).getByText(value)).toBeInTheDocument();
@@ -49,14 +49,13 @@ it('shows KPI values that match selectors on load', () => {
   const initialGameState = buildInitialState();
   const cashFlow = calculateMonthlyCashFlowEstimate(initialGameState);
   const netWorth = calculateNetWorth(initialGameState);
-  const { container } = renderApp(initialGameState);
+  renderApp(initialGameState);
 
-  const header = container.querySelector('header') as HTMLElement | null;
-  expect(header).not.toBeNull();
+  const main = screen.getByRole('main');
 
-  expectHeaderKpi(header as HTMLElement, 'Cash', formatCurrencyCompactValue(initialGameState.cash));
-  expectHeaderKpi(header as HTMLElement, 'Net Worth', formatCurrencyCompactValue(netWorth));
-  expectHeaderKpi(header as HTMLElement, 'Passive / mo', formatCurrencyCompactValue(cashFlow.passive));
+  expectKpi(main, 'Cash', formatCurrencyCompactValue(initialGameState.cash));
+  expectKpi(main, 'Net Worth', formatCurrencyCompactValue(netWorth));
+  expectKpi(main, 'Passive Income', `${formatCurrencyCompactValue(cashFlow.passive)}/mo`);
 });
 
 it('advances month and refreshes KPI values when Next Month is clicked', async () => {
@@ -71,25 +70,25 @@ it('advances month and refreshes KPI values when Next Month is clicked', async (
   const { container } = renderApp(initialGameState);
 
   try {
-    const button = await screen.findByRole('button', { name: /next month/i });
+    const header = container.querySelector('header') as HTMLElement;
+    expect(header).not.toBeNull();
+    const button = await within(header).findByRole('button', { name: /next month/i });
     await act(async () => {
       await user.click(button);
     });
     await new Promise((resolve) => setTimeout(resolve, 200));
 
-    const header = container.querySelector('header') as HTMLElement | null;
-    expect(header).not.toBeNull();
-
     const expectedMonthOfYear = ((expectedState.month - 1) % 12) + 1;
-    expect(await within(header as HTMLElement).findByText(new RegExp(`Month ${expectedMonthOfYear}`))).toBeInTheDocument();
+    expect(await within(header).findByText(new RegExp(`Month ${expectedMonthOfYear}`))).toBeInTheDocument();
 
     const expectedCash = formatCurrencyCompactValue(expectedState.cash);
     const expectedNetWorth = formatCurrencyCompactValue(calculateNetWorth(expectedState));
     const expectedPassive = formatCurrencyCompactValue(calculateMonthlyCashFlowEstimate(expectedState).passive);
 
-    expectHeaderKpi(header as HTMLElement, 'Cash', expectedCash);
-    expectHeaderKpi(header as HTMLElement, 'Net Worth', expectedNetWorth);
-    expectHeaderKpi(header as HTMLElement, 'Passive / mo', expectedPassive);
+    const main = screen.getByRole('main');
+    expectKpi(main, 'Cash', expectedCash);
+    expectKpi(main, 'Net Worth', expectedNetWorth);
+    expectKpi(main, 'Passive Income', `${expectedPassive}/mo`);
   } finally {
     randomSpy.mockRestore();
   }

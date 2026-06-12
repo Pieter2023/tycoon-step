@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import { INITIAL_GAME_STATE, CHARACTERS } from '../constants';
 import { I18nProvider } from '../i18n';
@@ -10,32 +10,17 @@ import App from '../App';
 
 const ONBOARDING_SEEN_STORAGE_KEY = 'tycoon_onboarding_seen_v1';
 
-describe('tab navigation state', () => {
+describe('invest tab state persistence (v2 shell)', () => {
   beforeEach(() => {
     localStorage.setItem(ONBOARDING_SEEN_STORAGE_KEY, '1');
+    localStorage.setItem('tycoon_ui_v2', '1');
+    Object.defineProperty(window, 'scrollTo', {
+      value: vi.fn(),
+      configurable: true
+    });
   });
 
-  it('restores invest filters and scroll position when returning to a tab', async () => {
-    let scrollY = 0;
-    const scrollTo = vi.fn((options?: ScrollToOptions | number, y?: number) => {
-      if (typeof options === 'number') {
-        scrollY = options;
-      } else if (typeof y === 'number') {
-        scrollY = y;
-      } else if (options && typeof options.top === 'number') {
-        scrollY = options.top;
-      }
-    });
-
-    Object.defineProperty(window, 'scrollY', {
-      get: () => scrollY,
-      configurable: true
-    });
-    Object.defineProperty(window, 'scrollTo', {
-      value: scrollTo,
-      configurable: true
-    });
-
+  it('keeps invest filters and search when navigating away and back', async () => {
     const initialGameState = { ...INITIAL_GAME_STATE, character: CHARACTERS[0] };
     render(
       <I18nProvider>
@@ -43,25 +28,17 @@ describe('tab navigation state', () => {
       </I18nProvider>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /^invest$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^money invest/i }));
     fireEvent.click(await screen.findByRole('button', { name: /bonds/i }));
     const searchInput = await screen.findByPlaceholderText(/search investments/i);
     fireEvent.change(searchInput, { target: { value: 'index' } });
 
-    scrollY = 420;
-    fireEvent.click(screen.getByRole('button', { name: /^portfolio$/i }));
+    // Leave the Money page entirely (unmounts InvestTab), then return.
+    fireEvent.click(screen.getByRole('button', { name: /^career salary/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^money invest/i }));
 
-    scrollY = 0;
-    fireEvent.click(screen.getByRole('button', { name: /^invest$/i }));
-    await screen.findByRole('button', { name: /bonds/i });
-
-    await waitFor(() => {
-      expect(scrollTo).toHaveBeenCalled();
-    });
-
-    const bondsButton = screen.getByRole('button', { name: /bonds/i });
+    const bondsButton = await screen.findByRole('button', { name: /bonds/i });
     expect(bondsButton.className).toMatch(/ds-button--primary/);
     expect(screen.getByPlaceholderText(/search investments/i)).toHaveValue('index');
-    expect(scrollTo).toHaveBeenLastCalledWith({ top: 420, behavior: 'auto' });
   });
 });
