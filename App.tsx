@@ -14,6 +14,8 @@ import TabErrorBoundary from './components/TabErrorBoundary';
 import { useTabIntroVideo } from './hooks/useTabIntroVideo';
 import { useSaveLoad } from './hooks/useSaveLoad';
 import { useAutoplay, useAutoplayScheduler, AUTOPLAY_SPEED_OPTIONS, AUTOPLAY_SPEED_LABELS } from './hooks/useAutoplay';
+import { useTutorial } from './hooks/useTutorial';
+import { useCoachHints, CoachTarget } from './hooks/useCoachHints';
 import Modal from './components/Modal';
 import {
   VictoryModal,
@@ -33,7 +35,6 @@ import {
   MarketSpecialAction,
   DashboardDetailModal,
   QuickTutorialModal,
-  QUICK_TUTORIAL_STORAGE_KEY,
   TutorialModal,
   TUTORIAL_TIPS,
   MortgageModal,
@@ -175,26 +176,6 @@ const getHustleUpgradeLabel = (hustle: SideHustle, index: number, optionId?: str
 // TurnPreviewLine/TurnPreviewData types now live in components/modals/TurnPreviewModal.
 
 // ConfirmDialogConfig and AccessibilityPrefs now live in components/modals/.
-
-// ============================================
-// COACH UI (Step 12)
-// ============================================
-type CoachTarget =
-  | 'monthly-actions'
-  | 'lifestyle-grid'
-  | 'assets-sell'
-  | 'sidehustles-list'
-  | 'bank-loans'
-  | 'self-learn-tab';
-
-type CoachHintData = {
-  id: string;
-  tabId: TabId;
-  title: string;
-  message: string;
-  target?: CoachTarget;
-  allowReopenPreview?: boolean;
-};
 
 const getRiskColor = (risk: string) => {
   const colors: Record<string, string> = {
@@ -438,9 +419,6 @@ const NEGOTIATIONS_INTRO_VIDEO_SRC = '/videos/tycoon-master-negotiations.mp4';
 
 const QUICK_TUTORIAL_SRC = '/videos/quick-tutorial.mp4';
 
-const AUTO_TUTORIAL_POPUPS_STORAGE_KEY = 'tycoon_auto_tutorial_popups_v1';
-const ONBOARDING_SEEN_STORAGE_KEY = 'tycoon_onboarding_seen_v1';
-const HIDE_TIPS_STORAGE_KEY = 'tycoon_hide_tips_v1';
 const CASH_FLOW_HISTORY_STORAGE_KEY = 'tycoon_cash_flow_history_v1_';
 const AI_DISRUPTION_HISTORY_STORAGE_KEY = 'tycoon_ai_disruption_history_v1_';
 const UI_V2_STORAGE_KEY = 'tycoon_ui_v2';
@@ -467,7 +445,6 @@ const readUiV2Preference = () => {
   return true;
 };
 const LAST_SAVE_SLOT_STORAGE_KEY = 'tycoon_last_save_slot_v1';
-const SELF_LEARN_HINT_STORAGE_KEY = 'tycoon_self_learn_hint_v1';
 
 const resolveSaveSlot = (raw: string | null): SaveSlotId => {
   if (raw === 'autosave' || raw === 'slot1' || raw === 'slot2' || raw === 'slot3') return raw;
@@ -833,9 +810,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const [showTutorialVideos, setShowTutorialVideos] = useState(false);
   const [showSideHustleUpgradeModal, setShowSideHustleUpgradeModal] = useState(false);
   const [showEventLab, setShowEventLab] = useState(false);
-  const [showQuickTutorial, setShowQuickTutorial] = useState(false);
-
-  const quickTutorialVideoRef = useRef<HTMLVideoElement | null>(null);
   const [eventLabEventId, setEventLabEventId] = useState(ALL_LIFE_EVENTS[0]?.id || '');
   const [eventLabOptionIdx, setEventLabOptionIdx] = useState(0);
   const [eventLabSimulation, setEventLabSimulation] = useState<{
@@ -891,22 +865,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   // Confetti configuration for origin point
   const [confettiConfig, setConfettiConfig] = useState<{ origin: { x: number; y: number } } | null>(null);
 
-  // ============================================
-  // COACH HINTS + HIGHLIGHTS (Step 12)
-  // ============================================
-  const [coachHint, setCoachHint] = useState<CoachHintData | null>(null);
-  const coachTimeoutRef = useRef<number | null>(null);
-
-  // After a "Quick Fix" jump, offer a convenient "Re-open Preview" pill for a short time.
-  const [showReopenPreviewPill, setShowReopenPreviewPill] = useState(false);
-  const reopenPreviewTimeoutRef = useRef<number | null>(null);
-
-  // Coach focus refs (used to scroll + highlight the exact spot)
-  const coachMonthlyActionsRef = useRef<HTMLDivElement | null>(null);
-  const coachLifestyleGridRef = useRef<HTMLDivElement | null>(null);
-  const coachAssetsSellRef = useRef<HTMLDivElement | null>(null);
-  const coachSideHustlesRef = useRef<HTMLDivElement | null>(null);
-  const coachBankLoansRef = useRef<HTMLDivElement | null>(null);
   // ============================================
   // TAB INTRO VIDEOS (config-driven onboarding popups)
   // - Shows ONLY the first time a user opens a tab (per-device via localStorage)
@@ -1020,112 +978,21 @@ const [gameState, setGameState] = useState<GameState>(() => {
   }, [gameState.lifestyle, gameState.month]);
 
   // ============================================
-  // COACH HINTS (Step 12)
+  // COACH HINTS (Step 12) — state machine lives in hooks/useCoachHints
   // ============================================
-  const offerReopenPreview = useCallback(() => {
-    setShowReopenPreviewPill(true);
-    if (reopenPreviewTimeoutRef.current) {
-      window.clearTimeout(reopenPreviewTimeoutRef.current);
-    }
-    reopenPreviewTimeoutRef.current = window.setTimeout(() => {
-      setShowReopenPreviewPill(false);
-      reopenPreviewTimeoutRef.current = null;
-    }, 25000);
-  }, []);
-
-  const triggerCoachHint = useCallback((hint: Omit<CoachHintData, 'id'>) => {
-    const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    setCoachHint({ id, ...hint });
-    if (coachTimeoutRef.current) {
-      window.clearTimeout(coachTimeoutRef.current);
-    }
-    coachTimeoutRef.current = window.setTimeout(() => {
-      setCoachHint(null);
-      coachTimeoutRef.current = null;
-    }, 5000);
-
-    if (hint.allowReopenPreview) {
-      offerReopenPreview();
-    }
-  }, [offerReopenPreview]);
-
-  const coachHighlight = useCallback((target: CoachTarget) => {
-    const active = !!coachHint && coachHint.tabId === activeTab && coachHint.target === target;
-    return active
-      ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-900 shadow-[0_0_0_4px_rgba(16,185,129,0.12)] animate-pulse'
-      : '';
-  }, [activeTab, coachHint]);
-
-  // Scroll the exact focused UI section into view when a coach hint lands.
-  useEffect(() => {
-    if (!coachHint?.target) return;
-    if (coachHint.tabId !== activeTab) return;
-
-    const behavior: ScrollBehavior = reduceMotion ? 'auto' : 'smooth';
-    const opts: ScrollIntoViewOptions = { behavior, block: 'center' };
-
-    const getRef = (): React.RefObject<HTMLDivElement> | null => {
-      switch (coachHint.target) {
-        case 'monthly-actions':
-          return coachMonthlyActionsRef;
-        case 'lifestyle-grid':
-          return coachLifestyleGridRef;
-        case 'assets-sell':
-          return coachAssetsSellRef;
-        case 'sidehustles-list':
-          return coachSideHustlesRef;
-        case 'bank-loans':
-          return coachBankLoansRef;
-        case 'self-learn-tab':
-          return null;
-        default:
-          return null;
-      }
-    };
-
-    const r = getRef();
-    if (r?.current) {
-      try {
-        r.current.scrollIntoView(opts);
-      } catch (e) {
-        console.debug('scrollIntoView failed:', e);
-      }
-    }
-  }, [activeTab, coachHint?.id, coachHint?.tabId, coachHint?.target, reduceMotion]);
-
-  useEffect(() => {
-    if (!gameStarted || isMultiplayer) return;
-    try {
-      if (localStorage.getItem(SELF_LEARN_HINT_STORAGE_KEY) === '1') return;
-      const hintTimer = window.setTimeout(() => {
-        triggerCoachHint({
-          tabId: activeTab,
-          title: 'New Self Learn tab',
-          message: 'Sales Certification, Upgrade EQ, and Master Negotiations now live under Self Learn.',
-          target: 'self-learn-tab'
-        });
-        localStorage.setItem(SELF_LEARN_HINT_STORAGE_KEY, '1');
-      }, 1200);
-      return () => window.clearTimeout(hintTimer);
-    } catch (e) {
-      console.warn('Failed to show Self Learn hint:', e);
-    }
-  }, [activeTab, gameStarted, isMultiplayer, triggerCoachHint]);
-
-  // Cleanup timers
-  useEffect(() => {
-    return () => {
-      if (coachTimeoutRef.current) window.clearTimeout(coachTimeoutRef.current);
-      if (reopenPreviewTimeoutRef.current) window.clearTimeout(reopenPreviewTimeoutRef.current);
-    };
-  }, []);
-
-  // If a preview is opened, hide the "Re-open Preview" pill.
-  useEffect(() => {
-    if (showTurnPreview) {
-      setShowReopenPreviewPill(false);
-    }
-  }, [showTurnPreview]);
+  const {
+    coachHint,
+    setCoachHint,
+    triggerCoachHint,
+    coachHighlight,
+    showReopenPreviewPill,
+    setShowReopenPreviewPill,
+    coachMonthlyActionsRef,
+    coachLifestyleGridRef,
+    coachAssetsSellRef,
+    coachSideHustlesRef,
+    coachBankLoansRef
+  } = useCoachHints({ activeTab, gameStarted, isMultiplayer, reduceMotion, showTurnPreview });
 
   // ============================================
   // TAB INTRO VIDEOS (config-driven onboarding popups)
@@ -1215,35 +1082,24 @@ const [gameState, setGameState] = useState<GameState>(() => {
     showNotif
   });
 
-  const [autoTutorialPopups, setAutoTutorialPopups] = useState(() => {
-    try {
-      const stored = localStorage.getItem(AUTO_TUTORIAL_POPUPS_STORAGE_KEY);
-      return stored === null ? true : stored === '1';
-    } catch (e) {
-      console.warn('Failed to read tutorial popup preference:', e);
-      return true;
-    }
-  });
-  const [hideTipsEverywhere, setHideTipsEverywhere] = useState(() => {
-    try {
-      return localStorage.getItem(HIDE_TIPS_STORAGE_KEY) === '1';
-    } catch (e) {
-      console.warn('Failed to read tips preference:', e);
-      return false;
-    }
-  });
-  
-  // Tutorial state - track which tips have been shown
-  const [showTutorial, setShowTutorial] = useState(() => {
-    try {
-      return localStorage.getItem(ONBOARDING_SEEN_STORAGE_KEY) !== '1';
-    } catch (e) {
-      console.warn('Failed to read onboarding preference:', e);
-      return true;
-    }
-  });
-  const [tutorialStep, setTutorialStep] = useState(0);
-  const [tutorialDismissed, setTutorialDismissed] = useState(false);
+  // Tutorial/onboarding state machine lives in hooks/useTutorial.
+  const {
+    autoTutorialPopups,
+    setAutoTutorialPopups,
+    hideTipsEverywhere,
+    setHideTipsEverywhere,
+    showTutorial,
+    setShowTutorial,
+    tutorialStep,
+    setTutorialStep,
+    tutorialDismissed,
+    setTutorialDismissed,
+    showQuickTutorial,
+    setShowQuickTutorial,
+    isTutorialActive,
+    markOnboardingSeen,
+    shouldShowOnboarding
+  } = useTutorial({ gameStarted, isMultiplayer, isResumingFromSave });
 
   useEffect(() => {
     const prevTab = prevTabRef.current;
@@ -1308,26 +1164,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
     }
   }, [activeTab, investmentFilter, quizSeen, activeQuizId]);
   
-  // Tutorial tips content
-
-  const markOnboardingSeen = useCallback(() => {
-    try {
-      localStorage.setItem(ONBOARDING_SEEN_STORAGE_KEY, '1');
-    } catch (e) {
-      console.warn('Failed to save onboarding preference:', e);
-    }
-  }, []);
-
-  const shouldShowOnboarding = useCallback(() => {
-    if (!autoTutorialPopups) return false;
-    try {
-      return localStorage.getItem(ONBOARDING_SEEN_STORAGE_KEY) !== '1';
-    } catch (e) {
-      console.warn('Failed to read onboarding preference:', e);
-      return false;
-    }
-  }, [autoTutorialPopups]);
-
   // Shared restart for the win/bankruptcy end screens.
   const handlePlayAgain = useCallback(() => {
     setAutoPlaySpeed(null);
@@ -1343,35 +1179,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
       quests: getInitialQuestState()
     });
   }, [shouldShowOnboarding]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(AUTO_TUTORIAL_POPUPS_STORAGE_KEY, autoTutorialPopups ? '1' : '0');
-    } catch (e) {
-      console.warn('Failed to save tutorial popup preference:', e);
-    }
-  }, [autoTutorialPopups]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(HIDE_TIPS_STORAGE_KEY, hideTipsEverywhere ? '1' : '0');
-    } catch (e) {
-      console.warn('Failed to save tips preference:', e);
-    }
-  }, [hideTipsEverywhere]);
-
-  useEffect(() => {
-    if (!gameStarted || isMultiplayer) return;
-    if (import.meta.env.MODE === 'test') return;
-    if (isResumingFromSave || !autoTutorialPopups || hideTipsEverywhere) return;
-    try {
-      const seen = localStorage.getItem(QUICK_TUTORIAL_STORAGE_KEY) === '1';
-      if (!seen) setShowQuickTutorial(true);
-    } catch (e) {
-      console.warn('Failed to read quick tutorial preference:', e);
-      setShowQuickTutorial(true);
-    }
-  }, [autoTutorialPopups, gameStarted, hideTipsEverywhere, isMultiplayer, isResumingFromSave]);
 
   // The autoplay-preference write moved into useAutoplay; this keeps the
   // last-used-slot bookkeeping (read at startup by initialSaveSlot).
@@ -1438,15 +1245,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
       return next;
     });
   }, [aiDisruptionHistoryStorageKey, gameState.aiDisruption?.disruptionLevel, gameState.month, isMultiplayer]);
-
-  useEffect(() => {
-    if (autoTutorialPopups) return;
-    if (!showTutorial) return;
-    setShowTutorial(false);
-    setTutorialDismissed(true);
-    markOnboardingSeen();
-  }, [autoTutorialPopups, showTutorial, markOnboardingSeen]);
-
 
   const isScrollRestoreBlocked =
     !!gameState.pendingScenario ||
@@ -2355,7 +2153,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   // Autoplay should feel "hands-off": it temporarily pauses itself while any blocking UI is open
   // (events, confirmation dialogs, special market flows, etc.) and then continues automatically.
   // Players can always stop it explicitly via the header button, keyboard (Shift+A), or the event popup.
-  const isTutorialActive = showTutorial && !tutorialDismissed && tutorialStep < TUTORIAL_TIPS.length;
   const isEmergencyCashModal = gameState.cash <= 0 && !gameState.isBankrupt && gameState.assets.length > 0;
   const pendingSideHustle = gameState.pendingSideHustleUpgrade
     ? gameState.activeSideHustles.find(h => h.id === gameState.pendingSideHustleUpgrade?.hustleId)

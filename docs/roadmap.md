@@ -12,8 +12,8 @@ the missing portfolio poster (ffmpeg blur-fill from the video — it was
 never in git history). App.tsx 8467 → ~6.1k lines. Working tree clean;
 remote main == working branch.
 **Next session: read "Cold-start context" + "Next build priorities" below.**
-**Update (2026-06-11, late session):** phase-3 slices 1+2 shipped — the
-save/load + autoplay clusters are now hooks (App.tsx 6082 → 5885).
+**Update (2026-06-11, late session):** phase-3 slices 1-4 shipped — the
+save/load, autoplay, tutorial + coach-hints clusters are now hooks (App.tsx 6082 → 5682).
 Details under "Next build priorities" item 1.
 
 ## Cold-start context for the next session (written 2026-06-11 EOD)
@@ -286,6 +286,28 @@ returned `{valid:true, source:'gumroad'}`.
    context/Zustand rewrite until the hooks make the seams obvious. Same
    working rules: one slice per commit, suite green at every step,
    verify live in the preview.
+   - **Slices 3+4, tutorial + coach-hints clusters — DONE 2026-06-12**
+     (one working session, single commit — both verified together):
+     `hooks/useTutorial.ts` (6 useStates: step tutorial, quick-tutorial
+     auto-open with the MODE==='test' guard intact, auto-popups +
+     hide-tips prefs; owns/exports the 3 storage keys —
+     `tycoon_onboarding_seen_v1` is a hard contract with 5 integration
+     tests; imports TUTORIAL_TIPS/QUICK_TUTORIAL_STORAGE_KEY from leaf
+     modal files for cycle safety; dead `quickTutorialVideoRef`
+     deleted). `hooks/useCoachHints.ts` (ribbon state + 5s auto-clear,
+     5 focus refs + scroll-into-view, one-time Self Learn hint, and the
+     Re-open Preview pill sub-cluster — `offerReopenPreview` is private;
+     exports CoachTarget/CoachHintData types). `showTutorialVideos`
+     deliberately stays in App (video-chooser modal state, couples to
+     introVideo). Neither hook uses useI18n (strings are hardcoded —
+     intentional deviation). App.tsx 5885 → 5682. Suite 160 green;
+     adversarial review workflow: ZERO findings across 4 lenses.
+     Verified live: fresh profile → quick-tutorial auto-opened → step
+     tutorial → Next/Skip persists onboarding key; legacy shell →
+     Self Learn coach ribbon rendered after tab switch + one-time key
+     semantics confirmed (v2 run had already consumed the hint —
+     ribbon is legacy-only UI, a known retirement-phase item).
+     Remaining cluster: batch-buy.
    - **Slice 2, autoplay cluster — DONE 2026-06-11 (late session)**:
      `hooks/useAutoplay.ts` owns the speed state (init from per-slot
      pref), the year-in-review pause, per-slot pref persistence

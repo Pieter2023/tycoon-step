@@ -62,6 +62,21 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
   are declared long after the state hook must run. `isAutoplayBlocked`
   (~16 modal flags) deliberately stays in App. Real hook tests in
   `test/Autoplay.test.tsx` (was a synthetic harness before).
+- `hooks/useTutorial.ts` — phase-3 slice 3: step tutorial
+  (show/step/dismissed), quick-tutorial auto-open (keeps the
+  MODE==='test' guard), auto-popups/hide-tips prefs + persistence,
+  `isTutorialActive`, markOnboardingSeen/shouldShowOnboarding. Owns +
+  exports the three storage-key constants. `tycoon_onboarding_seen_v1`
+  is a HARD test contract (5 integration tests seed it). Imports
+  TUTORIAL_TIPS/QUICK_TUTORIAL_STORAGE_KEY from the LEAF modal files,
+  not the barrel (cycle safety). No useI18n on purpose (all strings
+  hardcoded). showTutorialVideos stays in App (video-chooser state).
+- `hooks/useCoachHints.ts` — phase-3 slice 4: coach ribbon state +
+  5s auto-clear, the five section focus refs + scroll-into-view, the
+  one-time Self Learn hint, and the "Re-open Preview" pill (state +
+  25s timer; pill/ribbon JSX stays in App — note the ribbon only
+  renders in the legacy shell). Exports CoachTarget/CoachHintData
+  types + SELF_LEARN_HINT_STORAGE_KEY.
 - `KidsApp.tsx` — separate simplified kids mode
 - `docs/architecture-map.md` — deeper technical map (from Dec 2025 discovery)
 
@@ -154,10 +169,10 @@ regenerated the missing portfolio poster. All verified live at every step.
 **The queue (details + COLD-START CONTEXT section in `docs/roadmap.md` —
 read that first in a new session):**
 1. App.tsx split, phase 3: state organization — extract cohesive useState
-   clusters into hooks, `useTabIntroVideo`-style, one commit each.
-   Save/load cluster DONE (`hooks/useSaveLoad.ts`, App 6082 → 5906).
-   Autoplay cluster DONE (`hooks/useAutoplay.ts`, App 5906 → 5885,
-   verified live). Remaining: coach/tutorial, batch-buy clusters
+   clusters into hooks, `useTabIntroVideo`-style. DONE: save/load
+   (`useSaveLoad`, 6082 → 5906), autoplay (`useAutoplay`, → 5885),
+   tutorial (`useTutorial`, → 5809), coach hints (`useCoachHints`,
+   → 5682) — all verified live. Remaining: batch-buy cluster
 2. Retire the legacy shell (~800 lines): first migrate the two integration
    tests to the v2 shell (they currently force `uiV2Enabled=false`)
 3. B2B classroom packs (one-page offer + outreach; bulk codes already work)
