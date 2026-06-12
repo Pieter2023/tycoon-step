@@ -48,12 +48,13 @@ const KeyboardShortcutsOverlay: React.FC<KeyboardShortcutsOverlayProps> = ({
             <div className="grid grid-cols-2 gap-3">
               {shortcuts.map((shortcut) => (
                 <div
-                  key={shortcut.key + shortcut.description}
+                  key={(shortcut.modifier || '') + shortcut.key + shortcut.description}
                   className="flex items-center justify-between p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
                 >
                   <span className="text-slate-300 text-sm">{shortcut.description}</span>
                   <kbd className="px-2 py-1 bg-slate-800 border border-slate-700 rounded-lg text-xs font-semibold text-emerald-300 font-mono">
-                    {shortcut.key.toUpperCase()}
+                    {(shortcut.modifier ? `${shortcut.modifier.toUpperCase()}+` : '') +
+                      (shortcut.key.length === 1 ? shortcut.key.toUpperCase() : shortcut.key)}
                   </kbd>
                 </div>
               ))}

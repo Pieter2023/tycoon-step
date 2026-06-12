@@ -801,51 +801,36 @@ const [gameState, setGameState] = useState<GameState>(() => {
     root.classList.toggle('tycoon-reduce-motion', !!accessibilityPrefs.reduceMotion);
   }, [accessibilityPrefs.largeText, accessibilityPrefs.highContrast, accessibilityPrefs.reduceMotion]);
 
-  // Keyboard shortcuts
-  useKeyboardShortcuts(
-    createGameShortcuts({
-      onNextMonth: () => {
-        if (!isProcessing && !showTurnPreview && gameStarted) {
-          handleNextTurn();
-        }
-      },
-      onToggleAutoplay: () => {
-        if (gameStarted) {
-          toggleAutoplay();
-        }
-      },
-      onOpenActions: () => {
-        if (gameStarted) {
-          setActionsDrawerOpen(true);
-        }
-      },
-      onNavigateToInvest: () => {
-        if (gameStarted) setActiveTab(TABS.INVEST);
-      },
-      onNavigateToPortfolio: () => {
-        if (gameStarted) setActiveTab(TABS.ASSETS);
-      },
-      onNavigateToBank: () => {
-        if (gameStarted) setActiveTab(TABS.BANK);
-      },
-      onNavigateToCareer: () => {
-        if (gameStarted) setActiveTab(TABS.CAREER);
-      },
-      onNavigateToEducation: () => {
-        if (gameStarted) setActiveTab(TABS.EDUCATION);
-      },
-      onNavigateToSideHustles: () => {
-        if (gameStarted) setActiveTab(TABS.SIDEHUSTLE);
-      },
-      onNavigateToLifestyle: () => {
-        if (gameStarted) setActiveTab(TABS.LIFESTYLE);
-      },
-      onShowShortcuts: () => {
-        if (gameStarted) setShowShortcutsOverlay(true);
-      },
-    }),
-    gameStarted && !showCharacterSelect
-  );
+  // Keyboard shortcuts — the ONLY keydown system (merged 2026-06-12).
+  // One config drives both the listener and the "?" overlay. Navigation
+  // goes through navigateToTab so the v2 shell actually moves; handlers
+  // close over consts declared later in App (evaluated at keypress time).
+  const gameShortcuts = createGameShortcuts({
+    onNextMonth: () => {
+      if (showTurnPreview && turnPreview) {
+        confirmTurnPreview();
+      } else if (!isProcessing) {
+        handleNextTurn();
+      }
+    },
+    onConfirmPreview: () => {
+      if (showTurnPreview && turnPreview) confirmTurnPreview();
+    },
+    onToggleAutoplay: () => toggleAutoplay(),
+    onOpenActions: () => {
+      navigateToTab(TABS.OVERVIEW);
+      setOpenActionsSignal((prev) => prev + 1);
+    },
+    onNavigateToInvest: () => navigateToTab(TABS.INVEST),
+    onNavigateToPortfolio: () => navigateToTab(TABS.ASSETS),
+    onNavigateToBank: () => navigateToTab(TABS.BANK),
+    onNavigateToCareer: () => navigateToTab(TABS.CAREER),
+    onNavigateToEducation: () => navigateToTab(TABS.EDUCATION),
+    onNavigateToSideHustles: () => navigateToTab(TABS.SIDEHUSTLE),
+    onNavigateToLifestyle: () => navigateToTab(TABS.LIFESTYLE),
+    onShowShortcuts: () => setShowShortcutsOverlay(true),
+  });
+  useKeyboardShortcuts(gameShortcuts, gameStarted && !showCharacterSelect);
 
   useEffect(() => {
     if (!import.meta.env.DEV) return;
@@ -1881,81 +1866,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
     setShowReopenPreviewPill(false);
   }, [buildTurnPreview, gameState, isMultiplayer, isProcessing]);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented) return;
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
-      const target = event.target as HTMLElement | null;
-      if (target) {
-        const tag = target.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) return;
-      }
-      const key = event.key.toLowerCase();
-      const openActions = () => {
-        navigateToTab(TABS.OVERVIEW);
-        setOpenActionsSignal((prev) => prev + 1);
-      };
-      const openMoneyTab = (tab: 'invest' | 'portfolio' | 'bank') => {
-        navigateToTab(tab === 'invest' ? TABS.INVEST : tab === 'portfolio' ? TABS.ASSETS : TABS.BANK);
-      };
-      const openLifeTab = (tab: 'lifestyle' | 'sidehustles') => {
-        navigateToTab(tab === 'lifestyle' ? TABS.LIFESTYLE : TABS.SIDEHUSTLE);
-      };
-
-      switch (key) {
-        case 'n':
-          event.preventDefault();
-          if (showTurnPreview && turnPreview) {
-            confirmTurnPreview();
-          } else {
-            handleNextTurn();
-          }
-          break;
-        case 't':
-          event.preventDefault();
-          toggleAutoplay();
-          break;
-        case 'a':
-          event.preventDefault();
-          openActions();
-          break;
-        case 'i':
-          event.preventDefault();
-          openMoneyTab('invest');
-          break;
-        case 'p':
-          event.preventDefault();
-          openMoneyTab('portfolio');
-          break;
-        case 'b':
-          event.preventDefault();
-          openMoneyTab('bank');
-          break;
-        case 'c':
-          event.preventDefault();
-          navigateToTab(TABS.CAREER);
-          break;
-        case 'e':
-          event.preventDefault();
-          navigateToTab(TABS.EDUCATION);
-          break;
-        case 's':
-          event.preventDefault();
-          openLifeTab('sidehustles');
-          break;
-        case 'l':
-          event.preventDefault();
-          openLifeTab('lifestyle');
-          break;
-        default:
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [autoPlaySpeed, confirmTurnPreview, handleNextTurn, navigateToTab, showTurnPreview, turnPreview]);
-
   // Auto-play
   // Autoplay should feel "hands-off": it temporarily pauses itself while any blocking UI is open
   // (events, confirmation dialogs, special market flows, etc.) and then continues automatically.
@@ -1991,37 +1901,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
     month: gameState.month,
     onAdvance: advanceMonth
   });
-
-  // Unified keyboard shortcut handler
-  // Handles Escape (close modals by z-index priority), Shift+A (autoplay toggle), Enter (confirm turn preview)
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      // Skip if typing in an input
-      const target = e.target as HTMLElement | null;
-      const tag = (target?.tagName || '').toLowerCase();
-      const isTyping = tag === 'input' || tag === 'textarea' || (target as any)?.isContentEditable;
-
-      // Handle Enter - confirm turn preview
-      if (e.key === 'Enter' && showTurnPreview) {
-        confirmTurnPreview();
-        return;
-      }
-
-      // Handle Shift+A - toggle autoplay
-      if (!isTyping && !e.repeat && e.shiftKey && (e.key === 'a' || e.key === 'A')) {
-        e.preventDefault();
-        toggleAutoplay();
-      }
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [
-    showSaveManager, confirmDialog, showAccessibility, imageLightbox,
-    introVideo.tabId, showTurnPreview, showTutorial, tutorialDismissed,
-    tutorialStep, TUTORIAL_TIPS.length, showMortgageModal,
-    confirmTurnPreview
-  ]);
 
   // ============================================
   // SCENARIO CHOICE
@@ -3491,22 +3370,10 @@ const [gameState, setGameState] = useState<GameState>(() => {
       />
 
       {/* Keyboard Shortcuts Overlay */}
-      <KeyboardShortcutsOverlay 
-        isOpen={showShortcutsOverlay} 
-        onClose={() => setShowShortcutsOverlay(false)} 
-        shortcuts={[
-          { key: 'n', action: () => {}, description: 'Next Month' },
-          { key: 't', action: () => {}, description: 'Toggle Autoplay' },
-          { key: 'a', action: () => {}, description: 'Actions Tab' },
-          { key: 'i', action: () => {}, description: 'Invest Tab' },
-          { key: 'p', action: () => {}, description: 'Portfolio Tab' },
-          { key: 'b', action: () => {}, description: 'Bank Tab' },
-          { key: 'c', action: () => {}, description: 'Career Tab' },
-          { key: 'e', action: () => {}, description: 'Education Tab' },
-          { key: 's', action: () => {}, description: 'Side Hustles Tab' },
-          { key: 'l', action: () => {}, description: 'Lifestyle Tab' },
-          { key: '?', action: () => {}, description: 'Show Shortcuts' },
-        ]} 
+      <KeyboardShortcutsOverlay
+        isOpen={showShortcutsOverlay}
+        onClose={() => setShowShortcutsOverlay(false)}
+        shortcuts={gameShortcuts}
       />
 
       {/* Tab Intro Video (shows only first time a user opens a tab, unless postponed) */}
