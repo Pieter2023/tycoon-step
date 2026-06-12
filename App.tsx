@@ -1141,8 +1141,10 @@ const [gameState, setGameState] = useState<GameState>(() => {
     });
   }, [activeTab, investmentFilter, investmentSearch, investmentTierFilter]);
 
+  // Quiz trigger keys on the invest filter changing (the filter buttons only
+  // exist inside InvestTab, so a non-ALL filter proves the invest surface is
+  // in use) — NOT on activeTab, which v2 navigation doesn't always set.
   useEffect(() => {
-    if (activeTab !== TABS.INVEST) return;
     if (investmentFilter === 'ALL') return;
     if (activeQuizId) return;
 
@@ -1160,7 +1162,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
       setActiveQuizId(nextQuiz.id);
       setQuizAnswers({});
     }
-  }, [activeTab, investmentFilter, quizSeen, activeQuizId]);
+  }, [investmentFilter, quizSeen, activeQuizId]);
   
   // Shared restart for the win/bankruptcy end screens.
   const handlePlayAgain = useCallback(() => {
@@ -1169,6 +1171,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
     setShowCharacterSelect(true);
     setMonthlyReport(null);
     setActiveTab(TABS.OVERVIEW);
+    setV2Path('/play');
     setTutorialStep(0);
     setTutorialDismissed(false);
     setShowTutorial(shouldShowOnboarding());
@@ -1450,6 +1453,36 @@ const [gameState, setGameState] = useState<GameState>(() => {
     },
     [setForcedLifeTab, setForcedMoneyTab]
   );
+
+  // Navigate BOTH routing systems: the activeTab mirror (still read by the
+  // coach gates and tab-keyed config) and the v2 shell router. Without the
+  // v2 write, TurnPreview quick-fixes and intro-video "Continue" silently
+  // no-op in the v2 shell.
+  const navigateToTab = useCallback((tabId: TabId) => {
+    setActiveTab(tabId);
+    if (tabId === TABS.INVEST) {
+      setV2Path('/money');
+      setForcedMoneyTab('invest');
+    } else if (tabId === TABS.ASSETS) {
+      setV2Path('/money');
+      setForcedMoneyTab('portfolio');
+    } else if (tabId === TABS.BANK) {
+      setV2Path('/money');
+      setForcedMoneyTab('bank');
+    } else if (tabId === TABS.LIFESTYLE) {
+      setV2Path('/life');
+      setForcedLifeTab('lifestyle');
+    } else if (tabId === TABS.SIDEHUSTLE) {
+      setV2Path('/life');
+      setForcedLifeTab('sidehustles');
+    } else if (tabId === TABS.CAREER) {
+      setV2Path('/career');
+    } else if (tabId === TABS.EDUCATION || tabId === TABS.SELF_LEARN || tabId === TABS.EQ || tabId === TABS.NEGOTIATIONS) {
+      setV2Path('/learn');
+    } else {
+      setV2Path('/play');
+    }
+  }, []);
   // ============================================
   // HANDLERS
   // ============================================
@@ -3777,7 +3810,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
             const continueToTab = introVideo.activeConfig?.continueToTab;
             introVideo.close({ remember: true });
             if (continueToTab) {
-              setActiveTab(continueToTab);
+              navigateToTab(continueToTab);
             }
           }}
           onSkip={() => introVideo.close({ remember: false })}
@@ -3809,7 +3842,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
         const goTo = (tabId: TabId, tipTitle: string, tipMessage: string, tipType: string = 'info') => {
           playClick();
           hideTurnPreview();
-          setActiveTab(tabId);
+          navigateToTab(tabId);
           showNotif(tipTitle, tipMessage, tipType);
 
           // Step 12: on-tab coach ribbon + section highlight
@@ -3833,7 +3866,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
         const useAction = (actionId: MonthlyActionId) => {
           // Close preview first so effects/notifications feel immediate.
           hideTurnPreview();
-          setActiveTab(TABS.OVERVIEW);
+          navigateToTab(TABS.OVERVIEW);
           triggerCoachHint({
             tabId: TABS.OVERVIEW,
             title: 'Coach Tip',
@@ -4309,6 +4342,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
               navItems={v2NavItems}
               activePath={v2Path}
               onNavigate={(path) => setV2Path(path as typeof v2Path)}
+              year={Math.ceil(gameState.month / 12)}
+              month={((gameState.month - 1) % 12) + 1}
               headerLeading={
                 <div className="flex flex-col items-center gap-1">
                   <div className={`h-12 w-12 rounded-full bg-gradient-to-br ${gameState.character?.avatarColor || 'from-slate-500 to-slate-600'} flex items-center justify-center text-xl overflow-hidden border border-white/10`}>

@@ -9,6 +9,8 @@ type DesktopShellProps = {
   onNavigate: (path: string) => void;
   headerLeading?: React.ReactNode;
   headerActions?: React.ReactNode;
+  year?: number;
+  month?: number;
   children: React.ReactNode;
 };
 
@@ -36,6 +38,8 @@ const DesktopShell: React.FC<DesktopShellProps> = ({
   onNavigate,
   headerLeading,
   headerActions,
+  year,
+  month,
   children
 }) => {
   const activeItem = navItems.find((item) => item.path === activePath) || navItems[0];
@@ -96,6 +100,9 @@ const DesktopShell: React.FC<DesktopShellProps> = ({
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Current View</p>
               <h2 className="mt-1 text-2xl font-semibold text-white">{activeItem?.label || title}</h2>
+              {typeof year === 'number' && typeof month === 'number' && (
+                <p className="mt-0.5 text-xs text-slate-400">Year {year} • Month {month}</p>
+              )}
             </div>
             {headerActions && <div className="flex items-center gap-3">{headerActions}</div>}
           </div>
