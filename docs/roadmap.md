@@ -12,8 +12,8 @@ the missing portfolio poster (ffmpeg blur-fill from the video — it was
 never in git history). App.tsx 8467 → ~6.1k lines. Working tree clean;
 remote main == working branch.
 **Next session: read "Cold-start context" + "Next build priorities" below.**
-**Update (2026-06-11, late session):** phase-3 slice 1 shipped — the
-save/load cluster is now `hooks/useSaveLoad.ts` (App.tsx 6082 → 5906).
+**Update (2026-06-11, late session):** phase-3 slices 1+2 shipped — the
+save/load + autoplay clusters are now hooks (App.tsx 6082 → 5885).
 Details under "Next build priorities" item 1.
 
 ## Cold-start context for the next session (written 2026-06-11 EOD)
@@ -286,6 +286,29 @@ returned `{valid:true, source:'gumroad'}`.
    context/Zustand rewrite until the hooks make the seams obvious. Same
    working rules: one slice per commit, suite green at every step,
    verify live in the preview.
+   - **Slice 2, autoplay cluster — DONE 2026-06-11 (late session)**:
+     `hooks/useAutoplay.ts` owns the speed state (init from per-slot
+     pref), the year-in-review pause, per-slot pref persistence
+     (persist-before-reload order is load-bearing: speed carries over
+     on slot switch, clobbering the target slot's stored pref — a test
+     now pins this), derived labels/tooltip, and a consolidated
+     `toggleAutoplay` (was 7 duplicated expressions). Second export
+     `useAutoplayScheduler` (the timer) is called separately after
+     `advanceMonth`/`isAutoplayBlocked` exist — TDZ makes a single call
+     site impossible; `isAutoplayBlocked` (~16 modal flags) stays in
+     App. The old combined localStorage effect was split: autoplay-pref
+     write moved to the hook, LAST_SAVE_SLOT write stays in App.
+     `test/Autoplay.test.tsx` rewritten from a synthetic harness to 11
+     real-hook tests (incl. i18n tooltip resolution + the carry-over
+     clobber case, both proven by mutation testing to be the only
+     discriminating cases). Deps arrays of unchanged App code left
+     untouched (incl. the now-unneeded autoPlaySpeed in advanceMonth's
+     array — prune later if wanted). App.tsx 5906 → 5885. Suite 23
+     files / 160 green; verified live (Shift+A on → pref '1000', months
+     auto-advanced 1→3, Shift+A off → pref 'off', month frozen, console
+     clean). Workflow-mapped + adversarially reviewed (3 confirmed
+     findings, all addressed). Remaining clusters: coach/tutorial,
+     batch-buy.
    - **Slice 1, save/load cluster — DONE 2026-06-11 (late session)**:
      `hooks/useSaveLoad.ts` owns the 9 save/load useState hooks,
      SAVE_SLOTS, the autosave ticker effect, `recordAutosave` (incl.

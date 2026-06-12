@@ -52,6 +52,16 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
   handlers). Cross-cutting state (currentSaveSlot, gameState, run
   lifecycle setters, showNotif) stays in App and arrives via deps —
   showNotif must stay defined BEFORE the hook call (const → TDZ).
+- `hooks/useAutoplay.ts` — phase-3 slice 2: autoplay speed state,
+  per-slot pref persistence (effect ORDER is load-bearing: persist
+  before reload → speed carries over on slot switch), year-in-review
+  pause, derived labels/tooltip, `toggleAutoplay`. Exports the
+  AUTOPLAY_SPEED_OPTIONS/LABELS constants AND a second hook,
+  `useAutoplayScheduler` (the timer) — called separately further down
+  App.tsx because it needs `advanceMonth` + `isAutoplayBlocked`, which
+  are declared long after the state hook must run. `isAutoplayBlocked`
+  (~16 modal flags) deliberately stays in App. Real hook tests in
+  `test/Autoplay.test.tsx` (was a synthetic harness before).
 - `KidsApp.tsx` — separate simplified kids mode
 - `docs/architecture-map.md` — deeper technical map (from Dec 2025 discovery)
 
@@ -145,9 +155,9 @@ regenerated the missing portfolio poster. All verified live at every step.
 read that first in a new session):**
 1. App.tsx split, phase 3: state organization — extract cohesive useState
    clusters into hooks, `useTabIntroVideo`-style, one commit each.
-   Save/load cluster DONE (`hooks/useSaveLoad.ts`, App 6082 → 5906
-   lines, verified live). Remaining: autoplay, coach/tutorial,
-   batch-buy clusters
+   Save/load cluster DONE (`hooks/useSaveLoad.ts`, App 6082 → 5906).
+   Autoplay cluster DONE (`hooks/useAutoplay.ts`, App 5906 → 5885,
+   verified live). Remaining: coach/tutorial, batch-buy clusters
 2. Retire the legacy shell (~800 lines): first migrate the two integration
    tests to the v2 shell (they currently force `uiV2Enabled=false`)
 3. B2B classroom packs (one-page offer + outreach; bulk codes already work)

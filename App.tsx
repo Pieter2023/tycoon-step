@@ -13,6 +13,7 @@ import { GLOSSARY_ENTRIES, QUIZ_DEFINITIONS, getQuizDefinition } from './data/le
 import TabErrorBoundary from './components/TabErrorBoundary';
 import { useTabIntroVideo } from './hooks/useTabIntroVideo';
 import { useSaveLoad } from './hooks/useSaveLoad';
+import { useAutoplay, useAutoplayScheduler, AUTOPLAY_SPEED_OPTIONS, AUTOPLAY_SPEED_LABELS } from './hooks/useAutoplay';
 import Modal from './components/Modal';
 import {
   VictoryModal,
@@ -442,7 +443,6 @@ const ONBOARDING_SEEN_STORAGE_KEY = 'tycoon_onboarding_seen_v1';
 const HIDE_TIPS_STORAGE_KEY = 'tycoon_hide_tips_v1';
 const CASH_FLOW_HISTORY_STORAGE_KEY = 'tycoon_cash_flow_history_v1_';
 const AI_DISRUPTION_HISTORY_STORAGE_KEY = 'tycoon_ai_disruption_history_v1_';
-const AUTOPLAY_PREF_PREFIX = 'tycoon_autoplay_pref_v1_';
 const UI_V2_STORAGE_KEY = 'tycoon_ui_v2';
 
 const normalizeFlag = (value?: string | null) => {
@@ -468,29 +468,10 @@ const readUiV2Preference = () => {
 };
 const LAST_SAVE_SLOT_STORAGE_KEY = 'tycoon_last_save_slot_v1';
 const SELF_LEARN_HINT_STORAGE_KEY = 'tycoon_self_learn_hint_v1';
-const AUTOPLAY_SPEED_OPTIONS = [1000, 500, 250];
-const AUTOPLAY_SPEED_LABELS: Record<number, string> = {
-  1000: '1x',
-  500: '2x',
-  250: '4x'
-};
 
 const resolveSaveSlot = (raw: string | null): SaveSlotId => {
   if (raw === 'autosave' || raw === 'slot1' || raw === 'slot2' || raw === 'slot3') return raw;
   return 'autosave';
-};
-
-const readAutoplayPreference = (slotId: SaveSlotId): number | null => {
-  try {
-    const raw = localStorage.getItem(`${AUTOPLAY_PREF_PREFIX}${slotId}`);
-    if (!raw || raw === 'off') return null;
-    const parsed = Number(raw);
-    if (!Number.isFinite(parsed)) return null;
-    return AUTOPLAY_SPEED_OPTIONS.includes(parsed) ? parsed : AUTOPLAY_SPEED_OPTIONS[0];
-  } catch (e) {
-    console.warn('Failed to read autoplay preference:', e);
-    return null;
-  }
 };
 
 // TabIntroVideoConfig type now lives in components/modals/TabIntroVideoModal.
@@ -723,7 +704,17 @@ const [gameState, setGameState] = useState<GameState>(() => {
     }
   })();
   const [currentSaveSlot, setCurrentSaveSlot] = useState<SaveSlotId>(initialSaveSlot);
-  const [autoPlaySpeed, setAutoPlaySpeed] = useState<number | null>(() => readAutoplayPreference(initialSaveSlot));
+  // Autoplay state machine (speed, per-slot prefs, derived labels) lives in
+  // hooks/useAutoplay; the timer is wired up further down (useAutoplayScheduler)
+  // once advanceMonth + isAutoplayBlocked exist.
+  const {
+    autoPlaySpeed,
+    setAutoPlaySpeed,
+    toggleAutoplay,
+    autoplayEnabled,
+    autoplaySpeedLabel,
+    autoplayTooltip
+  } = useAutoplay({ initialSaveSlot, currentSaveSlot, gameState });
   const cashFlowHistoryStorageKey = `${CASH_FLOW_HISTORY_STORAGE_KEY}${currentSaveSlot}`;
   const aiDisruptionHistoryStorageKey = `${AI_DISRUPTION_HISTORY_STORAGE_KEY}${currentSaveSlot}`;
   const [cashFlowHistory, setCashFlowHistory] = useState<CashFlowHistoryEntry[]>(() => {
@@ -764,11 +755,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   // Run summary card for normal games (win / bankruptcy / anytime via HUD menu)
   const [showRunCard, setShowRunCard] = useState(false);
 
-  // Pause autoplay while the year-in-review modal is up so it can be read.
-  useEffect(() => {
-    if (gameState.annualReport && !gameState.challenge) setAutoPlaySpeed(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState.annualReport]);
   const tabUiStateRef = useRef<Record<TabId, TabUiState>>(createTabUiStateMap());
   const pendingScrollRestoreRef = useRef<TabId | null>(null);
   const prevTabRef = useRef<TabId>(activeTab);
@@ -967,7 +953,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
       },
       onToggleAutoplay: () => {
         if (gameStarted) {
-          setAutoPlaySpeed(autoPlaySpeed ? null : AUTOPLAY_SPEED_OPTIONS[0]);
+          toggleAutoplay();
         }
       },
       onOpenActions: () => {
@@ -1387,17 +1373,14 @@ const [gameState, setGameState] = useState<GameState>(() => {
     }
   }, [autoTutorialPopups, gameStarted, hideTipsEverywhere, isMultiplayer, isResumingFromSave]);
 
+  // The autoplay-preference write moved into useAutoplay; this keeps the
+  // last-used-slot bookkeeping (read at startup by initialSaveSlot).
   useEffect(() => {
     try {
-      localStorage.setItem(`${AUTOPLAY_PREF_PREFIX}${currentSaveSlot}`, autoPlaySpeed ? String(autoPlaySpeed) : 'off');
       localStorage.setItem(LAST_SAVE_SLOT_STORAGE_KEY, currentSaveSlot);
     } catch (e) {
-      console.warn('Failed to save autoplay preference:', e);
+      console.warn('Failed to save slot preference:', e);
     }
-  }, [autoPlaySpeed, currentSaveSlot]);
-
-  useEffect(() => {
-    setAutoPlaySpeed(readAutoplayPreference(currentSaveSlot));
   }, [currentSaveSlot]);
 
   useEffect(() => {
@@ -1504,11 +1487,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const activeQuiz = useMemo(() => (activeQuizId ? getQuizDefinition(activeQuizId) : null), [activeQuizId]);
   const activeTabVideo = TAB_INTRO_VIDEO_CONFIG[activeTab];
   const activeTabQuickTips = activeTabVideo?.quickTips || [];
-  const autoplayEnabled = autoPlaySpeed !== null;
-  const autoplaySpeedLabel = autoPlaySpeed ? (AUTOPLAY_SPEED_LABELS[autoPlaySpeed] || '1x') : '1x';
-  const autoplayTooltip = autoplayEnabled
-    ? t('autoplay.tooltipOn', { speed: autoplaySpeedLabel })
-    : t('autoplay.tooltipOff');
   const uiV2Enabled = useMemo(() => readUiV2Preference(), []);
   const [v2Path, setV2Path] = useState<'/play' | '/money' | '/career' | '/learn' | '/life'>('/play');
   const [mobileTab, setMobileTab] = useState<'dashboard' | 'actions' | 'profile' | 'more'>('dashboard');
@@ -2328,7 +2306,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           break;
         case 't':
           event.preventDefault();
-          setAutoPlaySpeed(autoPlaySpeed ? null : AUTOPLAY_SPEED_OPTIONS[0]);
+          toggleAutoplay();
           break;
         case 'a':
           event.preventDefault();
@@ -2403,11 +2381,12 @@ const [gameState, setGameState] = useState<GameState>(() => {
     gameState.hasWon ||
     gameState.isBankrupt;
 
-  useEffect(() => {
-    if (autoPlaySpeed === null || isAutoplayBlocked) return;
-    const t = setTimeout(advanceMonth, autoPlaySpeed);
-    return () => clearTimeout(t);
-  }, [autoPlaySpeed, isAutoplayBlocked, gameState.month, advanceMonth]);
+  useAutoplayScheduler({
+    speed: autoPlaySpeed,
+    blocked: isAutoplayBlocked,
+    month: gameState.month,
+    onAdvance: advanceMonth
+  });
 
   // Unified keyboard shortcut handler
   // Handles Escape (close modals by z-index priority), Shift+A (autoplay toggle), Enter (confirm turn preview)
@@ -2427,7 +2406,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
       // Handle Shift+A - toggle autoplay
       if (!isTyping && !e.repeat && e.shiftKey && (e.key === 'a' || e.key === 'A')) {
         e.preventDefault();
-        setAutoPlaySpeed((prev) => (prev ? null : AUTOPLAY_SPEED_OPTIONS[0]));
+        toggleAutoplay();
       }
     };
 
@@ -4311,7 +4290,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           isMultiplayer={isMultiplayer}
           autoPlaySpeed={autoPlaySpeed}
           autoplaySpeedLabel={autoplaySpeedLabel}
-          onToggleAutoplay={() => setAutoPlaySpeed(autoPlaySpeed ? null : AUTOPLAY_SPEED_OPTIONS[0])}
+          onToggleAutoplay={toggleAutoplay}
           onOpenImage={openImageLightbox}
           onChoose={handleScenarioChoice}
         />
@@ -4665,7 +4644,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 autoplaySpeed={autoPlaySpeed}
                 autoplaySpeedOptions={AUTOPLAY_SPEED_OPTIONS}
                 autoplaySpeedLabels={AUTOPLAY_SPEED_LABELS}
-                onToggleAutoplay={() => setAutoPlaySpeed(autoPlaySpeed ? null : AUTOPLAY_SPEED_OPTIONS[0])}
+                onToggleAutoplay={toggleAutoplay}
                 onSetAutoplaySpeed={setAutoPlaySpeed}
               />
             )}
@@ -4768,7 +4747,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setAutoPlaySpeed(autoPlaySpeed ? null : AUTOPLAY_SPEED_OPTIONS[0])}
+                  onClick={toggleAutoplay}
                   className={`flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold ${
                     autoplayEnabled
                       ? 'border-amber-400/70 bg-amber-400/10 text-amber-200'
@@ -5065,7 +5044,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                       <Button
                         variant="secondary"
                         size="md"
-                        onClick={() => setAutoPlaySpeed(autoPlaySpeed ? null : AUTOPLAY_SPEED_OPTIONS[0])}
+                        onClick={toggleAutoplay}
                         title={`${autoplayTooltip} • Shortcut: T`}
                         aria-label="Autoplay toggle"
                         aria-pressed={autoplayEnabled}
