@@ -4,25 +4,15 @@ import { GameState, AssetType, MarketItem, Lifestyle, Character, Asset, SideHust
 import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, ALL_LIFE_EVENTS, AUTO_INVEST_PRESETS } from './constants';
 import { processTurn, calculateMonthlyCashFlowEstimate, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier, checkPromotion, MAX_SOLD_POSITIONS } from './services/gameLogic';
 import { playMoneyGain, playMoneyLoss, playClick, playPurchase, playSell, playAchievement, playLevelUp, playVictory, playWarning, playTick, playNotification, playError, setMuted } from './services/audioService';
-import {
-  saveAdultGame,
-  loadAdultGame,
-  getSaveSummaries,
-  getSaveSummary,
-  deleteSaveSlot,
-  renameSaveSlot,
-  exportSaveSlot,
-  importSavePayload,
-  SaveSlotId,
-  SaveSummary
-} from './services/storageService';
+import { SaveSlotId } from './services/storageService';
 import confetti from 'canvas-confetti';
-import { useI18n, formatCurrencyCompactValue, formatCurrencyValue, formatPercentValue, formatDateTimeValue } from './i18n';
+import { useI18n, formatCurrencyCompactValue, formatCurrencyValue, formatPercentValue } from './i18n';
 import { DEFAULT_TAB_UI_STATE, hydrateTabUiState, TabUiState } from './services/tabState';
 import { GLOSSARY_ENTRIES, QUIZ_DEFINITIONS, getQuizDefinition } from './data/learning';
 
 import TabErrorBoundary from './components/TabErrorBoundary';
 import { useTabIntroVideo } from './hooks/useTabIntroVideo';
+import { useSaveLoad } from './hooks/useSaveLoad';
 import Modal from './components/Modal';
 import {
   VictoryModal,
@@ -56,7 +46,6 @@ import {
   SaveManagerModal,
   TutorialVideosModal
 } from './components/modals';
-import { isCloudSyncEnabled, uploadCloudSave } from './services/cloudSave';
 import QuestLog from './components/QuestLog';
 import { Button, Badge, Card, Tooltip } from './components/ui';
 import type { AppShellNavItem } from './components/ui/AppShell';
@@ -774,8 +763,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const [hudMenuOpen, setHudMenuOpen] = useState(false);
   // Run summary card for normal games (win / bankruptcy / anytime via HUD menu)
   const [showRunCard, setShowRunCard] = useState(false);
-  // Throttle for cloud-save uploads (see recordAutosave)
-  const lastCloudUploadRef = useRef(0);
 
   // Pause autoplay while the year-in-review modal is up so it can be read.
   useEffect(() => {
@@ -1181,32 +1168,66 @@ const [gameState, setGameState] = useState<GameState>(() => {
     setImageLightbox(null);
   }, []);
 
-  // Save / Load
-  const SAVE_SLOTS: SaveSlotId[] = ['autosave', 'slot1', 'slot2', 'slot3'];
-  const [showSaveManager, setShowSaveManager] = useState(false);
-  const [saveSummaries, setSaveSummaries] = useState<SaveSummary[]>([]);
-  const [saveLabelDrafts, setSaveLabelDrafts] = useState<Record<SaveSlotId, string>>({
-    autosave: '',
-    slot1: '',
-    slot2: '',
-    slot3: ''
-  });
-  const [lastAutosaveAt, setLastAutosaveAt] = useState<number | null>(() => {
-    if (isMultiplayer) return null;
-    return getSaveSummary('adult', 'autosave')?.updatedAt ?? null;
-  });
-  const [autosaveNow, setAutosaveNow] = useState(() => Date.now());
-  const [exportSlotId, setExportSlotId] = useState<SaveSlotId>('autosave');
-  const [importSlotId, setImportSlotId] = useState<SaveSlotId>('autosave');
-  const [importPayload, setImportPayload] = useState('');
-  const [importError, setImportError] = useState<string | null>(null);
+  const notifTimeoutRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (isMultiplayer) return;
-    if (!lastAutosaveAt) return;
-    const id = window.setInterval(() => setAutosaveNow(Date.now()), 60000);
-    return () => window.clearInterval(id);
-  }, [isMultiplayer, lastAutosaveAt]);
+  // Defined before useSaveLoad so the hook's deps object can reference it
+  // (it's a const — reading it earlier in the render body is a TDZ crash).
+  const showNotif = (
+    title: string,
+    message: string,
+    type: string = 'info',
+    opts?: { actionLabel?: string; onAction?: () => void; durationMs?: number }
+  ) => {
+    if (notifTimeoutRef.current) window.clearTimeout(notifTimeoutRef.current);
+    setNotification({ title, message, type, actionLabel: opts?.actionLabel, onAction: opts?.onAction });
+    if (type === 'success') playNotification();
+    else if (type === 'error') playError();
+    else if (type === 'warning') playWarning();
+    const duration = opts?.durationMs ?? 4000;
+    notifTimeoutRef.current = window.setTimeout(() => {
+      setNotification(null);
+      notifTimeoutRef.current = null;
+    }, duration);
+  };
+
+  // Save / Load (state machine + handlers live in hooks/useSaveLoad)
+  const {
+    saveSlots: SAVE_SLOTS,
+    showSaveManager,
+    setShowSaveManager,
+    saveSummaries,
+    saveLabelDrafts,
+    setSaveLabelDrafts,
+    exportSlotId,
+    setExportSlotId,
+    importSlotId,
+    setImportSlotId,
+    importPayload,
+    setImportPayload,
+    importError,
+    autosaveStatus,
+    recordAutosave,
+    refreshSaveSummaries,
+    openSaveManager,
+    handleSaveToSlot,
+    handleLoadFromSlot,
+    handleDeleteSlot,
+    handleRenameSlot,
+    handleExportSlot,
+    handleImportSave
+  } = useSaveLoad({
+    isMultiplayer,
+    gameState,
+    currentSaveSlot,
+    setCurrentSaveSlot,
+    setGameState,
+    setGameStarted,
+    setIsProcessing,
+    setMonthlyReport,
+    setShowCharacterSelect,
+    setSoundEnabled,
+    showNotif
+  });
 
   const [autoTutorialPopups, setAutoTutorialPopups] = useState(() => {
     try {
@@ -1705,26 +1726,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
     if (ns) playClick();
   };
 
-  const notifTimeoutRef = useRef<number | null>(null);
-
-  const showNotif = (
-    title: string,
-    message: string,
-    type: string = 'info',
-    opts?: { actionLabel?: string; onAction?: () => void; durationMs?: number }
-  ) => {
-    if (notifTimeoutRef.current) window.clearTimeout(notifTimeoutRef.current);
-    setNotification({ title, message, type, actionLabel: opts?.actionLabel, onAction: opts?.onAction });
-    if (type === 'success') playNotification();
-    else if (type === 'error') playError();
-    else if (type === 'warning') playWarning();
-    const duration = opts?.durationMs ?? 4000;
-    notifTimeoutRef.current = window.setTimeout(() => {
-      setNotification(null);
-      notifTimeoutRef.current = null;
-    }, duration);
-  };
-
   // Consolidate rapid consecutive purchases into one toast (less pop-up spam)
   const purchaseToastAggRef = useRef<{
     timer: number | null;
@@ -1908,27 +1909,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
     [accessibilityPrefs.disableConfetti, reduceMotion, trackFrameDrops]
   );
 
-  const recordAutosave = useCallback((state: GameState) => {
-    if (isMultiplayer) return;
-    // Daily challenge runs are ephemeral sprints — never clobber the player's
-    // adult-mode autosave with them.
-    if (state.challenge) return;
-    saveAdultGame(state, 'autosave');
-    const now = Date.now();
-    setLastAutosaveAt(now);
-    setAutosaveNow(now);
-
-    // Cloud backup: fire-and-forget, throttled to once a minute.
-    if (isCloudSyncEnabled() && now - lastCloudUploadRef.current > 60_000) {
-      lastCloudUploadRef.current = now;
-      uploadCloudSave(state, {
-        name: state.character?.name,
-        month: state.month,
-        netWorth: calculateNetWorth(state)
-      }).catch(() => undefined);
-    }
-  }, [isMultiplayer]);
-
   const handleClaimQuest = useCallback((questId: string) => {
     if (isProcessing) return;
     const q = getQuestById(questId);
@@ -2026,199 +2006,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
       }
     });
   }, [gameState.quests?.readyToClaim, openConfirmDialog, recordAutosave, showNotif]);
-
-  const formatDateTime = (ts: number) => {
-    try {
-      return formatDateTimeValue(ts);
-    } catch (e) {
-      console.debug('Date formatting failed:', e);
-      return t('dates.invalid');
-    }
-  };
-
-  const relativeTimeFormatter = useMemo(() => {
-    try {
-      return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
-    } catch (e) {
-      console.debug('RelativeTimeFormat failed:', e);
-      return new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
-    }
-  }, [locale]);
-
-  const formatRelativeTime = useCallback((diffMs: number) => {
-    const seconds = Math.round(diffMs / 1000);
-    if (seconds < 60) return relativeTimeFormatter.format(-seconds, 'second');
-    const minutes = Math.round(seconds / 60);
-    if (minutes < 60) return relativeTimeFormatter.format(-minutes, 'minute');
-    const hours = Math.round(minutes / 60);
-    if (hours < 24) return relativeTimeFormatter.format(-hours, 'hour');
-    const days = Math.round(hours / 24);
-    return relativeTimeFormatter.format(-days, 'day');
-  }, [relativeTimeFormatter]);
-
-  const autosaveStatus = useMemo(() => {
-    if (isMultiplayer) return '';
-    if (!lastAutosaveAt) return t('save.autosaveNever');
-    const diffMs = Math.max(0, autosaveNow - lastAutosaveAt);
-    if (diffMs < 45000) return t('save.autosaveJustNow');
-    return t('save.autosaveLast', { time: formatRelativeTime(diffMs) });
-  }, [autosaveNow, formatRelativeTime, isMultiplayer, lastAutosaveAt, t]);
-
-  const refreshSaveSummaries = useCallback(() => {
-    setSaveSummaries(getSaveSummaries('adult'));
-  }, []);
-
-  const openSaveManager = () => {
-    playClick();
-    const summaries = getSaveSummaries('adult');
-    setSaveSummaries(summaries);
-    setExportSlotId(currentSaveSlot);
-    setImportSlotId(currentSaveSlot);
-    setImportError(null);
-    setSaveLabelDrafts(prev => {
-      const drafts: Record<SaveSlotId, string> = { ...prev };
-      SAVE_SLOTS.forEach(slotId => {
-        if (slotId === 'autosave') return;
-        const summary = summaries.find(s => s.slotId === slotId);
-        drafts[slotId] = summary?.label ?? '';
-      });
-      return drafts;
-    });
-    setShowSaveManager(true);
-  };
-
-  const handleSaveToSlot = (slotId: SaveSlotId, label?: string) => {
-    try {
-      const trimmedLabelRaw = slotId === 'autosave' ? undefined : label?.trim();
-      const trimmedLabel = trimmedLabelRaw && trimmedLabelRaw.length > 0 ? trimmedLabelRaw : undefined;
-      saveAdultGame(gameState, slotId, trimmedLabel);
-      setCurrentSaveSlot(slotId);
-      if (slotId === 'autosave') {
-        const now = Date.now();
-        setLastAutosaveAt(now);
-        setAutosaveNow(now);
-      } else if (typeof trimmedLabel === 'string') {
-        setSaveLabelDrafts(prev => ({ ...prev, [slotId]: trimmedLabel }));
-      }
-      refreshSaveSummaries();
-      showNotif(t('save.savedTitle'), t('save.savedBody', { slot: slotId === 'autosave' ? t('save.slot.autosave') : slotId }), 'success');
-    } catch (e) {
-      console.error('Failed to save game:', e);
-      showNotif(t('save.failedTitle'), t('save.failedBody'), 'error');
-    }
-  };
-
-  const handleLoadFromSlot = (slotId: SaveSlotId) => {
-    const loaded = loadAdultGame(slotId);
-    if (!loaded) {
-      showNotif(t('save.notFoundTitle'), t('save.notFoundBody', { slot: slotId }), 'warning');
-      return;
-    }
-
-    setIsProcessing(false);
-    setMonthlyReport(null);
-    setGameState(loaded);
-    setCurrentSaveSlot(slotId);
-    setGameStarted(true);
-    setShowCharacterSelect(false);
-
-    const se = loaded.soundEnabled ?? true;
-    setSoundEnabled(se);
-    setMuted(!se);
-
-    const autosaveSummary = getSaveSummary('adult', 'autosave');
-    if (autosaveSummary?.updatedAt) {
-      setLastAutosaveAt(autosaveSummary.updatedAt);
-      setAutosaveNow(Date.now());
-    } else {
-      setLastAutosaveAt(null);
-    }
-
-    setShowSaveManager(false);
-    showNotif(t('save.loadedTitle'), t('save.loadedBody', { slot: slotId === 'autosave' ? t('save.slot.autosave') : slotId }), 'success');
-  };
-
-  const handleDeleteSlot = (slotId: SaveSlotId) => {
-    deleteSaveSlot('adult', slotId);
-    refreshSaveSummaries();
-    showNotif(t('save.deletedTitle'), t('save.deletedBody', { slot: slotId === 'autosave' ? t('save.slot.autosave') : slotId }), 'info');
-  };
-
-  const handleRenameSlot = (slotId: SaveSlotId, label: string) => {
-    const nextLabel = label.trim();
-    renameSaveSlot('adult', slotId, nextLabel);
-    setSaveLabelDrafts(prev => ({ ...prev, [slotId]: nextLabel }));
-    refreshSaveSummaries();
-    showNotif(t('save.renamedTitle'), t('save.renamedBody', { slot: slotId }), 'success');
-  };
-
-  const handleExportSlot = async (slotId: SaveSlotId, mode: 'copy' | 'download') => {
-    const payload = exportSaveSlot('adult', slotId);
-    if (!payload) {
-      showNotif(t('save.exportMissingTitle'), t('save.exportMissingBody'), 'warning');
-      return;
-    }
-
-    const json = JSON.stringify(payload, null, 2);
-
-    if (mode === 'copy') {
-      try {
-        if (!navigator.clipboard?.writeText) {
-          throw new Error('Clipboard unavailable');
-        }
-        await navigator.clipboard.writeText(json);
-        showNotif(t('save.exportCopiedTitle'), t('save.exportCopiedBody'), 'success');
-      } catch (e) {
-        console.warn('Clipboard write failed:', e);
-        showNotif(t('save.exportCopyFailedTitle'), t('save.exportCopyFailedBody'), 'error');
-      }
-      return;
-    }
-
-    try {
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `tycoon-${slotId}-save.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      showNotif(t('save.exportDownloadedTitle'), t('save.exportDownloadedBody'), 'success');
-    } catch (e) {
-      console.warn('Download failed:', e);
-      showNotif(t('save.exportDownloadFailedTitle'), t('save.exportDownloadFailedBody'), 'error');
-    }
-  };
-
-  const handleImportSave = () => {
-    setImportError(null);
-    let parsed: unknown;
-
-    try {
-      const trimmed = importPayload.trim();
-      if (!trimmed) {
-        setImportError(t('save.importInvalid'));
-        return;
-      }
-      parsed = JSON.parse(trimmed);
-    } catch (e) {
-      setImportError(t('save.importInvalid'));
-      return;
-    }
-
-    const summary = importSavePayload(parsed, 'adult', importSlotId, saveLabelDrafts[importSlotId]);
-    if (!summary) {
-      setImportError(t('save.importFailed'));
-      return;
-    }
-
-    refreshSaveSummaries();
-    setImportPayload('');
-    showNotif(t('save.importSuccessTitle'), t('save.importSuccessBody', { slot: importSlotId }), 'success');
-    handleLoadFromSlot(importSlotId);
-  };
 
   const handleQuickStart = () => {
     playClick();

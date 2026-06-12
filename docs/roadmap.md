@@ -12,6 +12,9 @@ the missing portfolio poster (ffmpeg blur-fill from the video — it was
 never in git history). App.tsx 8467 → ~6.1k lines. Working tree clean;
 remote main == working branch.
 **Next session: read "Cold-start context" + "Next build priorities" below.**
+**Update (2026-06-11, late session):** phase-3 slice 1 shipped — the
+save/load cluster is now `hooks/useSaveLoad.ts` (App.tsx 6082 → 5906).
+Details under "Next build priorities" item 1.
 
 ## Cold-start context for the next session (written 2026-06-11 EOD)
 
@@ -277,15 +280,31 @@ returned `{valid:true, source:'gumroad'}`.
 1. **App.tsx split, phase 3: state organization** (the M-3/L-2 question
    from `docs/implementation-plan.md`; everything else from phase 2 is
    done — modals out, tabs out, QW-3 hook, dead code, v2 feature port).
-   ~4k lines of state + handlers (44+ useState hooks) remain in App.tsx.
    Recommended approach: incremental hook extraction in the
    `useTabIntroVideo` mold (find a cohesive state cluster + its handlers,
-   move them verbatim into a hook, one commit each) — candidates:
-   save/load cluster (saveSummaries, drafts, import/export),
-   autoplay cluster (speed, preferences, block-list), coach/tutorial
-   cluster, batch-buy cluster. Avoid a big-bang context/Zustand rewrite
-   until the hooks make the seams obvious. Same working rules: one slice
-   per commit, suite green at every step, verify live in the preview.
+   move them verbatim into a hook, one commit each). Avoid a big-bang
+   context/Zustand rewrite until the hooks make the seams obvious. Same
+   working rules: one slice per commit, suite green at every step,
+   verify live in the preview.
+   - **Slice 1, save/load cluster — DONE 2026-06-11 (late session)**:
+     `hooks/useSaveLoad.ts` owns the 9 save/load useState hooks,
+     SAVE_SLOTS, the autosave ticker effect, `recordAutosave` (incl.
+     throttled cloud upload + its lastCloudUploadRef), the relative-time
+     formatters + `autosaveStatus`, and all 8 slot handlers (save/load/
+     delete/rename/export/import + openSaveManager + refresh) — moved
+     verbatim. Hook calls `useI18n()` itself; cross-cutting deps
+     (currentSaveSlot stays in App — the history storage keys and
+     autoplay prefs read it; gameState; run lifecycle setters; showNotif)
+     are passed in. **showNotif moved up ~520 lines** to before the hook
+     call — it's a `const`, referencing it in the deps object earlier is
+     a TDZ crash (the slice-1 handlePlayAgain lesson again). Bonus: dead
+     `formatDateTime` deleted from App (zero call sites — the modal has
+     its own copy). App.tsx 6082 → 5906 lines. Suite 23 files / 150
+     green; verified live in v2 preview: save to Slot 1 with label →
+     localStorage `adult:slot1` written, advance month → autosave
+     updated to month 2, load Slot 1 → back to month 1 + toast + modal
+     closed, console clean. Remaining clusters: autoplay (speed,
+     preferences, block-list), coach/tutorial, batch-buy.
 
 2. **Retire the legacy shell** (unblocks deleting ~800 lines). Now that
    its features are ported to v2, the legacy branch only serves the test
@@ -306,8 +325,8 @@ returned `{valid:true, source:'gumroad'}`.
 
 ## Known issues / debt
 
-- `App.tsx` ~6.3k lines (down from ~8.5k; legacy shell branch + state
-  organization pending);
+- `App.tsx` ~5.9k lines (down from ~8.5k; legacy shell branch + remaining
+  state clusters pending);
   `App.tsx.backup`, `constants.ts.save`, `tycoon-eq-upgrade-code-only.zip`
   are junk files on disk (now gitignored)
 - Dead code in App.tsx: scenarioImage parallax motion values/springs/

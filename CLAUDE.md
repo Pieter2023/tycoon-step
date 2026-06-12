@@ -13,10 +13,10 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 ## Architecture (key files)
 
-- `App.tsx` — the adult game's state + orchestration (~6.1k lines after the
-  2026-06-11 refactor day). All modals live in `components/modals/`;
+- `App.tsx` — the adult game's state + orchestration (~5.9k lines; phase-3
+  state extraction in progress). All modals live in `components/modals/`;
   all tab content is extracted AND lazy-loaded from `components/tabs/`.
-  What's left inside: ~4k lines of state/handlers (44+ useState — phase-3
+  What's left inside: state/handlers (still 40+ useState — phase-3
   target), the v2 shell wiring, and the ~800-line legacy header/tab-nav
   branch (`uiV2Enabled` false — kept as the test harness).
   Early returns: splash → character select → main render. Passing an
@@ -46,6 +46,12 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 - `hooks/useTabIntroVideo.ts` — the intro-video state machine (QW-3);
   `hooks/useKeyboardShortcuts.ts` predates it. The hook-extraction
   pattern is the template for the phase-3 state cleanup.
+- `hooks/useSaveLoad.ts` — phase-3 slice 1: the whole save/load cluster
+  (Save Manager state, slot summaries/labels, autosave bookkeeping +
+  throttled cloud upload via `recordAutosave`, export/import, all slot
+  handlers). Cross-cutting state (currentSaveSlot, gameState, run
+  lifecycle setters, showNotif) stays in App and arrives via deps —
+  showNotif must stay defined BEFORE the hook call (const → TDZ).
 - `KidsApp.tsx` — separate simplified kids mode
 - `docs/architecture-map.md` — deeper technical map (from Dec 2025 discovery)
 
@@ -138,8 +144,10 @@ regenerated the missing portfolio poster. All verified live at every step.
 **The queue (details + COLD-START CONTEXT section in `docs/roadmap.md` —
 read that first in a new session):**
 1. App.tsx split, phase 3: state organization — extract cohesive useState
-   clusters into hooks, `useTabIntroVideo`-style, one commit each
-   (save/load, autoplay, coach/tutorial, batch-buy clusters)
+   clusters into hooks, `useTabIntroVideo`-style, one commit each.
+   Save/load cluster DONE (`hooks/useSaveLoad.ts`, App 6082 → 5906
+   lines, verified live). Remaining: autoplay, coach/tutorial,
+   batch-buy clusters
 2. Retire the legacy shell (~800 lines): first migrate the two integration
    tests to the v2 shell (they currently force `uiV2Enabled=false`)
 3. B2B classroom packs (one-page offer + outreach; bulk codes already work)
