@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   Area,
   AreaChart,
@@ -28,7 +28,8 @@ type MoneyPageLayoutProps = {
   portfolioTabProps: Omit<React.ComponentProps<typeof PortfolioTab>, 'activeTab' | 'setActiveTab'>;
   bankTabProps: React.ComponentProps<typeof BankTab>;
   showQuiz: boolean;
-  forcedTab?: 'invest' | 'portfolio' | 'bank';
+  activeTab: 'invest' | 'portfolio' | 'bank' | 'reports';
+  onTabChange: (tab: 'invest' | 'portfolio' | 'bank' | 'reports') => void;
 };
 
 const assetTypeLabels: Record<string, string> = {
@@ -55,15 +56,9 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
   portfolioTabProps,
   bankTabProps,
   showQuiz,
-  forcedTab
+  activeTab,
+  onTabChange
 }) => {
-  const [activeTab, setActiveTab] = useState<'invest' | 'portfolio' | 'bank' | 'reports'>('invest');
-
-  useEffect(() => {
-    if (!forcedTab) return;
-    setActiveTab(forcedTab);
-  }, [forcedTab]);
-
   const netWorthHistory = useMemo(() => {
     const history = gameState.netWorthHistory || [];
     if (history.length > 0) return history;
@@ -130,9 +125,9 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
   ];
 
   const handleLegacyTabChange = (tabId: TabId) => {
-    if (tabId === TABS.INVEST) setActiveTab('invest');
-    if (tabId === TABS.ASSETS) setActiveTab('portfolio');
-    if (tabId === TABS.BANK) setActiveTab('bank');
+    if (tabId === TABS.INVEST) onTabChange('invest');
+    if (tabId === TABS.ASSETS) onTabChange('portfolio');
+    if (tabId === TABS.BANK) onTabChange('bank');
   };
 
   const tabButtonClass = (tab: string) =>
@@ -271,16 +266,16 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
 
       <section className="glass-panel p-6">
         <div className="flex flex-wrap items-center gap-2 mb-6">
-          <button type="button" className={tabButtonClass('invest')} onClick={() => setActiveTab('invest')}>
+          <button type="button" className={tabButtonClass('invest')} onClick={() => onTabChange('invest')}>
             Invest
           </button>
-          <button type="button" className={tabButtonClass('portfolio')} onClick={() => setActiveTab('portfolio')}>
+          <button type="button" className={tabButtonClass('portfolio')} onClick={() => onTabChange('portfolio')}>
             Portfolio
           </button>
-          <button type="button" className={tabButtonClass('bank')} onClick={() => setActiveTab('bank')}>
+          <button type="button" className={tabButtonClass('bank')} onClick={() => onTabChange('bank')}>
             Bank
           </button>
-          <button type="button" className={tabButtonClass('reports')} onClick={() => setActiveTab('reports')}>
+          <button type="button" className={tabButtonClass('reports')} onClick={() => onTabChange('reports')}>
             Reports
           </button>
         </div>
@@ -335,7 +330,7 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setActiveTab('invest')}
+                onClick={() => onTabChange('invest')}
                 className="mt-5 inline-flex items-center gap-2 rounded-md bg-emerald-400 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-emerald-300"
               >
                 Review investments

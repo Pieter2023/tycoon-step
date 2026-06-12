@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Heart, Home, Users } from 'lucide-react';
 import Modal from '../Modal';
 import LifestyleTab from '../tabs/LifestyleTab';
@@ -21,7 +21,8 @@ type LifePageLayoutProps = {
   handleStopSideHustle: (hustleId: string) => void;
   setShowSideHustleUpgradeModal: (open: boolean) => void;
   coachSideHustlesRef: React.RefObject<HTMLDivElement>;
-  forcedTab?: 'lifestyle' | 'sidehustles';
+  activeTab: 'lifestyle' | 'sidehustles' | 'family';
+  onTabChange: (tab: 'lifestyle' | 'sidehustles' | 'family') => void;
 };
 
 export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
@@ -39,15 +40,10 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
   handleStopSideHustle,
   setShowSideHustleUpgradeModal,
   coachSideHustlesRef,
-  forcedTab
+  activeTab,
+  onTabChange
 }) => {
-  const [activeTab, setActiveTab] = useState<'lifestyle' | 'sidehustles' | 'family'>('lifestyle');
   const [openDetail, setOpenDetail] = useState<'lifestyle' | 'sidehustles' | 'family' | null>(null);
-
-  useEffect(() => {
-    if (!forcedTab) return;
-    setActiveTab(forcedTab);
-  }, [forcedTab]);
 
   const lifestyle = LIFESTYLE_OPTS[gameState.lifestyle];
   const familySummary = useMemo(() => {
@@ -88,7 +84,7 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
           <button
             type="button"
             onClick={() => {
-              setActiveTab('lifestyle');
+              onTabChange('lifestyle');
               setOpenDetail('lifestyle');
             }}
             className="mt-4 rounded-md border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
@@ -105,7 +101,7 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
           <button
             type="button"
             onClick={() => {
-              setActiveTab('sidehustles');
+              onTabChange('sidehustles');
               setOpenDetail('sidehustles');
             }}
             className="mt-4 rounded-md border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
@@ -122,7 +118,7 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
           <button
             type="button"
             onClick={() => {
-              setActiveTab('family');
+              onTabChange('family');
               setOpenDetail('family');
             }}
             className="mt-4 rounded-md border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
@@ -134,13 +130,13 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
 
       <section className="glass-panel p-6">
         <div className="flex flex-wrap items-center gap-2 mb-6">
-          <button type="button" className={tabButtonClass('lifestyle')} onClick={() => setActiveTab('lifestyle')}>
+          <button type="button" className={tabButtonClass('lifestyle')} onClick={() => onTabChange('lifestyle')}>
             Lifestyle
           </button>
-          <button type="button" className={tabButtonClass('sidehustles')} onClick={() => setActiveTab('sidehustles')}>
+          <button type="button" className={tabButtonClass('sidehustles')} onClick={() => onTabChange('sidehustles')}>
             Side Hustles
           </button>
-          <button type="button" className={tabButtonClass('family')} onClick={() => setActiveTab('family')}>
+          <button type="button" className={tabButtonClass('family')} onClick={() => onTabChange('family')}>
             Family
           </button>
         </div>

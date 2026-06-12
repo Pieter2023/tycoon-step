@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { TabId } from '../types';
+import { TABS, TabId } from '../types';
 
 export const SELF_LEARN_HINT_STORAGE_KEY = 'tycoon_self_learn_hint_v1';
 
@@ -21,7 +21,9 @@ export type CoachHintData = {
 };
 
 interface CoachHintsDeps {
-  activeTab: TabId;
+  // null = a v2 surface with no legacy TabId equivalent (e.g. Money's
+  // Reports tab); hint gates simply never match there.
+  activeTab: TabId | null;
   gameStarted: boolean;
   isMultiplayer?: boolean;
   reduceMotion: boolean;
@@ -129,7 +131,7 @@ export const useCoachHints = (deps: CoachHintsDeps) => {
       if (localStorage.getItem(SELF_LEARN_HINT_STORAGE_KEY) === '1') return;
       const hintTimer = window.setTimeout(() => {
         triggerCoachHint({
-          tabId: activeTab,
+          tabId: activeTab ?? TABS.OVERVIEW,
           title: 'New Self Learn tab',
           message: 'Sales Certification, Upgrade EQ, and Master Negotiations now live under Self Learn.',
           target: 'self-learn-tab'

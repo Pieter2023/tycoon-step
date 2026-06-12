@@ -634,7 +634,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
       return [];
     }
   });
-  const [activeTab, setActiveTab] = useState<TabId>(TABS.OVERVIEW);
   const [investmentFilter, setInvestmentFilter] = useState<string>('ALL');
   const [investmentTierFilter, setInvestmentTierFilter] = useState<'ALL' | 'STARTER' | 'MID' | 'ADVANCED'>('ALL');
   const [investmentSearch, setInvestmentSearch] = useState('');
@@ -675,8 +674,42 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const lastMonthRef = useRef(gameState.month);
   const [openActionsSignal, setOpenActionsSignal] = useState(0);
   const [actionsDrawerOpen, setActionsDrawerOpen] = useState(false);
-  const [forcedMoneyTab, setForcedMoneyTab] = useState<'invest' | 'portfolio' | 'bank' | null>(null);
-  const [forcedLifeTab, setForcedLifeTab] = useState<'lifestyle' | 'sidehustles' | null>(null);
+
+  // v2 router: the page path plus the Money/Life sub-tabs. The sub-tabs are
+  // hoisted from the page layouts (controlled components) so navigation can
+  // set them directly — this replaced the never-cleared forcedTab signals.
+  const [v2Path, setV2Path] = useState<'/play' | '/money' | '/career' | '/learn' | '/life'>('/play');
+  const [mobileTab, setMobileTab] = useState<'dashboard' | 'actions' | 'profile' | 'more'>('dashboard');
+  const [moneyTab, setMoneyTab] = useState<'invest' | 'portfolio' | 'bank' | 'reports'>('invest');
+  const [lifeTab, setLifeTab] = useState<'lifestyle' | 'sidehustles' | 'family'>('lifestyle');
+
+  // The legacy TabId is DERIVED from the v2 router (the writable mirror was
+  // retired 2026-06-12). null = a v2 surface with no legacy equivalent
+  // (Money's Reports, Life's Family); coach-hint gates simply never match it.
+  const activeTab = useMemo<TabId | null>(() => {
+    switch (v2Path) {
+      case '/money':
+        return moneyTab === 'invest'
+          ? TABS.INVEST
+          : moneyTab === 'portfolio'
+            ? TABS.ASSETS
+            : moneyTab === 'bank'
+              ? TABS.BANK
+              : null;
+      case '/life':
+        return lifeTab === 'lifestyle'
+          ? TABS.LIFESTYLE
+          : lifeTab === 'sidehustles'
+            ? TABS.SIDEHUSTLE
+            : null;
+      case '/career':
+        return TABS.CAREER;
+      case '/learn':
+        return TABS.EDUCATION;
+      default:
+        return TABS.OVERVIEW;
+    }
+  }, [v2Path, moneyTab, lifeTab]);
 
   // ============================================
   // NEXT MONTH PREVIEW (Step 10)
@@ -984,7 +1017,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
   // Quiz trigger keys on the invest filter changing (the filter buttons only
   // exist inside InvestTab, so a non-ALL filter proves the invest surface is
-  // in use) — NOT on activeTab, which v2 navigation doesn't always set.
+  // in use) — NOT on activeTab.
   useEffect(() => {
     if (investmentFilter === 'ALL') return;
     if (activeQuizId) return;
@@ -1011,8 +1044,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
     setGameStarted(false);
     setShowCharacterSelect(true);
     setMonthlyReport(null);
-    setActiveTab(TABS.OVERVIEW);
     setV2Path('/play');
+    setMoneyTab('invest');
+    setLifeTab('lifestyle');
     setTutorialStep(0);
     setTutorialDismissed(false);
     setShowTutorial(shouldShowOnboarding());
@@ -1095,8 +1129,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   // IMPORTANT: Use the deterministic cash flow estimate for UI so UI renders don't consume randomness.
   const cashFlow = useMemo(() => calculateMonthlyCashFlowEstimate(gameState), [gameState]);
   const activeQuiz = useMemo(() => (activeQuizId ? getQuizDefinition(activeQuizId) : null), [activeQuizId]);
-  const [v2Path, setV2Path] = useState<'/play' | '/money' | '/career' | '/learn' | '/life'>('/play');
-  const [mobileTab, setMobileTab] = useState<'dashboard' | 'actions' | 'profile' | 'more'>('dashboard');
   const [overflowMenuOpen, setOverflowMenuOpen] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const shouldPreloadVideos = !accessibilityPrefs.disableVideoPreload;
@@ -1246,39 +1278,36 @@ const [gameState, setGameState] = useState<GameState>(() => {
     (path: '/play' | '/money' | '/career' | '/learn' | '/life', tab?: 'invest' | 'lifestyle' | 'sidehustles') => {
       setV2Path(path);
       if (path === '/money' && tab === 'invest') {
-        setForcedMoneyTab('invest');
+        setMoneyTab('invest');
       }
       if (path === '/life' && tab === 'sidehustles') {
-        setForcedLifeTab('sidehustles');
+        setLifeTab('sidehustles');
       }
       if (path === '/life' && tab === 'lifestyle') {
-        setForcedLifeTab('lifestyle');
+        setLifeTab('lifestyle');
       }
     },
-    [setForcedLifeTab, setForcedMoneyTab]
+    []
   );
 
-  // Navigate BOTH routing systems: the activeTab mirror (still read by the
-  // coach gates and tab-keyed config) and the v2 shell router. Without the
-  // v2 write, TurnPreview quick-fixes and intro-video "Continue" silently
-  // no-op in the v2 shell.
+  // Map a legacy TabId onto the v2 router (path + sub-tab). The old
+  // activeTab mirror is gone — it's derived from these writes now.
   const navigateToTab = useCallback((tabId: TabId) => {
-    setActiveTab(tabId);
     if (tabId === TABS.INVEST) {
       setV2Path('/money');
-      setForcedMoneyTab('invest');
+      setMoneyTab('invest');
     } else if (tabId === TABS.ASSETS) {
       setV2Path('/money');
-      setForcedMoneyTab('portfolio');
+      setMoneyTab('portfolio');
     } else if (tabId === TABS.BANK) {
       setV2Path('/money');
-      setForcedMoneyTab('bank');
+      setMoneyTab('bank');
     } else if (tabId === TABS.LIFESTYLE) {
       setV2Path('/life');
-      setForcedLifeTab('lifestyle');
+      setLifeTab('lifestyle');
     } else if (tabId === TABS.SIDEHUSTLE) {
       setV2Path('/life');
-      setForcedLifeTab('sidehustles');
+      setLifeTab('sidehustles');
     } else if (tabId === TABS.CAREER) {
       setV2Path('/career');
     } else if (tabId === TABS.EDUCATION || tabId === TABS.SELF_LEARN || tabId === TABS.EQ || tabId === TABS.NEGOTIATIONS) {
@@ -3644,7 +3673,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
           onDismiss={() => { setTutorialDismissed(true); setShowTutorial(false); markOnboardingSeen(); }}
           onApplyAutoInvestPreset={(presetId) => {
             applyAutoInvestPreset(presetId);
-            setActiveTab(TABS.INVEST);
             handleV2Navigate('/money', 'invest');
           }}
         />
@@ -3876,7 +3904,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   portfolioTabProps={portfolioTabProps}
                   bankTabProps={bankTabProps}
                   showQuiz={!!activeQuiz}
-                  forcedTab={forcedMoneyTab || undefined}
+                  activeTab={moneyTab}
+                  onTabChange={setMoneyTab}
                 />
               </TabErrorBoundary>
             )}
@@ -3924,7 +3953,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   handleStopSideHustle={handleStopSideHustle}
                   setShowSideHustleUpgradeModal={setShowSideHustleUpgradeModal}
                   coachSideHustlesRef={coachSideHustlesRef}
-                  forcedTab={forcedLifeTab || undefined}
+                  activeTab={lifeTab}
+                  onTabChange={setLifeTab}
                 />
               </TabErrorBoundary>
             )}
@@ -4066,7 +4096,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   portfolioTabProps={portfolioTabProps}
                   bankTabProps={bankTabProps}
                   showQuiz={!!activeQuiz}
-                  forcedTab={forcedMoneyTab || undefined}
+                  activeTab={moneyTab}
+                  onTabChange={setMoneyTab}
                 />
               </TabErrorBoundary>
             )}
@@ -4114,7 +4145,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   handleStopSideHustle={handleStopSideHustle}
                   setShowSideHustleUpgradeModal={setShowSideHustleUpgradeModal}
                   coachSideHustlesRef={coachSideHustlesRef}
-                  forcedTab={forcedLifeTab || undefined}
+                  activeTab={lifeTab}
+                  onTabChange={setLifeTab}
                 />
               </TabErrorBoundary>
             )}
