@@ -80,7 +80,7 @@ import {
   GraduationCap, PiggyBank, LineChart, AlertTriangle, CheckCircle,
   X, Wallet, Sparkles, Volume2, VolumeX,
   Bot, Coffee, Plus, Save as SaveIcon,
-  Users, BookOpen, Trophy, Info, Settings
+  Users, BookOpen, Trophy, Info, Settings, Home, MoreHorizontal
 } from 'lucide-react';
 
 
@@ -1112,7 +1112,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const activeQuiz = useMemo(() => (activeQuizId ? getQuizDefinition(activeQuizId) : null), [activeQuizId]);
   const [v2Path, setV2Path] = useState<'/play' | '/money' | '/career' | '/learn' | '/life'>('/play');
   const [mobileTab, setMobileTab] = useState<'dashboard' | 'actions' | 'profile' | 'more'>('dashboard');
-  const [mobileOverflowOpen, setMobileOverflowOpen] = useState(false);
+  const [overflowMenuOpen, setOverflowMenuOpen] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const shouldPreloadVideos = !accessibilityPrefs.disableVideoPreload;
   const careerLevel = gameState.career?.level ?? gameState.playerJob?.level ?? 0;
@@ -3895,7 +3895,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
             isProcessing={isProcessing}
             nextMonthDisabled={isProcessing || !!gameState.pendingScenario}
             onNextMonth={handleNextTurn}
-            onOpenOverflow={() => setMobileOverflowOpen(true)}
+            onOpenOverflow={() => setOverflowMenuOpen(true)}
             activePath={v2Path}
             onNavigatePath={(path) => {
               setV2Path(path);
@@ -4138,6 +4138,14 @@ const [gameState, setGameState] = useState<GameState>(() => {
                     );
                   })}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setOverflowMenuOpen(true)}
+                  aria-label="More options"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-700/70 text-slate-300 hover:text-white hover:bg-slate-800/60"
+                >
+                  <MoreHorizontal size={18} />
+                </button>
               </div>
             }
           >
@@ -4254,8 +4262,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
           />
 
           <Modal
-            isOpen={mobileOverflowOpen}
-            onClose={() => setMobileOverflowOpen(false)}
+            isOpen={overflowMenuOpen}
+            onClose={() => setOverflowMenuOpen(false)}
             ariaLabel="Quick actions"
             contentClassName="bg-slate-900 border border-slate-800 rounded-3xl p-4 max-w-sm w-full"
           >
@@ -4264,7 +4272,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 type="button"
                 onClick={() => {
                   openSaveManager();
-                  setMobileOverflowOpen(false);
+                  setOverflowMenuOpen(false);
                 }}
                 className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
               >
@@ -4275,7 +4283,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   type="button"
                   onClick={() => {
                     setShowRunCard(true);
-                    setMobileOverflowOpen(false);
+                    setOverflowMenuOpen(false);
                   }}
                   className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
                 >
@@ -4286,7 +4294,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 type="button"
                 onClick={() => {
                   setShowQuestLog(true);
-                  setMobileOverflowOpen(false);
+                  setOverflowMenuOpen(false);
                 }}
                 className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
               >
@@ -4296,7 +4304,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 type="button"
                 onClick={() => {
                   setShowGlossary(true);
-                  setMobileOverflowOpen(false);
+                  setOverflowMenuOpen(false);
                 }}
                 className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
               >
@@ -4306,7 +4314,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 type="button"
                 onClick={() => {
                   setShowTutorialVideos(true);
-                  setMobileOverflowOpen(false);
+                  setOverflowMenuOpen(false);
                 }}
                 className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
               >
@@ -4316,12 +4324,35 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 type="button"
                 onClick={() => {
                   setShowAccessibility(true);
-                  setMobileOverflowOpen(false);
+                  setOverflowMenuOpen(false);
                 }}
                 className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
               >
                 <Settings size={18} className="text-purple-300" /> Accessibility
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  toggleSound();
+                }}
+                className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
+              >
+                {soundEnabled ? <Volume2 size={18} className="text-emerald-300" /> : <VolumeX size={18} className="text-rose-300" />}
+                {soundEnabled ? 'Mute' : 'Unmute'}
+              </button>
+              {onBackToMenu && !isMultiplayer && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    recordAutosave(gameState);
+                    setOverflowMenuOpen(false);
+                    onBackToMenu();
+                  }}
+                  className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
+                >
+                  <Home size={18} className="text-slate-300" /> Back to Menu
+                </button>
+              )}
             </div>
           </Modal>
         </>

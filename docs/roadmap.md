@@ -402,9 +402,15 @@ returned `{valid:true, source:'gumroad'}`.
      HelpDrawer tips surface + hide-tips toggle UI, DashboardWidget 2x2
      grid, Event Lab (commit d9531bd has it last), per-tab scroll
      memory, confetti-on-next-month, legacy 9-tab nav + KPI header.
-   - **Spawned follow-ups:** desktop-v2 utility menu (Save/Load etc.
-     are mobile-only today), Back-to-Menu missing everywhere in v2,
-     merge the two keyboard systems, full activeTab retirement.
+   - **Follow-ups:** ~~desktop-v2 utility menu~~ + ~~Back-to-Menu~~
+     DONE same day — the "Quick actions" Modal is now shared by both
+     shells (desktop trigger: "More options" in DesktopShell
+     headerActions; state renamed overflowMenuOpen) and gained
+     Mute/Unmute + Back to Menu (recordAutosave first; hidden in
+     multiplayer / without onBackToMenu — the legacy conditions).
+     AccessibilitySmoke now asserts the full menu on BOTH shells
+     (suite 23 files / 161). Still queued: merge the two keyboard
+     systems, full activeTab retirement.
 
 3. **B2B classroom packs** (business + light code). Bulk access codes
    already work via the `ACCESS_CODES` Netlify env var (comma-separated —
