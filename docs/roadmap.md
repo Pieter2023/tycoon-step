@@ -466,8 +466,6 @@ returned `{valid:true, source:'gumroad'}`.
   unmodified letters refuse shifted presses).
 - ~~`activeTab` mirror~~ RETIRED late 2026-06-12 (derived from the v2
   router; see cold-start notes).
-- `services/tabState.ts` is orphaned (only its own test imports it) —
-  delete with its test whenever convenient.
 - `hideTipsEverywhere` pref persists but has no UI writer since the
   legacy tips toggle sunset — if a stuck device ever suppresses the
   quick-tutorial, clear `tycoon_hide_tips_v1`; consider porting the
