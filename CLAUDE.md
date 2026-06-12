@@ -77,6 +77,14 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
   25s timer; pill/ribbon JSX stays in App — note the ribbon only
   renders in the legacy shell). Exports CoachTarget/CoachHintData
   types + SELF_LEARN_HINT_STORAGE_KEY.
+- `hooks/useBatchBuy.ts` — phase-3 slice 5 (phase 3 COMPLETE): cart
+  mode/quantities, the priced cart memo, and all handlers. Handlers are
+  deliberately PLAIN functions (no useCallback) — InvestTab's "Buy Nx"
+  defers openBatchBuyConfirm via setTimeout(0) and relies on
+  fresh-per-render closures. No recordAutosave on purpose: batch buys
+  persist indirectly via the event-sync effect seeing the prepended
+  📦 event. Has a local formatMoneyFull copy (importing App's would be
+  a cycle). The fixed Batch Cart bar JSX stays in App (reads activeTab).
 - `KidsApp.tsx` — separate simplified kids mode
 - `docs/architecture-map.md` — deeper technical map (from Dec 2025 discovery)
 
@@ -168,11 +176,12 @@ regenerated the missing portfolio poster. All verified live at every step.
 
 **The queue (details + COLD-START CONTEXT section in `docs/roadmap.md` —
 read that first in a new session):**
-1. App.tsx split, phase 3: state organization — extract cohesive useState
-   clusters into hooks, `useTabIntroVideo`-style. DONE: save/load
-   (`useSaveLoad`, 6082 → 5906), autoplay (`useAutoplay`, → 5885),
-   tutorial (`useTutorial`, → 5809), coach hints (`useCoachHints`,
-   → 5682) — all verified live. Remaining: batch-buy cluster
+1. ~~App.tsx split, phase 3: state organization~~ **COMPLETE 2026-06-12**
+   — all five clusters extracted into hooks, one verified slice each:
+   save/load (`useSaveLoad`, 6082 → 5906), autoplay (`useAutoplay`,
+   → 5885), tutorial (`useTutorial`, → 5809), coach hints
+   (`useCoachHints`, → 5682), batch-buy (`useBatchBuy`, → 5479).
+   Next up: retire the legacy shell (item 2 below)
 2. Retire the legacy shell (~800 lines): first migrate the two integration
    tests to the v2 shell (they currently force `uiV2Enabled=false`)
 3. B2B classroom packs (one-page offer + outreach; bulk codes already work)

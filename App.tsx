@@ -66,6 +66,7 @@ import ActionsScreen from './components/v2/ActionsScreen';
 import ProfileScreen from './components/v2/ProfileScreen';
 import MoreScreen from './components/v2/MoreScreen';
 import { getMonthlyActionsSummary } from './services/monthlyActions';
+import { useBatchBuy } from './hooks/useBatchBuy';
 import UnlockModal from './components/UnlockModal';
 import { AccessTier, DEMO_MONTH_LIMIT, getAccessTier } from './services/accessControl';
 
@@ -736,9 +737,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const pendingScrollRestoreRef = useRef<TabId | null>(null);
   const prevTabRef = useRef<TabId>(activeTab);
 
-  // Batch buying (securities): build a small 'cart' and confirm once
-  const [batchBuyMode, setBatchBuyMode] = useState(false);
-  const [batchBuyQuantities, setBatchBuyQuantities] = useState<Record<string, number>>({});
 
   const [floatingNumbers, setFloatingNumbers] = useState<{ id: string; value: number }[]>([]);
   const [notification, setNotification] = useState<{
@@ -1418,44 +1416,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
     });
   }, [investmentFilter, investmentSearch, investmentTierFilter]);
 
-  const batchBuyCart = useMemo(() => {
-    const inflationMult = Math.pow(1 + gameState.economy.inflationRate, gameState.month / 12);
-
-    const lines = Object.entries(batchBuyQuantities)
-      .filter(([, qty]) => qty > 0)
-      .map(([id, qty]) => {
-        const item = MARKET_ITEMS.find(i => i.id === id);
-        if (!item) return null;
-
-        const unitPrice = Math.round(item.price * inflationMult);
-        return {
-          id,
-          item,
-          qty,
-          unitPrice,
-          lineTotal: unitPrice * qty
-        };
-      })
-      .filter(Boolean) as Array<{
-        id: string;
-        item: MarketItem;
-        qty: number;
-        unitPrice: number;
-        lineTotal: number;
-      }>;
-
-    const totalCost = lines.reduce((sum, l) => sum + l.lineTotal, 0);
-    const totalUnits = lines.reduce((sum, l) => sum + l.qty, 0);
-
-    return {
-      lines,
-      totalCost,
-      totalUnits,
-      canAfford: totalCost <= gameState.cash
-    };
-  }, [batchBuyQuantities, gameState.cash, gameState.economy.inflationRate, gameState.month]);
-
-
   const careerPath = gameState.career?.path || 'TECH';
   const aiImpact = gameState.aiDisruption?.affectedIndustries?.[careerPath];
   const v2NavItems: AppShellNavItem[] = [
@@ -1684,6 +1644,19 @@ const [gameState, setGameState] = useState<GameState>(() => {
     },
     [accessibilityPrefs.disableConfetti, reduceMotion, trackFrameDrops]
   );
+
+  // Batch-buy (securities) cluster lives in hooks/useBatchBuy.
+  const {
+    batchBuyMode,
+    batchBuyQuantities,
+    setBatchBuyQuantities,
+    batchBuyCart,
+    isBatchBuyEligible,
+    toggleBatchBuyMode,
+    setBatchQty,
+    clearBatchBuyCart,
+    openBatchBuyConfirm
+  } = useBatchBuy({ gameState, setGameState, showNotif, openConfirmDialog, setFloatingNumbers, maybeConfetti });
 
   const handleClaimQuest = useCallback((questId: string) => {
     if (isProcessing) return;
@@ -2861,182 +2834,6 @@ const [gameState, setGameState] = useState<GameState>(() => {
     }
   }, [gameState]);
 
-  // ============================================
-  // BATCH BUY (Securities)
-  // ============================================
-  const isBatchBuyEligible = (item: MarketItem) => {
-    return [
-      AssetType.STOCK,
-      AssetType.INDEX_FUND,
-      AssetType.BOND,
-      AssetType.CRYPTO,
-      AssetType.COMMODITY
-    ].includes(item.type);
-  };
-
-  const toggleBatchBuyMode = () => {
-    playClick();
-    setBatchBuyMode(prev => {
-      const next = !prev;
-      if (!next) {
-        setBatchBuyQuantities({});
-      }
-      return next;
-    });
-  };
-
-  const setBatchQty = (itemId: string, qty: number) => {
-    setBatchBuyQuantities(prev => {
-      const next = { ...prev };
-      if (qty <= 0) {
-        delete next[itemId];
-      } else {
-        next[itemId] = qty;
-      }
-      return next;
-    });
-  };
-
-  const clearBatchBuyCart = () => {
-    playClick();
-    setBatchBuyQuantities({});
-  };
-
-  const executeBatchBuy = () => {
-    if (batchBuyCart.lines.length === 0) {
-      showNotif('Cart Empty', 'Select quantities on securities first.', 'warning');
-      return;
-    }
-
-    if (!batchBuyCart.canAfford) {
-      showNotif(
-        'Not Enough Cash',
-        `Total is ${formatMoneyFull(batchBuyCart.totalCost)} but you only have ${formatMoneyFull(gameState.cash)}.`,
-        'error'
-      );
-      return;
-    }
-
-    playPurchase();
-
-    setGameState(prev => {
-      const inflationMult = Math.pow(1 + prev.economy.inflationRate, prev.month / 12);
-
-      let cash = prev.cash;
-      let assets = [...prev.assets];
-      let totalSpent = 0;
-
-      const purchased: string[] = [];
-
-      for (const line of batchBuyCart.lines) {
-        const item = line.item;
-        if (!isBatchBuyEligible(item)) continue;
-
-        const unitPrice = Math.round(item.price * inflationMult);
-        const qty = Math.max(1, line.qty);
-        const lineTotal = unitPrice * qty;
-
-        if (cash < lineTotal) break;
-
-        cash -= lineTotal;
-        totalSpent += lineTotal;
-        purchased.push(`${qty}x ${item.name}`);
-
-        const existing = assets.find(a => a.name === item.name && a.type === item.type && !a.mortgageId);
-        if (existing) {
-          const prevQty = typeof existing.quantity === 'number' ? existing.quantity : 1;
-          const newQty = prevQty + qty;
-          const newCostBasis = ((existing.costBasis * prevQty) + (unitPrice * qty)) / newQty;
-
-          assets = assets.map(a => a.id === existing.id ? {
-            ...a,
-            quantity: newQty,
-            costBasis: newCostBasis,
-            value: unitPrice,
-            cashFlow: (item.expectedYield * unitPrice) / 12,
-            purchasePrice: unitPrice
-          } : a);
-        } else {
-          const baseMonthly = (item.expectedYield * unitPrice) / 12;
-          const newAsset: Asset = {
-            id: 'asset-' + Date.now().toString() + '-' + item.id,
-            name: item.name,
-            type: item.type,
-            value: unitPrice,
-            costBasis: unitPrice,
-            quantity: qty,
-            appreciationRate: item.appreciationRate || (item.expectedYield * 0.4),
-            volatility: item.volatility,
-            baseYield: item.expectedYield,
-            cashFlow: baseMonthly,
-            purchasedMonth: prev.month,
-            purchasePrice: unitPrice,
-            industry: item.industry,
-            description: item.description,
-            priceHistory: [{ month: prev.month, value: unitPrice }],
-            opsUpgrade: item.type === AssetType.BUSINESS ? false : undefined,
-            currentMonthIncome: item.type === AssetType.BUSINESS ? Math.round(baseMonthly * qty) : undefined,
-            lastMonthIncome: item.type === AssetType.BUSINESS ? Math.round(baseMonthly * qty) : undefined
-          };
-          assets.push(newAsset);
-        }
-      }
-
-      if (totalSpent <= 0) return prev;
-
-      return {
-        ...prev,
-        cash,
-        assets,
-        events: [{
-          id: Date.now().toString(),
-          month: prev.month,
-          title: '📦 Batch Purchase',
-          description: `Bought ${purchased.join(', ')} for ${formatMoneyFull(totalSpent)} total.`,
-          type: 'DECISION'
-        }, ...prev.events]
-      };
-    });
-
-    setFloatingNumbers(p => [...p, { id: Date.now().toString(), value: -batchBuyCart.totalCost }]);
-    playMoneyLoss();
-    showNotif(
-      'Batch Purchase Complete!',
-      `Bought ${batchBuyCart.lines.length} ${batchBuyCart.lines.length === 1 ? 'security' : 'securities'} for ${formatMoneyFull(batchBuyCart.totalCost)}.`,
-      'success'
-    );
-
-    maybeConfetti({ particleCount: 40, spread: 60, origin: { y: 0.7 } });
-
-    // Clear cart (keep mode on for rapid re-buying)
-    setBatchBuyQuantities({});
-  };
-
-  const openBatchBuyConfirm = () => {
-    if (batchBuyCart.lines.length === 0) {
-      showNotif('Cart Empty', 'Select quantities on securities first.', 'warning');
-      return;
-    }
-
-    const details = batchBuyCart.lines.map(l => ({
-      label: `${l.qty}x ${l.item.name}`,
-      value: `${formatMoneyFull(l.lineTotal)} (${formatMoneyFull(l.unitPrice)} each)`
-    }));
-
-    details.push({
-      label: 'TOTAL',
-      value: formatMoneyFull(batchBuyCart.totalCost)
-    });
-
-    openConfirmDialog({
-      title: 'Confirm Batch Purchase',
-      description: 'You are about to buy the following securities:',
-      details,
-      confirmLabel: `Buy (${formatMoneyFull(batchBuyCart.totalCost)})`,
-      cancelLabel: 'Cancel',
-      onConfirm: executeBatchBuy
-    });
-  };
 
 
 

@@ -12,8 +12,8 @@ the missing portfolio poster (ffmpeg blur-fill from the video — it was
 never in git history). App.tsx 8467 → ~6.1k lines. Working tree clean;
 remote main == working branch.
 **Next session: read "Cold-start context" + "Next build priorities" below.**
-**Update (2026-06-11, late session):** phase-3 slices 1-4 shipped — the
-save/load, autoplay, tutorial + coach-hints clusters are now hooks (App.tsx 6082 → 5682).
+**Update (2026-06-11, late session):** phase-3 COMPLETE (all 5 slices) — the
+save/load, autoplay, tutorial, coach-hints + batch-buy clusters are now hooks (App.tsx 6082 → 5479).
 Details under "Next build priorities" item 1.
 
 ## Cold-start context for the next session (written 2026-06-11 EOD)
@@ -286,6 +286,26 @@ returned `{valid:true, source:'gumroad'}`.
    context/Zustand rewrite until the hooks make the seams obvious. Same
    working rules: one slice per commit, suite green at every step,
    verify live in the preview.
+   - **Slice 5, batch-buy cluster — DONE 2026-06-12 (PHASE 3 COMPLETE)**:
+     `hooks/useBatchBuy.ts` owns cart mode/quantities, the priced cart
+     memo, and all six handlers — moved byte-identical. Three
+     load-bearing subtleties (workflow-mapped, then confirmed by a
+     zero-findings adversarial review): (1) handlers stay PLAIN
+     functions — InvestTab's "Buy Nx" replaces the cart then defers
+     openBatchBuyConfirm via setTimeout(0), relying on fresh-per-render
+     closures; (2) recordAutosave is deliberately NOT a dep — batch
+     buys persist indirectly when the event-sync effect sees the
+     prepended 📦 event (live-verified: purchase landed in the
+     autosave); (3) hook-local formatMoneyFull copy (App's is module-
+     scope; importing it would create a cycle). Raw setBatchBuyQuantities
+     returned (InvestTabProps Dispatch contract). Pre-existing quirks
+     left alone: closed-over totalCost can overstate the toast on
+     partial buys; the v2 cart-bar activeTab gate; handlePlayAgain not
+     clearing the cart. App.tsx 5682 → 5479. Suite 160 green. Verified
+     live in v2: toggle ON → qty 2 → Buy 2x → confirm dialog
+     (TOTAL $2,004) → cash 10,000→7,996, 2x Treasury Bills @ $1,002
+     basis, 📦 event in autosave, cart cleared, mode stayed ON,
+     toggle OFF cleared the qty UI; console clean.
    - **Slices 3+4, tutorial + coach-hints clusters — DONE 2026-06-12**
      (one working session, single commit — both verified together):
      `hooks/useTutorial.ts` (6 useStates: step tutorial, quick-tutorial
