@@ -111,7 +111,8 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 - `KidsApp.tsx` — separate simplified kids mode
 - `public/educators.html` — standalone B2B offer page at /educators
   (netlify.toml redirect; linked from the ModeSelector footer);
-  playbook in `docs/b2b-classroom-packs.md`
+  playbook in `docs/b2b-classroom-packs.md`, ready-to-paste outreach
+  copy (NGPF/Reddit posts + email variants) in `docs/outreach-drafts.md`
 - `docs/architecture-map.md`, `docs/implementation-plan.md`,
   `docs/ui-refactor-map.md` — HISTORICAL (pre-refactor snapshots; each
   carries a banner). This file + `docs/roadmap.md` are the current truth.
@@ -184,7 +185,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
   `git checkout main` / `reset --hard` across that boundary locally**; it will
   try to delete those from disk. Update remote main via push (cmd above).
 
-## Current state & next steps (2026-06-12 EOD)
+## Current state & next steps (2026-06-13)
 
 **Everything in the roadmap queue is shipped, verified live, and deployed.**
 Working tree clean; remote main == working branch. The feature surface:
@@ -204,15 +205,22 @@ Late 2026-06-12: both deferred refactors landed — the keyboard merge
 legacy listener had been swallowing i/p/b/c/e/s/l before the v2-aware
 one ran) and the activeTab retirement (derived from v2Path + hoisted
 moneyTab/lifeTab; forcedTab signals gone; sub-tabs persist across page
-switches now). Both verified live via the preview browser.
+switches now). Both verified live via the preview browser. Also removed
+the orphaned `services/tabState.ts` + its test (suite 23→22 files,
+161→159 tests) and wrote the B2B outreach copy
+(`docs/outreach-drafts.md`). App.tsx is now ~4.35k lines.
 
 **No queued build work.** Open threads, in priority order:
-1. **B2B outreach (Pieter, not code)** — next actions in
-   `docs/b2b-classroom-packs.md`: optional $99 Gumroad "Classroom Pack"
-   product, post the demo to the NGPF teacher community, work the email
-   template down the target list. Fulfillment = add code to
-   `ACCESS_CODES` + redeploy (warm functions cache env!).
-2. Multiplayer polish — deliberately deprioritized.
+1. **B2B outreach (Pieter, not code)** — ready-to-paste copy is in
+   `docs/outreach-drafts.md`; strategy/fulfillment in
+   `docs/b2b-classroom-packs.md`. Next actions: optionally create the
+   $99 Gumroad "Classroom Pack" product, post the demo to the NGPF
+   teacher community, then work the email list. Fulfillment = add code
+   to `ACCESS_CODES` + redeploy (warm functions cache env!).
+2. Small optional code polish if a build session is wanted: port the
+   `hideTipsEverywhere` toggle into AccessibilityModal (pref persists
+   but has no UI writer); code-split the ~1.1MB main bundle.
+3. Multiplayer polish — deliberately deprioritized.
 
 If something looks broken at cold start: `docs/roadmap.md` has the full
 slice-by-slice history (what moved where and why, sunset list, every

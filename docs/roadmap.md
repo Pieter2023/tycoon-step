@@ -1,7 +1,8 @@
 # Roadmap
 
-**Last updated:** 2026-06-12. **The entire 3-item queue is DONE** (all
-verified live + deployed, suite 23 files / 161 tests green throughout):
+**Last updated:** 2026-06-13. **The entire 3-item queue is DONE** (all
+verified live + deployed, suite 23 files / 161 tests green throughout —
+now 22 / 159 after the tabState cleanup below):
 (1) phase-3 state organization — all 5 clusters are hooks (useSaveLoad,
 useAutoplay, useTutorial, useCoachHints, useBatchBuy); (2) the legacy
 shell is RETIRED — all five integration tests drive v2, the
@@ -14,12 +15,14 @@ packs — live offer page at /educators + docs/b2b-classroom-packs.md
 playbook. App.tsx 8467 → ~4.4k lines across the whole refactor
 (6082 → 4406 this session). Working tree clean; remote main == branch.
 **Next session: no queued build work.** Open threads: Pieter's B2B
-outreach (playbook has next actions); multiplayer polish remains
-deprioritized. Late 2026-06-12: both deferred refactors landed —
-keyboard-system merge + full activeTab retirement (see below).
-Slice history + sunset lists below.
+outreach (ready-to-paste copy in `docs/outreach-drafts.md`); multiplayer
+polish remains deprioritized. Late 2026-06-12: both deferred refactors
+landed — keyboard-system merge + full activeTab retirement (see below) —
+plus the orphaned `services/tabState.ts` was deleted (suite 23→22 files,
+161→159) and the B2B outreach drafts were written. Slice history +
+sunset lists below.
 
-## Cold-start context for the next session (refreshed 2026-06-12 EOD)
+## Cold-start context for the next session (refreshed 2026-06-13)
 
 - **Where the refactor stands: FINISHED.** App.tsx (~4.4k lines, from
   8,467) is state + orchestration only: modals in `components/modals/`
@@ -456,7 +459,7 @@ returned `{valid:true, source:'gumroad'}`.
      "Classroom Pack" product, (2) post the demo to the NGPF community,
      (3) work the email template down the target list.
 
-## Known issues / debt (refreshed 2026-06-12)
+## Known issues / debt (refreshed 2026-06-13)
 
 - `App.tsx` ~4.4k lines (down from ~8.5k; refactor complete).
   `App.tsx.backup`, `constants.ts.save`, `tycoon-eq-upgrade-code-only.zip`

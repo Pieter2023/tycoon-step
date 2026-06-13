@@ -16,10 +16,11 @@ Progress can sync across devices via cloud saves (private sync code or an email-
 
 ## 📚 Project Docs
 
-- [CLAUDE.md](CLAUDE.md) — quick orientation: commands, architecture, gotchas
-- [docs/roadmap.md](docs/roadmap.md) — current state and prioritized next work
+- [CLAUDE.md](CLAUDE.md) — quick orientation: commands, architecture, gotchas (current truth)
+- [docs/roadmap.md](docs/roadmap.md) — current state and prioritized next work (current truth)
 - [docs/monetization-setup.md](docs/monetization-setup.md) — how to start selling (Gumroad + Netlify env)
-- [docs/architecture-map.md](docs/architecture-map.md) — deeper technical map
+- [docs/b2b-classroom-packs.md](docs/b2b-classroom-packs.md) + [docs/outreach-drafts.md](docs/outreach-drafts.md) — B2B classroom offer: strategy + ready-to-paste copy
+- [docs/architecture-map.md](docs/architecture-map.md) — deeper technical map (HISTORICAL snapshot; see banner)
 
 ## 🎮 How to Play
 
