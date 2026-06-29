@@ -185,6 +185,68 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
   `git checkout main` / `reset --hard` across that boundary locally**; it will
   try to delete those from disk. Update remote main via push (cmd above).
 
+## Conversion / GTM funnel work (2026-06-28)
+
+Context: zero sales since the store went live. Diagnosis (multi-agent GTM
+analysis) = a distribution problem, not a product problem: the game is
+North-America-localized but the only channel activated was Pieter's SA
+friends list, the whole outreach kit was written but never sent, AND there
+was **zero analytics** so the funnel was invisible. This session fixed the
+in-app funnel leaks the analysis found + built the missing teacher asset.
+**Code changes are LOCAL ONLY — not committed/pushed/deployed yet** (Pieter's
+call). All verified: `tsc --noEmit` clean, 22 files/159 tests green, cold-visitor
+flow + unlock modal + analytics events confirmed live in the preview browser.
+
+Code:
+- `services/analytics.ts` (NEW) — provider-agnostic, zero-PII `track()` helper
+  (supports Umami + Plausible; safe no-op until a script is added; dev logs to
+  console). Funnel events wired: `app_loaded` (index.tsx), `mode_selected`
+  (each ModeSelector card), `demo_started` (auto on first load), `demo_wall_hit`
+  + `unlock_modal_opened` (App.tsx advanceMonth wall; ModeSelector banner/
+  multiplayer), `gumroad_click` + `purchase_unlocked` (UnlockModal).
+  **To turn ON: uncomment the Umami snippet in `index.html` and paste a website
+  id from cloud.umami.is** — events flow automatically, no code change.
+- **Password gate removed** (`ModeSelector.tsx` mount effect): first-time
+  visitors now auto-start in the free demo and land on the mode picker in one
+  click (was a 🔐 "Unlock the Full Game" password wall — the biggest leak). The
+  old login JSX is retained but unreachable (kept as a fallback; still compiles,
+  so no unused-var errors). Access-code entry now lives in the UnlockModal.
+- **Price shown in-app** (`$12` was hidden until Gumroad): added
+  `PURCHASE_PRICE` to `accessControl.ts`; demo banner + UnlockModal now show
+  "$12 one-time". **`UnlockModal.tsx` redesigned buy-first**: price callout +
+  primary "Get the full game — $12" (fires `gumroad_click`), access-code field
+  demoted to a secondary "I already have an access code →" toggle.
+- **Share card made viral-shaped** (`ChallengeShareCard.tsx`): `shareText` is
+  now multi-line, copy-pasteable, spoiler-free, with a Wordle-style emoji
+  net-worth trajectory (`▁▂▃▅▆▇█` sparkline) + a 1:1 dare; **"Copy result" is
+  now the primary button**, "Save image" demoted (pasted text travels, PNGs
+  don't).
+
+New marketing assets:
+- `docs/teacher-packet.md` + `public/teacher-packet.html` (live at
+  **/teacher-packet** via netlify.toml redirect; linked from the /educators
+  hero). A print-ready "Teach Tycoon in 45 minutes" lesson plan (objectives
+  mapped to the National Standards strands, minute-budgeted run-of-show,
+  debrief tied to Hindsight + Year-in-Review, facilitation key). The critic's
+  highest-leverage asset: teachers buy time saved.
+- `docs/gumroad-classroom-setup.md` — step-by-step to stand up the $99
+  Classroom Pack as a buyable Gumroad product. Key reasoning baked in: Gumroad
+  is merchant-of-record, so a SA solo seller sidesteps W-9/PO/DPA — make
+  "buy → expense the receipt" the only paid path; don't chase district POs.
+
+⚠️ **Open decision flagged for Pieter**: the GTM analysis recommends making the
+Daily Challenge completable in the free demo (to feed the viral loop + pass
+daily-game directory rules), but CLAUDE.md records the demo-gating as Pieter's
+deliberate call ("challenge is demo-gated; card doubles as upsell"). **Left
+unchanged** — needs Pieter's decision before reversing.
+
+Next (Pieter, human GTM — see the GTM plan + `docs/outreach-drafts.md`):
+1. Downgrade Supabase (ref `bvsqnhtlwklexyijvexw`) to Free to stop the ~$10/mo
+   bleed (game is Netlify-static; leaderboard/saves degrade gracefully).
+2. Turn on analytics (uncomment Umami snippet + paste id), then deploy.
+3. Post to **FinLit Fanatics** (NOT "NGPF Fans" — the drafts have the name
+   wrong), email teachers/Jump$tart affiliates, attach the lesson plan.
+
 ## Current state & next steps (2026-06-13)
 
 **Everything in the roadmap queue is shipped, verified live, and deployed.**

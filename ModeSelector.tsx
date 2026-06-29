@@ -12,10 +12,11 @@ import { calculateMonthlyCashFlowEstimate, calculateNetWorth } from './services/
 import { useI18n } from './i18n';
 import CustomAvatarBuilder, { CustomAvatarResult } from './components/customAvatar/CustomAvatarBuilder';
 import UnlockModal from './components/UnlockModal';
-import { AccessTier, getAccessTier, setAccessTier, validateAccessCode } from './services/accessControl';
+import { AccessTier, PURCHASE_PRICE, getAccessTier, setAccessTier, validateAccessCode } from './services/accessControl';
 import { createDailyChallengeState, getDailyChallengeId, getDailyCharacter, getDailySeed, getDailyStreak, getPreviousChallengeId, recordDailyChallengePlayed } from './services/dailyChallenge';
 import { adoptSyncCode, fetchAccountSave, fetchCloudSave, getSyncCode, isCloudSyncEnabled, isValidSyncCode, setCloudSyncEnabled, uploadCloudSave } from './services/cloudSave';
 import { AccountInfo, ensureSignedIn, getAccount, linkEmail, signInWithEmail, signOut } from './services/auth';
+import { track } from './services/analytics';
 
 type GameMode = 'select' | 'adult' | 'kids' | 'daily' | 'multiplayer-setup' | 'multiplayer-game';
 
@@ -197,6 +198,17 @@ const ModeSelector: React.FC = () => {
     const auth = safeLocalStorageGet(AUTH_KEY);
     if (auth === 'true') {
       setIsAuthenticated(true);
+    } else {
+      // No password wall for first-time visitors — a stranger who lands here
+      // (e.g. from an outreach link) should be playing in one click. Drop them
+      // straight into the free demo. The full-version access-code path still
+      // lives in the UnlockModal ("I already have an access code"). The old
+      // login screen below is retained as a fallback but no longer shown.
+      safeLocalStorageSet(AUTH_KEY, 'true');
+      setAccessTier('demo');
+      setAccessTierState('demo');
+      setIsAuthenticated(true);
+      track('demo_started', { entry: 'auto' });
     }
     setIsLoading(false);
   }, []);
@@ -957,7 +969,7 @@ const ModeSelector: React.FC = () => {
       eyebrow: 'Full Experience',
       body: 'Build income, manage debt, invest through cycles, and beat career disruption.',
       Icon: BriefcaseBusiness,
-      onClick: () => { setAdultResumeState(null); setMode('adult'); },
+      onClick: () => { track('mode_selected', { mode: 'adult' }); setAdultResumeState(null); setMode('adult'); },
       cta: 'Start adult game',
       image: '/event-images/ai_opportunity.webp',
       tone: 'border-emerald-400/25 hover:border-emerald-300/70',
@@ -976,6 +988,7 @@ const ModeSelector: React.FC = () => {
       body: `Everyone plays the same seeded world today as ${getDailyCharacter(getDailySeed()).name}. 10-year sprint — score is your final net worth.`,
       Icon: CalendarDays,
       onClick: () => {
+        track('mode_selected', { mode: 'daily' });
         setDailyStreak(recordDailyChallengePlayed());
         setDailyState(createDailyChallengeState());
         setMode('daily');
@@ -993,7 +1006,7 @@ const ModeSelector: React.FC = () => {
       eyebrow: 'Ages 8-10',
       body: 'A simpler financial game focused on saving, goals, and money basics.',
       Icon: BookOpen,
-      onClick: () => { setKidsResumeState(null); setMode('kids'); },
+      onClick: () => { track('mode_selected', { mode: 'kids' }); setKidsResumeState(null); setMode('kids'); },
       cta: 'Start kids game',
       image: '/event-images/child_school.webp',
       tone: 'border-cyan-400/25 hover:border-cyan-300/70',
@@ -1006,7 +1019,9 @@ const ModeSelector: React.FC = () => {
       body: 'Run the race with different careers, difficulties, and strategy styles.',
       Icon: Users,
       onClick: () => {
+        track('mode_selected', { mode: 'multiplayer' });
         if (accessTier === 'demo') {
+          track('unlock_modal_opened', { source: 'multiplayer' });
           setShowUnlockModal(true);
           return;
         }
@@ -1087,13 +1102,13 @@ const ModeSelector: React.FC = () => {
           >
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-300">Demo mode</p>
-              <p className="text-sm text-slate-300 mt-1">You're playing the free demo — 3 in-game years of the adult simulation. Unlock the full game for unlimited play and multiplayer.</p>
+              <p className="text-sm text-slate-300 mt-1">You're playing the free demo — 3 in-game years of the adult simulation. Unlock the full game ({PURCHASE_PRICE} one-time) for unlimited play and multiplayer.</p>
             </div>
             <button
-              onClick={() => setShowUnlockModal(true)}
+              onClick={() => { track('unlock_modal_opened', { source: 'demo_banner' }); setShowUnlockModal(true); }}
               className="rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 px-5 py-2.5 text-sm font-bold text-white transition hover:from-emerald-600 hover:to-cyan-600"
             >
-              Unlock Full Game
+              Unlock — {PURCHASE_PRICE}
             </button>
           </motion.div>
         )}
@@ -1101,7 +1116,7 @@ const ModeSelector: React.FC = () => {
         <UnlockModal
           open={showUnlockModal}
           title="Unlock the Full Game"
-          description="Enter your access code to remove all limits."
+          description="Unlimited years, multiplayer, and every future update — one payment."
           perks={['Unlimited in-game years', 'Multiplayer for 2-4 players', 'All future updates']}
           onUnlocked={handleUnlocked}
           onClose={() => setShowUnlockModal(false)}

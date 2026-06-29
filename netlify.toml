@@ -28,6 +28,11 @@
   to = "/educators.html"
   status = 200
 
+[[redirects]]
+  from = "/teacher-packet"
+  to = "/teacher-packet.html"
+  status = 200
+
 [context.production]
   [[context.production.redirects]]
     from = "/*"

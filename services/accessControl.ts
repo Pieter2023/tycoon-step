@@ -16,6 +16,10 @@ export const DEMO_MONTH_LIMIT = 36;
 // until the store page exists.
 export const PURCHASE_URL = 'https://pieterrealtor.gumroad.com/l/tycoon';
 
+// Shown in-app so the price is never hidden behind a click-out (a $12 impulse
+// product has to wear its price). Keep in sync with the Gumroad listing.
+export const PURCHASE_PRICE = '$12';
+
 export const getAccessTier = (): AccessTier => {
   try {
     // Missing key counts as 'full' so beta users authenticated before tiers

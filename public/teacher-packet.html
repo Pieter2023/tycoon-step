@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teach Tycoon in 45 Minutes — Ready-to-Run Personal-Finance Lesson</title>
+  <meta name="description" content="A ready-to-run 45-minute personal-finance lesson using Tycoon. Objectives mapped to national standards, a minute-by-minute run-of-show, debrief questions, and a facilitation key. Print to PDF or run from the screen." />
+  <meta name="robots" content="index,follow" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0c1210; --paper: #ece8dd; --paper-dim: rgba(236,232,221,0.66);
+      --paper-faint: rgba(236,232,221,0.4); --rule: rgba(236,232,221,0.14);
+      --emerald: #34d399; --amber: #fbbf24;
+      --serif: 'Fraunces', Georgia, serif; --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--ink); color: var(--paper); font-family: var(--serif);
+      font-weight: 300; font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+    }
+    main { max-width: 860px; margin: 0 auto; padding: 48px 28px 72px; }
+    .eyebrow { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.26em; text-transform: uppercase; color: var(--emerald); }
+    h1 { font-size: clamp(32px, 5.5vw, 52px); font-weight: 900; letter-spacing: -0.02em; line-height: 1.04; margin: 10px 0 14px; }
+    .lede { font-size: 18px; color: var(--paper-dim); max-width: 60ch; }
+    .meta { font-family: var(--mono); font-size: 13px; color: var(--paper-faint); margin-top: 18px; }
+    .meta a { color: var(--emerald); text-decoration: none; }
+    .facts { margin: 22px 0 8px; padding: 16px 20px; border: 1px solid var(--rule); border-radius: 4px; background: rgba(52,211,153,0.05); font-size: 15px; color: var(--paper-dim); }
+    .facts strong { color: var(--paper); font-weight: 600; }
+    h2 { font-size: 24px; font-weight: 900; letter-spacing: -0.01em; margin: 40px 0 6px; }
+    h2 .no { font-family: var(--mono); font-size: 13px; color: var(--emerald); font-weight: 600; margin-right: 10px; }
+    .sub { color: var(--paper-faint); font-size: 14px; margin-bottom: 14px; }
+    ul, ol { margin: 12px 0 12px 4px; padding-left: 20px; }
+    li { margin: 9px 0; color: var(--paper-dim); }
+    li strong, p strong { color: var(--paper); font-weight: 600; }
+    li em, p em { color: var(--paper-dim); font-style: italic; }
+    .key li { border-left: 2px solid var(--rule); list-style: none; margin-left: -20px; padding-left: 16px; }
+    hr { border: none; border-top: 1px solid var(--rule); margin: 36px 0; }
+    .toolbar { position: sticky; top: 0; z-index: 5; display: flex; justify-content: flex-end; gap: 10px; padding: 12px 0; }
+    .btn { font-family: var(--mono); font-size: 13px; font-weight: 600; padding: 9px 16px; border-radius: 3px; text-decoration: none; cursor: pointer; border: 1px solid var(--rule); color: var(--paper); background: transparent; }
+    .btn.print { background: var(--emerald); color: #06281c; border-color: var(--emerald); }
+    footer { margin-top: 44px; padding-top: 20px; border-top: 1px solid var(--rule); font-family: var(--mono); font-size: 12px; color: var(--paper-faint); }
+    footer a { color: var(--paper-dim); }
+
+    @media print {
+      :root { --ink: #fff; --paper: #16181c; --paper-dim: #2a2d33; --paper-faint: #555; --rule: #cfcabb; --emerald: #0a7f54; }
+      body { background: #fff; color: #16181c; font-size: 11pt; line-height: 1.4; }
+      main { max-width: none; padding: 0; }
+      .toolbar { display: none; }
+      h1 { font-size: 26pt; } h2 { font-size: 15pt; margin: 18px 0 4px; }
+      .lede { font-size: 12pt; } .facts { background: #f3f1ea; }
+      a { color: #0a7f54; }
+      h2 { break-after: avoid; } li { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="toolbar">
+      <a class="btn" href="https://tycoonjan22026.netlify.app/educators">Educator details</a>
+      <a class="btn print" href="#" onclick="window.print();return false;">Print / Save as PDF</a>
+    </div>
+
+    <p class="eyebrow">Teacher packet · Grades 9–12 &amp; intro college</p>
+    <h1>Teach Tycoon in 45 minutes</h1>
+    <p class="lede">A ready-to-run personal-finance lesson — students earn, invest, hit real life, and learn from their own decisions.</p>
+    <p class="meta">Play: <a href="https://tycoonjan22026.netlify.app/">tycoonjan22026.netlify.app</a> · Educator details: <a href="https://tycoonjan22026.netlify.app/educators">/educators</a></p>
+
+    <div class="facts">
+      Runs in <strong>any browser, including Chromebooks</strong>. No installs, no student accounts, no PII — one link gets the whole class in. The <strong>free demo covers the first 3 in-game years (36 months)</strong>, enough for a full class period. Win condition: a student reaches <strong>financial freedom when passive income covers 110% of monthly expenses</strong>.
+    </div>
+
+    <h2><span class="no">A</span>Learning objectives</h2>
+    <p class="sub">Mapped to the strands of the National Standards for Personal Financial Education (Council for Economic Education / Jump$tart). By the end of the period students can:</p>
+    <ul>
+      <li><strong>Earning Income</strong> — explain how career choice, education, and skills drive earning power. <em>In Tycoon: students pick a career path (Technology, Healthcare, Skilled Trades, Finance, Creative, and more) and can invest in education — e.g. a $15K coding bootcamp for a ~15% salary bump, or weigh a bachelor's against starting work sooner.</em></li>
+      <li><strong>Spending &amp; budgeting</strong> — build a monthly budget where income must cover rent, expenses, and debt before anything is left to invest. <em>Every turn is one month; cash flow is the constraint students feel immediately.</em></li>
+      <li><strong>Saving</strong> — distinguish saving (safety, liquidity) from investing (growth, risk). <em>The ladder starts at a high-yield savings account (~4.5%, FDIC-insured, "start here") before riskier rungs open up.</em></li>
+      <li><strong>Investing</strong> — build a diversified portfolio and watch compounding over years. <em>The ladder climbs from savings → bonds → an S&amp;P 500 index fund → individual stocks → crypto (Bitcoin flagged "only invest what you can lose") → REITs → rental real estate with properly amortized mortgages.</em></li>
+      <li><strong>Managing Credit</strong> — understand borrowing, interest, and how debt shapes net worth. <em>Student-loan balances accrue interest; home purchases compare FHA (3.5% down) vs. conventional 20%-down mortgages with the math shown line-by-line.</em></li>
+      <li><strong>Managing Risk</strong> — weigh probability and consequence; use diversification as a defense. <em>80+ life events — layoffs, recessions, medical bills, surprise repairs, windfalls, scams — test whether a portfolio and an emergency fund can absorb a shock.</em></li>
+    </ul>
+
+    <h2><span class="no">B</span>45-minute run-of-show</h2>
+    <ol>
+      <li><strong>Hook / setup (~5 min).</strong> Post the link. Each student picks a character (each starts with different cash, debt, and a career — e.g. a software engineer with savings, or a healthcare worker carrying ~$25K in student loans). Read the win condition aloud: <em>passive income ≥ 110% of expenses.</em> Frame it: <strong>"Can you make your money outearn your life?"</strong></li>
+      <li><strong>Play block 1 — the first year (~15 min).</strong> Students set a budget, take or upgrade a job, and make their <strong>first investments</strong>. Encourage one safe move (savings / index fund) and let them eye the riskier options. They advance month by month and feel the spend-vs-save-vs-invest trade-off.</li>
+      <li><strong>Mid-point checkpoint (~5 min).</strong> Pause everyone. Pulse question: <strong>"What's your passive income right now, and what are your monthly expenses?"</strong> Have three students call out their ratio — it makes the win condition concrete and surfaces who's investing vs. just hoarding cash.</li>
+      <li><strong>Play block 2 — ride a cycle (~12 min).</strong> Advance into a market swing and at least one <strong>life event</strong>. Some portfolios dip; some students will be tempted to panic-sell. Let them — the game quietly records it (see debrief). Keep playing toward year 3.</li>
+      <li><strong>Debrief (~8 min).</strong> Look up. Run the discussion questions below.</li>
+    </ol>
+
+    <h2><span class="no">C</span>Debrief &amp; discussion questions</h2>
+    <p class="sub">Tied directly to Tycoon's two built-in reflection features — the Hindsight and the Year-in-Review — plus core risk concepts.</p>
+    <ol>
+      <li><strong>The Hindsight.</strong> "When the market dropped and you sold an asset, the game later showed what it would be worth 12 months on. What did your sold asset do — and what would you do differently next time?"</li>
+      <li><strong>The Year-in-Review.</strong> "Your January report showed market gains vs. income you earned, and what your net worth would be if you'd <em>never</em> invested. Which did more for you this year — your salary or your investments?"</li>
+      <li><strong>Diversification.</strong> "Did you put everything in one place, or spread it out? When the bad event hit, did that choice help or hurt?"</li>
+      <li><strong>Risk vs. reward.</strong> "Compare the safe savings account to the riskiest thing you bought (crypto, a single stock). Was the extra risk worth it over the years you played?"</li>
+      <li><strong>Cash flow vs. net worth.</strong> "You can have a big net worth and still be short on cash some months. Where did that bite you — and how does passive income change the picture?"</li>
+    </ol>
+
+    <h2><span class="no">D</span>Facilitation notes — the intended takeaways</h2>
+    <p class="sub">Short cues so you can steer the conversation without prep.</p>
+    <ul class="key">
+      <li><strong>Hindsight →</strong> panic-selling locks in a loss and misses the recovery. The line: <em>time in the market beats timing the market.</em> A strong answer names the emotional pull of selling and a rule to resist it ("hold through dips").</li>
+      <li><strong>Year-in-Review →</strong> for most students the <strong>investments quietly out-earned the salary</strong> over time — compounding doing the work. The "what if I never invested" number is the punchline.</li>
+      <li><strong>Diversification →</strong> a concentrated bet swings hardest both ways. Strong answers see that <strong>spreading money across uncorrelated assets softened the shock</strong> — it's about surviving, not maximizing.</li>
+      <li><strong>Risk vs. reward →</strong> no universal right answer — <strong>higher expected return comes bundled with bigger swings</strong>. Match risk to time horizon and to how much loss you can stomach.</li>
+      <li><strong>Cash flow vs. net worth →</strong> wealth on paper doesn't pay rent. Strong answers distinguish <strong>liquidity from net worth</strong> and explain why an emergency fund and passive income create real stability.</li>
+    </ul>
+
+    <h2><span class="no">E</span>Ways to extend</h2>
+    <ul>
+      <li><strong>Daily Challenge as a bell-ringer.</strong> Everyone plays the <strong>same seeded world and character on the same day</strong> — identical market, identical events — so any difference in outcome is pure decision-making. ~15 minutes, with a <strong>shareable result card</strong>. A fair, self-contained class competition and a natural homework loop.</li>
+      <li><strong>Journaling prompt.</strong> After a run, students write a half-page from their <strong>Year-in-Review</strong>: best call, worst call, one rule for next year. Quick to assign, quick to grade.</li>
+      <li><strong>"Who reached financial freedom first?"</strong> Run a full game across a unit and track who first hits passive income ≥ 110% of expenses — or, on the demo, the highest net worth at month 36.</li>
+    </ul>
+
+    <footer>
+      Free pilot codes for your class — email <a href="mailto:pieter@houseofrealtors.co.za">pieter@houseofrealtors.co.za</a>.<br />
+      Demo + details: <a href="https://tycoonjan22026.netlify.app/educators">tycoonjan22026.netlify.app/educators</a>
+    </footer>
+  </main>
+</body>
+</html>

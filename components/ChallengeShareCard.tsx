@@ -22,6 +22,25 @@ const yearsMonths = (months: number) => {
   return m === 0 ? `${y}y` : `${y}y ${m}mo`;
 };
 
+// Wordle-style trajectory: an emoji bar chart of the net-worth curve that
+// survives being pasted into a tweet, a group chat, or a Discord. This is what
+// actually travels — a downloadable PNG doesn't. Reveals your shape/score, not
+// the "answer", which is exactly the daily-challenge sharing loop.
+const SPARK_BLOCKS = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
+const sparkline = (history: { value: number }[] | undefined): string => {
+  const vals = (history || []).map(h => h.value);
+  if (vals.length < 2) return '';
+  const N = Math.min(12, vals.length);
+  const step = (vals.length - 1) / (N - 1);
+  const sampled = Array.from({ length: N }, (_, i) => vals[Math.round(i * step)]);
+  const min = Math.min(...sampled);
+  const max = Math.max(...sampled);
+  const span = max - min || 1;
+  return sampled
+    .map(v => SPARK_BLOCKS[Math.max(0, Math.min(SPARK_BLOCKS.length - 1, Math.round(((v - min) / span) * (SPARK_BLOCKS.length - 1))))])
+    .join('');
+};
+
 /** Pick up to 3 "defining" events spread across the run. */
 export const pickDefiningEvents = (
   events: { month: number; title: string }[] | undefined
@@ -207,17 +226,30 @@ const ChallengeShareCard: React.FC<ChallengeShareCardProps> = ({ gameState, netW
 
   const shareText = useMemo(() => {
     const ch = gameState.challenge;
+    const spark = sparkline(gameState.netWorthHistory);
+    const charName = gameState.character?.name || 'Player';
     const outcome = gameState.isBankrupt
-      ? 'I went bankrupt'
+      ? 'Went bankrupt 💥'
       : gameState.hasWon
-        ? `I hit financial freedom in ${yearsMonths(gameState.prestige?.fastestWin || gameState.month - 1)}`
+        ? `Financially FREE in ${yearsMonths(gameState.prestige?.fastestWin || gameState.month - 1)} 🏆`
         : ch
-          ? 'I survived the 10-year sprint'
-          : `I'm ${yearsMonths(Math.max(1, gameState.month - 1))} into the climb`;
+          ? 'Survived the 10-year sprint'
+          : `${yearsMonths(Math.max(1, gameState.month - 1))} into the climb`;
     if (ch) {
-      return `Tycoon Daily Challenge ${ch.id}: ${outcome} — final net worth ${fmtMoney(netWorth)}. Same world, your choices: ${GAME_URL}`;
+      return [
+        `Tycoon Daily ${ch.id} 💰`,
+        spark,
+        `${charName} → ${fmtMoney(netWorth)}`,
+        outcome,
+        `Same world, your call — beat me 👉 ${GAME_URL}`,
+      ].filter(Boolean).join('\n');
     }
-    return `Tycoon: ${outcome} — net worth ${fmtMoney(netWorth)}. Think you can do it faster? ${GAME_URL}`;
+    return [
+      `Tycoon 💰 ${outcome}`,
+      spark,
+      `Net worth ${fmtMoney(netWorth)}`,
+      `Think you can do it faster? 👉 ${GAME_URL}`,
+    ].filter(Boolean).join('\n');
   }, [gameState, netWorth]);
 
   useEffect(() => {
@@ -280,10 +312,10 @@ const ChallengeShareCard: React.FC<ChallengeShareCardProps> = ({ gameState, netW
       />
       <div className="flex flex-wrap items-center justify-center gap-3">
         <button
-          onClick={handleDownload}
+          onClick={handleCopy}
           className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold transition-colors"
         >
-          Download card
+          {copied ? 'Copied — now paste it!' : 'Copy result'}
         </button>
         {shareSupported && (
           <button
@@ -294,10 +326,10 @@ const ChallengeShareCard: React.FC<ChallengeShareCardProps> = ({ gameState, netW
           </button>
         )}
         <button
-          onClick={handleCopy}
+          onClick={handleDownload}
           className="px-5 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold transition-colors"
         >
-          {copied ? 'Copied!' : 'Copy text'}
+          Save image
         </button>
         {onClose && (
           <button

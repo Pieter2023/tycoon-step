@@ -64,6 +64,7 @@ import { getMonthlyActionsSummary } from './services/monthlyActions';
 import { useBatchBuy } from './hooks/useBatchBuy';
 import UnlockModal from './components/UnlockModal';
 import { AccessTier, DEMO_MONTH_LIMIT, getAccessTier } from './services/accessControl';
+import { track } from './services/analytics';
 
 // New Components for Enhanced UI
 import CollapsibleSection from './components/ui/CollapsibleSection';
@@ -1770,6 +1771,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
     if (isProcessing || gameState.pendingScenario || gameState.pendingSideHustleUpgrade) return;
     if (tier === 'demo' && !isMultiplayer && gameState.month > DEMO_MONTH_LIMIT) {
       setAutoPlaySpeed(null);
+      track('demo_wall_hit', { month: gameState.month });
+      track('unlock_modal_opened', { source: 'demo_wall' });
       setShowDemoLimitModal(true);
       return;
     }

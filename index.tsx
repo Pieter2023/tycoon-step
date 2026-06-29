@@ -4,6 +4,9 @@ import './index.css';
 import ModeSelector from './ModeSelector';
 import ErrorBoundary from './components/ErrorBoundary';
 import { I18nProvider } from './i18n';
+import { track } from './services/analytics';
+
+track('app_loaded');
 
 const AppRoot: React.FC = () => {
   return (
