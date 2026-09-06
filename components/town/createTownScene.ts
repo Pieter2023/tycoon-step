@@ -1,4 +1,5 @@
 import { CafeService, ServiceStation, SERVICE_STATIONS } from '../../services/cafeService';
+import { tl } from '../../i18n/town';
 import { createCafeRoom, clampCafePoint, cafeSpot } from './townCafeRoom';
 import { createTownWeather, createTownAmbience } from './townAtmosphere';
 import { CafeState, cafeWeather } from '../../services/townCafe';
@@ -129,7 +130,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const BOARD={x:-6.2,z:9.6};
   {const post=new THREE.Mesh(new THREE.BoxGeometry(.12,1.9,.12),new THREE.MeshStandardMaterial({color:'#4a3b2c'}));post.position.set(BOARD.x,1.15,BOARD.z);post.castShadow=true;outdoors.add(post);
    const panel=new THREE.Mesh(new THREE.BoxGeometry(1.7,1.1,.08),new THREE.MeshStandardMaterial({color:'#5f4a36'}));panel.position.set(BOARD.x,1.75,BOARD.z);panel.castShadow=true;outdoors.add(panel);
-   const paper=document.createElement('canvas');paper.width=768;paper.height=480;const ink=paper.getContext('2d')!;ink.fillStyle='#f6ecd6';ink.fillRect(0,0,768,480);ink.fillStyle='#3a5a4a';ink.font='600 58px sans-serif';ink.textAlign='center';ink.fillText('NOTICE BOARD',384,90);ink.fillStyle='#6b5a44';ink.font='40px sans-serif';ink.fillText("This month's challenges",384,160);for(const y of [230,300,370]){ink.fillStyle='#fff8ea';ink.fillRect(80,y-40,608,58);ink.fillStyle='#c9b898';ink.fillRect(100,y-24,26,26);ink.fillStyle='#8a7a62';ink.fillRect(150,y-18,300,14);}
+   const paper=document.createElement('canvas');paper.width=768;paper.height=480;const ink=paper.getContext('2d')!;ink.fillStyle='#f6ecd6';ink.fillRect(0,0,768,480);ink.fillStyle='#3a5a4a';ink.font='600 58px sans-serif';ink.textAlign='center';ink.fillText(tl('NOTICE BOARD','TABLÓN DE ANUNCIOS'),384,90);ink.fillStyle='#6b5a44';ink.font='40px sans-serif';ink.fillText("This month's challenges",384,160);for(const y of [230,300,370]){ink.fillStyle='#fff8ea';ink.fillRect(80,y-40,608,58);ink.fillStyle='#c9b898';ink.fillRect(100,y-24,26,26);ink.fillStyle='#8a7a62';ink.fillRect(150,y-18,300,14);}
    const texture=new THREE.CanvasTexture(paper);texture.colorSpace=THREE.SRGBColorSpace;const sheet=new THREE.Mesh(new THREE.PlaneGeometry(1.55,.97),new THREE.MeshBasicMaterial({map:texture}));sheet.position.set(BOARD.x,1.75,BOARD.z+.05);outdoors.add(sheet);
    const roofBoard=new THREE.Mesh(new THREE.BoxGeometry(1.9,.08,.5),new THREE.MeshStandardMaterial({color:'#7a4a3c'}));roofBoard.position.set(BOARD.x,2.36,BOARD.z);outdoors.add(roofBoard);}
   let glassMaterial:THREE.MeshStandardMaterial|undefined, townMonth=1, phaseOverride:number|undefined, timeLabel:Daylight['label']|undefined;
@@ -149,7 +150,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const cafeActors:Actor[]=[];
   const makeSpeech=(parent:THREE.Object3D)=>{const canvas=document.createElement('canvas');canvas.width=768;canvas.height=110;const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,depthTest:false}));sprite.scale.set(3.1,.44,1);sprite.visible=false;parent.add(sprite);let current='';return {sprite,say(text:string,x:number,y:number,z:number){if(text!==current){current=text;const ctx=canvas.getContext('2d')!;ctx.clearRect(0,0,768,110);ctx.fillStyle='#fff6e2';ctx.beginPath();ctx.roundRect(4,4,760,102,28);ctx.fill();ctx.fillStyle='#233b33';ctx.font='600 40px sans-serif';ctx.textAlign='center';ctx.fillText(text,384,68);texture.needsUpdate=true;}sprite.position.set(x,y,z);sprite.visible=true;},hide(){sprite.visible=false;}};};
   const tellerSpeech=makeSpeech(bank.root),brokerSpeech=makeSpeech(exchange.root),agentSpeech=makeSpeech(office.root),managerSpeech=makeSpeech(work.root),rosaSpeech=makeSpeech(outdoors);
-  const TELLER_LINES=['Morning, neighbour. Moving some money?','One month of bills in cash. That is the rule.','Savings sit still; investments move.'];
+  const TELLER_LINES=[['Morning, neighbour. Moving some money?','Buenos días, vecino. ¿Moviendo dinero?'],['One month of bills in cash. That is the rule.','Un mes de facturas en efectivo. Esa es la regla.'],['Savings sit still; investments move.','Los ahorros se quedan quietos; las inversiones se mueven.']] as const;
   let cafeService:CafeService|undefined, lastPointAt=0;
   const guestPaths=new Map<number,{key:string;path:TownPoint[];seated:boolean}>();
   const guestLabels:{sprite:THREE.Sprite;canvas:HTMLCanvasElement;texture:THREE.CanvasTexture;text:string}[]=[];
@@ -399,7 +400,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     if(agent&&officeInside){animateActor(agent,spot==='agent'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='agent'&&agentHeadline)agentSpeech.say(agentHeadline,0,2.45,-1.5);else agentSpeech.hide();}
     if(workInside)for(const actor of workActors){animateActor(actor,'Idle',reducedMotion?0:dt);seatActor(actor.root);}
     if(manager&&workInside){animateActor(manager,spot==='manager'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='manager'&&managerHeadline)managerSpeech.say(managerHeadline,0,2.45,-1.5);else managerSpeech.hide();}
-    if(teller&&inside&&!cafeInside&&!exchangeInside&&!officeInside&&!homeInside&&!workInside){animateActor(teller,spot==='teller'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='teller')tellerSpeech.say(TELLER_LINES[Math.floor(elapsed/6)%TELLER_LINES.length],0,2.45,-1.5);else tellerSpeech.hide();}
+    if(teller&&inside&&!cafeInside&&!exchangeInside&&!officeInside&&!homeInside&&!workInside){animateActor(teller,spot==='teller'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='teller'){const line=TELLER_LINES[Math.floor(elapsed/6)%TELLER_LINES.length];tellerSpeech.say(tl(line[0],line[1]),0,2.45,-1.5);}else tellerSpeech.hide();}
     if(broker&&exchangeInside){animateActor(broker,spot==='broker'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='broker'&&brokerHeadline)brokerSpeech.say(brokerHeadline,0,2.45,-1.5);else brokerSpeech.hide();}
     if(exchangeInside)for(const actor of cafeActors.slice(6))animateActor(actor,'Idle',reducedMotion?0:dt);
     const cafePortrait=cafeInside&&camera.aspect<.8;

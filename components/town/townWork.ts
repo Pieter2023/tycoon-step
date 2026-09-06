@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { tl } from '../../i18n/town';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import type { TownPoint } from './townWorld';
 import type { WorkBoard } from '../../services/townWork';
@@ -43,7 +44,7 @@ export function createTownWork() {
   box(2, .028, .85, 0, .23, 6.1, '#a9b6c0');                                                     // exit mat
 
   const draw = (canvas: HTMLCanvasElement, fn: (ink: CanvasRenderingContext2D) => void, texture: THREE.CanvasTexture) => { const ink = canvas.getContext?.('2d'); if (!ink) return; fn(ink); texture.needsUpdate = true; };
-  draw(poster.canvas, ink => { ink.fillStyle = '#2f4f6f'; ink.fillRect(0, 0, 512, 352); ink.fillStyle = '#f5f0e4'; ink.font = '700 44px sans-serif'; ink.textAlign = 'center'; ink.fillText('PAY YOURSELF FIRST', 256, 150); ink.font = '400 26px sans-serif'; ink.fillText('salary → reserve → investments → the rest', 256, 210); }, poster.texture);
+  draw(poster.canvas, ink => { ink.fillStyle = '#2f4f6f'; ink.fillRect(0, 0, 512, 352); ink.fillStyle = '#f5f0e4'; ink.font = '700 44px sans-serif'; ink.textAlign = 'center'; ink.fillText(tl('PAY YOURSELF FIRST','PÁGATE A TI PRIMERO'), 256, 150); ink.font = '400 26px sans-serif'; ink.fillText(tl('salary → reserve → investments → the rest','sueldo → reserva → inversiones → el resto'), 256, 210); }, poster.texture);
   const setBoard = (board: WorkBoard) => {
     draw(payroll.canvas, ink => {
       const W = payroll.canvas.width, H = payroll.canvas.height; ink.fillStyle = '#f7f4ec'; ink.fillRect(0, 0, W, H);
@@ -51,11 +52,11 @@ export function createTownWork() {
       ink.font = '400 28px sans-serif'; let y = 130; const rows = board.lines.slice(0, 7);
       for (const line of rows) { ink.fillStyle = '#2a3944'; ink.textAlign = 'left'; ink.fillText(line.label.slice(0, 40), 28, y); ink.textAlign = 'right'; ink.fillStyle = line.amount.startsWith('-') ? '#a33c2f' : '#2a3944'; ink.fillText(line.amount, W - 28, y); y += 42; }
       ink.strokeStyle = '#233b4d'; ink.lineWidth = 3; ink.beginPath(); ink.moveTo(28, H - 74); ink.lineTo(W - 28, H - 74); ink.stroke();
-      ink.font = '700 34px sans-serif'; ink.fillStyle = '#1f6f4a'; ink.textAlign = 'left'; ink.fillText('TAKE-HOME', 28, H - 26); ink.textAlign = 'right'; ink.fillText(board.net, W - 28, H - 26);
+      ink.font = '700 34px sans-serif'; ink.fillStyle = '#1f6f4a'; ink.textAlign = 'left'; ink.fillText(tl('TAKE-HOME','NETO'), 28, H - 26); ink.textAlign = 'right'; ink.fillText(board.net, W - 28, H - 26);
     }, payroll.texture);
     draw(ladder.canvas, ink => {
       const W = ladder.canvas.width, H = ladder.canvas.height; ink.fillStyle = '#eef1f3'; ink.fillRect(0, 0, W, H);
-      ink.fillStyle = '#233b4d'; ink.font = '700 30px sans-serif'; ink.textAlign = 'left'; ink.fillText('CAREER LADDER', 24, 46);
+      ink.fillStyle = '#233b4d'; ink.font = '700 30px sans-serif'; ink.textAlign = 'left'; ink.fillText(tl('CAREER LADDER','ESCALERA DE CARRERA'), 24, 46);
       let y = 96; for (const rung of board.ladder.slice(0, 7)) {
         ink.fillStyle = rung.state === 'current' ? '#d9c18b' : rung.state === 'next' ? '#cfe3d6' : '#ffffff00'; if (rung.state === 'current' || rung.state === 'next') ink.fillRect(16, y - 30, W - 32, 40);
         ink.fillStyle = rung.state === 'later' ? '#8b98a3' : '#233b4d'; ink.font = `${rung.state === 'current' ? '700' : '400'} 24px sans-serif`; ink.textAlign = 'left'; ink.fillText(`${rung.state === 'done' ? '✓ ' : rung.state === 'current' ? '● ' : rung.state === 'next' ? '→ ' : '· '}${rung.title}`, 26, y);

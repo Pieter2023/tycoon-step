@@ -1,4 +1,5 @@
 import { AssetType, type GameState } from '../types';
+import { tl } from '../i18n/town';
 import { calculateMonthlyCashFlowEstimate } from './gameLogic';
 import { savingsBalance } from './townActivities';
 import { serviceStars } from './cafeService';
@@ -25,14 +26,14 @@ const hash = (n: number) => { let h = (n * 2654435761) >>> 0; h ^= h >>> 15; h =
 export function monthlyChallenges(state: GameState): Challenge[] {
   const flow = calculateMonthlyCashFlowEstimate(state), cart = state.assets.some(a => a.marketItemId === 'coffee_cart' && a.quantity > 0) && state.townProgress?.permitMonth !== undefined;
   const pool: Challenge[] = [
-    { id: 'reserve', title: 'End the month with a full reserve', detail: `Keep at least $${Math.round(flow.expenses).toLocaleString('en-US')} (one month of expenses) in cash when the month closes.`, target: Math.round(flow.expenses), unit: 'dollars' },
-    { id: 'invest', title: 'Put new money to work', detail: 'Buy investments with fresh cash this month (cost basis, not price moves).', target: roundTo(flow.income * .08, 50), unit: 'dollars' },
-    { id: 'savings', title: 'Top up savings', detail: 'Move money into savings at the bank this month.', target: roundTo(flow.income * .05, 50), unit: 'dollars' },
+    { id: 'reserve', title: tl('End the month with a full reserve','Termina el mes con la reserva completa'), detail: `${tl('Keep at least','Mantén al menos')} $${Math.round(flow.expenses).toLocaleString('en-US')} ${tl('(one month of expenses) in cash when the month closes.','(un mes de gastos) en efectivo cuando cierre el mes.')}`, target: Math.round(flow.expenses), unit: 'dollars' },
+    { id: 'invest', title: tl('Put new money to work','Pon dinero nuevo a trabajar'), detail: tl('Buy investments with fresh cash this month (cost basis, not price moves).','Compra inversiones con efectivo nuevo este mes (costo, no movimientos de precio).'), target: roundTo(flow.income * .08, 50), unit: 'dollars' },
+    { id: 'savings', title: tl('Top up savings','Abona a tus ahorros'), detail: tl('Move money into savings at the bank this month.','Mueve dinero a ahorros en el banco este mes.'), target: roundTo(flow.income * .05, 50), unit: 'dollars' },
   ];
-  if (debtOf(state) > 0) pool.push({ id: 'debt', title: 'Pay debt down', detail: 'Reduce what you owe beyond the scheduled payment.', target: roundTo(Math.min(debtOf(state), flow.income * .06), 50), unit: 'dollars' });
-  if (state.cafe) { pool.push({ id: 'shift3', title: 'Run a three-star owner shift', detail: 'Serve everyone in the café and earn tips from at least half of them.', target: 3, unit: 'count' }); pool.push({ id: 'tip', title: 'Earn a tip', detail: 'Serve a café guest fast enough to be tipped in a paid owner shift.', target: 1, unit: 'count' }); }
-  if (cart) pool.push({ id: 'cart', title: 'Work your cart', detail: 'Run this month\'s pop-up shift at the coffee cart.', target: 1, unit: 'count' });
-  if (indexUnits(state) > 0 && (state.marketCycle.phase === 'CONTRACTION' || state.economy.recession)) pool.push({ id: 'hold', title: 'Hold through the dip', detail: 'Keep every index-fund unit you own while prices fall.', target: 1, unit: 'count' });
+  if (debtOf(state) > 0) pool.push({ id: 'debt', title: tl('Pay debt down','Reduce tu deuda'), detail: tl('Reduce what you owe beyond the scheduled payment.','Reduce lo que debes más allá del pago programado.'), target: roundTo(Math.min(debtOf(state), flow.income * .06), 50), unit: 'dollars' });
+  if (state.cafe) { pool.push({ id: 'shift3', title: tl('Run a three-star owner shift','Haz un turno de dueño de tres estrellas'), detail: tl('Serve everyone in the café and earn tips from at least half of them.','Atiende a todos en el café y gana propina de al menos la mitad.'), target: 3, unit: 'count' }); pool.push({ id: 'tip', title: tl('Earn a tip','Gana una propina'), detail: tl('Serve a café guest fast enough to be tipped in a paid owner shift.','Atiende a un cliente en la primera mitad de su paciencia para ganar propina.'), target: 1, unit: 'count' }); }
+  if (cart) pool.push({ id: 'cart', title: tl('Work your cart','Trabaja tu carrito'), detail: tl('Run this month\'s pop-up shift at the coffee cart.','Haz el turno de este mes en el carrito de café.'), target: 1, unit: 'count' });
+  if (indexUnits(state) > 0 && (state.marketCycle.phase === 'CONTRACTION' || state.economy.recession)) pool.push({ id: 'hold', title: tl('Hold through the dip','Aguanta la caída'), detail: tl('Keep every index-fund unit you own while prices fall.','Conserva cada unidad de fondo indexado mientras los precios caen.'), target: 1, unit: 'count' });
   const always = pool.filter(c => c.id === 'reserve'), rest = pool.filter(c => c.id !== 'reserve').sort((a, b) => hash(state.month * 31 + a.id.length * 7 + a.id.charCodeAt(0)) - hash(state.month * 31 + b.id.length * 7 + b.id.charCodeAt(0)));
   return [...always, ...rest].slice(0, 3);
 }

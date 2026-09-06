@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { tl } from '../../i18n/town';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import type { TownPoint } from './townWorld';
 
@@ -59,21 +60,21 @@ export function createTownExchange() {
   function drawTicker(board: ExchangeBoard) {
     const c = ticker.canvas, ctx = c.getContext('2d')!; ctx.fillStyle = '#0f1a22'; ctx.fillRect(0, 0, c.width, c.height);
     ctx.fillStyle = '#1d2f3a'; ctx.fillRect(0, 0, c.width, 60);
-    ctx.fillStyle = '#f2d99a'; ctx.font = '600 34px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(`MARKET · ${board.mood.toUpperCase()}`, 28, 42);
+    ctx.fillStyle = '#f2d99a'; ctx.font = '600 34px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(`${tl('MARKET','MERCADO')} · ${board.mood.toUpperCase()}`, 28, 42);
     ctx.fillStyle = '#c9d6dd'; ctx.font = '28px sans-serif'; ctx.textAlign = 'right';
-    ctx.fillText(`INDEX ${board.index.length ? board.index[board.index.length - 1].toFixed(1) : '100.0'}${board.changePct === null ? '' : `  ${board.changePct >= 0 ? '▲' : '▼'} ${Math.abs(board.changePct)}% · 12 MO`}`, c.width - 28, 42);
+    ctx.fillText(`INDEX ${board.index.length ? board.index[board.index.length - 1].toFixed(1) : '100.0'}${board.changePct === null ? '' : `  ${board.changePct >= 0 ? '▲' : '▼'} ${Math.abs(board.changePct)}% · 12 ${tl('MO','MESES')}`}`, c.width - 28, 42);
     board.rows.forEach((row, i) => {
       const y = 112 + i * 62; ctx.textAlign = 'left'; ctx.fillStyle = '#eef3f5'; ctx.font = '600 34px sans-serif'; ctx.fillText(row.name.toUpperCase(), 28, y);
       ctx.textAlign = 'right'; ctx.fillText(money(row.price), 640, y);
       const up = (row.changePct ?? 0) >= 0; ctx.fillStyle = row.changePct === null ? '#9fb2c2' : up ? '#6fd39a' : '#ef7d72';
       ctx.fillText(row.changePct === null ? '—' : `${up ? '▲' : '▼'} ${Math.abs(row.changePct)}%`, 820, y);
-      ctx.fillStyle = '#9fb2c2'; ctx.font = '26px sans-serif'; ctx.fillText(row.held ? `${row.held} held` : 'not held', c.width - 28, y);
+      ctx.fillStyle = '#9fb2c2'; ctx.font = '26px sans-serif'; ctx.fillText(row.held ? `${row.held} ${tl('held','en cartera')}` : tl('not held','sin posición'), c.width - 28, y);
     });
     ticker.texture.needsUpdate = true;
   }
   function drawChart(target: { canvas: HTMLCanvasElement; texture: THREE.CanvasTexture }, board: ExchangeBoard) {
     const c = target.canvas, ctx = c.getContext('2d')!; ctx.fillStyle = '#0f1a22'; ctx.fillRect(0, 0, c.width, c.height);
-    ctx.fillStyle = '#c9d6dd'; ctx.font = '600 44px sans-serif'; ctx.textAlign = 'left'; ctx.fillText('TEACHING INDEX · 3 YEARS', 30, 66);
+    ctx.fillStyle = '#c9d6dd'; ctx.font = '600 44px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(tl('TEACHING INDEX · 3 YEARS','ÍNDICE DIDÁCTICO · 3 AÑOS'), 30, 66);
     const values = board.index.length > 1 ? board.index : [100, 100];
     const min = Math.min(...values) * .98, max = Math.max(...values) * 1.02, x0 = 30, y0 = 100, w = c.width - 60, h = c.height - 140;
     ctx.strokeStyle = '#28414f'; ctx.lineWidth = 2; for (let i = 0; i <= 4; i++) { const y = y0 + h * i / 4; ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0 + w, y); ctx.stroke(); }

@@ -1,4 +1,5 @@
 import type { GameState } from '../types';
+import { tl } from '../i18n/town';
 
 export const CAFE_DEPOSIT = 1200;
 export const CAFE_FITOUT = 1800;
@@ -14,7 +15,15 @@ export const CAFE_REPUTATION_START = 50;
 export const REPUTATION_BY_STARS = [-12, -4, 4, 12] as const;
 export const reputationOf = (cafe?: Pick<CafeState, 'reputation'>) => Math.max(0, Math.min(100, cafe?.reputation ?? CAFE_REPUTATION_START));
 export const reputationDemand = (reputation: number) => .8 + reputation / 250;
-export const reputationLabel = (reputation: number) => reputation >= 85 ? 'Talk of the town' : reputation >= 65 ? 'Well liked' : reputation >= 40 ? 'Getting known' : reputation >= 20 ? 'Mixed reviews' : 'Struggling';
+export const reputationLabel = (reputation: number) => reputation >= 85 ? tl('Talk of the town','La sensación del barrio') : reputation >= 65 ? tl('Well liked','Muy apreciado') : reputation >= 40 ? tl('Getting known','Empieza a conocerse') : reputation >= 20 ? tl('Mixed reviews','Reseñas mixtas') : tl('Struggling','En apuros');
+// Incident copy for Spanish readers; receipts store the English text they were written with.
+export const incidentCopyEs: Record<CafeIncident['id'], { title: string; detail: string }> = {
+  breakdown: { title: 'La máquina de café falló', detail: 'Reparación y unos días lentos mientras estuvo fuera de servicio. La máquina mejorada falla tres veces menos.' },
+  'inspection-fail': { title: 'Inspección sanitaria: aviso de mejora', detail: 'Los estándares reflejaron la reputación del café. Multa de $150 y un aviso en la ventana; los habituales también lo notaron.' },
+  'inspection-pass': { title: 'Inspección sanitaria: calificación máxima', detail: 'Una visita impecable. El certificado va a la ventana y se corre la voz.' },
+  'staff-quit': { title: 'Tu segundo barista renunció', detail: 'Nadie se queda en una tienda en apuros. El sueldo se pagó, pero trabajaste con poco personal y la capacidad bajó.' },
+  regulars: { title: 'Los habituales trajeron amigos', detail: 'Una semana ocupada gracias al boca a boca: ventas extra en el recibo, y el barrio habla.' },
+};
 export const applyShiftReputation = (cafe: CafeState, stars: number): CafeState => ({ ...cafe, reputation: Math.max(0, Math.min(100, reputationOf(cafe) + REPUTATION_BY_STARS[Math.max(0, Math.min(3, stars))])) });
 export const driftReputation = (cafe: CafeState): CafeState => { const r = reputationOf(cafe); return { ...cafe, reputation: r > 50 ? Math.max(50, r - 3) : r < 50 ? Math.min(50, r + 3) : 50 }; };
 export type CafeAction = { type: 'lease' } | { type: 'plan'; plan: CafePlan } | { type: 'upgrade'; upgrade: keyof typeof CAFE_UPGRADES } | { type: 'close' };

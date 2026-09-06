@@ -1,11 +1,12 @@
 import type { GameState } from '../types';
+import { tl } from '../i18n/town';
 import { applyShiftReputation, reputationOf, type CafeState } from './townCafe';
 export type ServicePlan = { price: 4 | 6; stock: 3 | 6; helper: boolean; pace: 'relaxed' | 'rush' };
 export type ServiceGuest = { id: number; name: string; drink: 'espresso' | 'latte'; arrival: number; deadline: number; table: 'table1' | 'table2' | 'counter'; status: 'coming' | 'queued' | 'ordered' | 'served' | 'left'; changedAt: number; tip?: number; helperTook?: boolean };
 export type ServiceStation = 'counter' | 'machine' | 'table1' | 'table2';
 export const SERVICE_STATIONS: Record<ServiceStation, { x: number; z: number; label: string }> = {
-  counter: { x: .9, z: .8, label: 'order counter' }, machine: { x: -.8, z: .8, label: 'coffee machine' },
-  table1: { x: -2.15, z: 1.4, label: 'table 1' }, table2: { x: -2.15, z: 4.3, label: 'table 2' },
+  counter: { x: .9, z: .8, get label() { return tl('order counter','el mostrador'); } }, machine: { x: -.8, z: .8, get label() { return tl('coffee machine','la máquina de café'); } },
+  table1: { x: -2.15, z: 1.4, get label() { return tl('table 1','la mesa 1'); } }, table2: { x: -2.15, z: 4.3, get label() { return tl('table 2','la mesa 2'); } },
 };
 // `ready` is a finished drink waiting on the machine; `cupFor` is the drink in the player's hands.
 export type CafeService = { month: number; plan: ServicePlan; seats: boolean; machine: boolean; elapsed: number; status: 'active' | 'complete'; guests: ServiceGuest[]; prepared: number; brewing?: { guest: number; readyAt: number }; ready?: number; cupFor?: number };
@@ -46,16 +47,16 @@ export function serviceTask(shift: CafeService): ServiceTask | null {
   const carrying = byId(shift.cupFor), waiting = byId(shift.ready);
   const queued = shift.guests.find(g => g.status === 'queued' && !shift.plan.helper);
   const unmade = shift.guests.find(g => g.status === 'ordered' && g.id !== shift.cupFor && g.id !== shift.ready && g.id !== shift.brewing?.guest);
-  if (carrying && seated(carrying, shift.elapsed)) return { station: carrying.table, verb: `Serve ${carrying.name}`, detail: `${carrying.drink} → ${SERVICE_STATIONS[carrying.table].label}`, kind: 'serve', guest: carrying };
-  if (waiting) return { station: 'machine', verb: `Pick up ${waiting.name}’s ${waiting.drink}`, detail: 'The drink is ready on the machine.', kind: 'pickup', guest: waiting };
-  if (queued) return { station: 'counter', verb: `Take ${queued.name}’s order`, detail: shift.brewing ? 'A drink is brewing; take the next order meanwhile.' : 'Meet the next customer at the order counter.', kind: 'take', guest: queued };
-  if (carrying) return { station: carrying.table, verb: 'Customer finding their place…', detail: `${carrying.name} is on the way.`, kind: 'wait', guest: carrying };
-  if (unmade && !shift.brewing && shift.prepared < shift.plan.stock) return { station: 'machine', verb: `Make ${unmade.drink}`, detail: `${unmade.name} · ${SERVICE_STATIONS[unmade.table].label}`, kind: 'brew', guest: unmade };
-  if (shift.brewing) { const guest = byId(shift.brewing.guest); return { station: 'machine', verb: `Brewing · ${Math.max(0, shift.brewing.readyAt - shift.elapsed)}s`, detail: `${guest?.name ?? 'A guest'} is waiting for ${guest?.drink ?? 'coffee'}.`, kind: 'wait', guest }; }
-  if (unmade) return { station: 'machine', verb: 'Fresh stock used up', detail: 'Finish the shift; unfilled orders cannot be served.', kind: 'wait', guest: unmade };
+  if (carrying && seated(carrying, shift.elapsed)) return { station: carrying.table, verb: `${tl('Serve','Servir a')} ${carrying.name}`, detail: `${carrying.drink} → ${SERVICE_STATIONS[carrying.table].label}`, kind: 'serve', guest: carrying };
+  if (waiting) return { station: 'machine', verb: `${tl('Pick up','Recoger')} ${waiting.drink} ${tl('for','para')} ${waiting.name}`, detail: tl('The drink is ready on the machine.','La bebida está lista en la máquina.'), kind: 'pickup', guest: waiting };
+  if (queued) return { station: 'counter', verb: `${tl('Take','Tomar el pedido de')} ${queued.name}${tl('’s order','')}`, detail: shift.brewing ? tl('A drink is brewing; take the next order meanwhile.','Una bebida se está preparando; toma el siguiente pedido mientras tanto.') : tl('Meet the next customer at the order counter.','Recibe al siguiente cliente en el mostrador.'), kind: 'take', guest: queued };
+  if (carrying) return { station: carrying.table, verb: tl('Customer finding their place…','El cliente busca su lugar…'), detail: `${carrying.name} ${tl('is on the way.','va en camino.')}`, kind: 'wait', guest: carrying };
+  if (unmade && !shift.brewing && shift.prepared < shift.plan.stock) return { station: 'machine', verb: `${tl('Make','Preparar')} ${unmade.drink}`, detail: `${unmade.name} · ${SERVICE_STATIONS[unmade.table].label}`, kind: 'brew', guest: unmade };
+  if (shift.brewing) { const guest = byId(shift.brewing.guest); return { station: 'machine', verb: `${tl('Brewing','Preparando')} · ${Math.max(0, shift.brewing.readyAt - shift.elapsed)}s`, detail: `${guest?.name ?? 'A guest'} is waiting for ${guest?.drink ?? 'coffee'}.`, kind: 'wait', guest }; }
+  if (unmade) return { station: 'machine', verb: tl('Fresh stock used up','Se acabó el surtido fresco'), detail: tl('Finish the shift; unfilled orders cannot be served.','Termina el turno; los pedidos sin preparar no se pueden servir.'), kind: 'wait', guest: unmade };
   const helperQueue = shift.guests.find(g => g.status === 'queued');
-  if (helperQueue) return { station: 'machine', verb: 'Helper is taking the order…', detail: `${helperQueue.name} is at the counter with your helper.`, kind: 'wait', guest: helperQueue };
-  return { station: 'counter', verb: 'Next guest arriving…', detail: 'A moment to get back to the counter.', kind: 'wait' };
+  if (helperQueue) return { station: 'machine', verb: tl('Helper is taking the order…','El ayudante toma el pedido…'), detail: `${helperQueue.name} ${tl('is at the counter with your helper.','está en el mostrador con tu ayudante.')}`, kind: 'wait', guest: helperQueue };
+  return { station: 'counter', verb: tl('Next guest arriving…','Llega el siguiente cliente…'), detail: tl('A moment to get back to the counter.','Un momento para volver al mostrador.'), kind: 'wait' };
 }
 export const atServiceStation = (point: { x: number; z: number }, station: ServiceStation) => Number.isFinite(point.x) && Number.isFinite(point.z) && Math.hypot(point.x - SERVICE_STATIONS[station].x, point.z - SERVICE_STATIONS[station].z) < .6;
 export function finishCafeService(shift: CafeService): CafeService {

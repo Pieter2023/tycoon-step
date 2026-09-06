@@ -1,4 +1,5 @@
 import { resolveCafeService } from './services/cafeService';
+import { tl } from './i18n/town';
 import { resolveCafeAction, quoteCafe } from './services/townCafe';
 import { completeActiveJourney, activeJourney } from './services/townJourney';
 import { monthlyChallenges, challengeProgress, currentSnapshot } from './services/townChallenges';
@@ -589,6 +590,8 @@ const App: React.FC<AppProps> = ({ onBackToMenu, initialGameState, playerConfig,
   const [showDemoLimitModal, setShowDemoLimitModal] = useState(false);
   const [showTown, setShowTown] = useState(false);
   const [townOpenedMoney,setTownOpenedMoney]=useState(false);
+  // Set when the month is closed from inside the city so the player lands back on the square once the turn settles.
+  const returnToTown=useRef(false);
   const renderStart = import.meta.env.DEV ? performance.now() : 0;
   const isResumingFromSave = !isMultiplayer && !!initialGameState && !!initialGameState.character;
   const [gameStarted, setGameStarted] = useState(isMultiplayer ? true : isResumingFromSave);
@@ -1807,6 +1810,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
     setIsProcessing(true);
     playTick();
 
+    const backToTown = returnToTown.current; returnToTown.current = false;
     setTimeout(() => {
       const { newState, monthlyReport: report } = processTurn(gameState);
       const netIncome = report.income - report.expenses;
@@ -1864,6 +1868,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
       recordAutosave(newState);
       setMonthlyReport(report);
       setIsProcessing(false);
+      // Back to the square after a month closed from the city, unless something in the 2D shell needs the player first.
+      if (backToTown && !isMultiplayer && !newState.pendingScenario && !newState.annualReport && !newState.isBankrupt && !(newState.hasWon && !gameState.hasWon)) setShowTown(true);
 
       // Multiplayer: track turns and switch players after MULTIPLAYER_TURNS_PER_ROUND
       if (isMultiplayer && onTurnComplete) {
@@ -1880,6 +1886,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
   }, [autoPlaySpeed, gameState, isProcessing, isMultiplayer, onTurnComplete, multiplayerTurnsTaken, recordAutosave, tier]);
 
   const hideTurnPreview = useCallback(() => {
+    returnToTown.current = false;
     setShowTurnPreview(false);
     setTurnPreview(null);
   }, []);
@@ -1890,7 +1897,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
   }, [hideTurnPreview]);
 
   const confirmTurnPreview = useCallback(() => {
+    const backToTown = returnToTown.current; // closing the preview clears the flag; confirming must keep it
     closeTurnPreview();
+    returnToTown.current = backToTown;
     advanceMonth();
   }, [advanceMonth, closeTurnPreview]);
 
@@ -3369,9 +3378,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const townLauncher = !isMultiplayer && !gameState.challenge ?
     <div className="rounded-xl border border-amber-300/30 bg-gradient-to-r from-emerald-950 to-slate-900 px-5 py-4">
       <button onClick={() => setShowTown(true)} disabled={isProcessing || gameState.isBankrupt} className="flex w-full items-center justify-between gap-4 text-left disabled:opacity-40">
-        <span><strong className="block text-sm text-amber-100">Enter 3D city</strong><span className="mt-1 block text-xs text-slate-300">{cityJourney.completed ? `Freedom Square · notice board ${cityDone}/${cityChallenges.length} this month` : `${cityJourney.stage === 3 ? 'Neighbourhood tour' : cityJourney.stage === 2 ? 'Investor journey' : 'Your first business'} · ${cityJourney.title}`}</span></span><span className="shrink-0 text-xs text-emerald-200">{cityJourney.completed ? 'Explore →' : `${cityJourney.button} →`}</span>
+        <span><strong className="block text-sm text-amber-100">{tl('Enter 3D city','Entrar a la ciudad 3D')}</strong><span className="mt-1 block text-xs text-slate-300">{cityJourney.completed ? `${tl('Freedom Square · notice board','Plaza de la Libertad · tablón')} ${cityDone}/${cityChallenges.length} ${tl('this month','este mes')}` : `${cityJourney.stage === 3 ? tl('Neighbourhood tour','Recorrido del barrio') : cityJourney.stage === 2 ? tl('Investor journey','Recorrido del inversor') : tl('Your first business','Tu primer negocio')} · ${cityJourney.title}`}</span></span><span className="shrink-0 text-xs text-emerald-200">{cityJourney.completed ? tl('Explore →','Explorar →') : `${cityJourney.button} →`}</span>
       </button>
-      <p className="mt-3 border-t border-emerald-900/60 pt-3 text-xs text-slate-300"><span className="text-amber-200">Rosa says:</span> {adviceHeadline(gameState)}{cityJourney.completed ? '' : ` · Board ${cityDone}/${cityChallenges.length}`}</p>
+      <p className="mt-3 border-t border-emerald-900/60 pt-3 text-xs text-slate-300"><span className="text-amber-200">{tl('Rosa says','Rosa dice')}:</span> {adviceHeadline(gameState)}{cityJourney.completed ? '' : ` · ${tl('Board','Tablón')} ${cityDone}/${cityChallenges.length}`}</p>
     </div> : null;
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white pb-24 md:pb-4">
@@ -3391,7 +3400,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           onAction={action=>setGameState(prev=>isProcessing?prev:resolveTownAction(prev,action))}
           onRememberView={view=>setGameState(prev=>({...prev,townView:view}))}
           onOpenMoney={(tab,place) => { setShowTown(false); setTownOpenedMoney(true); setV2Path('/money'); setMoneyTab(tab); if(tab==='invest'){setInvestmentFilter(place==='property'?AssetType.REAL_ESTATE:place==='business'?AssetType.BUSINESS:'ALL');setInvestmentTierFilter('ALL');setInvestmentSearch('');} }}
-          onNextMonth={() => { setShowTown(false); handleNextTurn(); }} />
+          onNextMonth={() => { setShowTown(false); returnToTown.current = true; handleNextTurn(); }} />
       </React.Suspense></TabErrorBoundary>}
       {/* Floating Numbers */}
       <AnimatePresence>
