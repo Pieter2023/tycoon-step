@@ -1,5 +1,5 @@
 import { finishCafeService } from './cafeService';
-import { applyPerformanceReview, applyLayoff } from './townCareer';
+import { applyPerformanceReview, applyLayoff, judgeRecoveryPlan } from './townCareer';
 import { cafeValue, driftReputation, quoteCafe, settleCafeMonth } from './townCafe';
 import { closeChallengeMonth, snapshotFor } from './townChallenges';
 import { incomeYield, nominalPrice } from './investmentModel';
@@ -3025,10 +3025,15 @@ export const applyScenarioOutcome = (state: GameState, outcome: any): GameState 
 // APPLY MONTHLY ACTION (Adult mode)
 // ============================================
 // Counts desk actions for the workplace's annual performance review.
-const recordWorkAction = (s: GameState, key: 'overtime' | 'network' | 'training') => {
-  const stats = s.yearStats ?? { startNetWorth: calculateNetWorth(s), marketGains: 0, passiveIncome: 0, hindsights: [] };
-  const work = { overtime: 0, network: 0, training: 0, ...(stats.workActions ?? {}) }; work[key] += 1;
-  s.yearStats = { ...stats, workActions: work };
+const recordWorkAction = (s: GameState, key: 'overtime' | 'network' | 'training' | 'recover') => {
+  if (key !== 'recover') {
+    const stats = s.yearStats ?? { startNetWorth: calculateNetWorth(s), marketGains: 0, passiveIncome: 0, hindsights: [] };
+    const work = { overtime: 0, network: 0, training: 0, ...(stats.workActions ?? {}) }; work[key] += 1;
+    s.yearStats = { ...stats, workActions: work };
+  }
+  // Cumulative log for recovery plans (never reset).
+  const log = { overtime: 0, network: 0, training: 0, recover: 0, ...(s.townProgress?.workLog ?? {}) }; log[key] += 1;
+  s.townProgress = { ...s.townProgress, workLog: log };
 };
 
 export const applyMonthlyAction = (
@@ -3147,7 +3152,7 @@ export const applyMonthlyAction = (
     }
     case 'RECOVER': {
       applyStats({ energy: +18, stress: -15, health: +4, happiness: +6, fulfillment: +2 });
-      title = '🛌 Rest & Recovery';
+      title = '🛌 Rest & Recovery'; recordWorkAction(newState, 'recover');
       description = 'You took time to recover. Energy and health improved, stress dropped.';
       break;
     }
@@ -3658,6 +3663,7 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
 
   // 16.4 Layoff hazard (city workplace): AI exposure, recession and the last review set the odds; one seeded roll per turn.
   if (!newState.challenge) Object.assign(newState, applyLayoff(newState, rand()));
+  if (!newState.challenge) Object.assign(newState, judgeRecoveryPlan(newState));
   if (newState.yearStats && (state.jobLossMonthsRemaining ?? 0) > 0) newState.yearStats = { ...newState.yearStats, monthsUnemployed: (newState.yearStats.monthsUnemployed ?? 0) + 1 };
 
   // 16.5 Job loss shock countdown

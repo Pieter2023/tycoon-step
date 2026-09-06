@@ -1,23 +1,25 @@
 import React, { useState } from 'react';
 import type { CareerPath, MonthlyActionId } from '../../types';
 import type { MonthlyActionsSummary } from '../../services/monthlyActions';
-import { raiseOdds, jobBoard, careerChangeEligibility, layoffHazard, jobSearchOdds, reviewFactorLabel, type RaiseAsk } from '../../services/townCareer';
+import { raiseOdds, jobBoard, careerChangeEligibility, layoffHazard, jobSearchOdds, reviewFactorLabel, mentorTalk, proposeRecoveryPlan, planProgress, planGoalLabel, PLAN_CREDIT, type RaiseAsk } from '../../services/townCareer';
 import { calculateMonthlyCashFlowEstimate } from '../../services/gameLogic';
 import type { GameState } from '../../types';
 import { payStub, promotionOutlook, jobSecurity, managerLine, money } from '../../services/townWork';
 import { tl } from '../../i18n/town';
 
-type Props = { state: GameState; disabled: boolean; onPromote?: () => void; onOpenLife?: (tab: 'career' | 'education') => void; onAskRaise?: (ask: RaiseAsk) => void; onSwitchCareer?: (path: CareerPath) => void; onJobSearch?: () => void; workActions?: MonthlyActionsSummary; onMonthlyAction?: (id: MonthlyActionId) => void };
+type Props = { state: GameState; disabled: boolean; onPromote?: () => void; onOpenLife?: (tab: 'career' | 'education') => void; onAskRaise?: (ask: RaiseAsk) => void; onSwitchCareer?: (path: CareerPath) => void; onJobSearch?: () => void; onAcceptPlan?: () => void; workActions?: MonthlyActionsSummary; onMonthlyAction?: (id: MonthlyActionId) => void };
 
 // The manager's desk: this month's pay stub reconciled to the dollar, how close the next title
 // is and what is in the way, and how exposed this line of work is to automation and downturns.
-export default function WorkPanel({ state, disabled, onPromote, onOpenLife, onAskRaise, onSwitchCareer, onJobSearch, workActions, onMonthlyAction }: Props) {
+export default function WorkPanel({ state, disabled, onPromote, onOpenLife, onAskRaise, onSwitchCareer, onJobSearch, onAcceptPlan, workActions, onMonthlyAction }: Props) {
   const stub = payStub(state), outlook = promotionOutlook(state), security = jobSecurity(state);
   const [confirmPath, setConfirmPath] = useState<CareerPath | null>(null);
   const lastRaise = state.events.find(e => (e.title === 'Raise approved' || e.title === 'Raise declined') && e.month === state.month);
   const changeable = careerChangeEligibility(state), listings = jobBoard(state), deskActions = (workActions?.actions ?? []).filter(a => ['OVERTIME', 'NETWORK', 'TRAINING'].includes(a.id));
   const unemployed = (state.jobLossMonthsRemaining ?? 0) > 0, search = jobSearchOdds(state), hazard = layoffHazard(state), review = state.townProgress?.lastReview, runway = Math.floor(state.cash / Math.max(1, calculateMonthlyCashFlowEstimate(state).expenses));
   const lastSearch = state.events.find(e => e.title === 'Job search: offer accepted' && e.month === state.month);
+  const talk = mentorTalk(state), plan = state.townProgress?.recoveryPlan, planActive = !!plan && !plan.result, proposal = proposeRecoveryPlan(state), planSteps = plan ? planProgress(state, plan) : [];
+  const [talking, setTalking] = useState(false);
   const progress = outlook.next ? Math.min(100, Math.round(outlook.experience / Math.max(1, outlook.next.experienceRequired) * 100)) : 100;
   return <>
     <p className="town-eyebrow">{tl('MAIN STREET OFFICES','OFICINAS DE MAIN STREET')} · {stub.employer.toUpperCase()}</p><h3>{managerLine(state)}</h3>
@@ -57,6 +59,21 @@ export default function WorkPanel({ state, disabled, onPromote, onOpenLife, onAs
       {!search.eligible && <p className="town-small">{search.reason}</p>}
       {lastSearch && <p className="town-receipt" role="status">{lastSearch.description}</p>}
     </section>}
+
+    <section className="town-work-block" aria-label={tl('One-on-one with your manager','Reunión uno a uno con tu jefe')}>
+      <h4>{tl('One-on-one','Uno a uno')}{talk.projected && <span className={`town-tag ${talk.projected.grade === 'A' || talk.projected.grade === 'B' ? 'town-tag-good' : talk.projected.grade === 'C' ? 'town-tag-warn' : 'town-tag-bad'}`}>{tl('if the year ended today','si el año terminara hoy')}: {talk.projected.grade} · {talk.projected.score}</span>}</h4>
+      {!talking ? <button className="town-primary" onClick={() => setTalking(true)}>{tl('Ask how you are doing','Preguntar cómo vas')}</button> : <>
+        <p className="town-small town-quote">“{talk.opener}”</p>
+        {talk.points.map(p => <div key={p.id} className="town-job"><strong>{p.id === 'projection' ? '' : reviewFactorLabel(p.id as Parameters<typeof reviewFactorLabel>[0])}{p.delta !== undefined ? ` (${p.delta})` : ''}</strong><p className="town-small">{p.why}</p><p className="town-small"><em>{p.fix}</em></p></div>)}
+        <p className="town-small town-quote">“{talk.closing}”</p>
+      </>}
+      {plan && <div className="town-job"><strong>{planActive ? `${tl('Recovery plan','Plan de recuperación')} · ${Math.max(0, plan.endMonth - state.month)} ${tl('months left','meses restantes')}` : plan.result === 'completed' ? tl('Recovery plan completed ✓','Plan de recuperación completado ✓') : tl('Recovery plan missed','Plan de recuperación no cumplido')}</strong>
+        <ul className="town-list">{planSteps.map(p => <li key={p.goal.id}>{p.done ? '✓' : '○'} {planGoalLabel(p.goal)}{p.goal.id === 'stress-down' || p.goal.id === 'network-up' ? ` (${tl('now','ahora')} ${p.value})` : p.goal.id === 'land-job' ? '' : ` (${p.value}/${p.goal.target})`}</li>)}</ul>
+        {planActive && <p className="town-small">{tl('Judged in month','Se evalúa en el mes')} {plan.endMonth}. {tl('Completing it adds','Completarlo suma')} +{PLAN_CREDIT} {tl('to the next review','a la próxima evaluación')}{review?.grade === 'D' ? ` ${tl('and lifts the notice','y levanta el aviso')}` : ''}.</p>}
+      </div>}
+      {!planActive && proposal.length > 0 && !unemployed && <div className="town-actions"><button className="town-primary" disabled={disabled || !onAcceptPlan} onClick={onAcceptPlan}>{tl('Agree a 3-month plan','Acordar un plan de 3 meses')}: {proposal.map(g => planGoalLabel(g)).join(' · ')}</button></div>}
+      {!planActive && proposal.length > 0 && unemployed && <div className="town-actions"><button className="town-primary" disabled={disabled || !onAcceptPlan} onClick={onAcceptPlan}>{tl('Agree a 3-month plan','Acordar un plan de 3 meses')}: {proposal.map(g => planGoalLabel(g)).join(' · ')}</button></div>}
+    </section>
 
     {review && <section className="town-work-block" aria-label={tl('Last performance review','Última evaluación de desempeño')}>
       <h4>{tl('Last review','Última evaluación')} <span className={`town-tag ${review.grade === 'A' || review.grade === 'B' ? 'town-tag-good' : review.grade === 'C' ? 'town-tag-warn' : 'town-tag-bad'}`}>{review.grade} · {review.score}/100</span></h4>

@@ -110,3 +110,5 @@
 .town-tag{font-size:10px;padding:2px 8px;border-radius:999px;border:1px solid}.town-tag-good{color:#9be7b5;border-color:#9be7b5}.town-tag-warn{color:#f1d396;border-color:#f1d396}.town-tag-bad{color:#f2a7a0;border-color:#f2a7a0}
 
 .town-raise{margin-top:8px}.town-raise .town-primary{width:100%}.town-factors{columns:2;column-gap:12px;margin-top:4px}.town-job{margin-top:10px;padding:10px;border:1px solid #476359;border-radius:10px;background:#1f3934}.town-job strong{font-size:12px;color:#f1d396}.town-job button{margin-top:6px}
+
+.town-quote{font-style:italic;color:#e9dfc4}

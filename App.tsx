@@ -1,5 +1,5 @@
 import { resolveCafeService } from './services/cafeService';
-import { askForRaise, switchCareer, careerChangeEligibility, jobSearch } from './services/townCareer';
+import { askForRaise, switchCareer, careerChangeEligibility, jobSearch, acceptRecoveryPlan } from './services/townCareer';
 import { tl } from './i18n/town';
 import { resolveCafeAction, quoteCafe } from './services/townCafe';
 import { completeActiveJourney, activeJourney } from './services/townJourney';
@@ -3393,6 +3393,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           onAskRaise={ask=>{if(isProcessing)return;const result=askForRaise(gameState,ask);if(!result.asked){showNotif('Not now',result.line,'warning');return;}setGameState(result.state);recordAutosave(result.state);showNotif(result.success?'Raise approved':'Raise declined',result.line,result.success?'success':'warning');}}
           onSwitchCareer={path=>{if(isProcessing)return;const next=switchCareer(gameState,path);if(next===gameState){showNotif('Not now',careerChangeEligibility(gameState).reason??'Career change unavailable.','warning');return;}setGameState(next);recordAutosave(next);showNotif('Career change',`You start as ${next.career?.title} next month, after a month between jobs.`,'info');}}
           onJobSearch={()=>{if(isProcessing)return;const result=jobSearch(gameState);if(!result.applied){showNotif('Not now',result.line,'warning');return;}setGameState(result.state);recordAutosave(result.state);showNotif(result.success?'Offer accepted':'No offers yet',result.line,result.success?'success':'info');}}
+          onAcceptPlan={()=>{if(isProcessing)return;const next=acceptRecoveryPlan(gameState);if(next===gameState){showNotif('Not now','A plan is already running or an event is waiting.','warning');return;}setGameState(next);recordAutosave(next);showNotif('Recovery plan agreed','Three months. The office tracks each goal.','info');}}
           workActions={monthlyActionsSummary} onMonthlyAction={handleUseMonthlyAction}
           onSell={handleSellAsset}
           onMortgage={item=>setShowMortgageModal(item)}
