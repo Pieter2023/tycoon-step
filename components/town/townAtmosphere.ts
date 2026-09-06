@@ -16,7 +16,7 @@ export function createTownWeather() {
   } };
 }
 
-export type ChimeKind = 'order' | 'serve' | 'sale' | 'left' | 'celebrate';
+export type ChimeKind = 'order' | 'serve' | 'sale' | 'left' | 'celebrate' | 'ready';
 // Layered, fully synthesized soundscape: breeze and distant city hum, birdsong on dry days,
 // rain hiss, the fountain heard only when close, passing traffic panned by direction, shoe
 // steps on pavement or interior floor, the espresso machine while a drink brews, and short
@@ -83,6 +83,7 @@ export function createTownAmbience(context: AudioContext) {
     machine(on: boolean) { machine.gain.gain.setTargetAtTime(on ? .045 : 0, now(), .15); pumpGain.gain.setTargetAtTime(on ? .028 : 0, now(), .15); },
     chime(kind: ChimeKind) {
       if (kind === 'order') tone(880, .25, .04);
+      else if (kind === 'ready') { tone(988, .12, .04); tone(1318, .3, .04, 'sine', undefined, .1); }
       else if (kind === 'serve') { tone(1318, .35, .045); tone(1760, .5, .035, 'sine', undefined, .09); }
       else if (kind === 'sale') { burst(3000, 1200, .05, .05, 'highpass', 1); tone(2093, .3, .04, 'triangle', undefined, .04); tone(2637, .45, .035, 'triangle', undefined, .12); }
       else if (kind === 'left') tone(440, .4, .035, 'sine', 300);

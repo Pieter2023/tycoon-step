@@ -7,7 +7,7 @@ import { findTownPath, slideMovement, isWalkable } from './townNavigation';
 import { createTownBank, clampBankPoint, bankSpot } from './townBank';
 import { createCoffeeCart } from './townBusiness';
 import { createTownTraffic } from './townTraffic';
-import { createTownLife } from './townLife';
+import { createTownLife, createCyclist, createDogWalker } from './townLife';
 import { residentStyle, seatActor, styleCharacter, Sex } from './townResidents';
 export type TownView = { x:number; z:number; yaw:number; pitch:number; distance:number; mode?:CameraPreset };
 export type TownSpot = 'teller' | 'exit' | 'cart' | 'cafe-counter' | null;
@@ -77,12 +77,12 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   if(saved){yaw=Number.isFinite(saved.yaw)?saved.yaw:.12;pitch=Number.isFinite(saved.pitch)?THREE.MathUtils.clamp(saved.pitch,.16,1.05):.4;zoomDistance=Number.isFinite(saved.distance)?THREE.MathUtils.clamp(saved.distance,4,20):9;distance=zoomDistance;cameraTarget.set(spawn.x,1.65,spawn.z);}
   const cart=createCoffeeCart();outdoors.add(cart.root);let cartLicensed=false,paused=false;
   const life=createTownLife(reducedMotion);outdoors.add(life.root);
-  let traffic:ReturnType<typeof createTownTraffic>|undefined;
+  let traffic:ReturnType<typeof createTownTraffic>|undefined, cyclist:ReturnType<typeof createCyclist>|undefined, dogWalker:ReturnType<typeof createDogWalker>|undefined;
   let ambience:ReturnType<typeof createTownAmbience>|undefined;
   let audioContext:AudioContext|undefined, soundEnabled=false,lastStep=0;
   const stepSound=(speed:number)=>{if(!soundEnabled||!audioContext||audioContext.state!=='running')return;ambience?.step(inside,speed);};
-  let brewingBefore=false,saleChimed=false,serviceCounts={ordered:0,served:0,left:0};
-  const countGuests=(service?:CafeService)=>({ordered:service?.guests.filter(g=>g.status!=='coming'&&g.status!=='queued').length??0,served:service?.guests.filter(g=>g.status==='served').length??0,left:service?.guests.filter(g=>g.status==='left').length??0});
+  let brewingBefore=false,saleChimed=false,readyBefore=false,serviceCounts={ordered:0,served:0,left:0,tips:0};
+  const countGuests=(service?:CafeService)=>({ordered:service?.guests.filter(g=>g.status!=='coming'&&g.status!=='queued').length??0,served:service?.guests.filter(g=>g.status==='served').length??0,left:service?.guests.filter(g=>g.status==='left').length??0,tips:service?.guests.reduce((sum,g)=>sum+(g.tip??0),0)??0});
   let teller:Actor | undefined, serviceUntil=0, serviceStage:'approach'|'serve'|'return'|null=null, serviceDone:(()=>void)|undefined, celebrationUntil=0;
   let serviceReturn:TownPoint={x:2.2,z:9.8},serviceView:{yaw:number;pitch:number;distance:number}|undefined;
   let cameraMode:CameraPreset=saved?.mode==='overview'?'overview':'follow';
@@ -92,6 +92,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const guestLabels:{sprite:THREE.Sprite;canvas:HTMLCanvasElement;texture:THREE.CanvasTexture;text:string}[]=[];
   const heldCup=new THREE.Mesh(new THREE.CylinderGeometry(.09,.07,.2,16),new THREE.MeshStandardMaterial({color:'#fff1d4'}));heldCup.visible=false;cafeRoom.root.add(heldCup);
   const steam=new THREE.Group();cafeRoom.root.add(steam);
+  const readyCup=new THREE.Mesh(new THREE.CylinderGeometry(.09,.07,.2,16),new THREE.MeshStandardMaterial({color:'#fff1d4'}));readyCup.position.set(-1.05,1.47,-.42);readyCup.visible=false;cafeRoom.root.add(readyCup);
   for(let i=0;i<4;i++){const puff=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6),new THREE.MeshBasicMaterial({color:'#fff4de',transparent:true,opacity:.35}));puff.position.set(-.6,1.7+i*.16,-.5);steam.add(puff);}steam.visible=false;
   let playerActor: Actor | undefined; const pedestrians: (Actor & { offset: number; lane: number; seat?: number })[] = [];
   const addActor = (root: THREE.Object3D, clips: THREE.AnimationClip[]): Actor => {
@@ -110,15 +111,22 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const loaded: THREE.Object3D[] = [];
   const load = async (url: string) => { const gltf = await loader.loadAsync(url); if (!alive) disposeTree(gltf.scene); else loaded.push(gltf.scene); return gltf; };
   // Vehicles are optional: the square still opens if only their file fails.
-  Promise.all([load('/models/town/freedom-square.glb'), load('/models/town/town-character.glb'), load('/models/town/town-vehicles.glb').catch(() => null)]).then(([town, character, vehicles]) => {
+  // Bump when any model in public/models/town changes: the files keep their names, so browsers would otherwise reuse a cached copy.
+  const MODEL_VERSION = '20260905c';
+  Promise.all([load(`/models/town/freedom-square.glb?v=${MODEL_VERSION}`), load(`/models/town/town-character.glb?v=${MODEL_VERSION}`), load(`/models/town/town-vehicles.glb?v=${MODEL_VERSION}`).catch(() => null)]).then(([town, character, vehicles]) => {
     if (!alive) return;
     for (const root of [town.scene, character.scene]) root.traverse(o => { if (o instanceof THREE.Mesh) { o.castShadow = true; o.receiveShadow = true; } });
     outdoors.add(town.scene); player.add(character.scene); playerActor = addActor(character.scene, character.animations);
     const playerSex = options.playerSex ?? 'm';
     styleCharacter(character.scene, { sex: playerSex, hair: playerSex === 'f' ? 'long' : 'short' });
-    if (vehicles) { traffic = createTownTraffic(vehicles.scene, reducedMotion); outdoors.add(traffic.root); }
+    if (vehicles) {
+      traffic = createTownTraffic(vehicles.scene, reducedMotion); outdoors.add(traffic.root);
+      const bike = vehicles.scene.getObjectByName('Bike'), dog = vehicles.scene.getObjectByName('Dog');
+      if (bike) { const rider = character.scene.clone(true); styleCharacter(rider, residentStyle(12)); cyclist = createCyclist(bike, rider, reducedMotion); outdoors.add(cyclist.root); }
+      if (dog) { dogWalker = createDogWalker(dog, reducedMotion); outdoors.add(dogWalker.root, dogWalker.leash); }
+    }
     // Dev-only QA handle for inspecting traffic and pigeons from the console; stripped from production builds.
-    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { traffic, life, player: () => ({ x: player.position.x, z: player.position.z }) };
+    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { traffic, life, cyclist, dogWalker, player: () => ({ x: player.position.x, z: player.position.z }) };
     // Twelve neighbours: walkers on both pavements plus two resting on the promenade benches.
     for (let i = 0; i < 12; i++) {
       const root = character.scene.clone(true); root.scale.setScalar(.86 + (i % 3) * .07);
@@ -135,14 +143,15 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       { sex: 'f' as const, hair: 'long' as const, colors: { shirt: '#bf896a', skin: '#d4a57d', hair: '#71503a', skirt: '#4f6f86' } },
       { sex: 'm' as const, hair: 'short' as const, cap: true, colors: { shirt: '#7e88ac', skin: '#bb805b', hair: '#322d2b', cap: '#5a3f3a' } },
       { sex: 'm' as const, hair: 'short' as const, beard: true, colors: { shirt: '#d0ad65', skin: '#e2b78c', hair: '#44302b' } },
+      { sex: 'f' as const, hair: 'tail' as const, colors: { shirt: '#a0687e', skin: '#f0cba5', hair: '#8a7f78', skirt: '#5d7a55' } },
     ];
-    for(let i=0;i<5;i++) {
+    for(let i=0;i<6;i++) {
       const root=character.scene.clone(true); root.scale.setScalar(i>1?.9:1);
       styleCharacter(root, cafeStyles[i]);
       root.position.set(i<2?(i===0?.8:-1.5):2.6,.22,i<2?-1.5:.8+(i-2)*1.2); root.rotation.y=i<2?0:Math.PI;
       cafeRoom.root.add(root); cafeActors.push(addActor(root,character.animations));
     }
-    for(let i=0;i<3;i++) {
+    for(let i=0;i<4;i++) {
       const label=document.createElement('canvas');label.width=512;label.height=100;
       const texture=new THREE.CanvasTexture(label);texture.colorSpace=THREE.SRGBColorSpace;
       const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,depthTest:false}));sprite.scale.set(1.8,.35,1);sprite.visible=false;cafeRoom.root.add(sprite);guestLabels.push({sprite,canvas:label,texture,text:''});
@@ -236,7 +245,8 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       if(!inside){
         const here={x:player.position.x,z:player.position.z};
         for(const pass of traffic?.update(dt,here,rainy,true)??[])ambience?.carPass(pass.pan,pass.closeness);
-        life.update(dt,elapsed,here,true);
+        life.update(dt,elapsed,here,true);cyclist?.update(dt,elapsed);
+        if(dogWalker&&pedestrians[10])dogWalker.update(dt,elapsed,pedestrians[10].root,pedestrians[10].root.visible);
         ambience?.tick(Math.hypot(here.x,here.z-12));
       }
       const nextSpot:TownSpot=inside?(cafeInside?cafeSpot(player.position):bankSpot(player.position)):cart.root.visible&&Math.hypot(player.position.x-2.2,player.position.z-8.7)<2?'cart':null;
@@ -248,10 +258,11 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     if(inside){yaw=THREE.MathUtils.clamp(yaw,-.65,.65);pitch=THREE.MathUtils.clamp(pitch,.5,.95);zoomDistance=THREE.MathUtils.clamp(zoomDistance,7,12);}
     weather.update(elapsed,rainy,reducedMotion);
     const playing=cafeInside&&cafeService?.status==='active';
-    heldCup.visible=false;steam.visible=!!(playing&&cafeService?.brewing);
+    heldCup.visible=false;steam.visible=!!(playing&&cafeService?.brewing);readyCup.visible=!!(playing&&cafeService?.ready!==undefined);
     const brewingNow=!!(playing&&cafeService?.brewing&&!paused);
     if(brewingNow!==brewingBefore){brewingBefore=brewingNow;ambience?.machine(brewingNow);}
-    if(playing){const counts=countGuests(cafeService);if(counts.served>serviceCounts.served)ambience?.chime('serve');else if(counts.left>serviceCounts.left)ambience?.chime('left');else if(counts.ordered>serviceCounts.ordered)ambience?.chime('order');serviceCounts=counts;}
+    if(playing){const counts=countGuests(cafeService);if(counts.tips>serviceCounts.tips)ambience?.chime('sale');else if(counts.served>serviceCounts.served)ambience?.chime('serve');else if(counts.left>serviceCounts.left)ambience?.chime('left');else if(counts.ordered>serviceCounts.ordered)ambience?.chime('order');serviceCounts=counts;}
+    const readyNow=!!(playing&&cafeService?.ready!==undefined);if(readyNow&&!readyBefore)ambience?.chime('ready');readyBefore=readyNow;
     if(steam.visible&&!reducedMotion)steam.children.forEach((p,i)=>{p.position.y=1.65+(elapsed*.3+i*.16)%.7;p.position.x=-.6+Math.sin(elapsed*2+i)*.06;});
     guestLabels.forEach(label=>label.sprite.visible=false);
     if(cafeInside) for(const [i,actor] of cafeActors.entries()) {
@@ -261,7 +272,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
         animateActor(actor,elapsed%10<4&&(i===0||i===2)?'Serve':'Idle',reducedMotion?0:dt);
         continue;
       }
-      if(i<2){actor.root.visible=i===0&&!!cafeService!.plan.helper;animateActor(actor,'Idle',reducedMotion?0:dt);continue;}
+      if(i<2){actor.root.visible=i===0&&!!cafeService!.plan.helper;const busy=cafeService!.guests.some(g=>g.helperTook&&g.status==='ordered'&&cafeService!.elapsed-g.changedAt<2);animateActor(actor,busy?'Serve':'Idle',reducedMotion?0:dt);continue;}
       const guest=cafeService!.guests[i-2];
       if(!guest||guest.status==='coming'){actor.root.visible=false;continue;}
       const departing=guest.status==='left'||(guest.status==='served'&&cafeService!.elapsed-guest.changedAt>=6);
@@ -284,7 +295,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       animateActor(actor,moving?'Walk':guest.status==='served'&&!seated?'Wave':'Idle',paused||reducedMotion?0:dt,moving?2.2/1.3125:1);
       if(seated){for(const side of ['-1','1']){const leg=actor.root.getObjectByName('Thigh'+side),knee=actor.root.getObjectByName('Knee'+side),ankle=actor.root.getObjectByName('Ankle'+side);if(leg)leg.rotation.x=-Math.PI/2;if(knee)knee.rotation.x=Math.PI/2;if(ankle)ankle.rotation.x=0;}}
       const label=guestLabels[guest.id];
-      if(label){const text=guest.status==='served'?'Thanks!':guest.status==='left'?'Too slow…':guest.status==='ordered'?guest.name+' · '+guest.drink:guest.name+' · Order please';if(label.text!==text){label.text=text;const ctx=label.canvas.getContext('2d')!;ctx.clearRect(0,0,512,100);ctx.fillStyle=guest.status==='left'?'#a45c50':guest.status==='served'?'#4c8265':'#294d43';ctx.fillRect(0,0,512,100);ctx.fillStyle='#fff1cc';ctx.font='600 39px sans-serif';ctx.textAlign='center';ctx.fillText(text,256,64);label.texture.needsUpdate=true;}label.sprite.visible=actor.root.visible;label.sprite.position.set(actor.root.position.x,actor.root.position.y+2.15,actor.root.position.z);}
+      if(label){const text=guest.status==='served'?(guest.tip?'Thanks! +$'+guest.tip+' tip':'Thanks!'):guest.status==='left'?'Too slow…':guest.status==='ordered'?guest.name+' · '+guest.drink:guest.name+' · Order please';if(label.text!==text){label.text=text;const ctx=label.canvas.getContext('2d')!;ctx.clearRect(0,0,512,100);ctx.fillStyle=guest.status==='left'?'#a45c50':guest.status==='served'?'#4c8265':'#294d43';ctx.fillRect(0,0,512,100);ctx.fillStyle='#fff1cc';ctx.font='600 39px sans-serif';ctx.textAlign='center';ctx.fillText(text,256,64);label.texture.needsUpdate=true;}label.sprite.visible=actor.root.visible;label.sprite.position.set(actor.root.position.x,actor.root.position.y+2.15,actor.root.position.z);}
     }
     if(playing&&cafeService?.cupFor!==undefined&&playerActor){
       const shoulder=playerActor.root.getObjectByName('Shoulder1'),elbow=playerActor.root.getObjectByName('Elbow1');if(shoulder)shoulder.rotation.x=-.85;if(elbow)elbow.rotation.x=-.7;
@@ -350,6 +361,6 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     move(x,z){if(serviceStage)return;stick=normalizeStick(x,z);if(stick.x||stick.z){stopPath();options.onManual?.();}},
     resetView(){yaw=.12;const preset=cameraPreset(cameraMode,inside);pitch=preset.pitch;zoomDistance=preset.distance;},
     setOwned(ids){for(const [id,object]of ownedMarkers)object.visible=ids.includes(id);},
-    dispose(){options.onView?.(inside&&cityView?cityView:{x:player.position.x,z:player.position.z,yaw,pitch,distance:zoomDistance,mode:cameraMode});ambience?.dispose();void audioContext?.close();alive=false;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',keyboard);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('contextmenu',contextMenu);canvas.removeEventListener('webglcontextlost',lost);playerActor?.mixer.stopAllAction();teller?.mixer.stopAllAction();cafeActors.forEach(a=>a.mixer.stopAllAction());pedestrians.forEach(p=>p.mixer.stopAllAction());if(traffic)disposeTree(traffic.root);disposeTree(life.root);for(const root of loaded)if(!root.parent)disposeTree(root);disposeTree(scene);draco.dispose();environment.dispose();sun.shadow.dispose();renderer.dispose();renderer.forceContextLoss();canvas.remove();}
+    dispose(){options.onView?.(inside&&cityView?cityView:{x:player.position.x,z:player.position.z,yaw,pitch,distance:zoomDistance,mode:cameraMode});ambience?.dispose();void audioContext?.close();alive=false;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',keyboard);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('contextmenu',contextMenu);canvas.removeEventListener('webglcontextlost',lost);playerActor?.mixer.stopAllAction();teller?.mixer.stopAllAction();cafeActors.forEach(a=>a.mixer.stopAllAction());pedestrians.forEach(p=>p.mixer.stopAllAction());if(traffic)disposeTree(traffic.root);if(cyclist)disposeTree(cyclist.root);if(dogWalker){disposeTree(dogWalker.root);dogWalker.leash.geometry.dispose();}disposeTree(life.root);for(const root of loaded)if(!root.parent)disposeTree(root);disposeTree(scene);draco.dispose();environment.dispose();sun.shadow.dispose();renderer.dispose();renderer.forceContextLoss();canvas.remove();}
   };
 }

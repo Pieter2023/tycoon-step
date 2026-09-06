@@ -98,8 +98,11 @@ describe('exported extras', () => {
     const vehicleNames = vehicles.nodes.map((n: { name: string }) => n.name);
     expect(vehicleNames).toContain('Car'); expect(vehicleNames).toContain('Van');
     expect(vehicleNames.filter((n: string) => n.startsWith('Wheel')).length).toBe(8);
+    expect(vehicleNames).toContain('Bike'); expect(vehicleNames).toContain('Dog');
+    expect(vehicleNames.filter((n: string) => n.startsWith('BikeWheel')).length).toBe(2);
+    expect(vehicleNames.filter((n: string) => n.startsWith('DogLeg')).length).toBe(4); expect(vehicleNames).toContain('DogTail');
     expect(vehicles.materials.map((m: { name: string }) => m.name)).toEqual(expect.arrayContaining(['carPaint', 'lamp', 'tyre']));
     expect(vehicles.extensionsUsed).toContain('KHR_draco_mesh_compression');
-    expect(statSync('public/models/town/town-vehicles.glb').size).toBeLessThan(160_000);
+    expect(statSync('public/models/town/town-vehicles.glb').size).toBeLessThan(200_000);
   });
 });

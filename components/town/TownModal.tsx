@@ -177,7 +177,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onClos
     setCameraTools(false);
     if(journey.action==='event'){onClose();return;}
     if(journey.completed){
-      if(room==='cafe'){if(serviceActive){setServicePaused(false);setShowDetails(false);}else if(!state.cafe&&showDetails&&cafePlay&&!unavailable&&!loading){beginShift({price:4,stock:3,helper:false,pace:'relaxed'},true);}else{setCafePlay(!state.cafe);setJournal(false);setShowDetails(true);}return;}
+      if(room==='cafe'){if(serviceActive){setServicePaused(false);setShowDetails(false);}else if(!state.cafe&&showDetails&&cafePlay&&!unavailable&&!loading){beginShift({price:4,stock:6,helper:false,pace:'relaxed'},true);}else{setCafePlay(!state.cafe);setJournal(false);setShowDetails(true);}return;}
       if(room==='city'&&near==='business'&&spot!=='cart'&&!unavailable){guide('cafe',()=>controller.current?.enterCafe?.());return;}
       guide('cafe',visitCafe);return;
     }

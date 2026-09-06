@@ -174,3 +174,26 @@ Runtime:
 Validation: 251 tests across 40 files passed (`test/TownLife.test.ts` added: sex mapping, style toggles with material cloning, seated pose, lane coverage and braking curve, pigeon flee/landing rules, GLB contents and size caps), TypeScript and the production build passed, `git diff --check` clean. Logs: [tests](verification/street-life-2026-09-05/tests.log), [build](verification/street-life-2026-09-05/build.log). Browser replay in Chrome at 61 fps: traffic braking confirmed from the dev handle (lead car stopped at 2.6 m, two queued behind), pigeon scatter confirmed (two flew and landed on the far side), women and men distinguishable at a glance in the square, at the cart queue, at the teller and in the café; sound toggled on with a clean console.
 
 Limits: sounds were verified to schedule without errors, not listened to on a physical device. Model rebuild order is documented in `assets/town/README.md`. Physical-phone frame rate with the extra residents and vehicles remains untested. `dist/` was rebuilt at the end of this pass; refresh an open 5187 page before opening the city.
+
+## Cyclist, dog walker and a livelier café shift — September 5, 2026 (night)
+
+Request: add a bicycle and a dog walker to the square, and make working the coffee shop feel less flat. Local only until committed.
+
+Street:
+
+- `scripts/build-town-extras.py` now also builds `Bike` (tube frame, two named wheels, hubs, saddle, bars, two named pedals) and `Dog` (body, chest, head, snout, ears, eyes, collar, four named legs, tail) into `town-vehicles.glb` (153,864 bytes, Draco). Editable source in `assets/town/town-vehicles.blend`.
+- `townLife.ts`: `createCyclist` seats a styled character clone on the frame with no mixer, pedalling in time with the wheels, riding east along the kerb lane at 4.4 m/s and looping; `createDogWalker` trots a dog a pace ahead of resident 10 on the shop pavement with swinging legs, wagging tail and a leash drawn from the walker's hand to the collar each frame.
+- Car and bike wheels now spin about their axle (`rotateY`), which the earlier euler-z spin did not.
+- Model URLs carry a `MODEL_VERSION` query so browsers stop serving a cached model after an export (this is what hid the first bike/dog attempt; production had the same exposure).
+
+Café shift (`services/cafeService.ts`), designed from what felt flat in play: standing idle during the brew, one guest at a time, no tension, no reward for speed.
+
+- Juggling: while a drink brews the next queued guest's order can be taken; finished drinks wait on the machine as `ready` and must be collected (`pickup`) before delivery, so the loop is take → brew → take another → collect → serve rather than a linear wait. Task priority is carry, collect, take, brew.
+- The helper now actually helps: with a helper hired, guests at the counter are taken after 3 s without the owner (`helperTook`), so the owner only brews and delivers; the helper figure plays the serve clip while doing it.
+- Busy market days bring four guests (Mia, Sam, Leo, Ava), rain three, premium pricing one fewer; arrivals every 7 s (rush 5 s). Patience 60 s relaxed / 34 s rush, −8 s at premium prices, +12 s with a helper (was 90/35: relaxed had no tension at all).
+- Tips: a guest served within the first 45 % of their patience tips $1 ($2 at premium prices). Tips are credited with the sale, shown on the guest's label and the HUD ("Tip! +$1" flash), and listed separately on the receipt.
+- Stars: 0–3. Everyone served earns two; tips from at least half the guests earns the third. Shown live in the HUD, on the receipt, and in the shift result event.
+- A ready-cup mesh appears on the machine; a two-note chime plays when a drink is ready and the sale chime when a tip lands. Default practice plan is now six drinks so the first shift is full.
+- Financial rules unchanged otherwise: costs charged at the start, each sale (plus tip) credited once on delivery, one paid shift per month, unused stock not refunded. Old saved shifts load unchanged (new fields are optional).
+
+Validation: 254 tests across 40 files (`test/CafeService.test.ts` rewritten for four guests, pickup, juggling, helper, tips and stars; `test/TownLife.test.ts` checks the bike and dog nodes), TypeScript and production build clean, `git diff --check` clean. Chrome playtest at 61 fps: cyclist and dog walker observed via the dev handle and on screen; full practice shift with the auto-player served all guests with tips; console clean.

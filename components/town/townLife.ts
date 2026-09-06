@@ -68,3 +68,66 @@ export function createTownLife(reducedMotion: boolean) {
   }
   return { root, pigeons, update };
 }
+
+// A cyclist on the kerb lane: the frame comes from the vehicle model, the rider is a plain
+// character clone posed by hand each frame (no mixer), pedalling with the wheels.
+export function createCyclist(bike: THREE.Object3D, rider: THREE.Object3D, reducedMotion: boolean) {
+  const root = new THREE.Group(); const frame = bike.clone(true); root.add(frame);
+  const wheels: THREE.Object3D[] = [], pedals: THREE.Object3D[] = [];
+  frame.traverse(o => { if (o.name.startsWith('BikeWheel') || o.name.startsWith('BikeHub')) wheels.push(o); if (o.name.startsWith('BikePedal')) pedals.push(o); if (o instanceof THREE.Mesh) { o.castShadow = true; o.receiveShadow = true; } });
+  rider.position.set(-.08, .21, 0); rider.rotation.y = Math.PI / 2; root.add(rider);
+  const joint = (name: string) => rider.getObjectByName(name);
+  let x = -18; const speed = 4.4;
+  root.position.set(x, .22, 5.45);
+  function update(dt: number, elapsed: number) {
+    if (reducedMotion) { pose(0); return; }
+    x += speed * dt; if (x > 42) x = -42; root.position.x = x;
+    root.rotation.z = Math.sin(elapsed * 6) * .01;
+    const phase = x / .36 * 1.0; // pedal cadence follows wheel travel
+    for (const wheel of wheels) wheel.rotateY(-speed * dt / .36);
+    pose(phase);
+  }
+  function pose(phase: number) {
+    for (const [i, side] of ['-1', '1'].entries()) {
+      const swing = Math.sin(phase + i * Math.PI);
+      const thigh = -1.15 + swing * .32, knee = 1.05 - swing * .35;
+      const leg = joint('Thigh' + side), kneeJoint = joint('Knee' + side), ankle = joint('Ankle' + side), arm = joint('Shoulder' + side), elbow = joint('Elbow' + side);
+      if (leg) leg.rotation.x = thigh; if (kneeJoint) kneeJoint.rotation.x = knee; if (ankle) ankle.rotation.x = -thigh - knee + .2;
+      if (arm) arm.rotation.x = -1.0; if (elbow) elbow.rotation.x = -.3;
+    }
+    const torso = joint('Torso'); if (torso) torso.rotation.x = .25;
+    for (const [i, pedal] of pedals.entries()) { const angle = phase + i * Math.PI; pedal.position.x = .1 + Math.cos(angle) * .1; pedal.position.y = .40 + Math.sin(angle) * .1; }
+  }
+  return { root, update };
+}
+
+// A small dog on a leash that trots a pace ahead of its owner, legs and tail swinging.
+export function createDogWalker(dog: THREE.Object3D, reducedMotion: boolean) {
+  const root = dog.clone(true); const legs: THREE.Object3D[] = []; let tail: THREE.Object3D | undefined, collar: THREE.Object3D | undefined;
+  root.traverse(o => { if (o.name.startsWith('DogLeg')) legs.push(o); if (o.name.startsWith('DogTail')) tail = o; if (o.name.startsWith('Dog collar')) collar = o; if (o instanceof THREE.Mesh) { o.castShadow = true; } });
+  root.scale.setScalar(1.05);
+  const points = [new THREE.Vector3(), new THREE.Vector3()];
+  const leash = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color: '#5a3b2a' }));
+  leash.frustumCulled = false;
+  const grip = new THREE.Vector3(), neck = new THREE.Vector3();
+  function update(dt: number, elapsed: number, owner: THREE.Object3D, visible: boolean) {
+    root.visible = visible; leash.visible = visible; if (!visible) return;
+    const forward = Math.sin(owner.rotation.y) >= 0 ? 1 : -1;
+    const targetX = owner.position.x + forward * 1.15, targetZ = owner.position.z + .12;
+    const blend = reducedMotion ? 1 : 1 - Math.exp(-dt * 6);
+    root.position.x += (targetX - root.position.x) * blend; root.position.z += (targetZ - root.position.z) * blend; root.position.y = .22;
+    root.rotation.y = forward > 0 ? 0 : Math.PI;
+    if (!reducedMotion) {
+      for (const [i, leg] of legs.entries()) leg.rotation.z = Math.sin(elapsed * 9 + (i % 3) * Math.PI) * .45;
+      if (tail) tail.rotation.x = Math.sin(elapsed * 11) * .5;
+      root.position.y = .22 + Math.abs(Math.sin(elapsed * 9)) * .02;
+    }
+    const hand = owner.getObjectByName('Grip1');
+    if (hand && collar) {
+      hand.getWorldPosition(grip); collar.getWorldPosition(neck);
+      const array = leash.geometry.attributes.position as THREE.BufferAttribute;
+      array.setXYZ(0, grip.x, grip.y, grip.z); array.setXYZ(1, neck.x, neck.y + .05, neck.z); array.needsUpdate = true;
+    }
+  }
+  return { root, leash, update };
+}

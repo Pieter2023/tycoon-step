@@ -100,6 +100,35 @@ attach(box('Van bumper', (2.32, 0, .42), (.12, 1.8, .24), 'bumper', .04), van)
 attach(box('Van bumper', (-2.12, 0, .42), (.12, 1.8, .24), 'bumper', .04), van)
 lights(van, 2.3, .78); lights(van, -2.1, .9, False)
 wheels(van, [1.35, -1.25], .92, .36, .28)
+# Bicycle: rider is a runtime character clone seated on the saddle, pedalling.
+material('frame', (.16, .36, .48), .45, .3); material('fur', (.62, .43, .26), .9); material('furLight', (.86, .74, .58), .9); material('collar', (.80, .22, .20), .5)
+def tube(name, a, b, r, mat, parent):
+    mid = (Vector(a) + Vector(b)) * .5; o = cylinder(name, mid, r, (Vector(b) - Vector(a)).length, mat, bevel=0)
+    o.rotation_euler = (Vector(b) - Vector(a)).to_track_quat('Z', 'Y').to_euler(); return attach(o, parent)
+bike = bpy.data.objects.new('Bike', None); bpy.context.collection.objects.link(bike)
+for x in [.55, -.55]:
+    wheel = cylinder('BikeWheel', (x, 0, .36), .36, .05, 'tyre', bevel=0); wheel.rotation_euler.x = math.pi / 2; attach(wheel, bike)
+    hub = cylinder('BikeHub', (x, 0, .36), .05, .09, 'hub', bevel=0); hub.rotation_euler.x = math.pi / 2; attach(hub, bike)
+tube('Bike frame', (-.55, 0, .36), (-.05, 0, .95), .028, 'frame', bike); tube('Bike frame', (-.05, 0, .95), (.5, 0, .82), .028, 'frame', bike)
+tube('Bike frame', (.5, 0, .82), (.55, 0, .36), .028, 'frame', bike); tube('Bike frame', (-.55, 0, .36), (.1, 0, .40), .028, 'frame', bike)
+tube('Bike frame', (.1, 0, .40), (-.05, 0, .95), .028, 'frame', bike); tube('Bike frame', (.1, 0, .40), (.5, 0, .82), .028, 'frame', bike)
+attach(box('Bike saddle', (-.08, 0, 1.0), (.26, .14, .06), 'tyre', .02), bike)
+tube('Bike bars', (.5, -.24, .98), (.5, .24, .98), .02, 'hub', bike); tube('Bike stem', (.5, 0, .82), (.5, 0, .98), .022, 'frame', bike)
+for side in [-1, 1]: attach(box('BikePedal', (.1, side * .14, .40), (.1, .06, .03), 'tyre', .005), bike)
+# Dog: named legs and tail are swung at runtime; the leash is drawn in the game.
+dog = bpy.data.objects.new('Dog', None); bpy.context.collection.objects.link(dog)
+attach(box('Dog body', (0, 0, .33), (.46, .2, .2), 'fur', .06), dog)
+attach(box('Dog chest', (.14, 0, .30), (.18, .22, .17), 'furLight', .05), dog)
+attach(sphere('Dog head', (.31, 0, .45), (.13, .12, .12), 'fur'), dog)
+attach(box('Dog snout', (.41, 0, .41), (.12, .09, .07), 'furLight', .02), dog)
+attach(sphere('Dog nose', (.47, 0, .43), (.025, .025, .02), 'tyre'), dog)
+for side in [-1, 1]:
+    ear = attach(box('Dog ear', (.27, side * .10, .50), (.07, .03, .11), 'fur', .015), dog); ear.rotation_euler.x = side * .5
+    attach(sphere('Dog eye', (.38, side * .05, .48), (.02, .02, .02), 'tyre'), dog)
+attach(cylinder('Dog collar', (.25, 0, .40), .075, .04, 'collar', bevel=0), dog).rotation_euler.y = math.pi / 2
+for i, (x, side) in enumerate([(.17, -1), (.17, 1), (-.17, -1), (-.17, 1)]):
+    leg = cylinder('DogLeg', (x, side * .07, .12), .035, .24, 'fur', bevel=0); attach(leg, dog)
+tail = attach(box('DogTail', (-.28, 0, .42), (.16, .04, .04), 'fur', .01), dog); tail.rotation_euler.y = -.5
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(SOURCE, 'town-vehicles.blend'))
 bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, 'town-vehicles.glb'), export_format='GLB', export_animations=False, export_yup=True, export_draco_mesh_compression_enable=True, export_draco_mesh_compression_level=6)
-print('VEHICLES EXPORTED: Car Van')
+print('VEHICLES EXPORTED: Car Van Bike Dog')

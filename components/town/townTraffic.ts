@@ -64,7 +64,7 @@ export function createTownTraffic(vehicles: THREE.Object3D, reducedMotion: boole
       if (Math.abs(vehicle.x - player.x) > 3) vehicle.passed = false;
       vehicle.root.position.x = vehicle.x;
       vehicle.root.position.y = .22 + (vehicle.speed > .5 ? Math.sin(vehicle.x * 3.1) * .006 : 0);
-      for (const wheel of vehicle.wheels) wheel.rotation.z -= vehicle.speed * dt / .34;
+      for (const wheel of vehicle.wheels) wheel.rotateY(-vehicle.speed * dt / .34);
       for (const lamp of vehicle.lamps) lamp.emissiveIntensity = rainy ? .9 : 0;
     }
     return passes;
