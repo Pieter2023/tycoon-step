@@ -8,7 +8,7 @@ import { createTownBank, clampBankPoint, bankSpot } from './townBank';
 import { createTownExchange, clampExchangePoint, exchangeSpot, ExchangeBoard } from './townExchange';
 import { createTownProperty, clampPropertyPoint, propertySpot, PropertyBoard } from './townProperty';
 import { daylight, dayPhase, createStreetLamps, Daylight } from './townDaylight';
-import { createTownHome, clampHomePoint, homeSpot } from './townHome';
+import { createTownHome, createHomeFacade, clampHomePoint, homeSpot } from './townHome';
 import { createSeasonPalette, createSeasonFall, seasonFor, Season } from './townSeasons';
 import type { Lifestyle } from '../../types';
 import { createCoffeeCart } from './townBusiness';
@@ -89,6 +89,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const lamps=createStreetLamps([-14,-7,7,14].map(x=>({x,z:5.9})));outdoors.add(lamps.root);
   // Your place: an apartment door at the west end of the promenade.
   const HOME={x:-15.7,z:7.4};
+  const facade=createHomeFacade(HOME);outdoors.add(facade.root);
   {const frame=new THREE.Mesh(new THREE.BoxGeometry(.35,2.6,1.7),new THREE.MeshStandardMaterial({color:'#e9dcc4'}));frame.position.set(-16.55,1.5,HOME.z);frame.castShadow=true;outdoors.add(frame);
    const door=new THREE.Mesh(new THREE.BoxGeometry(.08,2.1,1.0),new THREE.MeshStandardMaterial({color:'#5b7d70'}));door.position.set(-16.36,1.27,HOME.z);outdoors.add(door);
    const knob=new THREE.Mesh(new THREE.SphereGeometry(.05,8,6),new THREE.MeshStandardMaterial({color:'#d9b25a',metalness:.6,roughness:.3}));knob.position.set(-16.3,1.2,HOME.z+.35);outdoors.add(knob);
@@ -207,8 +208,10 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     ready = true; onReady?.();
   }).catch(() => { if (alive) onFailure(); });
   const walls = TOWN_PLACES.map(p => new THREE.Box3(new THREE.Vector3(p.x - 3.45, 0, -8.6), new THREE.Vector3(p.x + 3.45, 11, -2.2)));
-  // Include tree crowns so foreground foliage cannot swallow the camera.
-  for(const [x,z,scale] of [[-16,-1,1.35],[16,-1,1.4],[-12,8,1.5],[12,8,1.5],[-9,13,1.25],[9,13,1.3],[-18,12,1.4],[18,12,1.5]])walls.push(new THREE.Box3(new THREE.Vector3(x-1.85*scale,1.6*scale,z-1.65*scale),new THREE.Vector3(x+1.85*scale,4.5*scale,z+1.65*scale)));
+  walls.push(facade.bounds);
+  // Tree crowns only matter when the camera itself would sit inside one; a ray merely passing
+  // through a canopy on its way up must not drag the camera onto the player's shoulders.
+  const crowns=[[-16,-1,1.35],[16,-1,1.4],[-12,8,1.5],[12,8,1.5],[-9,13,1.25],[9,13,1.3],[-18,12,1.4],[18,12,1.5]].map(([x,z,scale])=>new THREE.Box3(new THREE.Vector3(x-1.85*scale,1.6*scale,z-1.65*scale),new THREE.Vector3(x+1.85*scale,4.5*scale,z+1.65*scale)));
   const cameraRay = new THREE.Ray(), hitPoint = new THREE.Vector3(), cameraDirection = new THREE.Vector3();
   const resize = () => { if (!host.clientWidth || !host.clientHeight) return; camera.aspect = host.clientWidth / host.clientHeight; camera.fov = camera.aspect < .8 ? 58 : 48; camera.updateProjectionMatrix(); renderer.setSize(host.clientWidth, host.clientHeight, false); };
   const observer = new ResizeObserver(resize); observer.observe(host); resize();
@@ -309,7 +312,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     const light=inside?daylight(.22,false):daylight(phaseOverride??dayPhase(townMonth,elapsed,reducedMotion),rainy);
     if(!inside&&(seasonOverride??season)==='winter'){light.sunIntensity*=.8;light.sunColor='#e8f0ff';}
     sun.position.copy(light.sun);sun.intensity=light.sunIntensity;sun.color.set(light.sunColor);hemi.color.set(light.sky);hemi.groundColor.set(light.ground);hemi.intensity=light.skyIntensity;scene.environmentIntensity=light.ambient;
-    renderer.toneMappingExposure=Number(light.exposure);lamps.set(inside?0:light.lamps);if(glassMaterial)glassMaterial.emissiveIntensity=light.windows*.9;
+    renderer.toneMappingExposure=Number(light.exposure);lamps.set(inside?0:light.lamps);if(glassMaterial)glassMaterial.emissiveIntensity=light.windows*.9;facade.glass.emissiveIntensity=light.windows*.9;
     if(!inside){(scene.background as THREE.Color).set(light.background);if(scene.fog instanceof THREE.Fog)scene.fog.color.set(light.background);ambience?.night(light.night?1:light.lamps*.6);}
     if(!inside&&light.label!==timeLabel){timeLabel=light.label;options.onTimeOfDay?.(light.label);}
     const playing=cafeInside&&cafeService?.status==='active';
@@ -368,7 +371,10 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     desiredCamera.set(cameraTarget.x+Math.sin(yaw)*Math.cos(pitch)*distance,cameraTarget.y+Math.sin(pitch)*distance,cameraTarget.z+Math.cos(yaw)*Math.cos(pitch)*distance);
     cameraDirection.copy(desiredCamera).sub(cameraTarget).normalize();cameraRay.set(cameraTarget,cameraDirection);
     let obstructed=false;
-    if(!inside) for(const wall of walls)if(cameraRay.intersectBox(wall,hitPoint)){const length=cameraTarget.distanceTo(hitPoint)-.45;if(length<cameraTarget.distanceTo(desiredCamera)){obstructed=true;desiredCamera.copy(cameraTarget).addScaledVector(cameraDirection,Math.max(.7,length));}}
+    if(!inside){
+      for(const wall of walls)if(cameraRay.intersectBox(wall,hitPoint)){const length=cameraTarget.distanceTo(hitPoint)-.45;if(length<cameraTarget.distanceTo(desiredCamera)){obstructed=true;desiredCamera.copy(cameraTarget).addScaledVector(cameraDirection,Math.max(.7,length));}}
+      for(const crown of crowns)if(crown.containsPoint(desiredCamera)&&cameraRay.intersectBox(crown,hitPoint)){const length=cameraTarget.distanceTo(hitPoint)-.45;obstructed=true;desiredCamera.copy(cameraTarget).addScaledVector(cameraDirection,Math.max(.7,length));}
+    }
     camera.position.lerp(desiredCamera,(reducedMotion||obstructed)?1:1-Math.exp(-dt*12));camera.lookAt(cameraTarget);
     if(!reducedMotion){for(let i=0;i<150;i++){const t=(elapsed*.65+i/150)%1,a=i*2.399;dropPositions[i*3]=Math.sin(a)*t*.8;dropPositions[i*3+1]=Math.sin(t*Math.PI)*1.2;dropPositions[i*3+2]=Math.cos(a)*t*.8;}droplets.attributes.position.needsUpdate=true;water.rotation.z=elapsed*.04;}
     let cupPosition:THREE.Vector3|null=null;

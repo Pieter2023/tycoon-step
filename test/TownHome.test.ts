@@ -25,6 +25,15 @@ describe('your place', () => {
     home.setLifestyle('LUXURIOUS'); const luxe = visibleMeshes();
     expect(luxe).toBeGreaterThan(frugal);
   });
+  it('wraps the apartment door in a townhouse whose windows glow and whose walls block the camera', async () => {
+    const { createHomeFacade } = await import('../components/town/townHome');
+    const facade = createHomeFacade({ x: -14.4, z: 5.2 });
+    let meshes = 0; facade.root.traverse(o => { if (o instanceof THREE.Mesh) meshes++; });
+    expect(meshes).toBeGreaterThan(20);
+    expect(facade.bounds.containsPoint(new THREE.Vector3(-16.5, 3, 5.2))).toBe(true);   // inside the body
+    expect(facade.bounds.containsPoint(new THREE.Vector3(-14.4, 1, 5.2))).toBe(false);  // the doorstep stays walkable
+    facade.glass.emissiveIntensity = .9; expect(facade.glass.emissive.getHexString()).toBe('ffc985');
+  });
   it('shows the bills, mail, a move chooser that asks the app to confirm, and Rosa\'s note', () => {
     const onChangeLifestyle = vi.fn(), onGo = vi.fn();
     const s = { ...base(), events: [{ id: 'e1', month: 3, title: 'Coffee cart licensed', description: 'Paid the permit.', type: 'DECISION' as const }] };

@@ -2,7 +2,7 @@
 
 ## Current handover — September 5, 2026
 
-Read [HANDOVER.md](HANDOVER.md) before acting. The new financial foundations, Freedom Square, bank/cart, café ownership and hands-on café service are **local only, uncommitted and undeployed**. Latest validation: 290 tests / 47 files and production build passed (overnight build 9, annual-report city section; receipts in docs/completed-improvements.md). Pushed to `origin/main` and live on Netlify `tycoonjan22026` (deploy `6a9d03ef…`, verified 2026-09-06 23:15 PDT). The user preview is `127.0.0.1:5187`; isolate QA on 5188. Preserve the existing save and all tracked/untracked work. Pieter authorised push + deploy on 2026-09-05 night and the branch is now live; treat further deploys as routine after green tests and a Chrome check.
+Read [HANDOVER.md](HANDOVER.md) before acting. The new financial foundations, Freedom Square, bank/cart, café ownership and hands-on café service are **local only, uncommitted and undeployed**. Latest validation: 291 tests / 47 files and production build passed (townhouse around the apartment door + camera-canopy fix, morning of 2026-09-06; receipts in docs/completed-improvements.md). Pushed to `origin/main` and live on Netlify `tycoonjan22026` (deploy `6a9d03ef…`, verified 2026-09-06 23:15 PDT). The user preview is `127.0.0.1:5187`; isolate QA on 5188. Preserve the existing save and all tracked/untracked work. Pieter authorised push + deploy on 2026-09-05 night and the branch is now live; treat further deploys as routine after green tests and a Chrome check.
 
 Current feature/source map and run instructions are in the handover. Detailed evidence is in [docs/completed-improvements.md](docs/completed-improvements.md); remaining priorities are in [docs/roadmap.md](docs/roadmap.md). Physical-phone testing remains open. No new paid service is needed for the implemented prototype.
 
@@ -16,7 +16,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (47 files / 290 tests passed at the overnight annual-report build; integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (47 files / 291 tests passed at the townhouse-facade build; integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)

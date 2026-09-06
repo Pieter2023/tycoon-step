@@ -264,6 +264,12 @@ The annual report now carries a "Your city this year" block: badges earned, noti
 
 Validation: 290 tests across 47 files, TypeScript, build and `git diff --check` clean. Logs in `docs/verification/annual-city-2026-09-06/`.
 
+## A building around the apartment door — September 6, 2026 (morning)
+
+Pieter's first note after the overnight run: "my apartment is only a door … it does not seem to be part of any building." `createHomeFacade` in `components/town/townHome.ts` now places a two-storey townhouse at the west end of the promenade behind the door at 12 Square St: sand walls with cream cornices and a slate roof, two windows either side of the door on both floors plus one above it (they share the shopfront night glow through `light.windows`), a clay canopy with a porch lamp, and a planter. The building's box joins the camera collision list so the follow camera cannot cut through it. While checking it, the camera jammed against the door: the tree-canopy collision boxes were treated like walls and pulled the camera in whenever the ray crossed a canopy. Canopies now only push the camera when it would actually sit inside one. Verified in Chrome from the square (follow camera at the door, neighbourhood overview, and night with the windows lit).
+
+Validation: 291 tests across 47 files (`test/TownHome.test.ts` covers the facade meshes, bounds and glass), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/home-facade-2026-09-06/`.
+
 ## Where the overnight session stopped
 
 Nine builds shipped to production between 23:00 and roughly 01:00 PDT: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. Each is on `origin/main` and live at https://tycoonjan22026.netlify.app. What remains needs Pieter: playing the live site by hand and listing what feels off, the physical-phone test, listening to the synthesized audio on a real speaker, and a decision on Spanish for the town copy (a large, mechanical translation job now that the English is settled).

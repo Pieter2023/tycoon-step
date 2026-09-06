@@ -64,3 +64,27 @@ export function createTownHome() {
     },
   };
 }
+
+// The townhouse the apartment door belongs to: a two-storey block at the west end of the
+// promenade, facing east onto the square. Windows share the night glow with the shopfronts.
+export function createHomeFacade(door: { x: number; z: number }) {
+  const root = new THREE.Group();
+  const mat = (color: string, roughness = .7) => new THREE.MeshStandardMaterial({ color, roughness });
+  const box = (w: number, h: number, d: number, x: number, y: number, z: number, material: THREE.Material, radius = .05) => { const mesh = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 2, radius), material); mesh.position.set(x, y, z); mesh.castShadow = true; mesh.receiveShadow = true; root.add(mesh); return mesh; };
+  const sand = mat('#d8c1a1'), cream = mat('#f3ead8'), clay = mat('#b8705a'), slate = mat('#3e4a52'), glass = new THREE.MeshStandardMaterial({ color: '#1d4652', roughness: .25, metalness: .1, emissive: '#ffc985', emissiveIntensity: 0 });
+  const front = door.x - 1.05, cx = front - 1.7;                                   // front face just behind the door frame
+  box(3.4, 7.0, 6.6, cx, 3.5, door.z + .6, sand, .12);                              // body
+  box(3.7, .5, 6.9, cx, .3, door.z + .6, cream, .08);                               // foundation
+  for (const y of [3.35, 6.85]) box(3.6, .22, 6.9, cx, y, door.z + .6, cream, .05); // cornices
+  box(3.2, .5, 6.4, cx, 7.2, door.z + .6, slate, .04);                              // roof
+  for (const z of [door.z - 2.2, door.z + 3.4]) for (const y of [1.6, 5.0]) {        // ground + upper windows either side of the door
+    box(.16, 1.7, 1.2, front + .02, y, z, cream, .04); box(.06, 1.5, 1.0, front + .1, y, z, glass, .01); box(.2, .14, 1.35, front + .04, y - .95, z, cream, .03);
+  }
+  box(.16, 1.7, 1.2, front + .02, 5.0, door.z, cream, .04); box(.06, 1.5, 1.0, front + .1, 5.0, door.z, glass, .01); // window above the door
+  box(1.0, .1, 1.9, front + .45, 2.75, door.z, clay, .03);                          // canopy
+  for (const dz of [-.85, .85]) box(.06, .9, .06, front + .9, 2.3, door.z + dz, slate, .01);
+  const lamp = new THREE.Mesh(new THREE.SphereGeometry(.09, 10, 8), new THREE.MeshStandardMaterial({ color: '#ffe9b8', emissive: '#ffcf7a', emissiveIntensity: .6 })); lamp.position.set(front + .35, 2.55, door.z); root.add(lamp);
+  box(.7, .55, .6, front + .45, .55, door.z - 1.5, mat('#a8865d'), .08);            // planter
+  const leaves = new THREE.Mesh(new THREE.IcosahedronGeometry(.42, 2), mat('#5f9464', .8)); leaves.scale.set(.8, 1.2, .8); leaves.position.set(front + .45, 1.2, door.z - 1.5); leaves.castShadow = true; root.add(leaves);
+  return { root, glass, bounds: new THREE.Box3(new THREE.Vector3(cx - 1.9, 0, door.z - 2.85), new THREE.Vector3(front + .5, 7.6, door.z + 4.05)) };
+}
