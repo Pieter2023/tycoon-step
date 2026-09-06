@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { tl } from '../../i18n/town';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { TownPoint } from './townWorld';
 
@@ -28,7 +29,7 @@ export function createTownBank() {
   box(9.8, 1.1, .12, 0, .78, -2.32, '#477a6b');
   for (let x = -4.5; x <= 4.5; x += .5) box(.035, 1.1, .06, x, .78, -2.22, '#aabd9c', .01);
   sign('COMMUNITY BANK', 0, 3.8, -2.32, 5.2);
-  sign('Small steps. Stronger futures.', 0, 3.1, -2.31, 3.7, '#688679');
+  sign(tl('Small steps. Stronger futures.','Pasos pequeños. Futuros más sólidos.'), 0, 3.1, -2.31, 3.7, '#688679');
   box(4.6, 1, 1.1, 0, .74, -.65, '#447b70');
   box(4.85, .16, 1.3, 0, 1.3, -.65, '#e9caa0');
   for (const x of [-1.9, -1.5, -1.1, 1.1, 1.5, 1.9]) box(.04, .9, .06, x, .75, -.06, '#92b4a0', .01);
