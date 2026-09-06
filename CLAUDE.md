@@ -2,7 +2,7 @@
 
 ## Current handover — September 5, 2026
 
-Read [HANDOVER.md](HANDOVER.md) before acting. The new financial foundations, Freedom Square, bank/cart, café ownership and hands-on café service are **local only, uncommitted and undeployed**. Latest validation: 268 tests / 42 files and production build passed (overnight build 3, property office; receipts in docs/completed-improvements.md). Everything is committed locally on the branch; see `git log`. Nothing pushed or deployed yet. The user preview is `127.0.0.1:5187`; isolate QA on 5188. Preserve the existing save and all tracked/untracked work. The latest user request updates handover/docs; it does not authorize publication.
+Read [HANDOVER.md](HANDOVER.md) before acting. The new financial foundations, Freedom Square, bank/cart, café ownership and hands-on café service are **local only, uncommitted and undeployed**. Latest validation: 274 tests / 44 files and production build passed (overnight builds 4–5, daylight + notice board; receipts in docs/completed-improvements.md). Everything is committed locally on the branch; see `git log`. Nothing pushed or deployed yet. The user preview is `127.0.0.1:5187`; isolate QA on 5188. Preserve the existing save and all tracked/untracked work. The latest user request updates handover/docs; it does not authorize publication.
 
 Current feature/source map and run instructions are in the handover. Detailed evidence is in [docs/completed-improvements.md](docs/completed-improvements.md); remaining priorities are in [docs/roadmap.md](docs/roadmap.md). Physical-phone testing remains open. No new paid service is needed for the implemented prototype.
 
@@ -16,7 +16,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (42 files / 268 tests passed at the overnight property-office build; integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (44 files / 274 tests passed at the overnight daylight/notice-board build; integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)

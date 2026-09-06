@@ -18,6 +18,10 @@ The opening journey connects reserve planning, coffee-cart ownership, a trading 
 
 The bank has a walkable interior and animated teller, savings deposits/withdrawals and existing loan comparisons. The cart has price/stock decisions, service animation and a receipt. The café has a walkable room, lease, furnishing upgrades, monthly price/stock/staff plans, trading receipts and net-worth accounting. Rain, puddles, residents and optional ambience add activity to the square.
 
+## Interiors, daylight and challenges
+
+Four walkable interiors sit behind the square's doors: the bank (teller, savings, loans), the Exchange (ticker, broker, index fund/dividend/bitcoin with a contributions calculator and the investor journey), Property & Co. (listings, mortgage quotes, rent-or-buy) and the café. A ten-minute day-night cycle lights lamps, windows and headlights after dusk. The notice board by the fountain posts three monthly challenges judged at month close against a start-of-month snapshot; café reputation links owner-shift stars to the next month's demand.
+
 ## Hands-on café activity
 
 Visit café → Enter café → Play a shift. Free practice works before ownership. Walk to the counter to take an order, make the drink at the machine, carry it and serve the guest at a table or the takeaway counter. The next-action button walks first and acts after arrival; E and manual movement are also available.

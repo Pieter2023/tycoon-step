@@ -1,0 +1,13 @@
+
+> tycoon-financial-freedom@3.4.3 test:run
+> vitest run
+
+
+ RUN  v4.1.11 /Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2
+
+
+ Test Files  44 passed (44)
+      Tests  274 passed (274)
+   Start at  23:07:53
+   Duration  9.91s (transform 9.38s, setup 9.89s, import 21.01s, tests 18.12s, environment 29.69s)
+

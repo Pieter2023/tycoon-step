@@ -38,6 +38,11 @@ export function createTownAmbience(context: AudioContext) {
   const pump = context.createOscillator(), pumpFilter = context.createBiquadFilter(), pumpGain = context.createGain();
   pump.type = 'sawtooth'; pump.frequency.value = 46; pumpFilter.type = 'lowpass'; pumpFilter.frequency.value = 170; pumpGain.gain.value = 0;
   pump.connect(pumpFilter); pumpFilter.connect(pumpGain); pumpGain.connect(master); pump.start();
+  // Crickets after dark: a high tone pulsed by a slow LFO, barely there.
+  const cricket = context.createOscillator(), cricketLfo = context.createOscillator(), cricketDepth = context.createGain(), cricketGain = context.createGain();
+  cricket.type = 'sine'; cricket.frequency.value = 4300; cricketLfo.type = 'square'; cricketLfo.frequency.value = 27; cricketDepth.gain.value = .5; cricketGain.gain.value = 0;
+  cricketLfo.connect(cricketDepth); cricketDepth.connect(cricketGain.gain); cricket.connect(cricketGain); cricketGain.connect(master); cricket.start(); cricketLfo.start();
+  let nightLevel = 0;
   const oneShots = new Set<AudioScheduledSourceNode>();
   const output = (pan: number) => {
     if (!pan || typeof context.createStereoPanner !== 'function') return master;
@@ -59,7 +64,7 @@ export function createTownAmbience(context: AudioContext) {
   let birdTimer: ReturnType<typeof setTimeout> | undefined, disposed = false;
   const chirp = () => { const base = 2400 + Math.random() * 900; for (let i = 0; i < 2 + Math.floor(Math.random() * 3); i++) tone(base, .07, .02, 'sine', base * 1.35, i * .11); };
   const scheduleBirds = () => {
-    birdTimer = setTimeout(() => { if (disposed) return; if (!state.hidden && !state.inside && !state.rainy && context.state === 'running') chirp(); scheduleBirds(); }, 2500 + Math.random() * 5000);
+    birdTimer = setTimeout(() => { if (disposed) return; if (!state.hidden && !state.inside && !state.rainy && nightLevel < .5 && context.state === 'running') chirp(); scheduleBirds(); }, 2500 + Math.random() * 5000);
   };
   scheduleBirds();
   return {
@@ -79,6 +84,7 @@ export function createTownAmbience(context: AudioContext) {
       burst(inside ? 1600 : 1000, inside ? 900 : 500, quick ? .06 : .08, (quick ? .06 : .045) * (inside ? .8 : 1), 'bandpass', 1.2, 0, .004);
       if (!inside) tone(95, .05, .018, 'sine', 60);
     },
+    night(level: number) { nightLevel = level; cricketGain.gain.setTargetAtTime(state.hidden || state.inside ? 0 : level * .011, now(), .8); },
     carPass(pan: number, closeness: number) { if (closeness > 0) burst(360, 220, 1.2, .10 * closeness, 'bandpass', .7, pan, .35); },
     machine(on: boolean) { machine.gain.gain.setTargetAtTime(on ? .045 : 0, now(), .15); pumpGain.gain.setTargetAtTime(on ? .028 : 0, now(), .15); },
     chime(kind: ChimeKind) {
@@ -93,6 +99,7 @@ export function createTownAmbience(context: AudioContext) {
       disposed = true; if (birdTimer) clearTimeout(birdTimer);
       for (const loopNode of [breeze, rain, fountain, machine]) { loopNode.source.stop(); loopNode.source.disconnect(); loopNode.filter.disconnect(); loopNode.gain.disconnect(); }
       pump.stop(); pump.disconnect(); pumpFilter.disconnect(); pumpGain.disconnect();
+      cricket.stop(); cricketLfo.stop(); cricket.disconnect(); cricketLfo.disconnect(); cricketDepth.disconnect(); cricketGain.disconnect();
       for (const node of oneShots) { try { node.stop(); } catch { /* already ended */ } }
       master.disconnect();
     },

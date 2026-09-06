@@ -43,7 +43,7 @@ describe('city movement and first business',()=>{
    s={...s,townView:{x:1,z:7,yaw:1,pitch:.4,distance:9}};
    const next=processTurn(s).newState;expect(next.lastMonthlyReport?.assetPayments?.[0].amount).toBeGreaterThan(0);
    expect(next.lastMonthlyReport?.cashBefore).toBe(s.cash);expect(next.lastMonthlyReport?.cashAfter).toBe(next.cash);
-   expect(saveAdultGame(next)).toBe(true);const loaded=loadAdultGame()!;expect(loaded.townView).toEqual(s.townView);expect(loaded.townProgress).toEqual(s.townProgress);expect(loaded.lastMonthlyReport).toEqual(next.lastMonthlyReport);
+   expect(saveAdultGame(next)).toBe(true);const loaded=loadAdultGame()!;expect(loaded.townView).toEqual(s.townView);expect(loaded.townProgress).toEqual(next.townProgress);expect(loaded.townProgress).toMatchObject(s.townProgress!);expect(loaded.lastMonthlyReport).toEqual(next.lastMonthlyReport);
  });
 });
 
