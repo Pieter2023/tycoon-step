@@ -66,6 +66,18 @@ const AnnualReportModal: React.FC<AnnualReportModalProps> = ({ report, onDismiss
         <p className="mt-2 text-xs text-slate-400">This is an accounting comparison, not a replay of another strategy. It excludes alternative uses of the cash, taxes and financing effects.</p>
       </div>
 
+      {report.city && (report.city.badges.length > 0 || report.city.challengesCompleted > 0 || report.city.cafeProfit !== undefined) && (
+        <div className="rounded-xl border border-amber-400/30 bg-amber-400/10 p-4 mb-4">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-amber-300 mb-1">🏙 Your city this year</p>
+          <p className="text-sm text-slate-200">
+            {report.city.badges.length ? <>Badges: <span className="font-bold text-white">{report.city.badges.join(', ')}</span>. </> : null}
+            Notice board: <span className="font-bold text-white">{report.city.challengesCompleted}</span> challenges completed{report.city.cleanSweeps ? <>, <span className="font-bold text-white">{report.city.cleanSweeps}</span> clean sweep{report.city.cleanSweeps === 1 ? '' : 's'}</> : null}.
+            {report.city.cafeProfit !== undefined && <> The café made <span className={`font-bold ${report.city.cafeProfit >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>{formatMoney(report.city.cafeProfit)}</span> after all operating costs across {report.city.ownerShifts} owner shift{report.city.ownerShifts === 1 ? '' : 's'}; reputation stands at {report.city.cafeReputation}/100.</>}
+          </p>
+          <p className="mt-2 text-xs text-slate-400">Badges and challenges never added cash; the habits behind them did the work.</p>
+        </div>
+      )}
+
       {report.hindsights.length > 0 && (
         <div className="rounded-xl border border-slate-700 bg-slate-800/60 p-4 mb-4">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400 mb-2">🎓 Hindsight</p>

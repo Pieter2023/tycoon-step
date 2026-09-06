@@ -3304,7 +3304,15 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
         endNetWorth,
         marketGains: Math.round(newState.yearStats.marketGains),
         passiveIncome: Math.round(newState.yearStats.passiveIncome),
-        hindsights: newState.yearStats.hindsights
+        hindsights: newState.yearStats.hindsights,
+        city: {
+          badges: [newState.townProgress?.journeyCompletedMonth !== undefined ? 'Neighbourhood entrepreneur' : '', newState.townProgress?.investorCompletedMonth !== undefined ? 'Patient investor' : ''].filter(Boolean),
+          challengesCompleted: (newState.townProgress?.challengeLog ?? []).filter(r => r.month > newState.month - 13).reduce((s, r) => s + r.completed.length, 0),
+          cleanSweeps: (newState.townProgress?.challengeLog ?? []).filter(r => r.month > newState.month - 13 && r.total > 0 && r.completed.length === r.total).length,
+          cafeProfit: newState.cafe ? Math.round(newState.yearStats.cafeProfit ?? 0) : undefined,
+          cafeReputation: newState.cafe ? Math.round(newState.cafe.reputation ?? 50) : undefined,
+          ownerShifts: newState.yearStats.ownerShifts ?? 0,
+        }
       };
     }
     newState.yearStats = { startNetWorth: endNetWorth, marketGains: 0, passiveIncome: 0, hindsights: [] };
@@ -3363,7 +3371,9 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
   if (newState.yearStats) {
     newState.yearStats = {
       ...newState.yearStats,
-      passiveIncome: newState.yearStats.passiveIncome + cashFlow.passive
+      passiveIncome: newState.yearStats.passiveIncome + cashFlow.passive,
+      cafeProfit: (newState.yearStats.cafeProfit ?? 0) + (newState.cafe?.lastReceipt?.profit ?? 0),
+      ownerShifts: (newState.yearStats.ownerShifts ?? 0) + (state.cafe?.service?.month === state.month ? 1 : 0)
     };
   }
   

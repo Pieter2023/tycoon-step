@@ -257,3 +257,13 @@ Validation: 284 tests across 47 files (`test/TownSeasons.test.ts`), TypeScript, 
 `cafeIncidents` and `settleCafeMonth` in `services/townCafe.ts`: each trading month can bring surprises whose odds come from the owner's decisions, not luck alone. A basic machine breaks about one month in six (a $250 repair and lost capacity); the upgraded machine one in eighteen (a $180 service). Health inspections come roughly every four months: an improvement notice and $150 fine below 40 reputation, top marks and +4 reputation above 70. A second barista quits an unloved shop (helper hired, reputation under 45), leaving the wage paid and capacity down. Regulars bring friends to a well-run café (reputation 80+), adding sales. Incidents are deterministic per month (no `rand`), never appear in forecasts, are settled in `processTurn` (cash, reputation, an event per incident, the ledger line) and are listed on the café receipt. Tests cover determinism, the breakdown ratio, reputation gating, settlement and the turn.
 
 Validation: 288 tests across 47 files, TypeScript, build and `git diff --check` clean. Logs in `docs/verification/cafe-incidents-2026-09-06/`.
+
+## Year-in-review city section — September 6, 2026 (overnight build 9)
+
+The annual report now carries a "Your city this year" block: badges earned, notice-board challenges completed and clean sweeps in the twelve months that closed, and, when a café exists, its operating profit after all costs across the year, the number of paid owner shifts, and where reputation stands. `YearStats` accumulates café profit and owner shifts each month; the report is built at the year boundary in `processTurn`. Tests cover the data and the modal render.
+
+Validation: 290 tests across 47 files, TypeScript, build and `git diff --check` clean. Logs in `docs/verification/annual-city-2026-09-06/`.
+
+## Where the overnight session stopped
+
+Nine builds shipped to production between 23:00 and roughly 01:00 PDT: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. Each is on `origin/main` and live at https://tycoonjan22026.netlify.app. What remains needs Pieter: playing the live site by hand and listing what feels off, the physical-phone test, listening to the synthesized audio on a real speaker, and a decision on Spanish for the town copy (a large, mechanical translation job now that the English is settled).

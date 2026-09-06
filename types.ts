@@ -663,6 +663,9 @@ export interface YearStats {
   passiveIncome: number;
   /** Resolved sell counterfactuals this year (for the annual report). */
   hindsights: { month: number; text: string }[];
+  /** Café operating profit and paid owner shifts this year (city section of the annual report). */
+  cafeProfit?: number;
+  ownerShifts?: number;
 }
 
 export interface AnnualReport {
@@ -673,6 +676,8 @@ export interface AnnualReport {
   marketGains: number;
   passiveIncome: number;
   hindsights: { month: number; text: string }[];
+  /** What the city added this year: badges earned, notice-board record, café trading. */
+  city?: { badges: string[]; challengesCompleted: number; cleanSweeps: number; cafeProfit?: number; cafeReputation?: number; ownerShifts: number };
 }
 
 export interface EQCourseState {

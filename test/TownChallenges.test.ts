@@ -49,3 +49,23 @@ describe('notice-board challenges', () => {
     expect(cleanSweeps([{ month: 1, completed: ['reserve', 'invest', 'savings'], total: 3 }, { month: 2, completed: ['reserve'], total: 3 }])).toBe(1);
   });
 });
+
+describe('year-in-review city section', () => {
+  it('reports badges, challenge totals and café trading for the year that closed', () => {
+    const start = { ...base(), month: 12, townProgress: { journeyCompletedMonth: 3, challengeLog: [{ month: 10, completed: ['reserve', 'invest', 'savings'] as const, total: 3 }, { month: 11, completed: ['reserve'] as const, total: 3 }] }, yearStats: { startNetWorth: 1000, marketGains: 0, passiveIncome: 0, hindsights: [], cafeProfit: 900, ownerShifts: 2 } };
+    vi.spyOn(Math, 'random').mockReturnValue(.5);
+    const { newState } = processTurn(start as GameState);
+    expect(newState.annualReport?.city).toMatchObject({ badges: ['Neighbourhood entrepreneur'], challengesCompleted: 4, cleanSweeps: 1, ownerShifts: 2 });
+    expect(newState.annualReport?.city?.cafeProfit).toBeUndefined();
+  });
+});
+
+import React from 'react';
+import { render, cleanup } from '@testing-library/react';
+import AnnualReportModal from '../components/modals/AnnualReportModal';
+it('renders the city section of the annual report', () => {
+  const report = { year: 1, startNetWorth: 1000, endNetWorth: 2000, marketGains: 100, passiveIncome: 200, hindsights: [], city: { badges: ['Patient investor'], challengesCompleted: 7, cleanSweeps: 2, cafeProfit: 1500, cafeReputation: 74, ownerShifts: 3 } };
+  const { container } = render(React.createElement(AnnualReportModal, { report, onDismiss: () => {} }));
+  expect(container.textContent).toMatch(/Your city this year/); expect(container.textContent).toMatch(/Patient investor/); expect(container.textContent).toMatch(/7 challenges completed, 2 clean sweeps/); expect(container.textContent).toMatch(/3 owner shifts; reputation stands at 74\/100/);
+  cleanup();
+});
