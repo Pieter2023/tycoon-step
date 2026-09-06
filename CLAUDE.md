@@ -2,7 +2,7 @@
 
 ## Current handover — September 5, 2026
 
-Read [HANDOVER.md](HANDOVER.md) before acting. The new financial foundations, Freedom Square, bank/cart, café ownership and hands-on café service are **local only, uncommitted and undeployed**. Latest validation: 274 tests / 44 files and production build passed (overnight builds 4–5, daylight + notice board; receipts in docs/completed-improvements.md). Everything is committed locally on the branch; see `git log`. Nothing pushed or deployed yet. The user preview is `127.0.0.1:5187`; isolate QA on 5188. Preserve the existing save and all tracked/untracked work. The latest user request updates handover/docs; it does not authorize publication.
+Read [HANDOVER.md](HANDOVER.md) before acting. The new financial foundations, Freedom Square, bank/cart, café ownership and hands-on café service are **local only, uncommitted and undeployed**. Latest validation: 274 tests / 44 files and production build passed (overnight builds 4–5, daylight + notice board; receipts in docs/completed-improvements.md). Pushed to `origin/main` and live on Netlify `tycoonjan22026` (deploy `6a9d03ef…`, verified 2026-09-06 23:15 PDT). The user preview is `127.0.0.1:5187`; isolate QA on 5188. Preserve the existing save and all tracked/untracked work. Pieter authorised push + deploy on 2026-09-05 night and the branch is now live; treat further deploys as routine after green tests and a Chrome check.
 
 Current feature/source map and run instructions are in the handover. Detailed evidence is in [docs/completed-improvements.md](docs/completed-improvements.md); remaining priorities are in [docs/roadmap.md](docs/roadmap.md). Physical-phone testing remains open. No new paid service is needed for the implemented prototype.
 

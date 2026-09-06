@@ -1,12 +1,12 @@
 # Start here — Tycoon handover
 
-Updated September 6, 2026, overnight autonomous build (see item 10+). This is the current session handover. Older dated deployment claims in other documents describe earlier versions, not the new city work.
+Updated September 6, 2026, 23:20 PDT, after the overnight autonomous build and deployment. This is the current session handover. Older dated deployment claims in other documents describe earlier versions, not the new city work.
 
 ## Status and exact project
 
-- **Three local commits on September 5 (`e909349` access invite links, `a2968e9` game work + pacing pass, `8baad7d` street life, residents, vehicles, sound); NOT pushed or deployed.** Working tree is clean apart from the untracked `graphify-out/`. Publication was not requested.
+- **DEPLOYED.** Pieter authorised push and deploy on the night of September 5. Branch `codex/game-overhaul-20260503-223748` was pushed and fast-forwarded to `origin/main` at `7b6a8ff` (plus a docs commit after). Netlify site `tycoonjan22026` auto-built it: live at https://tycoonjan22026.netlify.app, deploy `6a9d03ef42698a00086954ab`, verified in Chrome (city loads in ~8 s on first visit, guide chain works, models served with the version query, console clean). Working tree clean apart from the untracked `graphify-out/`.
 - Active folder: `/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2`.
-- Branch: `codex/game-overhaul-20260503-223748`. Local HEAD: `8baad7d`. Remote `origin` has not been fetched or pushed in these sessions.
+- Branch: `codex/game-overhaul-20260503-223748` == `origin/main` == production. `origin/main` was a clean ancestor with no tracked node_modules, so the push was a fast-forward; the old warning about main's history tracking node_modules no longer applies to the remote (local `git checkout main` still not needed).
 - Configured remote: `https://github.com/Pieter2023/tycoon-step.git`. Remote branch/deployment state was not fetched or verified for this handover.
 - Many tracked files are modified and important new files are untracked, including `components/town/`, services, tests, Blender sources and runtime models. Preserve the entire working folder. Do not assume a fresh clone or a git patch alone contains this work.
 - Existing unrelated edits also exist in `ModeSelector.tsx`, `index.tsx`, `netlify.toml`, `services/accessControl.ts`, its test, monetization docs and `graphify-out/`. Review the full diff before staging. Do not reset, clean, discard or blanket-stage the folder.
@@ -94,7 +94,7 @@ Latest validation (overnight builds 4–5): **274 tests / 44 files passed**, Typ
 
 ## Next session priorities
 
-1. Read this file, check the active folder/dirty state and current preview/save, then ask for or follow Pieter's next direction. No new feature or public deployment was authorized by the documentation request.
+1. Read this file and check `git status` / `git log`. Production now matches the branch. The next session should start with Pieter playing the live site and listing what feels off; the QA rhythm that worked all night is build → tests → Chrome verification → receipt here → commit → push main.
 2. **Physical-phone check remains outstanding:** actual touch/multitouch, camera feel, frame rate (now with twelve residents, six vehicles and pigeons), thermal behaviour, orientation, suspend/resume, and listening to the new soundscape on a real speaker. A desktop browser viewport is not a physical-device test.
 3. Pacing/clarity of the connected loop was tuned on September 5 evening (desktop Chrome). Still open: Pieter playing it by hand, character contact and crowd movement. New town/café copy is largely English-only; a full screen-reader, contrast and localization review remains open.
 4. If publication is requested, preserve a complete recoverable copy of tracked and untracked work, review unrelated changes, recheck tests/build, inspect the real hosting target and remote branches, create/verify a staging deployment, then publish within the authorized scope. The historical Netlify site name is `tycoonjan22026`; reverify it. Do not blindly run an old branch-to-main push recipe.
