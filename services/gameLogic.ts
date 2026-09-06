@@ -1,5 +1,5 @@
 import { finishCafeService } from './cafeService';
-import { cafeValue, quoteCafe } from './townCafe';
+import { cafeValue, driftReputation, quoteCafe } from './townCafe';
 import { incomeYield, nominalPrice } from './investmentModel';
 // Tycoon: Financial Freedom - Game Logic v3.4.3
 // Complete with Life Events, Marriage, Children, Taxes, Recessions
@@ -3325,7 +3325,8 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
   const businessUpdate = applyBusinessIncomeVariance(newState);
   newState = businessUpdate.state;
 
-  if (newState.cafe) newState.cafe = { ...newState.cafe, lastReceipt: quoteCafe(newState.cafe, newState.month) };
+  // A month with no hands-on shift lets the café's reputation drift back toward average before trading settles.
+  if (newState.cafe) { const rested = newState.cafe.service?.month === state.month ? newState.cafe : driftReputation(newState.cafe); newState.cafe = { ...rested, lastReceipt: quoteCafe(rested, newState.month) }; }
 
   // 7. Calculate cash flow
   const cashFlow = calculateMonthlyCashFlow(newState);

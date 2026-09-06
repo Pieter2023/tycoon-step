@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { GameState } from '../../types';
-import { CafeAction, CafePlan, CafeReceipt, CAFE_DEPOSIT, CAFE_FITOUT, CAFE_UPGRADES, cafeValue, canLeaseCafe, quoteCafe } from '../../services/townCafe';
+import { CafeAction, CafePlan, CafeReceipt, CAFE_DEPOSIT, CAFE_FITOUT, CAFE_UPGRADES, cafeValue, canLeaseCafe, quoteCafe, reputationOf, reputationDemand, reputationLabel } from '../../services/townCafe';
 import { calculateMonthlyCashFlowEstimate } from '../../services/gameLogic';
 const money = (n: number) => `${n < 0 ? '−' : ''}$${Math.abs(n).toLocaleString('en-US')}`;
 export function CafeLedger({ receipt }: { receipt: CafeReceipt }) {
@@ -27,7 +27,9 @@ export default function CafePanel({ state, disabled, onAction, onNextMonth }: { 
   const quote = quoteCafe({ ...cafe, plan }, state.month + 1), saved = JSON.stringify(plan) === JSON.stringify(cafe.plan);
   const reserve = calculateMonthlyCashFlowEstimate(state).expenses + quote.costs;
   const change = (patch: Partial<CafePlan>) => { setPlan(p => ({ ...p, ...patch })); setNotice(''); };
+  const reputation = reputationOf(cafe), demandPct = Math.round((reputationDemand(reputation) - 1) * 100), shiftDone = cafe.service?.month === state.month;
   return <section className="town-cafe-panel"><p className="town-eyebrow">YOUR CAFÉ · MONTHLY MANAGEMENT</p><h3>A place of your own.</h3><p>Your saved plan repeats each month. Staff run the counter; you choose what to spend and what to charge.</p>
+    <div className="town-lesson town-reputation" aria-label="Café reputation"><strong>Reputation {reputation}/100 · {reputationLabel(reputation)}</strong><div className="town-reputation-bar" role="img" aria-label={`${reputation} out of 100`}><span style={{ width: `${reputation}%` }} /></div><p>{demandPct === 0 ? 'Average: no effect on demand yet.' : `${demandPct > 0 ? '+' : ''}${demandPct}% demand next month.`} {shiftDone ? 'This month’s owner shift is already counted.' : 'A three-star owner shift lifts it by 12; a poor one costs 12. Months without you behind the counter drift it back toward 50.'}</p></div>
     <fieldset><legend>Trading</legend><div className="town-tabs"><button aria-pressed={plan.open} onClick={() => change({ open: true })}>Open</button><button aria-pressed={!plan.open} onClick={() => change({ open: false })}>Temporarily closed</button></div></fieldset>
     <fieldset disabled={!plan.open}><legend>Cup price</legend><div className="town-tabs">{([4, 6] as const).map(price => <button key={price} aria-pressed={plan.price === price} onClick={() => change({ price })}>${price} per cup</button>)}</div></fieldset>
     <fieldset disabled={!plan.open}><legend>Monthly fresh stock</legend><div className="town-tabs">{([400, 700] as const).map(stock => <button key={stock} aria-pressed={plan.stock === stock} onClick={() => change({ stock })}>{stock} cups · ${stock * 2}</button>)}</div></fieldset>

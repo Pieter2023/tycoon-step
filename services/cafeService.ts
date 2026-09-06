@@ -1,5 +1,5 @@
 import type { GameState } from '../types';
-import type { CafeState } from './townCafe';
+import { applyShiftReputation, reputationOf, type CafeState } from './townCafe';
 export type ServicePlan = { price: 4 | 6; stock: 3 | 6; helper: boolean; pace: 'relaxed' | 'rush' };
 export type ServiceGuest = { id: number; name: string; drink: 'espresso' | 'latte'; arrival: number; deadline: number; table: 'table1' | 'table2' | 'counter'; status: 'coming' | 'queued' | 'ordered' | 'served' | 'left'; changedAt: number; tip?: number; helperTook?: boolean };
 export type ServiceStation = 'counter' | 'machine' | 'table1' | 'table2';
@@ -105,6 +105,8 @@ export function resolveCafeService(state: GameState, action: ServiceAction): Gam
   const receipt = serviceReceipt(next), revenue = receipt.revenue - serviceReceipt(shift).revenue;
   const completed = next.status === 'complete' && shift.status !== 'complete';
   const stars = serviceStars(next), tipsText = receipt.tips ? ' + $' + receipt.tips + ' tips' : '';
-  const summary = 'Served ' + receipt.served + ' of ' + receipt.guests + '; ' + receipt.left + ' left. Sales $' + (receipt.revenue - receipt.tips) + tipsText + ' − committed costs $' + receipt.costs + ' = ' + (receipt.profit < 0 ? 'loss' : 'profit') + ' $' + Math.abs(receipt.profit) + '. ' + '★'.repeat(stars) + '☆'.repeat(3 - stars) + '. ' + receipt.wasted + ' cups’ worth of fresh stock unused. This result is already in cash and is not paid again next month.';
-  return { ...state, cash: state.cash + revenue, cafe: { ...state.cafe, service: next }, events: completed ? [{ id: `cafe-service-end-${state.month}`, month: state.month, title: 'Owner shift results', description: summary, type: 'DECISION' }, ...state.events] : state.events };
+  const cafe = completed ? applyShiftReputation({ ...state.cafe, service: next }, stars) : { ...state.cafe, service: next };
+  const reputationText = completed ? ' Café reputation ' + reputationOf(state.cafe) + ' → ' + reputationOf(cafe) + ', which changes next month\'s demand.' : '';
+  const summary = 'Served ' + receipt.served + ' of ' + receipt.guests + '; ' + receipt.left + ' left. Sales $' + (receipt.revenue - receipt.tips) + tipsText + ' − committed costs $' + receipt.costs + ' = ' + (receipt.profit < 0 ? 'loss' : 'profit') + ' $' + Math.abs(receipt.profit) + '. ' + '★'.repeat(stars) + '☆'.repeat(3 - stars) + '. ' + receipt.wasted + ' cups’ worth of fresh stock unused. This result is already in cash and is not paid again next month.' + reputationText;
+  return { ...state, cash: state.cash + revenue, cafe, events: completed ? [{ id: `cafe-service-end-${state.month}`, month: state.month, title: 'Owner shift results', description: summary, type: 'DECISION' }, ...state.events] : state.events };
 }

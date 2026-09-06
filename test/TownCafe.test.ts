@@ -53,3 +53,28 @@ it('makes staffing useful in crowds and value pricing useful in rain',()=>{
  expect(quoteCafe({...c,plan:{...c.plan,price:4}},3).profit).toBeGreaterThan(quoteCafe(c,3).profit);
  expect(quoteCafe({...equipped,plan:{...equipped.plan,helper:true}},3).profit).toBeLessThan(quoteCafe(equipped,3).profit);
 });
+
+import { applyShiftReputation, driftReputation, reputationOf, reputationDemand, CAFE_REPUTATION_START } from '../services/townCafe';
+import { createCafeService, resolveCafeService, serviceTask, SERVICE_STATIONS } from '../services/cafeService';
+describe('café reputation ties hands-on shifts to monthly trading',()=>{
+ it('defaults old saves to 50 with no demand change, and scales demand with reputation',()=>{
+  const c=resolveCafeAction(base(),{type:'lease'}).cafe!;
+  expect(reputationOf({...c,reputation:undefined})).toBe(CAFE_REPUTATION_START);expect(reputationDemand(50)).toBe(1);
+  expect(quoteCafe({...c,reputation:undefined},4).demand).toBe(quoteCafe(c,4).demand);
+  expect(quoteCafe({...c,reputation:100},4).demand).toBe(Math.round(650*1.2));expect(quoteCafe({...c,reputation:0},4).demand).toBe(520);
+  const staffed={...c,machine:true,plan:{...c.plan,stock:700 as const,helper:true}};
+  expect(quoteCafe({...staffed,reputation:100},4).sold).toBe(700);expect(quoteCafe(staffed,4).sold).toBe(650);
+ });
+ it('moves by stars after a paid shift, never past 0–100, and drifts toward 50 in idle months',()=>{
+  const c=resolveCafeAction(base(),{type:'lease'}).cafe!;
+  expect(applyShiftReputation(c,3).reputation).toBe(62);expect(applyShiftReputation(c,0).reputation).toBe(38);expect(applyShiftReputation({...c,reputation:95},3).reputation).toBe(100);
+  expect(driftReputation({...c,reputation:62}).reputation).toBe(59);expect(driftReputation({...c,reputation:38}).reputation).toBe(41);expect(driftReputation({...c,reputation:51}).reputation).toBe(50);
+  let s={...resolveCafeAction(base(),{type:'lease'}),month:4} as GameState;s={...s,cafe:{...s.cafe!,seats:true,machine:true}};
+  s=resolveCafeService(s,{type:'start',plan:{price:4,stock:6,helper:false,pace:'relaxed'}});
+  for(let guard=0;guard<400&&s.cafe!.service!.status==='active';guard++){const task=serviceTask(s.cafe!.service!)!;s=resolveCafeService(s,task.kind==='wait'?{type:'tick'}:{type:'interact',point:SERVICE_STATIONS[task.station]});}
+  expect(s.cafe!.reputation).toBe(62);expect(s.events[0].description).toContain('reputation 50 → 62');
+  const {newState}=processTurn(s);expect(newState.cafe!.reputation).toBe(62); // shift month: no drift
+  const later=processTurn({...newState,pendingScenario:undefined}).newState;expect(later.cafe!.reputation).toBe(59);
+  expect(later.cafe!.lastReceipt!.reputation).toBe(59);
+ });
+});
