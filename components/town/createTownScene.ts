@@ -15,9 +15,10 @@ import { createCoffeeCart } from './townBusiness';
 import { createTownTraffic } from './townTraffic';
 import { createTownLife, createCyclist, createDogWalker } from './townLife';
 import { residentStyle, seatActor, styleCharacter, Sex } from './townResidents';
+import { createQualityGovernor, initialQuality, QUALITY_SETTINGS, QualityLevel, QualityMode } from './townQuality';
 export type TownView = { x:number; z:number; yaw:number; pitch:number; distance:number; mode?:CameraPreset };
 export type TownSpot = 'teller' | 'exit' | 'cart' | 'cafe-counter' | 'broker' | 'agent' | 'board' | 'home' | 'desk' | 'rosa' | null;
-export type TownSceneOptions = { view?:TownView; onView?:(view:TownView)=>void; onRoom?:(room:'city'|'bank'|'cafe'|'exchange'|'property'|'home')=>void; onPlayerPoint?:(point:TownPoint)=>void; onSpot?:(spot:TownSpot)=>void; onManual?:()=>void; playerSex?:Sex; onTimeOfDay?:(label:Daylight['label'])=>void };
+export type TownSceneOptions = { view?:TownView; onView?:(view:TownView)=>void; onRoom?:(room:'city'|'bank'|'cafe'|'exchange'|'property'|'home')=>void; onPlayerPoint?:(point:TownPoint)=>void; onSpot?:(spot:TownSpot)=>void; onManual?:()=>void; playerSex?:Sex; quality?:QualityMode; onQuality?:(level:QualityLevel, automatic:boolean)=>void; onTimeOfDay?:(label:Daylight['label'])=>void };
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
@@ -27,7 +28,7 @@ import { cameraRelativeMovement, normalizeStick, cameraPreset, CameraPreset, tur
 export type TownController = {
   setCafeService:(service?:CafeService)=>void; walkToServiceStation:(station:ServiceStation)=>void; getPlayerPoint:()=>TownPoint;
   enterCafe:()=>void; leaveCafe:()=>void; walkToCafeCounter:()=>void; setNeighbourhood:(month:number,cafe?:CafeState)=>void;
-  enterBank:()=>void; leaveBank:()=>void; walkToTeller:()=>void; walkToExit:()=>void; enterExchange:()=>void; leaveExchange:()=>void; walkToBroker:()=>void; setBoard:(board:ExchangeBoard)=>void; enterProperty:()=>void; leaveProperty:()=>void; walkToAgent:()=>void; setListings:(board:PropertyBoard)=>void; enterHome:()=>void; leaveHome:()=>void; walkToDesk:()=>void; walkHome:()=>void; walkToRosa:()=>void; setLifestyle:(lifestyle:Lifestyle)=>void; setAdvice:(headline:string)=>void; serveCustomer:(onDone?:()=>void)=>void; celebrate:()=>void; setCamera:(mode:CameraPreset)=>void; orbit:(delta:number)=>void; zoom:(delta:number)=>void;
+  enterBank:()=>void; leaveBank:()=>void; walkToTeller:()=>void; walkToExit:()=>void; enterExchange:()=>void; leaveExchange:()=>void; walkToBroker:()=>void; setBoard:(board:ExchangeBoard)=>void; enterProperty:()=>void; leaveProperty:()=>void; walkToAgent:()=>void; setListings:(board:PropertyBoard)=>void; enterHome:()=>void; leaveHome:()=>void; walkToDesk:()=>void; walkHome:()=>void; walkToRosa:()=>void; setLifestyle:(lifestyle:Lifestyle)=>void; setAdvice:(headline:string)=>void; serveCustomer:(onDone?:()=>void)=>void; celebrate:()=>void; setCamera:(mode:CameraPreset)=>void; orbit:(delta:number)=>void; zoom:(delta:number)=>void; setQuality:(mode:QualityMode)=>void; getQuality:()=>QualityLevel;
   walkTo: (id: TownPlaceId) => void; walkToBoard: () => void; direction: (key: string, down: boolean) => void;
   move: (x: number, z: number) => void; resetView: () => void;
   setOwned: (ids: TownPlaceId[]) => void; setBusiness: (owned:boolean, licensed:boolean, upgraded:boolean)=>void; setSound:(enabled:boolean)=>void; visitCart:()=>void; pause:(paused:boolean)=>void; dispose: () => void;
@@ -54,6 +55,18 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const hemi = new THREE.HemisphereLight('#fff4df', '#687b85', 1.7); scene.add(hemi);
   const sun = new THREE.DirectionalLight('#fff0d4', 3.3); sun.position.set(-16, 25, 15); sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -27, right: 27, top: 25, bottom: -25, far: 75 }); sun.shadow.normalBias = .025; sun.shadow.bias = -.0002; sun.shadow.radius = 3; scene.add(sun);
+  // Graphics tier: resolution cap + shadows. Auto starts from the device hints and follows real frame times.
+  const deviceHints = () => ({ pixelRatio: devicePixelRatio, cores: navigator.hardwareConcurrency, coarsePointer: typeof matchMedia === 'function' && matchMedia('(pointer:coarse)').matches });
+  let quality: QualityLevel = initialQuality(options.quality ?? 'auto', deviceHints());
+  const governor = createQualityGovernor(quality, (options.quality ?? 'auto') === 'auto');
+  const applyQuality = (level: QualityLevel) => {
+    const settings = QUALITY_SETTINGS[level], shadowsChanged = renderer.shadowMap.enabled !== settings.shadows; quality = level;
+    renderer.setPixelRatio(Math.min(devicePixelRatio, settings.pixelRatioCap)); renderer.shadowMap.enabled = settings.shadows; sun.castShadow = settings.shadows;
+    if (sun.shadow.mapSize.x !== settings.shadowMap) { sun.shadow.mapSize.set(settings.shadowMap, settings.shadowMap); sun.shadow.map?.dispose(); sun.shadow.map = null; }
+    if (shadowsChanged) scene.traverse(o => { if (o instanceof THREE.Mesh) for (const material of Array.isArray(o.material) ? o.material : [o.material]) material.needsUpdate = true; });
+    renderer.shadowMap.needsUpdate = true;
+  };
+  applyQuality(quality);
   const outdoors = new THREE.Group(); scene.add(outdoors);
   const bank = createTownBank(); scene.add(bank.root);
   const cafeRoom = createCafeRoom(); scene.add(cafeRoom.root);
@@ -164,7 +177,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       if (dog) { dogWalker = createDogWalker(dog, reducedMotion); outdoors.add(dogWalker.root, dogWalker.leash); }
     }
     // Dev-only QA handle for inspecting traffic and pigeons from the console; stripped from production builds.
-    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { traffic, life, cyclist, dogWalker, player: () => ({ x: player.position.x, z: player.position.z }), setPhase: (p?: number) => { phaseOverride = p; }, setSeason: (s?: Season) => { seasonOverride = s; palette?.apply(s ?? season); } };
+    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { traffic, life, cyclist, dogWalker, player: () => ({ x: player.position.x, z: player.position.z }), setPhase: (p?: number) => { phaseOverride = p; }, quality: () => quality, setQuality: (mode: QualityMode) => { governor.set(initialQuality(mode, deviceHints()), mode === 'auto'); applyQuality(governor.level); }, governor, setSeason: (s?: Season) => { seasonOverride = s; palette?.apply(s ?? season); } };
     // Twelve neighbours: walkers on both pavements plus two resting on the promenade benches.
     for (let i = 0; i < 12; i++) {
       const root = character.scene.clone(true); root.scale.setScalar(.86 + (i % 3) * .07);
@@ -252,7 +265,8 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   canvas.addEventListener('pointerdown',down); canvas.addEventListener('pointermove',pointerMove); canvas.addEventListener('pointerup',up); canvas.addEventListener('pointercancel',cancel); canvas.addEventListener('wheel',wheel,{passive:false}); canvas.addEventListener('contextmenu',contextMenu); canvas.addEventListener('webglcontextlost',lost);
   const dayPhaseDark=()=>daylight(phaseOverride??dayPhase(townMonth,elapsed,reducedMotion),rainy).lamps>.4;
   const tick = (now:number) => {
-    if (!alive) return; frame=requestAnimationFrame(tick); const dt=Math.min((now-previousTime)/1000,.04); previousTime=now; if(document.hidden || !contextAvailable) return; elapsed+=dt;
+    if (!alive) return; frame=requestAnimationFrame(tick); const frameMs=now-previousTime, dt=Math.min(frameMs/1000,.04); previousTime=now; if(document.hidden || !contextAvailable) return; elapsed+=dt;
+    if(ready){const tier=governor.sample(frameMs);if(tier){applyQuality(tier);options.onQuality?.(tier,true);}}
     if(ready && !paused) {
       const input=normalizeStick(stick.x+Number(keys.has('d')||keys.has('arrowright'))-Number(keys.has('a')||keys.has('arrowleft')),stick.z+Number(keys.has('s')||keys.has('arrowdown'))-Number(keys.has('w')||keys.has('arrowup')));
       let movement=cameraRelativeMovement(input.x,input.z,yaw), speed=keys.has('shift')?JOG_SPEED:WALK_SPEED;
@@ -429,6 +443,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     serveCustomer(onDone){if(inside||!ready||reducedMotion){onDone?.();return;}clearMovement();stopPath();saleChimed=false;serviceReturn={x:player.position.x,z:player.position.z};serviceView={yaw,pitch,distance:zoomDistance};serviceDone=onDone;serviceStage='approach';path=findTownPath(player.position,{x:2.2,z:7.4});},
     celebrate(){ambience?.chime('celebrate');if(!reducedMotion){celebrationUntil=elapsed+3;clearMovement();stopPath();}},
     setCamera(mode){cameraMode=mode;const preset=cameraPreset(mode,inside);yaw=.12;pitch=preset.pitch;zoomDistance=preset.distance;},
+    setQuality(mode){const level=initialQuality(mode,deviceHints());governor.set(level,mode==='auto');applyQuality(level);options.onQuality?.(level,false);},getQuality(){return quality;},
     orbit(delta){yaw+=delta;},zoom(delta){zoomDistance=THREE.MathUtils.clamp(zoomDistance+delta,inside?7:5,inside?12:18);},
     walkTo(id){if(inside)transition(false);clearMovement();path=findTownPath(player.position,{x:TOWN_PLACES.find(p=>p.id===id)!.x,z:-1.1});const end=path[path.length-1];if(end){destinationRing.position.set(end.x,.235,end.z);destinationRing.visible=true;}},
     visitCart(){if(inside)transition(false);clearMovement();path=findTownPath(player.position,{x:2.2,z:9.8});},

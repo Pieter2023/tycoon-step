@@ -270,6 +270,14 @@ Pieter's first note after the overnight run: "my apartment is only a door … it
 
 Validation: 291 tests across 47 files (`test/TownHome.test.ts` covers the facade meshes, bounds and glass), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/home-facade-2026-09-06/`.
 
+## Adaptive graphics quality — September 6, 2026 (build 10)
+
+The outstanding risk for the city is real-phone performance. `components/town/townQuality.ts` now gives the scene three tiers: Detailed (resolution cap 1.6×, 2048 shadow map), Balanced (1.15×, 1024) and Smooth (0.85×, no shadows). A governor watches real frame times: two seconds averaging above 26 ms steps one tier down; twelve seconds averaging under 11 ms steps back up, but never into a tier left in the last 90 s, and the first three seconds (shader warm-up) and frames over 250 ms (tab switches) are ignored. Auto starts on Balanced when the device looks like a phone (four cores or fewer, or a coarse pointer with a dense screen). The Camera menu gained a Graphics row (Auto / Detailed / Balanced / Smooth; the choice persists in `tycoon_town_quality`) and now scrolls when it is taller than the viewport; an automatic switch shows a seven-second status note pointing at the menu. Switching shadows off and on marks every material for recompilation so the change is clean.
+
+Chrome: Smooth removed the tree and building shadows and the stored mode read `low`; Detailed restored them; with Auto selected, a scripted 45 ms busy-wait per frame drove the governor from Detailed to Smooth in about seven seconds and the note appeared. Console clean apart from the Chrome extension's own message-channel line.
+
+Validation: 295 tests across 48 files (`test/TownQuality.test.ts`: device guess, stored mode, demotion with warm-up and tab-switch handling, promotion with cooldown, fixed choice never overridden), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/quality-2026-09-06/`.
+
 ## Where the overnight session stopped
 
 Nine builds shipped to production between 23:00 and roughly 01:00 PDT: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. Each is on `origin/main` and live at https://tycoonjan22026.netlify.app. What remains needs Pieter: playing the live site by hand and listing what feels off, the physical-phone test, listening to the synthesized audio on a real speaker, and a decision on Spanish for the town copy (a large, mechanical translation job now that the English is settled).
