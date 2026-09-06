@@ -335,6 +335,8 @@ export interface ScenarioOption {
     startRelationship?: boolean;
     // Temporarily sets the player as unemployed (salary becomes $0) for N months.
     jobLossMonths?: number;
+    // Permanent percentage change to base salary (raises, pay cuts).
+    salaryChangePct?: number;
     negotiateType?: string;
     // Temporarily reduces income from a specific owned asset for N months.
     assetIncomeDisruption?: {
@@ -526,7 +528,7 @@ export interface PrestigeData {
 
 export interface GameState {
   cafe?: import('./services/townCafe').CafeState;
-  townProgress?: { reserveConfirmed?: boolean; permitMonth?: number; lastShift?: import('./services/townActivities').CartReceipt; firstShiftMonth?: number; journeyCompletedMonth?: number; exchangeVisitedMonth?: number; investorCompletedMonth?: number; workVisitedMonth?: number; homeVisitedMonth?: number; rosaVisitedMonth?: number; tourCompletedMonth?: number; challengeSnapshot?: import('./services/townChallenges').ChallengeSnapshot; challengeLog?: import('./services/townChallenges').ChallengeResult[] };
+  townProgress?: { reserveConfirmed?: boolean; permitMonth?: number; lastShift?: import('./services/townActivities').CartReceipt; firstShiftMonth?: number; journeyCompletedMonth?: number; exchangeVisitedMonth?: number; investorCompletedMonth?: number; lastRaiseAskMonth?: number; careerChangedMonth?: number; workVisitedMonth?: number; homeVisitedMonth?: number; rosaVisitedMonth?: number; tourCompletedMonth?: number; challengeSnapshot?: import('./services/townChallenges').ChallengeSnapshot; challengeLog?: import('./services/townChallenges').ChallengeResult[] };
   /** Teaching market index (starts at 100), one point per month, kept for three years. Drawn on the Exchange ticker. */
   marketIndex?: { month: number; value: number }[];
   townView?: { x: number; z: number; yaw: number; pitch: number; distance: number; mode?: 'follow' | 'overview' };

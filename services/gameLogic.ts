@@ -2540,7 +2540,7 @@ const generateNegotiationResult = (negotiateType: string, state: GameState): Sce
         category: 'CAREER',
         weight: 100,
         options: [
-          { label: 'Celebrate!', outcome: { cashChange: 0, message: 'Got the raise! Hard work pays off.', statChanges: { happiness: 20, stress: -10, fulfillment: 15 } } }
+          { label: 'Celebrate!', outcome: { cashChange: 0, salaryChangePct: 15, message: 'Got the raise! Hard work pays off.', statChanges: { happiness: 20, stress: -10, fulfillment: 15 } } }
         ]
       },
       failure: {
@@ -2550,7 +2550,7 @@ const generateNegotiationResult = (negotiateType: string, state: GameState): Sce
         category: 'CAREER',
         weight: 100,
         options: [
-          { label: 'Accept 3%', outcome: { cashChange: 0, message: 'Better than nothing.', statChanges: { happiness: -5, stress: 5 } } },
+          { label: 'Accept 3%', outcome: { cashChange: 0, salaryChangePct: 3, message: 'Better than nothing.', statChanges: { happiness: -5, stress: 5 } } },
           { label: 'Start job hunting', outcome: { cashChange: 0, message: 'Looking for better opportunities.', statChanges: { stress: 15, networking: 10 } } }
         ]
       }
@@ -2563,7 +2563,7 @@ const generateNegotiationResult = (negotiateType: string, state: GameState): Sce
         category: 'CAREER',
         weight: 100,
         options: [
-          { label: 'Great news!', outcome: { cashChange: 0, message: 'Modest raise secured.', statChanges: { happiness: 10, stress: -5, fulfillment: 5 } } }
+          { label: 'Great news!', outcome: { cashChange: 0, salaryChangePct: 8, message: 'Modest raise secured.', statChanges: { happiness: 10, stress: -5, fulfillment: 5 } } }
         ]
       },
       failure: {
@@ -2573,7 +2573,7 @@ const generateNegotiationResult = (negotiateType: string, state: GameState): Sce
         category: 'CAREER',
         weight: 100,
         options: [
-          { label: 'Accept 2%', outcome: { cashChange: 0, message: 'Small increase is something.', statChanges: { happiness: -3 } } }
+          { label: 'Accept 2%', outcome: { cashChange: 0, salaryChangePct: 2, message: 'Small increase is something.', statChanges: { happiness: -3 } } }
         ]
       }
     },
@@ -2830,6 +2830,13 @@ export const applyScenarioOutcome = (state: GameState, outcome: any): GameState 
       financialIQ: Math.min(100, Math.max(0, state.stats.financialIQ + (outcome.statChanges.financialIQ || 0))),
       fulfillment: Math.min(100, Math.max(0, (state.stats.fulfillment || 40) + (outcome.statChanges.fulfillment || 0)))
     };
+  }
+
+  // Raises and pay cuts: a permanent change to base salary (career and job records stay in step).
+  if (typeof outcome.salaryChangePct === 'number' && outcome.salaryChangePct !== 0) {
+    const factor = 1 + outcome.salaryChangePct / 100;
+    if (newState.career) newState.career = { ...newState.career, salary: Math.round(newState.career.salary * factor) };
+    if (newState.playerJob) newState.playerJob = { ...newState.playerJob, salary: Math.round(newState.playerJob.salary * factor) };
   }
 
   // Job loss shock: salary becomes $0 for N months.

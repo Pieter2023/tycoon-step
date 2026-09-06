@@ -1,4 +1,5 @@
 import type { GameState } from '../types';
+import { jobBoard } from './townCareer';
 import { tl, isSpanish } from '../i18n/town';
 import { CAREER_PATHS, EDUCATION_OPTIONS, DIFFICULTY_SETTINGS } from '../constants';
 import { calculateEffectiveMonthlySalary, calculateAnnualTaxes, calculateMonthlyCashFlow, calculateMonthlyCashFlowEstimate, getEducationSalaryMultiplier, getNegotiationRaiseBonus } from './gameLogic';
@@ -77,7 +78,7 @@ export function managerLine(state: GameState): string {
   return `${out.next!.title} ${tl('needs a','necesita un título de')} ${out.educationNeeded}. ${tl('Night school?','¿Escuela nocturna?')}`;
 }
 
-export type WorkBoard = { title: string; lines: { label: string; amount: string }[]; net: string; ladder: { title: string; salary: string; state: 'done' | 'current' | 'next' | 'later' }[]; headline: string };
+export type WorkBoard = { title: string; lines: { label: string; amount: string }[]; net: string; ladder: { title: string; salary: string; state: 'done' | 'current' | 'next' | 'later' }[]; headline: string; jobs: { line: string; salary: string; score: string }[] };
 export function workBoard(state: GameState): WorkBoard {
   const stub = payStub(state), info = state.career ? CAREER_PATHS[state.career.path] : undefined, level = state.career?.level ?? 0;
   return {
@@ -86,5 +87,6 @@ export function workBoard(state: GameState): WorkBoard {
     net: money(stub.net),
     ladder: (info?.levels ?? []).map((l, i) => ({ title: l.title, salary: money(l.baseSalary), state: i < level - 1 ? 'done' : i === level - 1 ? 'current' : i === level ? 'next' : 'later' })),
     headline: managerLine(state),
+    jobs: jobBoard(state).slice(0, 4).map(j => ({ line: `${j.icon} ${j.title}`, salary: money(j.salary), score: `${j.futureProofScore}%` })),
   };
 }

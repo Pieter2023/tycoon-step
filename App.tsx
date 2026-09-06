@@ -1,4 +1,5 @@
 import { resolveCafeService } from './services/cafeService';
+import { askForRaise, switchCareer, careerChangeEligibility } from './services/townCareer';
 import { tl } from './i18n/town';
 import { resolveCafeAction, quoteCafe } from './services/townCafe';
 import { completeActiveJourney, activeJourney } from './services/townJourney';
@@ -3389,6 +3390,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
           onBuy={(item,quantity)=>handleBuyAsset(item,undefined,quantity)} onClose={() => setShowTown(false)} saveError={saveError} onBackup={downloadCurrentProgress}
           onFinishJourney={()=>setGameState(prev=>isProcessing?prev:completeActiveJourney(prev))}
           onPromote={handleManualPromotion} onOpenLife={(tab)=>{setShowTown(false);navigateToTab(tab);}}
+          onAskRaise={ask=>{if(isProcessing)return;const result=askForRaise(gameState,ask);if(!result.asked){showNotif('Not now',result.line,'warning');return;}setGameState(result.state);recordAutosave(result.state);showNotif(result.success?'Raise approved':'Raise declined',result.line,result.success?'success':'warning');}}
+          onSwitchCareer={path=>{if(isProcessing)return;const next=switchCareer(gameState,path);if(next===gameState){showNotif('Not now',careerChangeEligibility(gameState).reason??'Career change unavailable.','warning');return;}setGameState(next);recordAutosave(next);showNotif('Career change',`You start as ${next.career?.title} next month, after a month between jobs.`,'info');}}
+          workActions={monthlyActionsSummary} onMonthlyAction={handleUseMonthlyAction}
           onSell={handleSellAsset}
           onMortgage={item=>setShowMortgageModal(item)}
           onChangeLifestyle={handleChangeLifestyle}

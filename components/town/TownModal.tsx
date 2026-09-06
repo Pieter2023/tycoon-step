@@ -25,6 +25,8 @@ import NoticeBoardPanel from './NoticeBoardPanel';
 import HomePanel from './HomePanel';
 import WorkPanel from './WorkPanel';
 import { workBoard } from '../../services/townWork';
+import type { CareerPath, MonthlyActionId } from '../../types';
+import type { MonthlyActionsSummary } from '../../services/monthlyActions';
 import AdvisorPanel from './AdvisorPanel';
 import { adviceHeadline, type Advice } from '../../services/townAdvisor';
 import { seasonFor, SEASON_LABEL } from './townSeasons';
@@ -58,6 +60,10 @@ type Props = {
   onChangeLifestyle?: (lifestyle: Lifestyle) => void;
   onPromote?: () => void;
   onOpenLife?: (tab: 'career' | 'education') => void;
+  onAskRaise?: (ask: 8 | 15) => void;
+  onSwitchCareer?: (path: CareerPath) => void;
+  workActions?: MonthlyActionsSummary;
+  onMonthlyAction?: (id: MonthlyActionId) => void;
   onClose: () => void;
   onOpenMoney: (tab: 'invest' | 'bank' | 'portfolio', place?:TownPlaceId) => void;
   onAction?: (action:TownAction)=>void;
@@ -68,7 +74,7 @@ type Props = {
   onBackup: () => void;
 };
 const money = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
-export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell, onMortgage, onChangeLifestyle, onPromote, onOpenLife, onClose, onOpenMoney, onNextMonth, saveError, onBackup, onAction, onRememberView, onTransfer, onRunShift, loans=[], onFinishJourney, onCafeAction, onCafeServiceAction }: Props) {
+export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell, onMortgage, onChangeLifestyle, onPromote, onOpenLife, onAskRaise, onSwitchCareer, workActions, onMonthlyAction, onClose, onOpenMoney, onNextMonth, saveError, onBackup, onAction, onRememberView, onTransfer, onRunShift, loans=[], onFinishJourney, onCafeAction, onCafeServiceAction }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const details = useRef<HTMLDivElement>(null);
   const controller = useRef<TownController | null>(null);
@@ -358,7 +364,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
       </section>
       <aside className="town-details" ref={details} tabIndex={-1} aria-label={tl(tl('Location opportunities','Oportunidades del lugar'),'Oportunidades del lugar')} style={{display:showDetails?'block':'none'}}>
         <button className="town-close-details" aria-label={tl(tl('Close opportunities','Cerrar oportunidades'),'Cerrar oportunidades')} onClick={()=>setShowDetails(false)}><X size={18}/></button>
-        {board&&room==='city' ? <NoticeBoardPanel state={state} disabled={disabled} onNextMonth={onNextMonth}/> : rosa&&room==='city' ? <AdvisorPanel state={state} onGo={goTo}/> : room==='work' ? <WorkPanel state={state} disabled={disabled} onPromote={onPromote} onOpenLife={onOpenLife}/> : room==='home' ? <HomePanel state={state} disabled={disabled} onChangeLifestyle={onChangeLifestyle} onGo={goTo}/> : journal ? <>
+        {board&&room==='city' ? <NoticeBoardPanel state={state} disabled={disabled} onNextMonth={onNextMonth}/> : rosa&&room==='city' ? <AdvisorPanel state={state} onGo={goTo}/> : room==='work' ? <WorkPanel state={state} disabled={disabled} onPromote={onPromote} onOpenLife={onOpenLife} onAskRaise={onAskRaise} onSwitchCareer={onSwitchCareer} workActions={workActions} onMonthlyAction={onMonthlyAction}/> : room==='home' ? <HomePanel state={state} disabled={disabled} onChangeLifestyle={onChangeLifestyle} onGo={goTo}/> : journal ? <>
           <p className="town-eyebrow">{journey.stage===3?tl('NEIGHBOURHOOD TOUR','RECORRIDO DEL BARRIO'):journey.stage===2?tl('INVESTOR JOURNEY','RECORRIDO DEL INVERSOR'):tl('YOUR FIRST BUSINESS','TU PRIMER NEGOCIO')}</p><h3>{journey.title}</h3><p className="town-intro">{journey.detail}</p>
           <ol className="town-journey-steps">{journey.milestones.map((step,index)=><li key={step.title} aria-current={!journey.completed&&index===journey.step?'step':undefined}><span>{step.done?'✓':index+1}</span><strong>{step.title}</strong></li>)}</ol>
           {journey.completed?<><div className="town-badge"><span>✦</span><strong>Neighbourhood entrepreneur</strong><p>Earned in month {state.townProgress?.journeyCompletedMonth}. A milestone you earned through decisions—no cash bonus.</p></div><div className="town-badge"><span>✦</span><strong>Patient investor</strong><p>Earned in month {state.townProgress?.investorCompletedMonth}. You held through the noise.</p></div><div className="town-badge"><span>✦</span><strong>Settled in</strong><p>Earned in month {state.townProgress?.tourCompletedMonth}. You know where the money comes from, where it goes and who to ask.</p></div></>:journey.action==='finish'?<button className="town-primary" disabled={disabled||!onFinishJourney} onClick={onFinishJourney}>{journey.stage===3?tl('Complete my neighbourhood tour ✦','Completar mi recorrido del barrio ✦'):journey.stage===2?tl('Complete my investor journey ✦','Completar mi recorrido del inversor ✦'):tl('Complete my opening journey ✦','Completar mi recorrido inicial ✦')}</button>:<>{journey.stage>=2&&<div className="town-badge"><span>✦</span><strong>Neighbourhood entrepreneur</strong><p>Earned in month {state.townProgress?.journeyCompletedMonth}.</p></div>}{journey.stage===3&&<div className="town-badge"><span>✦</span><strong>Patient investor</strong><p>Earned in month {state.townProgress?.investorCompletedMonth}.</p></div>}<button className="town-primary" disabled={guideDisabled} onClick={followJourney}>{guideText} →</button></>}

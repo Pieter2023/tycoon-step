@@ -30,6 +30,7 @@ export function createTownWork() {
   const payroll = canvasPlane(3.6, 2.2, 0, 3.05, -2.36);
   const ladder = canvasPlane(2.6, 1.8, -4.86, 2.2, 2.2, Math.PI / 2, 640);
   const poster = canvasPlane(1.6, 1.1, 4.86, 2.4, 1.6, -Math.PI / 2, 512);
+  const jobs = canvasPlane(1.7, 1.7, 4.86, 2.2, 3.9, -Math.PI / 2, 512);
   box(4.4, 1, 1.1, 0, .74, -.65, '#4b5f73'); box(4.65, .16, 1.3, 0, 1.3, -.65, '#e9eef2');   // manager desk
   box(.62, .42, .05, -1.0, 1.62, -.75, '#1f2933', .02); box(.26, .18, .16, -1.0, 1.42, -.6, '#3a4653', .02); // monitor
   box(.5, .035, .32, 1.0, 1.41, -.5, '#fff9e6');                                                 // papers
@@ -63,6 +64,11 @@ export function createTownWork() {
         ink.textAlign = 'right'; ink.fillText(rung.salary, W - 26, y); y += 52;
       }
     }, ladder.texture);
+    draw(jobs.canvas, ink => {
+      const W = jobs.canvas.width, H = jobs.canvas.height; ink.fillStyle = '#e9dcc4'; ink.fillRect(0, 0, W, H);
+      ink.fillStyle = '#233b4d'; ink.font = '700 34px sans-serif'; ink.textAlign = 'left'; ink.fillText(tl('JOB BOARD', 'BOLSA DE TRABAJO'), 24, 52);
+      let y = 110; for (const job of board.jobs) { ink.fillStyle = '#2a3944'; ink.font = '400 26px sans-serif'; ink.textAlign = 'left'; ink.fillText(job.line.slice(0, 26), 24, y); ink.textAlign = 'right'; ink.fillText(job.salary, W - 24, y); ink.font = '400 20px sans-serif'; ink.fillStyle = '#5a6b78'; ink.textAlign = 'left'; ink.fillText(`${tl('future-proof', 'a prueba de futuro')} ${job.score}`, 24, y + 28); y += 78; }
+    }, jobs.texture);
   };
   return { root, setBoard };
 }
