@@ -3,11 +3,12 @@ import { LIFESTYLE_OPTS } from '../constants';
 import { calculateMonthlyCashFlowEstimate } from './gameLogic';
 import { savingsBalance } from './townActivities';
 import { reputationOf } from './townCafe';
+import { promotionOutlook } from './townWork';
 
 // Rosa, the neighbour on the promenade bench, reads the player's actual numbers and says the
 // one or two things a sensible friend would say. Rules are ordered by urgency; each returns a
 // short observation with an optional place to go. Nothing here moves money.
-export type Advice = { id: string; tone: 'warn' | 'tip' | 'good'; title: string; text: string; place?: 'bank' | 'exchange' | 'property' | 'cafe' | 'home' | 'board' };
+export type Advice = { id: string; tone: 'warn' | 'tip' | 'good'; title: string; text: string; place?: 'bank' | 'exchange' | 'property' | 'cafe' | 'home' | 'board' | 'work' };
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
 export function adviseFrom(state: GameState): Advice[] {
@@ -29,6 +30,8 @@ export function adviseFrom(state: GameState): Advice[] {
   if (state.month >= 6 && investedValue === 0 && state.cash >= expenses * 2) out.push({ id: 'never-invested', tone: 'tip', title: `Six months in and nothing is invested.`, text: 'Time is the ingredient you cannot buy back. Even $500 a month in an index fund compounds for decades.', place: 'exchange' });
   if ((state.marketCycle.phase === 'CONTRACTION' || state.economy.recession) && investedValue > 0) out.push({ id: 'dip', tone: 'tip', title: 'This is the part where people panic.', text: 'Prices are down. Selling now turns a paper loss into a real one. If your bills are covered, the same money buys more units this month.', place: 'exchange' });
   if (state.cafe && reputationOf(state.cafe) < 40) out.push({ id: 'cafe-rep', tone: 'warn', title: 'The café has a reputation problem.', text: `Word gets around at ${reputationOf(state.cafe)}/100. One good owner shift lifts it twelve points; a month behind the counter changes the year.`, place: 'cafe' });
+  const outlook = promotionOutlook(state);
+  if (outlook.eligible && outlook.next) out.push({ id: 'promotion', tone: 'tip', title: `You qualify for ${outlook.next.title}. Ask.`, text: `Your manager will not bring it up. Each month you ask carries about a ${Math.round(outlook.chance * 100)}% chance, and a raise compounds every month after it lands.`, place: 'work' });
   if (state.cafe && !state.cafe.plan.open) out.push({ id: 'cafe-closed', tone: 'warn', title: 'Closed shops still pay rent.', text: '$720 a month leaves while the doors are shut. Reopen with a lean plan or end the lease; limbo is the expensive choice.', place: 'cafe' });
   if (passiveShare >= 1.1) out.push({ id: 'free', tone: 'good', title: 'Your investments cover your life.', text: `Passive income of ${money(flow.passive)} a month clears ${money(expenses)} of bills with room to spare. Everything from here is choice.` });
   else if (passiveShare >= .25) out.push({ id: 'progress', tone: 'good', title: `${Math.round(passiveShare * 100)}% of your bills are paid by money you do not work for.`, text: `${money(flow.passive)} a month arrives whether you show up or not. Keep the gap wide and that number grows on its own.` });

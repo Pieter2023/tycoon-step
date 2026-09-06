@@ -116,7 +116,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
   const [board,setBoard]=useState(false);
   const openBoard=()=>{setJournal(false);setRosa(false);setBoard(true);setShowDetails(true);};
   const openRosa=()=>{setJournal(false);setBoard(false);setRosa(true);setShowDetails(true);};
-  const goTo=(place:NonNullable<Advice['place']>)=>{setShowDetails(false);setRosa(false);setBoard(false);if(place==='board'){openBoard();return;}if(place==='home'){if(room==='home'){setShowDetails(true);return;}cancelGuide();controller.current?.walkHome?.();return;}if(place==='cafe'){visitCafe();return;}move(place);};
+  const goTo=(place:NonNullable<Advice['place']>)=>{setShowDetails(false);setRosa(false);setBoard(false);if(place==='board'){openBoard();return;}if(place==='home'){if(room==='home'){setShowDetails(true);return;}cancelGuide();controller.current?.walkHome?.();return;}if(place==='cafe'){visitCafe();return;}if(place==='work'){if(room==='work'){cancelGuide();controller.current?.walkToManager?.();return;}cancelGuide();controller.current?.walkToWork?.();return;}move(place);};
   const challengesDone=monthlyChallenges(state).map(c=>challengeProgress(c,currentSnapshot(state),state)).filter(p=>p.done).length;
   const [spot,setSpot]=useState<TownSpot>(null);
   const [serving,setServing]=useState(false);

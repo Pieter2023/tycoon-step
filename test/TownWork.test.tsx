@@ -7,6 +7,7 @@ import { GameState } from '../types';
 import { payStub, promotionOutlook, jobSecurity, managerLine, workBoard } from '../services/townWork';
 import { clampWorkPoint, workSpot, createTownWork } from '../components/town/townWork';
 import WorkPanel from '../components/town/WorkPanel';
+import { adviseFrom } from '../services/townAdvisor';
 
 const career = (overrides: Partial<NonNullable<GameState['career']>> = {}): NonNullable<GameState['career']> => ({ path: 'TECH', title: 'Junior Developer', salary: 5500, level: 1, experience: 10, skills: {}, aiVulnerability: .4, futureProofScore: 65, ...overrides });
 const base = (overrides: Partial<GameState> = {}): GameState => ({ ...structuredClone(INITIAL_GAME_STATE), character: CHARACTERS[0], cash: 9000, month: 11, career: career(), ...overrides });
@@ -37,6 +38,11 @@ describe('Main Street Offices', () => {
     expect(top.top).toBe(true); expect(managerLine(base({ career: career({ level: CAREER_PATHS.TECH.levels.length }) }))).toMatch(/run this place/);
     expect(managerLine(base({ career: career({ experience: 30 }) }))).toMatch(/ready for Developer/);
     expect(managerLine(base())).toMatch(/14 more months/);
+  });
+  it('has Rosa nudge the player to ask once a promotion is within reach', () => {
+    expect(adviseFrom(base()).some(a => a.id === 'promotion')).toBe(false);
+    const nudge = adviseFrom(base({ career: career({ experience: 30 }) })).find(a => a.id === 'promotion');
+    expect(nudge?.place).toBe('work'); expect(nudge?.title).toMatch(/qualify for Developer/);
   });
   it('rates job security from the career path and lists what shields the player', () => {
     expect(jobSecurity(base()).label).toBe('Exposed');

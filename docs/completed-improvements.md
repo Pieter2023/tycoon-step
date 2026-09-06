@@ -324,6 +324,12 @@ Chrome (QA save advanced past the investor journey): the card read "Neighbourhoo
 
 Validation: 308 tests across 52 files (`test/TownTour.test.ts`: arc order, idempotent visits, completion badge, stage selection, guide labels and hops; `test/TownExchange.test.ts` updated for the new final stage), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/tour-2026-09-06/`.
 
-## Where the overnight session stopped
+## Rosa points at the office — September 6, 2026 (closing touch)
 
-Nine builds shipped to production between 23:00 and roughly 01:00 PDT: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. Each is on `origin/main` and live at https://tycoonjan22026.netlify.app. What remains needs Pieter: playing the live site by hand and listing what feels off, the physical-phone test, listening to the synthesized audio on a real speaker, and a decision on Spanish for the town copy (a large, mechanical translation job now that the English is settled).
+`adviseFrom` gains a rule: when the promotion outlook says the player qualifies for the next title, Rosa says "You qualify for Developer. Ask." with the monthly odds and the point that a raise compounds; "Show me" walks to Main Street Offices (or to the manager when already inside). Test in `test/TownWork.test.tsx`. Validation for this touch: 309 tests across 52 files, build clean; logs in `docs/verification/closing-2026-09-06/`.
+
+## Where the sessions stopped (September 6, 2026, morning)
+
+Overnight (23:00 to about 01:00 PDT) nine builds shipped: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. The morning session (about 06:00 to 07:30 PDT) added eight more, each verified in Chrome, receipted above and pushed to `origin/main`: the townhouse around the apartment door and the camera-canopy fix; adaptive graphics quality; petite women with A-line skirts; residents that make room; Freedom Day; the city accessibility pass; Main Street Offices (pay stub, promotion outlook, job security); the neighbourhood tour with download progress and the city open after winning; and Rosa's promotion nudge.
+
+Everything in the roadmap's September list is now built except Spanish for the town copy, which is a large mechanical translation job across ten panels and five services and needs Pieter's decision given the North-America-first market. What remains needs Pieter in person: playing the live site by hand and listing what feels off, the physical-phone test (touch, frame rate under the adaptive quality governor, thermals, audio on a real speaker), and the Spanish decision.

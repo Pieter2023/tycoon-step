@@ -8,8 +8,8 @@ Updated September 6, 2026, 23:20 PDT, after the overnight autonomous build and d
 - Active folder: `/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2`.
 - Branch: `codex/game-overhaul-20260503-223748` == `origin/main` == production. `origin/main` was a clean ancestor with no tracked node_modules, so the push was a fast-forward; the old warning about main's history tracking node_modules no longer applies to the remote (local `git checkout main` still not needed).
 - Configured remote: `https://github.com/Pieter2023/tycoon-step.git`. Remote branch/deployment state was not fetched or verified for this handover.
-- Many tracked files are modified and important new files are untracked, including `components/town/`, services, tests, Blender sources and runtime models. Preserve the entire working folder. Do not assume a fresh clone or a git patch alone contains this work.
-- Existing unrelated edits also exist in `ModeSelector.tsx`, `index.tsx`, `netlify.toml`, `services/accessControl.ts`, its test, monetization docs and `graphify-out/`. Review the full diff before staging. Do not reset, clean, discard or blanket-stage the folder.
+- As of the morning of September 6 every tracked and previously untracked file of the city work is committed on the branch and pushed to `origin/main`; `git status` shows only `graphify-out/` (an analysis artefact, deliberately untracked). A fresh clone of `origin/main` contains the whole game, models and Blender sources.
+- Do not reset, clean or discard the folder; the user's preview save lives in the browser profile for `127.0.0.1:5187`, not in the repo.
 
 ## What Pieter wants
 
@@ -109,9 +109,9 @@ Latest validation (neighbourhood tour): **308 tests / 52 files passed**, TypeScr
 
 ## Next session priorities
 
-1. Read this file and check `git status` / `git log`. Production now matches the branch. The next session should start with Pieter playing the live site and listing what feels off; the QA rhythm that worked all night is build → tests → Chrome verification → receipt here → commit → push main.
+1. Read this file and check `git status` / `git log`. Production matches the branch (last push the morning of September 6, builds 10–17 plus Rosa's promotion nudge). Start with Pieter playing the live site and listing what feels off; the QA rhythm that worked is build → tests → Chrome verification → receipt in docs/completed-improvements.md → commit → push main.
 2. **Physical-phone check remains outstanding:** actual touch/multitouch, camera feel, frame rate (now with twelve residents, six vehicles and pigeons), thermal behaviour, orientation, suspend/resume, and listening to the new soundscape on a real speaker. A desktop browser viewport is not a physical-device test.
-3. Pacing/clarity of the connected loop was tuned on September 5 evening (desktop Chrome). Still open: Pieter playing it by hand, character contact and crowd movement. New town/café copy is largely English-only; a full screen-reader, contrast and localization review remains open.
+3. Pacing was tuned September 5; crowd contact, the keyboard/screen-reader pass, large-text and high-contrast support landed September 6. The one open roadmap item is **Spanish for the town copy** (ten panels, five services; English tests assert exact strings), which needs Pieter's decision given the North-America-first market. Still open from the old note: a full localization review remains open.
 4. If publication is requested, preserve a complete recoverable copy of tracked and untracked work, review unrelated changes, recheck tests/build, inspect the real hosting target and remote branches, create/verify a staging deployment, then publish within the authorized scope. The historical Netlify site name is `tycoonjan22026`; reverify it. Do not blindly run an old branch-to-main push recipe.
 5. More interiors, missions, voice or external art services are possible later choices, not a committed queue. Blender is already available; Higgsfield/Mixamo were not used for this stage. Quote current paid tiers only when a concrete need arises.
 
