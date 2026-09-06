@@ -1,6 +1,8 @@
 import { resolveCafeService } from './services/cafeService';
 import { resolveCafeAction, quoteCafe } from './services/townCafe';
-import { completeActiveJourney } from './services/townJourney';
+import { completeActiveJourney, activeJourney } from './services/townJourney';
+import { monthlyChallenges, challengeProgress, currentSnapshot } from './services/townChallenges';
+import { adviceHeadline } from './services/townAdvisor';
 import { transferTownSavings, runCartShift } from './services/townActivities';
 import { resolveTownAction } from './services/townProgress';
 import FirstSteps from './components/v2/FirstSteps';
@@ -3360,11 +3362,17 @@ const [gameState, setGameState] = useState<GameState>(() => {
     handlePayDebt
   };
 
+  // The city card on the dashboard: the next guided step, this month's challenges and Rosa's
+  // one-line read, so players who stay in the 2D shell still see what the city is asking of them.
+  const cityJourney = activeJourney(gameState), cityChallenges = monthlyChallenges(gameState), citySnapshot = currentSnapshot(gameState);
+  const cityDone = cityChallenges.filter(c => challengeProgress(c, citySnapshot, gameState).done).length;
   const townLauncher = !isMultiplayer && !gameState.challenge ?
-    <button onClick={() => setShowTown(true)} disabled={isProcessing || gameState.hasWon || gameState.isBankrupt}
-      className="flex w-full items-center justify-between gap-4 rounded-xl border border-amber-300/30 bg-gradient-to-r from-emerald-950 to-slate-900 px-5 py-4 text-left disabled:opacity-40">
-      <span><strong className="block text-sm text-amber-100">Enter 3D city</strong><span className="mt-1 block text-xs text-slate-300">Walk around Freedom Square. Visit the bank, businesses and property office.</span></span><span className="shrink-0 text-xs text-emerald-200">Explore →</span>
-    </button> : null;
+    <div className="rounded-xl border border-amber-300/30 bg-gradient-to-r from-emerald-950 to-slate-900 px-5 py-4">
+      <button onClick={() => setShowTown(true)} disabled={isProcessing || gameState.hasWon || gameState.isBankrupt} className="flex w-full items-center justify-between gap-4 text-left disabled:opacity-40">
+        <span><strong className="block text-sm text-amber-100">Enter 3D city</strong><span className="mt-1 block text-xs text-slate-300">{cityJourney.completed ? `Freedom Square · notice board ${cityDone}/${cityChallenges.length} this month` : `${cityJourney.stage === 2 ? 'Investor journey' : 'Your first business'} · ${cityJourney.title}`}</span></span><span className="shrink-0 text-xs text-emerald-200">{cityJourney.completed ? 'Explore →' : `${cityJourney.button} →`}</span>
+      </button>
+      <p className="mt-3 border-t border-emerald-900/60 pt-3 text-xs text-slate-300"><span className="text-amber-200">Rosa says:</span> {adviceHeadline(gameState)}{cityJourney.completed ? '' : ` · Board ${cityDone}/${cityChallenges.length}`}</p>
+    </div> : null;
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white pb-24 md:pb-4">
       {showTown && <TabErrorBoundary tabName="3D neighbourhood"><React.Suspense fallback={<Modal isOpen onClose={() => setShowTown(false)} ariaLabel="Loading neighbourhood"><p className="p-8">Opening Freedom Square…</p></Modal>}>
@@ -3373,6 +3381,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           onFinishJourney={()=>setGameState(prev=>isProcessing?prev:completeActiveJourney(prev))}
           onSell={handleSellAsset}
           onMortgage={item=>setShowMortgageModal(item)}
+          onChangeLifestyle={handleChangeLifestyle}
           loans={adjustedLoanOptions}
           onTransfer={transfer=>setGameState(prev=>isProcessing?prev:transferTownSavings(prev,transfer))}
           onCafeServiceAction={action=>setGameState(prev=>isProcessing?prev:resolveCafeService(prev,action))}

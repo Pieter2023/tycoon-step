@@ -22,6 +22,10 @@ import { activeJourney } from '../../services/townJourney';
 import ExchangePanel from './ExchangePanel';
 import PropertyPanel from './PropertyPanel';
 import NoticeBoardPanel from './NoticeBoardPanel';
+import HomePanel from './HomePanel';
+import AdvisorPanel from './AdvisorPanel';
+import { adviceHeadline, type Advice } from '../../services/townAdvisor';
+import type { Lifestyle } from '../../types';
 import { monthlyChallenges, challengeProgress, currentSnapshot } from '../../services/townChallenges';
 import { PROPERTY_LISTINGS, landlordMonth, mortgageQuote } from '../../services/townProperty';
 import { MORTGAGE_OPTIONS } from '../../constants';
@@ -44,6 +48,7 @@ type Props = {
   onBuy: (item: MarketItem, quantity?: number) => void;
   onSell?: (assetId: string) => void;
   onMortgage?: (item: MarketItem) => void;
+  onChangeLifestyle?: (lifestyle: Lifestyle) => void;
   onClose: () => void;
   onOpenMoney: (tab: 'invest' | 'bank' | 'portfolio', place?:TownPlaceId) => void;
   onAction?: (action:TownAction)=>void;
@@ -54,7 +59,7 @@ type Props = {
   onBackup: () => void;
 };
 const money = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
-export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell, onMortgage, onClose, onOpenMoney, onNextMonth, saveError, onBackup, onAction, onRememberView, onTransfer, onRunShift, loans=[], onFinishJourney, onCafeAction, onCafeServiceAction }: Props) {
+export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell, onMortgage, onChangeLifestyle, onClose, onOpenMoney, onNextMonth, saveError, onBackup, onAction, onRememberView, onTransfer, onRunShift, loans=[], onFinishJourney, onCafeAction, onCafeServiceAction }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const details = useRef<HTMLDivElement>(null);
   const controller = useRef<TownController | null>(null);
@@ -78,10 +83,13 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
   const [servicePaused,setServicePaused]=useState(state.cafe?.service?.status==='active');
   const [playerPoint,setPlayerPoint]=useState({x:0,z:5});
   const previousServiceStatus=useRef(service?.status);
-  const [room,setRoom]=useState<'city'|'bank'|'cafe'|'exchange'|'property'>('city');
+  const [room,setRoom]=useState<'city'|'bank'|'cafe'|'exchange'|'property'|'home'>('city');
+  const [rosa,setRosa]=useState(false);
   const [timeOfDay,setTimeOfDay]=useState<string>('');
   const [board,setBoard]=useState(false);
-  const openBoard=()=>{setJournal(false);setBoard(true);setShowDetails(true);};
+  const openBoard=()=>{setJournal(false);setRosa(false);setBoard(true);setShowDetails(true);};
+  const openRosa=()=>{setJournal(false);setBoard(false);setRosa(true);setShowDetails(true);};
+  const goTo=(place:NonNullable<Advice['place']>)=>{setShowDetails(false);setRosa(false);setBoard(false);if(place==='board'){openBoard();return;}if(place==='home'){if(room==='home'){setShowDetails(true);return;}cancelGuide();controller.current?.walkHome?.();return;}if(place==='cafe'){visitCafe();return;}move(place);};
   const challengesDone=monthlyChallenges(state).map(c=>challengeProgress(c,currentSnapshot(state),state)).filter(p=>p.done).length;
   const [spot,setSpot]=useState<TownSpot>(null);
   const [serving,setServing]=useState(false);
@@ -101,6 +109,9 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
     if(serviceActive&&room==='cafe'){actInShift();return;}
     if(room==='cafe'&&spot==='exit'){controller.current?.leaveCafe?.();return;}
     if(room==='city'&&spot==='board'){openBoard();return;}
+    if(room==='city'&&spot==='rosa'){openRosa();return;}
+    if(room==='city'&&spot==='home'&&!unavailable){controller.current?.enterHome?.();return;}
+    if(room==='home'&&spot==='exit'){controller.current?.leaveHome?.();return;}
     if(room==='bank'&&spot==='exit'){controller.current?.leaveBank?.();return;}
     if(room==='exchange'&&spot==='exit'){controller.current?.leaveExchange?.();return;}
     if(room==='property'&&spot==='exit'){controller.current?.leaveProperty?.();return;}
@@ -176,7 +187,9 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
       listings:PROPERTY_LISTINGS.map((id,i)=>{const item=MARKET_ITEMS.find(m=>m.id===id)!;const price=nominalPrice(item,state.month,state.economy.inflationRate);const month=landlordMonth(item,price);const best=(item.mortgageOptions??[]).map(o=>mortgageQuote(price,o,rate)!).find(Boolean);return {name:item.name,price:'$'+price.toLocaleString('en-US'),rent:'Rent ≈ $'+month.grossRent.toLocaleString('en-US')+'/mo',tag:best?best.downPercent+'% down · $'+best.payment.toLocaleString('en-US')+'/mo':'Cash purchase',colour:['#efd9a7','#cfe2d5','#dcc8e6'][i%3]};})});
   },[state.month,state.economy.interestRate,state.economy.inflationRate,loading]);
   useEffect(()=>{if(state.townProgress?.challengeSnapshot?.month!==state.month&&!disabled)onAction?.('challenge-snapshot');},[state.month,disabled]);
-  useEffect(()=>{if(!showDetails)setBoard(false);},[showDetails]);
+  useEffect(()=>{if(!showDetails){setBoard(false);setRosa(false);}},[showDetails]);
+  useEffect(()=>{controller.current?.setLifestyle?.(state.lifestyle);},[state.lifestyle,loading]);
+  useEffect(()=>{controller.current?.setAdvice?.(adviceHeadline(state));},[state,loading]);
   // Reaching the broker counts as visiting the Exchange for the investor journey.
   useEffect(()=>{if(room==='exchange'&&spot==='broker'&&showDetails&&state.townProgress?.exchangeVisitedMonth===undefined)onAction?.('visit-exchange');},[room,spot,showDetails]);
   const dispatchService=(action:ServiceAction)=>{
@@ -241,7 +254,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
   const chooseCamera=(mode:CameraPreset)=>{setCameraMode(mode);controller.current?.setCamera?.(mode);setCameraTools(false);};
   return <Modal isOpen onClose={onClose} ariaLabel="Freedom Square 3D neighbourhood" showCloseButton={false} overlayStyle={{ padding: 0 }} contentStyle={{ maxWidth: 1500, width: '100%' }} contentClassName={`town-modal${serviceActive&&room==='cafe'?' town-in-service':''}`}>
     <header className="town-header">
-      <div><p className="town-eyebrow">Your city · playable preview</p><h2>{room==='bank'?'Community Bank':room==='cafe'?'Little Square Café':room==='exchange'?'The Exchange':room==='property'?'Property & Co.':'Freedom Square'}</h2></div>
+      <div><p className="town-eyebrow">Your city · playable preview</p><h2>{room==='bank'?'Community Bank':room==='cafe'?'Little Square Café':room==='exchange'?'The Exchange':room==='property'?'Property & Co.':room==='home'?'Your place':'Freedom Square'}</h2></div>
       <div className="town-balance"><span>Cash available</span><strong>{money(state.cash)}</strong></div>
       <button className="town-icon-button" onClick={onClose} aria-label="Back to dashboard"><X size={22} /></button>
     </header>
@@ -251,9 +264,12 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
       {TOWN_PLACES.map(p => <button key={p.id} aria-label={`Walk to ${p.name}`} aria-pressed={destination === p.id} disabled={serving} onClick={() => move(p.id)} style={{ '--place-color': p.color } as React.CSSProperties}><span className="town-dot" />{p.sign === 'BUSINESSES' ? 'Businesses' : p.sign === 'PROPERTY' ? 'Property' : p.sign === 'EXCHANGE' ? 'Stocks' : 'Bank'}{owned.includes(p.id) && <span aria-label="Has holdings"> ✓</span>}</button>)}
       <button disabled={serving} onClick={visitCafe} aria-label={room==='city'&&near==='business'&&spot!=='cart'?'Enter café':'Visit café'}>{room==='city'&&near==='business'&&spot!=='cart'?'Enter café →':state.cafe?'Your café':'Café'}</button>
       {cart&&!unavailable&&<button aria-label="Walk to your coffee cart" disabled={serving} onClick={visitCart} style={{'--place-color':'#eac778'} as React.CSSProperties}><span className="town-dot"/>Your cart</button>}
+      {!unavailable&&<button aria-label="Walk home" disabled={serving} onClick={()=>{cancelGuide();setShowDetails(false);controller.current?.walkHome?.();}} style={{'--place-color':'#8fb3a0'} as React.CSSProperties}><span className="town-dot"/>Home</button>}
+      {!unavailable&&<button aria-label="Talk to Rosa on the bench" disabled={serving} onClick={()=>{cancelGuide();setShowDetails(false);controller.current?.walkToRosa?.();}} style={{'--place-color':'#c99ab8'} as React.CSSProperties}><span className="town-dot"/>Rosa</button>}
       <button aria-label="Notice board: this month's challenges" disabled={serving} onClick={()=>{cancelGuide();if(!unavailable&&room==='city')controller.current?.walkToBoard?.();openBoard();}} style={{'--place-color':'#c9b898'} as React.CSSProperties}><span className="town-dot"/>Board {challengesDone}/3</button>
     </nav>
     {room==='bank'&&<div className="town-interior-nav"><span>Inside the bank</span><button onClick={()=>{cancelGuide();setShowDetails(false);controller.current?.walkToTeller?.();}}>Walk to teller</button><button onClick={()=>{cancelGuide();setShowDetails(false);controller.current?.walkToExit?.();}}>Walk to exit</button><button onClick={()=>{cancelGuide();controller.current?.leaveBank?.();}}>Return to square ↗</button></div>}
+    {room==='home'&&<div className="town-interior-nav"><span>Your place</span><button onClick={()=>{cancelGuide();setShowDetails(false);controller.current?.walkToDesk?.();}}>Walk to desk</button><button onClick={()=>{cancelGuide();setShowDetails(false);controller.current?.walkToExit?.();}}>Walk to exit</button><button onClick={()=>{cancelGuide();controller.current?.leaveHome?.();}}>Back to the square ↗</button></div>}
     {room==='property'&&<div className="town-interior-nav"><span>Estate office</span><button onClick={()=>{cancelGuide();setShowDetails(false);controller.current?.walkToAgent?.();}}>Walk to agent</button><button onClick={()=>{cancelGuide();setShowDetails(false);controller.current?.walkToExit?.();}}>Walk to exit</button><button onClick={()=>{cancelGuide();controller.current?.leaveProperty?.();}}>Return to square ↗</button></div>}
     {room==='exchange'&&<div className="town-interior-nav"><span>Trading floor</span><button onClick={()=>{cancelGuide();setShowDetails(false);controller.current?.walkToBroker?.();}}>Walk to broker</button><button onClick={()=>{cancelGuide();setShowDetails(false);controller.current?.walkToExit?.();}}>Walk to exit</button><button onClick={()=>{cancelGuide();controller.current?.leaveExchange?.();}}>Return to square ↗</button></div>}
     {room==='cafe'&&<div className="town-interior-nav"><span>{state.cafe?'Your café':'Café viewing'}</span><button onClick={()=>{cancelGuide();setShowDetails(false);controller.current?.walkToCafeCounter?.();}}>Walk to counter</button><button onClick={()=>{setCafePlay(true);setJournal(false);setShowDetails(true);}}>Play a shift</button><button onClick={()=>{setCafePlay(false);setJournal(false);setShowDetails(true);}}>Manage café</button><button onClick={()=>{cancelGuide();if(unavailable){setRoom('city');setShowDetails(false);}else controller.current?.leaveCafe?.();}}>Return to square ↗</button></div>}
@@ -274,7 +290,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
           {cameraTools&&<div className="town-camera-menu" aria-label="Camera controls"><strong>Choose your view</strong><button aria-pressed={cameraMode==='follow'} onClick={()=>chooseCamera('follow')}>Follow character</button><button aria-pressed={cameraMode==='overview'} onClick={()=>chooseCamera('overview')}>See neighbourhood</button><div><button aria-label="Turn camera left" onClick={()=>controller.current?.orbit?.(-.3)}>↶ Left</button><button aria-label="Turn camera right" onClick={()=>controller.current?.orbit?.(.3)}>Right ↷</button></div><div><button onClick={()=>controller.current?.zoom?.(-1)}>Zoom in</button><button onClick={()=>controller.current?.zoom?.(1)}>Zoom out</button></div><p>Tap the ground to walk. Drag to adjust the view. Reset restores this preset.</p><button onClick={()=>setCameraTools(false)}>Done</button></div>}
           {celebrating&&<div className="town-earned" role="status"><span>✦</span><strong>{celebrating}</strong><p>{celebrating==='Patient investor'?'You owned a slice of the market and held it through the noise.':'You opened a business and learned what it earned.'}</p></div>}
           {serving&&<div className="town-serving" role="status">Serving your customers…<span>Your shift receipt is ready in a moment.</span></div>}
-          <div className="town-location" role="status">{room==='city'&&spot==='board'?<button onClick={inspect}><strong>Community notice board</strong><span>This month's challenges →</span></button>:room==='cafe'?<button onClick={inspect}><strong>{spot==='exit'?'Back to the square':spot==='cafe-counter'?'Your café counter':'Welcome to Little Square Café'}</strong><span>{spot==='exit'?'Leave café →':'Plan, furnish & review →'}</span></button>:(room==='bank'||room==='exchange'||room==='property')&&spot==='exit'?<button onClick={inspect}><strong>Back to the square</strong><span>Leave {room==='bank'?'bank':room==='property'?'the office':'the Exchange'} →</span></button>:room==='property'?(spot==='agent'?<button onClick={inspect}><strong>Your agent</strong><span>Listings, rents and mortgages →</span></button>:<><strong>Welcome to Property & Co.</strong><span>Walk to the agent's desk.</span></>):room==='exchange'?(spot==='broker'?<button onClick={inspect}><strong>Your broker</strong><span>Talk about the market →</span></button>:<><strong>Welcome to the trading floor.</strong><span>Walk to the broker to talk.</span></>):room==='bank'&&!place?<><strong>Welcome inside.</strong><span>Walk to the teller to talk.</span></>:place ? <button onClick={inspect}><strong>{spot==='cart'?'Your coffee cart':room==='bank'?'Your bank teller':place.name}</strong><span>{room==='bank'?'Talk to teller →':place.id==='bank'?'Enter bank →':place.id==='exchange'&&!unavailable?'Enter the Exchange →':place.id==='property'&&!unavailable?'Enter the office →':spot==='cart'?'Run a shift & manage cart →':'View opportunities →'}</span></button> : <><strong>{destination ? `Next stop: ${TOWN_PLACES.find(p => p.id === destination)?.name}` : 'Make yourself at home.'}</strong><span>Tap a destination or the pavement to walk. Your next step is above.</span></>}</div>
+          <div className="town-location" role="status">{room==='home'?<button onClick={inspect}><strong>{spot==='exit'?'Back to the square':spot==='desk'?'Your desk':'Home sweet home'}</strong><span>{spot==='exit'?'Leave →':'Mail, bills & your place →'}</span></button>:room==='city'&&spot==='home'?<button onClick={inspect}><strong>12 Square St</strong><span>Enter your place →</span></button>:room==='city'&&spot==='rosa'?<button onClick={inspect}><strong>Rosa, on the bench</strong><span>Talk about your month →</span></button>:room==='city'&&spot==='board'?<button onClick={inspect}><strong>Community notice board</strong><span>This month's challenges →</span></button>:room==='cafe'?<button onClick={inspect}><strong>{spot==='exit'?'Back to the square':spot==='cafe-counter'?'Your café counter':'Welcome to Little Square Café'}</strong><span>{spot==='exit'?'Leave café →':'Plan, furnish & review →'}</span></button>:(room==='bank'||room==='exchange'||room==='property')&&spot==='exit'?<button onClick={inspect}><strong>Back to the square</strong><span>Leave {room==='bank'?'bank':room==='property'?'the office':'the Exchange'} →</span></button>:room==='property'?(spot==='agent'?<button onClick={inspect}><strong>Your agent</strong><span>Listings, rents and mortgages →</span></button>:<><strong>Welcome to Property & Co.</strong><span>Walk to the agent's desk.</span></>):room==='exchange'?(spot==='broker'?<button onClick={inspect}><strong>Your broker</strong><span>Talk about the market →</span></button>:<><strong>Welcome to the trading floor.</strong><span>Walk to the broker to talk.</span></>):room==='bank'&&!place?<><strong>Welcome inside.</strong><span>Walk to the teller to talk.</span></>:place ? <button onClick={inspect}><strong>{spot==='cart'?'Your coffee cart':room==='bank'?'Your bank teller':place.name}</strong><span>{room==='bank'?'Talk to teller →':place.id==='bank'?'Enter bank →':place.id==='exchange'&&!unavailable?'Enter the Exchange →':place.id==='property'&&!unavailable?'Enter the office →':spot==='cart'?'Run a shift & manage cart →':'View opportunities →'}</span></button> : <><strong>{destination ? `Next stop: ${TOWN_PLACES.find(p => p.id === destination)?.name}` : 'Make yourself at home.'}</strong><span>Tap a destination or the pavement to walk. Your next step is above.</span></>}</div>
           <div className="town-joystick" role="group" aria-label="Movement joystick. Drag to walk, or use W A S D or arrow keys." tabIndex={0}
             onPointerDown={event=>{event.preventDefault();cancelGuide();stickPointer.current=event.pointerId;event.currentTarget.setPointerCapture(event.pointerId);updateStick(event);}}
             onPointerMove={updateStick} onPointerUp={releaseStick} onPointerCancel={releaseStick} onLostPointerCapture={releaseStick} onBlur={releaseStick}>
@@ -285,7 +301,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
       </section>
       <aside className="town-details" ref={details} aria-label="Location opportunities" style={{display:showDetails?'block':'none'}}>
         <button className="town-close-details" aria-label="Close opportunities" onClick={()=>setShowDetails(false)}><X size={18}/></button>
-        {board&&room==='city' ? <NoticeBoardPanel state={state} disabled={disabled} onNextMonth={onNextMonth}/> : journal ? <>
+        {board&&room==='city' ? <NoticeBoardPanel state={state} disabled={disabled} onNextMonth={onNextMonth}/> : rosa&&room==='city' ? <AdvisorPanel state={state} onGo={goTo}/> : room==='home' ? <HomePanel state={state} disabled={disabled} onChangeLifestyle={onChangeLifestyle} onGo={goTo}/> : journal ? <>
           <p className="town-eyebrow">{journey.stage===2?'INVESTOR JOURNEY':'YOUR FIRST BUSINESS'}</p><h3>{journey.title}</h3><p className="town-intro">{journey.detail}</p>
           <ol className="town-journey-steps">{journey.milestones.map((step,index)=><li key={step.title} aria-current={!journey.completed&&index===journey.step?'step':undefined}><span>{step.done?'✓':index+1}</span><strong>{step.title}</strong></li>)}</ol>
           {journey.completed?<><div className="town-badge"><span>✦</span><strong>Neighbourhood entrepreneur</strong><p>Earned in month {state.townProgress?.journeyCompletedMonth}. A milestone you earned through decisions—no cash bonus.</p></div><div className="town-badge"><span>✦</span><strong>Patient investor</strong><p>Earned in month {state.townProgress?.investorCompletedMonth}. You held through the noise.</p></div></>:journey.action==='finish'?<button className="town-primary" disabled={disabled||!onFinishJourney} onClick={onFinishJourney}>{journey.stage===2?'Complete my investor journey ✦':'Complete my opening journey ✦'}</button>:<>{journey.stage===2&&<div className="town-badge"><span>✦</span><strong>Neighbourhood entrepreneur</strong><p>Earned in month {state.townProgress?.journeyCompletedMonth}.</p></div>}<button className="town-primary" disabled={guideDisabled} onClick={followJourney}>{guideText} →</button></>}
