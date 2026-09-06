@@ -245,3 +245,9 @@ Validation: 274 tests across 44 files (`test/TownDaylight.test.ts`, `test/TownCh
 **City card (App launcher).** The "Enter 3D city" card on the Play dashboard now shows the current guided step and its button label (or the notice-board score once both journeys are done) and Rosa's one-line read, so players in the 2D shell see what the city is asking of them.
 
 Validation: 281 tests across 46 files (`test/TownAdvisor.test.ts`, `test/TownHome.test.ts`), TypeScript, build and `git diff --check` clean. Chrome: door, flat, desk panel, lifestyle chooser, Rosa's bubble and panel and the dashboard card all verified; console clean. Logs: [tests](verification/home-rosa-2026-09-06/tests.log), [build](verification/home-rosa-2026-09-06/build.log).
+
+## Seasons — September 6, 2026 (overnight build 7)
+
+`components/town/townSeasons.ts`: the game month sets the season (December to February winter, then spring, summer, autumn). The merged city materials are recoloured by name, so the Blender model is untouched: winter whitens the ground and pavements and cools the sun; autumn turns the canopies orange and gold; summer restores the exact original colours. A shared particle cloud drops snow in winter and leaves in autumn, hidden indoors and under reduced motion. The caption now reads e.g. "MONTH 2 · WINTER · MARKET DAY · MIDDAY". Dev handle: `window.__town.setSeason('autumn')`.
+
+Validation: 284 tests across 47 files (`test/TownSeasons.test.ts`), TypeScript, build and `git diff --check` clean; Chrome showed winter (month 2), then forced autumn and summer. Logs in `docs/verification/seasons-2026-09-06/`.

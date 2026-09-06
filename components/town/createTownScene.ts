@@ -9,6 +9,7 @@ import { createTownExchange, clampExchangePoint, exchangeSpot, ExchangeBoard } f
 import { createTownProperty, clampPropertyPoint, propertySpot, PropertyBoard } from './townProperty';
 import { daylight, dayPhase, createStreetLamps, Daylight } from './townDaylight';
 import { createTownHome, clampHomePoint, homeSpot } from './townHome';
+import { createSeasonPalette, createSeasonFall, seasonFor, Season } from './townSeasons';
 import type { Lifestyle } from '../../types';
 import { createCoffeeCart } from './townBusiness';
 import { createTownTraffic } from './townTraffic';
@@ -105,6 +106,8 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
    const texture=new THREE.CanvasTexture(paper);texture.colorSpace=THREE.SRGBColorSpace;const sheet=new THREE.Mesh(new THREE.PlaneGeometry(1.55,.97),new THREE.MeshBasicMaterial({map:texture}));sheet.position.set(BOARD.x,1.75,BOARD.z+.05);outdoors.add(sheet);
    const roofBoard=new THREE.Mesh(new THREE.BoxGeometry(1.9,.08,.5),new THREE.MeshStandardMaterial({color:'#7a4a3c'}));roofBoard.position.set(BOARD.x,2.36,BOARD.z);outdoors.add(roofBoard);}
   let glassMaterial:THREE.MeshStandardMaterial|undefined, townMonth=1, phaseOverride:number|undefined, timeLabel:Daylight['label']|undefined;
+  // Seasons recolour the merged city materials and drop snow or leaves.
+  const seasonFall=createSeasonFall();outdoors.add(seasonFall.root);let palette:ReturnType<typeof createSeasonPalette>|undefined, season:Season='summer', seasonOverride:Season|undefined;
   const life=createTownLife(reducedMotion);outdoors.add(life.root);
   let traffic:ReturnType<typeof createTownTraffic>|undefined, cyclist:ReturnType<typeof createCyclist>|undefined, dogWalker:ReturnType<typeof createDogWalker>|undefined;
   let ambience:ReturnType<typeof createTownAmbience>|undefined;
@@ -149,6 +152,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     if (!alive) return;
     for (const root of [town.scene, character.scene]) root.traverse(o => { if (o instanceof THREE.Mesh) { o.castShadow = true; o.receiveShadow = true; } });
     outdoors.add(town.scene); player.add(character.scene); playerActor = addActor(character.scene, character.animations);
+    palette = createSeasonPalette(town.scene); palette.apply(seasonOverride ?? season);
     town.scene.traverse(o => { if (o instanceof THREE.Mesh && !Array.isArray(o.material) && o.material.name === 'glass' && o.material instanceof THREE.MeshStandardMaterial) { glassMaterial = o.material; glassMaterial.emissive.set('#ffc985'); glassMaterial.emissiveIntensity = 0; } });
     const playerSex = options.playerSex ?? 'm';
     styleCharacter(character.scene, { sex: playerSex, hair: playerSex === 'f' ? 'long' : 'short' });
@@ -159,7 +163,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       if (dog) { dogWalker = createDogWalker(dog, reducedMotion); outdoors.add(dogWalker.root, dogWalker.leash); }
     }
     // Dev-only QA handle for inspecting traffic and pigeons from the console; stripped from production builds.
-    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { traffic, life, cyclist, dogWalker, player: () => ({ x: player.position.x, z: player.position.z }), setPhase: (p?: number) => { phaseOverride = p; } };
+    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { traffic, life, cyclist, dogWalker, player: () => ({ x: player.position.x, z: player.position.z }), setPhase: (p?: number) => { phaseOverride = p; }, setSeason: (s?: Season) => { seasonOverride = s; palette?.apply(s ?? season); } };
     // Twelve neighbours: walkers on both pavements plus two resting on the promenade benches.
     for (let i = 0; i < 12; i++) {
       const root = character.scene.clone(true); root.scale.setScalar(.86 + (i % 3) * .07);
@@ -301,8 +305,9 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       if(cafeInside&&elapsed-lastPointAt>.12){lastPointAt=elapsed;options.onPlayerPoint?.({x:player.position.x,z:player.position.z});}
     }
     if(inside){yaw=THREE.MathUtils.clamp(yaw,-.65,.65);pitch=THREE.MathUtils.clamp(pitch,.5,.95);zoomDistance=THREE.MathUtils.clamp(zoomDistance,7,12);}
-    weather.update(elapsed,rainy,reducedMotion);
+    weather.update(elapsed,rainy,reducedMotion);seasonFall.update(elapsed,seasonOverride??season,reducedMotion||inside);
     const light=inside?daylight(.22,false):daylight(phaseOverride??dayPhase(townMonth,elapsed,reducedMotion),rainy);
+    if(!inside&&(seasonOverride??season)==='winter'){light.sunIntensity*=.8;light.sunColor='#e8f0ff';}
     sun.position.copy(light.sun);sun.intensity=light.sunIntensity;sun.color.set(light.sunColor);hemi.color.set(light.sky);hemi.groundColor.set(light.ground);hemi.intensity=light.skyIntensity;scene.environmentIntensity=light.ambient;
     renderer.toneMappingExposure=Number(light.exposure);lamps.set(inside?0:light.lamps);if(glassMaterial)glassMaterial.emissiveIntensity=light.windows*.9;
     if(!inside){(scene.background as THREE.Color).set(light.background);if(scene.fog instanceof THREE.Fog)scene.fog.color.set(light.background);ambience?.night(light.night?1:light.lamps*.6);}
@@ -411,7 +416,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     setLifestyle(lifestyle){home.setLifestyle(lifestyle);},
     setAdvice(headline){adviceHeadline=headline;},
     walkToCafeCounter(){if(cafeInside){clearMovement();path=[{x:0,z:.8}];}},
-    setNeighbourhood(month,cafe){cafeState=cafe;townMonth=month;shopSign.visible=!!cafe;rainy=cafeWeather(month);cafeRoom.setState(cafeService?.status==='active'?{seats:cafeService.seats,machine:cafeService.machine}:cafe);if(!(scene.background instanceof THREE.Color))scene.background=new THREE.Color('#bdd7e4');ambience?.update(rainy,inside,document.hidden);},
+    setNeighbourhood(month,cafe){cafeState=cafe;townMonth=month;season=seasonFor(month);palette?.apply(seasonOverride??season);shopSign.visible=!!cafe;rainy=cafeWeather(month);cafeRoom.setState(cafeService?.status==='active'?{seats:cafeService.seats,machine:cafeService.machine}:cafe);if(!(scene.background instanceof THREE.Color))scene.background=new THREE.Color('#bdd7e4');ambience?.update(rainy,inside,document.hidden);},
     enterBank(){if(near==='bank'&&!inside)transition(true,'bank');},leaveBank(){transition(false);},
     walkToTeller(){if(inside&&!cafeInside&&!exchangeInside&&!officeInside&&!homeInside){clearMovement();path=[{x:0,z:.75}];}},
     walkToExit(){if(inside){clearMovement();path=[{x:0,z:6.1}];}},

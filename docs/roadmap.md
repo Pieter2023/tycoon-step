@@ -2,7 +2,7 @@
 
 ## Current priorities — September 5, 2026
 
-Start with [HANDOVER.md](../HANDOVER.md). **All September 5–6 work is on `origin/main` and live on Netlify (`tycoonjan22026`).** Latest code validation: 281 tests / 46 files plus a successful production build (overnight build 6). The earlier “clean tree”, “deployed” and “no queued build work” statements below apply only to the archived June version.
+Start with [HANDOVER.md](../HANDOVER.md). **All September 5–6 work is on `origin/main` and live on Netlify (`tycoonjan22026`).** Latest code validation: 284 tests / 47 files plus a successful production build (overnight build 7). The earlier “clean tree”, “deployed” and “no queued build work” statements below apply only to the archived June version.
 
 Completed locally: five financial-learning foundations; 3D Freedom Square and movement/camera polish; connected opening journey; bank/teller and coffee-cart activity; living neighbourhood and café management; hands-on coffee preparation/service with free practice, saved owner shifts and financial receipts.
 

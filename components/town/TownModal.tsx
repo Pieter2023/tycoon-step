@@ -25,6 +25,7 @@ import NoticeBoardPanel from './NoticeBoardPanel';
 import HomePanel from './HomePanel';
 import AdvisorPanel from './AdvisorPanel';
 import { adviceHeadline, type Advice } from '../../services/townAdvisor';
+import { seasonFor, SEASON_LABEL } from './townSeasons';
 import type { Lifestyle } from '../../types';
 import { monthlyChallenges, challengeProgress, currentSnapshot } from '../../services/townChallenges';
 import { PROPERTY_LISTINGS, landlordMonth, mortgageQuote } from '../../services/townProperty';
@@ -284,7 +285,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
         {serviceActive&&service&&room==='cafe'&&!showDetails&&!unavailable&&<CafeServiceHUD shift={service} practice={!!practice} point={playerPoint} paused={servicePaused||(!practice&&disabled)} onAct={actInShift} onPause={()=>setServicePaused(p=>!p)} onFinish={()=>dispatchService({type:'finish'})}/>}
         {loading && <div className="town-loading" role="status"><span className="town-loading-orbit" /><strong>Welcome to your neighbourhood</strong><span>Opening the city…</span></div>}
         {unavailable ? <div className="town-fallback"><Building2 size={36} /><h3>Explore with the destination buttons</h3><p>This browser cannot display the 3D view. Your purchases and progress still work.</p></div> : <>
-          <div className="town-world-caption"><span className="town-live-dot" /> MONTH {state.month} · {cafeWeather(state.month)?'RAIN':'MARKET DAY'}{timeOfDay&&room==='city'?` · ${timeOfDay}`:''}<span>{room==='cafe'?(state.cafe?.plan.open?'Trading plan saved · staff at work':'Your next chapter'):cafeWeather(state.month)?'Rainy afternoon · quieter streets':'Market day · neighbours out and about'}</span></div>
+          <div className="town-world-caption"><span className="town-live-dot" /> MONTH {state.month} · {SEASON_LABEL[seasonFor(state.month)]} · {cafeWeather(state.month)?'RAIN':'MARKET DAY'}{timeOfDay&&room==='city'?` · ${timeOfDay}`:''}<span>{room==='cafe'?(state.cafe?.plan.open?'Trading plan saved · staff at work':'Your next chapter'):cafeWeather(state.month)?'Rainy afternoon · quieter streets':'Market day · neighbours out and about'}</span></div>
           <button className="town-camera-menu-button" aria-expanded={cameraTools} onClick={()=>setCameraTools(!cameraTools)}>Camera</button>
           <button className="town-reset-camera" aria-label="Reset camera" title="Reset camera (R)" onClick={() => controller.current?.resetView()}><RotateCcw size={18} /></button>
           {cameraTools&&<div className="town-camera-menu" aria-label="Camera controls"><strong>Choose your view</strong><button aria-pressed={cameraMode==='follow'} onClick={()=>chooseCamera('follow')}>Follow character</button><button aria-pressed={cameraMode==='overview'} onClick={()=>chooseCamera('overview')}>See neighbourhood</button><div><button aria-label="Turn camera left" onClick={()=>controller.current?.orbit?.(-.3)}>↶ Left</button><button aria-label="Turn camera right" onClick={()=>controller.current?.orbit?.(.3)}>Right ↷</button></div><div><button onClick={()=>controller.current?.zoom?.(-1)}>Zoom in</button><button onClick={()=>controller.current?.zoom?.(1)}>Zoom out</button></div><p>Tap the ground to walk. Drag to adjust the view. Reset restores this preset.</p><button onClick={()=>setCameraTools(false)}>Done</button></div>}
