@@ -63,9 +63,11 @@ describe('year-in-review city section', () => {
 import React from 'react';
 import { render, cleanup } from '@testing-library/react';
 import AnnualReportModal from '../components/modals/AnnualReportModal';
+import { I18nProvider } from '../i18n';
 it('renders the city section of the annual report', () => {
   const report = { year: 1, startNetWorth: 1000, endNetWorth: 2000, marketGains: 100, passiveIncome: 200, hindsights: [], city: { badges: ['Patient investor'], challengesCompleted: 7, cleanSweeps: 2, cafeProfit: 1500, cafeReputation: 74, ownerShifts: 3 } };
-  const { container } = render(React.createElement(AnnualReportModal, { report, onDismiss: () => {} }));
-  expect(container.textContent).toMatch(/Your city this year/); expect(container.textContent).toMatch(/Patient investor/); expect(container.textContent).toMatch(/7 challenges completed, 2 clean sweeps/); expect(container.textContent).toMatch(/3 owner shifts; reputation stands at 74\/100/);
+  render(React.createElement(I18nProvider, null, React.createElement(AnnualReportModal, { report, onDismiss: () => {} })));
+  const text = document.body.textContent ?? '';
+  expect(text).toMatch(/Your city this year/); expect(text).toMatch(/Patient investor/); expect(text).toMatch(/7 challenges completed, 2 clean sweeps/); expect(text).toMatch(/3 owner shifts; reputation stands at 74\/100/);
   cleanup();
 });

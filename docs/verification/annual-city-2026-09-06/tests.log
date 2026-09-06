@@ -13,86 +13,9 @@ Error: Not implemented: HTMLCanvasElement.prototype.getContext (without installi
     at /Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/test/TownHome.test.ts:22:18
     at processTicksAndRejections (node:internal/process/task_queues:103:5)
     at file:///Users/pietervanderwalt/Desktop/Current%20High%20Value%20Apps/tycoon-step-main%202/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20 undefined
-Error: Uncaught [Error: useI18n must be used within I18nProvider]
-    at reportException (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
-    at innerInvokeEventListeners (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
-    at invokeEventListeners (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
-    at HTMLUnknownElementImpl._dispatch (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
-    at HTMLUnknownElementImpl.dispatchEvent (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
-    at HTMLUnknownElement.dispatchEvent (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
-    at Object.invokeGuardedCallbackDev (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
-    at invokeGuardedCallback (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
-    at beginWork$1 (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/react-dom/cjs/react-dom.development.js:27490:7)
-    at performUnitOfWork (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/react-dom/cjs/react-dom.development.js:26599:12) Error: useI18n must be used within I18nProvider
-    at useI18n (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/i18n/index.tsx:166:11)
-    at Modal (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/components/Modal.tsx:111:17)
-    at renderWithHooks (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/react-dom/cjs/react-dom.development.js:15486:18)
-    at mountIndeterminateComponent (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/react-dom/cjs/react-dom.development.js:20103:13)
-    at beginWork (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/react-dom/cjs/react-dom.development.js:21626:16)
-    at HTMLUnknownElement.callCallback (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/react-dom/cjs/react-dom.development.js:4164:14)
-    at HTMLUnknownElement.callTheUserObjectsOperation (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:26:30)
-    at innerInvokeEventListeners (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:350:25)
-    at invokeEventListeners (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
-    at HTMLUnknownElementImpl._dispatch (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
-Error: Uncaught [Error: useI18n must be used within I18nProvider]
-    at reportException (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/helpers/runtime-script-errors.js:66:24)
-    at innerInvokeEventListeners (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:353:9)
-    at invokeEventListeners (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
-    at HTMLUnknownElementImpl._dispatch (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
-    at HTMLUnknownElementImpl.dispatchEvent (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
-    at HTMLUnknownElement.dispatchEvent (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
-    at Object.invokeGuardedCallbackDev (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/react-dom/cjs/react-dom.development.js:4213:16)
-    at invokeGuardedCallback (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/react-dom/cjs/react-dom.development.js:4277:31)
-    at beginWork$1 (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/react-dom/cjs/react-dom.development.js:27490:7)
-    at performUnitOfWork (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/react-dom/cjs/react-dom.development.js:26599:12) Error: useI18n must be used within I18nProvider
-    at useI18n (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/i18n/index.tsx:166:11)
-    at Modal (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/components/Modal.tsx:111:17)
-    at renderWithHooks (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/react-dom/cjs/react-dom.development.js:15486:18)
-    at mountIndeterminateComponent (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/react-dom/cjs/react-dom.development.js:20103:13)
-    at beginWork (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/react-dom/cjs/react-dom.development.js:21626:16)
-    at HTMLUnknownElement.callCallback (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/react-dom/cjs/react-dom.development.js:4164:14)
-    at HTMLUnknownElement.callTheUserObjectsOperation (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:26:30)
-    at innerInvokeEventListeners (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:350:25)
-    at invokeEventListeners (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
-    at HTMLUnknownElementImpl._dispatch (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
-stderr | test/TownChallenges.test.ts > renders the city section of the annual report
-The above error occurred in the <Modal> component:
 
-    at Modal (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/components/Modal.tsx:63:3)
-    at AnnualReportModal (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/components/modals/AnnualReportModal.tsx:6:30)
-
-Consider adding an error boundary to your tree to customize error handling behavior.
-Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
-
- ❯ test/TownChallenges.test.ts (5 tests | 1 failed) 58ms
-   × renders the city section of the annual report 23ms
-
-⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
-
- FAIL  test/TownChallenges.test.ts > renders the city section of the annual report
-Error: useI18n must be used within I18nProvider
- ❯ useI18n i18n/index.tsx:166:11
-    164|   const ctx = useContext(I18nContext);
-    165|   if (!ctx) {
-    166|     throw new Error('useI18n must be used within I18nProvider');
-       |           ^
-    167|   }
-    168|   return ctx;
- ❯ Modal components/Modal.tsx:111:17
- ❯ renderWithHooks node_modules/react-dom/cjs/react-dom.development.js:15486:18
- ❯ mountIndeterminateComponent node_modules/react-dom/cjs/react-dom.development.js:20103:13
- ❯ beginWork node_modules/react-dom/cjs/react-dom.development.js:21626:16
- ❯ beginWork$1 node_modules/react-dom/cjs/react-dom.development.js:27465:14
- ❯ performUnitOfWork node_modules/react-dom/cjs/react-dom.development.js:26599:12
- ❯ workLoopSync node_modules/react-dom/cjs/react-dom.development.js:26505:5
- ❯ renderRootSync node_modules/react-dom/cjs/react-dom.development.js:26473:7
- ❯ recoverFromConcurrentError node_modules/react-dom/cjs/react-dom.development.js:25889:20
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
-
-
- Test Files  1 failed | 46 passed (47)
-      Tests  1 failed | 289 passed (290)
-   Start at  23:54:12
-   Duration  9.86s (transform 9.10s, setup 10.19s, import 21.18s, tests 16.03s, environment 30.49s)
+ Test Files  47 passed (47)
+      Tests  290 passed (290)
+   Start at  23:55:05
+   Duration  9.71s (transform 7.75s, setup 9.55s, import 19.34s, tests 16.61s, environment 29.58s)
 
