@@ -2,7 +2,7 @@
 
 ## Current priorities — September 5, 2026
 
-Start with [HANDOVER.md](../HANDOVER.md). **All September 5–6 work is on `origin/main` and live on Netlify (`tycoonjan22026`).** Latest code validation: 306 tests / 51 files plus a successful production build (workplace build, morning of 2026-09-06). The earlier “clean tree”, “deployed” and “no queued build work” statements below apply only to the archived June version.
+Start with [HANDOVER.md](../HANDOVER.md). **All September 5–6 work is on `origin/main` and live on Netlify (`tycoonjan22026`).** Latest code validation: 308 tests / 52 files plus a successful production build (tour build, morning of 2026-09-06). The earlier “clean tree”, “deployed” and “no queued build work” statements below apply only to the archived June version.
 
 Completed locally: five financial-learning foundations; 3D Freedom Square and movement/camera polish; connected opening journey; bank/teller and coffee-cart activity; living neighbourhood and café management; hands-on coffee preparation/service with free practice, saved owner shifts and financial receipts.
 
@@ -11,7 +11,7 @@ Next priorities, subject to Pieter's next request:
 1. Real-phone playtest on the live site: touch, multitouch, performance with twelve residents, six vehicles, cyclist, dog and pigeons, orientation, suspend/resume, and how the synthesized audio sounds on a speaker. Browser phone-sized layout checks already passed but do not replace this.
 1b. Spanish (es.json) for the town, Exchange, property, café and notice-board copy. (The screen-reader/keyboard pass over the city landed on September 6.)
 2. Pacing of the connected bank/cart/café loop was tuned on September 5 (one-tap guided walks through doors, jogging on long routes, panels that scroll to the new step, honest guide labels; see the receipt). Character contact and crowd movement landed on September 6 (residents step aside and wait); still open: a second opinion from Pieter playing it by hand. Preserve accurate finance and save behaviour.
-3. Review town accessibility/localization and initial loading cost before a broader release.
+3. Localization of the town copy (Spanish) remains open. Accessibility landed September 6; the city now shows download progress, and the bundle facts are recorded in docs/completed-improvements.md (main 1.12 MB / 307 KB gz; city chunk 823 KB / 227 KB gz, loaded on demand). Further code-splitting of the 2D main chunk is possible but not required.
 4. If asked to publish, preserve all untracked work, review unrelated changes, verify hosting/remote state and validate staging before production. No publication has been requested in this handover task.
 5. Street life landed on September 5 (sex-distinct residents, traffic that yields, pigeons, bunting, synthesized soundscape). Natural next steps: listen-test the audio on a device, a bicycle/dog walker, evening lighting, and more varied clips via the refine script. Consider more interiors/dialogue/asset services only after choosing the next scope. No new paid account is currently required.
 

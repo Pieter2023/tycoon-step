@@ -3368,8 +3368,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const cityDone = cityChallenges.filter(c => challengeProgress(c, citySnapshot, gameState).done).length;
   const townLauncher = !isMultiplayer && !gameState.challenge ?
     <div className="rounded-xl border border-amber-300/30 bg-gradient-to-r from-emerald-950 to-slate-900 px-5 py-4">
-      <button onClick={() => setShowTown(true)} disabled={isProcessing || gameState.hasWon || gameState.isBankrupt} className="flex w-full items-center justify-between gap-4 text-left disabled:opacity-40">
-        <span><strong className="block text-sm text-amber-100">Enter 3D city</strong><span className="mt-1 block text-xs text-slate-300">{cityJourney.completed ? `Freedom Square · notice board ${cityDone}/${cityChallenges.length} this month` : `${cityJourney.stage === 2 ? 'Investor journey' : 'Your first business'} · ${cityJourney.title}`}</span></span><span className="shrink-0 text-xs text-emerald-200">{cityJourney.completed ? 'Explore →' : `${cityJourney.button} →`}</span>
+      <button onClick={() => setShowTown(true)} disabled={isProcessing || gameState.isBankrupt} className="flex w-full items-center justify-between gap-4 text-left disabled:opacity-40">
+        <span><strong className="block text-sm text-amber-100">Enter 3D city</strong><span className="mt-1 block text-xs text-slate-300">{cityJourney.completed ? `Freedom Square · notice board ${cityDone}/${cityChallenges.length} this month` : `${cityJourney.stage === 3 ? 'Neighbourhood tour' : cityJourney.stage === 2 ? 'Investor journey' : 'Your first business'} · ${cityJourney.title}`}</span></span><span className="shrink-0 text-xs text-emerald-200">{cityJourney.completed ? 'Explore →' : `${cityJourney.button} →`}</span>
       </button>
       <p className="mt-3 border-t border-emerald-900/60 pt-3 text-xs text-slate-300"><span className="text-amber-200">Rosa says:</span> {adviceHeadline(gameState)}{cityJourney.completed ? '' : ` · Board ${cityDone}/${cityChallenges.length}`}</p>
     </div> : null;

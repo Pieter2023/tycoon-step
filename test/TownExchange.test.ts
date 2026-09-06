@@ -26,7 +26,7 @@ describe('investor journey', () => {
     s = { ...s, assets: [fund(3)] }; expect(investorJourney(s)).toMatchObject({ step: 2, action: 'review' });
     expect(completeActiveJourney(s)).toBe(s);
     s = { ...s, month: 3 + HOLD_MONTHS }; expect(investorJourney(s)).toMatchObject({ step: 3, action: 'finish' });
-    const done = completeActiveJourney(s); expect(done.cash).toBe(s.cash); expect(investorJourney(done).completed).toBe(true); expect(activeJourney(done).completed).toBe(true);
+    const done = completeActiveJourney(s); expect(done.cash).toBe(s.cash); expect(investorJourney(done).completed).toBe(true); expect(activeJourney(done).stage).toBe(3); expect(activeJourney(done).completed).toBe(false); // the neighbourhood tour follows
     expect(done.events[0].title).toBe('Patient investor'); expect(completeActiveJourney(done)).toBe(done);
   });
   it('routes the finish through the right arc and defers to pending events', () => {

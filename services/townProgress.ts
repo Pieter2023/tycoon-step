@@ -1,6 +1,6 @@
 import { GameState, AssetType } from '../types';
 import { calculateMonthlyCashFlowEstimate } from './gameLogic';
-export type TownAction = 'reserve' | 'permit' | 'upgrade' | 'visit-exchange' | 'challenge-snapshot';
+export type TownAction = 'reserve' | 'permit' | 'upgrade' | 'visit-exchange' | 'visit-work' | 'visit-home' | 'visit-rosa' | 'challenge-snapshot';
 import { snapshotFor } from './townChallenges';
 export const CART_PERMIT = 60;
 export const CART_UPGRADE = 350;
@@ -18,6 +18,11 @@ export function resolveTownAction(state:GameState,action:TownAction):GameState {
   if(action==='challenge-snapshot'){
     if(state.townProgress?.challengeSnapshot?.month===state.month)return state;
     return {...state,townProgress:{...state.townProgress,challengeSnapshot:snapshotFor(state)}};
+  }
+  if(action==='visit-work'||action==='visit-home'||action==='visit-rosa'){
+    const key=action==='visit-work'?'workVisitedMonth':action==='visit-home'?'homeVisitedMonth':'rosaVisitedMonth';
+    if(state.townProgress?.[key]!==undefined)return state;
+    return {...state,townProgress:{...state.townProgress,[key]:state.month}};
   }
   if(action==='visit-exchange'){
     if(state.townProgress?.exchangeVisitedMonth!==undefined)return state;

@@ -1,6 +1,6 @@
 import { GameState } from '../types';
 import { coffeeCart } from './townProgress';
-export type JourneyAction = 'event' | 'bank' | 'business' | 'cart' | 'review' | 'finish' | 'journal' | 'exchange' | 'invest';
+export type JourneyAction = 'event' | 'bank' | 'business' | 'cart' | 'review' | 'finish' | 'journal' | 'exchange' | 'invest' | 'work' | 'home' | 'rosa' | 'board';
 export function townJourney(state: GameState) {
   const firstShift = state.townProgress?.firstShiftMonth ?? state.townProgress?.lastShift?.month;
   const completed = state.townProgress?.journeyCompletedMonth !== undefined;
@@ -71,10 +71,42 @@ export function completeInvestorJourney(state: GameState): GameState {
     description: `Visited the Exchange, bought an index fund and held it for ${HOLD_MONTHS} months while comparing growth with cash income. Earned a milestone badge; no cash bonus.`, type: 'ACHIEVEMENT',
   }, ...state.events] };
 }
-// The journey the city guide shows right now: the opening arc, then the investor arc.
-export type ActiveJourney = (ReturnType<typeof townJourney> & { stage: 1 }) | ReturnType<typeof investorJourney>;
+// Third arc: settle into the neighbourhood. The places that explain the rest of your money: the
+// office (where it comes from), your desk (where it goes), Rosa (a second opinion) and the board
+// (a fresh goal every month, judged at month close).
+export function tourJourney(state: GameState) {
+  const p = state.townProgress, completed = p?.tourCompletedMonth !== undefined;
+  const milestones = [
+    { title: 'Read your pay stub with your manager', done: p?.workVisitedMonth !== undefined },
+    { title: 'Check the bills at your desk', done: p?.homeVisitedMonth !== undefined },
+    { title: 'Ask Rosa for a second opinion', done: p?.rosaVisitedMonth !== undefined },
+    { title: 'Complete a notice-board challenge', done: (p?.challengeLog ?? []).some(r => r.completed.length > 0) },
+    { title: 'Complete your tour', done: completed },
+  ];
+  const step = completed ? 5 : milestones.findIndex(m => !m.done);
+  let title = '', detail = '', button = '', action: JourneyAction = 'journal';
+  if (completed) { title = 'Settled in'; detail = 'You know where your money comes from, where it goes and who to ask. The board sets a fresh goal every month.'; button = 'View your journey'; }
+  else if (step === 0) { title = 'Clock in'; detail = 'Your salary funds everything else. Walk to Main Street Offices and read the pay stub with your manager: what comes off, and what the next title needs.'; button = 'Go to work'; action = 'work'; }
+  else if (step === 1) { title = 'Know your bills'; detail = 'Go home and sit at your desk. Lifestyle is the one bill you choose; see what share of your pay it takes.'; button = 'Go home'; action = 'home'; }
+  else if (step === 2) { title = 'Get a second opinion'; detail = 'Rosa on the west bench reads your real numbers and says what a sensible friend would. Ask her.'; button = 'Talk to Rosa'; action = 'rosa'; }
+  else if (step === 3) { title = 'Take a challenge'; detail = 'The notice board sets three small goals each month and judges them when the month closes. Complete one.'; button = 'Read the board'; action = 'board'; }
+  else { title = 'You know the neighbourhood'; detail = 'Pay, bills, advice and a monthly goal: the whole loop in one square. Complete your tour.'; button = 'Review & finish'; action = 'finish'; }
+  if (state.pendingScenario && !completed) { detail = 'A decision is waiting. Resolve it first so you can make financial choices in the city.'; button = 'Resolve the waiting event'; action = 'event'; }
+  return { stage: 3 as const, step, completed, milestones, title, detail, button, action };
+}
+export function completeTourJourney(state: GameState): GameState {
+  if (state.pendingScenario || state.hasWon || state.isBankrupt || tourJourney(state).action !== 'finish') return state;
+  return { ...state, townProgress: { ...state.townProgress, tourCompletedMonth: state.month }, events: [{
+    id: `tour-journey-${state.month}`, month: state.month, title: 'Settled in',
+    description: 'Read a pay stub with the manager, checked the bills at home, asked Rosa for a second opinion and completed a notice-board challenge. Earned a milestone badge; no cash bonus.', type: 'ACHIEVEMENT',
+  }, ...state.events] };
+}
+// The journey the city guide shows right now: the opening arc, then the investor arc, then the tour.
+export type ActiveJourney = (ReturnType<typeof townJourney> & { stage: 1 }) | ReturnType<typeof investorJourney> | ReturnType<typeof tourJourney>;
 export const activeJourney = (state: GameState): ActiveJourney => {
   const opening = townJourney(state);
-  return opening.completed ? investorJourney(state) : { ...opening, stage: 1 as const };
+  if (!opening.completed) return { ...opening, stage: 1 as const };
+  const investor = investorJourney(state);
+  return investor.completed ? tourJourney(state) : investor;
 };
-export const completeActiveJourney = (state: GameState): GameState => townJourney(state).completed ? completeInvestorJourney(state) : completeTownJourney(state);
+export const completeActiveJourney = (state: GameState): GameState => !townJourney(state).completed ? completeTownJourney(state) : !investorJourney(state).completed ? completeInvestorJourney(state) : completeTourJourney(state);

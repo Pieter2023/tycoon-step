@@ -20,7 +20,7 @@ import { residentStyle, seatActor, styleCharacter, yieldTo, Sex, YieldState } fr
 import { createQualityGovernor, initialQuality, QUALITY_SETTINGS, QualityLevel, QualityMode } from './townQuality';
 export type TownView = { x:number; z:number; yaw:number; pitch:number; distance:number; mode?:CameraPreset };
 export type TownSpot = 'teller' | 'exit' | 'cart' | 'cafe-counter' | 'broker' | 'agent' | 'board' | 'home' | 'desk' | 'rosa' | 'work' | 'manager' | null;
-export type TownSceneOptions = { view?:TownView; onView?:(view:TownView)=>void; onRoom?:(room:'city'|'bank'|'cafe'|'exchange'|'property'|'home'|'work')=>void; onPlayerPoint?:(point:TownPoint)=>void; onSpot?:(spot:TownSpot)=>void; onManual?:()=>void; playerSex?:Sex; quality?:QualityMode; onQuality?:(level:QualityLevel, automatic:boolean)=>void; onTimeOfDay?:(label:Daylight['label'])=>void };
+export type TownSceneOptions = { view?:TownView; onView?:(view:TownView)=>void; onRoom?:(room:'city'|'bank'|'cafe'|'exchange'|'property'|'home'|'work')=>void; onPlayerPoint?:(point:TownPoint)=>void; onSpot?:(spot:TownSpot)=>void; onManual?:()=>void; playerSex?:Sex; quality?:QualityMode; onQuality?:(level:QualityLevel, automatic:boolean)=>void; onProgress?:(fraction:number)=>void; onTimeOfDay?:(label:Daylight['label'])=>void };
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
@@ -172,7 +172,10 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const loader = new GLTFLoader().setDRACOLoader(draco);
   // Each successful load is released even if the other request fails or the view closes.
   const loaded: THREE.Object3D[] = [];
-  const load = async (url: string) => { const gltf = await loader.loadAsync(url); if (!alive) disposeTree(gltf.scene); else loaded.push(gltf.scene); return gltf; };
+  // Download progress across the three model files (the city is by far the largest), reported as one fraction.
+  const progress = new Map<string, number>(), weights: Record<string, number> = { 'freedom-square': .72, 'town-character': .2, 'town-vehicles': .08 };
+  const report = () => { let sum = 0; for (const [key, weight] of Object.entries(weights)) sum += weight * (progress.get(key) ?? 0); options.onProgress?.(Math.min(1, sum)); };
+  const load = async (url: string) => { const key = Object.keys(weights).find(k => url.includes(k)) ?? url; const gltf = await loader.loadAsync(url, e => { progress.set(key, e.total ? e.loaded / e.total : .5); report(); }); progress.set(key, 1); report(); if (!alive) disposeTree(gltf.scene); else loaded.push(gltf.scene); return gltf; };
   // Vehicles are optional: the square still opens if only their file fails.
   // Bump when any model in public/models/town changes: the files keep their names, so browsers would otherwise reuse a cached copy.
   const MODEL_VERSION = '20260906a';

@@ -74,6 +74,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
   const [destination, setDestination] = useState<TownPlaceId | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
   const [journal,setJournal]=useState(false);
   const [sound,setSound]=useState(false);
@@ -159,7 +160,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
   useEffect(() => {
     if (!host.current) return;
     setLoading(true);
-    try { controller.current = createTownScene(host.current, id => { setNear(id); if(!id)setShowDetails(false); }, () => inspectRef.current(), () => { setUnavailable(true); setLoading(false); setShowDetails(true); }, reduceMotion, () => setLoading(false), {view:state.townView,onView:onRememberView,onRoom:value=>{setRoom(value);setDestination(null);setShowDetails(false);setJournal(false);},onSpot:setSpot,onPlayerPoint:setPlayerPoint,onManual:cancelGuide,playerSex:characterSex(state.character),quality:readQualityMode(),onQuality:(level,automatic)=>{setQualityLevel(level);if(automatic)setQualityNote(`Graphics switched to ${QUALITY_SETTINGS[level].label} for a steadier frame rate. Change it under Camera.`);},onTimeOfDay:setTimeOfDay}); }
+    try { controller.current = createTownScene(host.current, id => { setNear(id); if(!id)setShowDetails(false); }, () => inspectRef.current(), () => { setUnavailable(true); setLoading(false); setShowDetails(true); }, reduceMotion, () => setLoading(false), {view:state.townView,onView:onRememberView,onRoom:value=>{setRoom(value);setDestination(null);setShowDetails(false);setJournal(false);},onSpot:setSpot,onPlayerPoint:setPlayerPoint,onManual:cancelGuide,playerSex:characterSex(state.character),quality:readQualityMode(),onProgress:setProgress,onQuality:(level,automatic)=>{setQualityLevel(level);if(automatic)setQualityNote(`Graphics switched to ${QUALITY_SETTINGS[level].label} for a steadier frame rate. Change it under Camera.`);},onTimeOfDay:setTimeOfDay}); }
     catch { setUnavailable(true); setLoading(false); setShowDetails(true); }
     return () => { controller.current?.dispose(); controller.current = null; };
   }, [reduceMotion]);
@@ -175,7 +176,11 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
     else if(hop==='enterCafe')controller.current?.enterCafe?.();
     else if(hop==='enterExchange')controller.current?.enterExchange?.();
     else if(hop==='walkToBroker')controller.current?.walkToBroker?.();
-    else if(hop==='arrived'){guided.current=null;setJournal(false);if(target==='cafe')setCafePlay(!state.cafe);setShowDetails(true);}
+    else if(hop==='enterWork')controller.current?.enterWork?.();
+    else if(hop==='walkToManager')controller.current?.walkToManager?.();
+    else if(hop==='enterHome')controller.current?.enterHome?.();
+    else if(hop==='walkToDesk')controller.current?.walkToDesk?.();
+    else if(hop==='arrived'){guided.current=null;setJournal(false);if(target==='rosa'){openRosa();return;}if(target==='board'){openBoard();return;}if(target==='cafe')setCafePlay(!state.cafe);setShowDetails(true);}
   },[near,room,spot,unavailable,loading]);
   useEffect(()=>{controller.current?.setCafeService?.(service);},[service,reduceMotion]);
   useEffect(()=>{
@@ -221,6 +226,9 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
   useEffect(()=>{controller.current?.setAdvice?.(adviceHeadline(state));},[state,loading]);
   // Reaching the broker counts as visiting the Exchange for the investor journey.
   useEffect(()=>{if(room==='exchange'&&spot==='broker'&&showDetails&&state.townProgress?.exchangeVisitedMonth===undefined)onAction?.('visit-exchange');},[room,spot,showDetails]);
+  useEffect(()=>{if(room==='work'&&spot==='manager'&&showDetails&&state.townProgress?.workVisitedMonth===undefined)onAction?.('visit-work');},[room,spot,showDetails]);
+  useEffect(()=>{if(room==='home'&&spot==='desk'&&showDetails&&state.townProgress?.homeVisitedMonth===undefined)onAction?.('visit-home');},[room,spot,showDetails]);
+  useEffect(()=>{if(rosa&&showDetails&&state.townProgress?.rosaVisitedMonth===undefined)onAction?.('visit-rosa');},[rosa,showDetails]);
   const dispatchService=(action:ServiceAction)=>{
     if(practice){if(action.type!=='start')setPractice(previous=>previous?stepCafeService(previous,action):previous);}
     else onCafeServiceAction?.(action);
@@ -257,8 +265,20 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
   const followJourney=()=>{
     setCameraTools(false);
     if(journey.action==='event'){onClose();return;}
-    if(journey.completed&&journey.stage===2&&board&&showDetails){onNextMonth();return;}
-    if(journey.completed&&journey.stage===2){openBoard();return;}
+    if(journey.completed&&journey.stage===3&&board&&showDetails){onNextMonth();return;}
+    if(journey.completed&&journey.stage===3){openBoard();return;}
+    if(journey.action==='work'){
+      if(room==='work'){if(spot==='manager'){if(!showDetails)inspect();}else guide('manager',()=>{setShowDetails(false);controller.current?.walkToManager?.();});}
+      else if(room==='city'&&spot==='work'&&!unavailable)guide('manager',()=>controller.current?.enterWork?.());else guide('manager',()=>{setShowDetails(false);controller.current?.walkToWork?.();});
+      return;
+    }
+    if(journey.action==='home'){
+      if(room==='home'){if(spot==='desk'){if(!showDetails)inspect();}else guide('desk',()=>{setShowDetails(false);controller.current?.walkToDesk?.();});}
+      else if(room==='city'&&spot==='home'&&!unavailable)guide('desk',()=>controller.current?.enterHome?.());else guide('desk',()=>{setShowDetails(false);controller.current?.walkHome?.();});
+      return;
+    }
+    if(journey.action==='rosa'){if(unavailable||(room==='city'&&spot==='rosa')){if(!(rosa&&showDetails))openRosa();}else guide('rosa',()=>{setShowDetails(false);controller.current?.walkToRosa?.();});return;}
+    if(journey.action==='board'){if(board&&showDetails){onNextMonth();return;}if(unavailable||(room==='city'&&spot==='board')){openBoard();return;}guide('board',()=>{setShowDetails(false);controller.current?.walkToBoard?.();});return;}
     if(journey.completed){
       if(room==='cafe'){if(serviceActive){setServicePaused(false);setShowDetails(false);}else if(!state.cafe&&showDetails&&cafePlay&&!unavailable&&!loading){beginShift({price:4,stock:6,helper:false,pace:'relaxed'},true);}else{setCafePlay(!state.cafe);setJournal(false);setShowDetails(true);}return;}
       if(room==='city'&&near==='business'&&spot!=='cart'&&!unavailable){guide('cafe',()=>controller.current?.enterCafe?.());return;}
@@ -278,7 +298,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
     else if(journey.action==='finish'&&journal&&showDetails){onFinishJourney?.();}
     else {setJournal(true);setShowDetails(true);}
   };
-  const guideText=journey.completed&&journey.stage===2?(board&&showDetails?'Close the month & judge':'Check the notice board'):guideLabel({journey,room,near,spot,showDetails,journal,serviceActive,hasCafe:!!state.cafe});
+  const guideText=journey.completed&&journey.stage===3?(board&&showDetails?'Close the month & judge':'Check the notice board'):guideLabel({journey,room,near,spot,showDetails,journal,serviceActive,hasCafe:!!state.cafe});
   const guideDisabled=serving||(disabled&&(journey.action==='review'||journey.action==='finish'))||(guideText==='Confirm my cash reserve'&&(disabled||state.cash<expenses))||(guideText==='Pay the $60 permit'&&(disabled||state.cash<CART_PERMIT));
   const chooseQuality=(mode:QualityMode)=>{setQualityMode(mode);saveQualityMode(mode);controller.current?.setQuality?.(mode);};
   const roomTitle=room==='bank'?'Community Bank':room==='cafe'?'Little Square Café':room==='exchange'?'The Exchange':room==='property'?'Property & Co.':room==='home'?'Your place':room==='work'?'Main Street Offices':'Freedom Square';
@@ -307,7 +327,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
     {room==='exchange'&&<div className="town-interior-nav"><span>Trading floor</span><button onClick={()=>{cancelGuide();setShowDetails(false);controller.current?.walkToBroker?.();}}>Walk to broker</button><button onClick={()=>{cancelGuide();setShowDetails(false);controller.current?.walkToExit?.();}}>Walk to exit</button><button onClick={()=>{cancelGuide();controller.current?.leaveExchange?.();}}>Return to square ↗</button></div>}
     {room==='cafe'&&<div className="town-interior-nav"><span>{state.cafe?'Your café':'Café viewing'}</span><button onClick={()=>{cancelGuide();setShowDetails(false);controller.current?.walkToCafeCounter?.();}}>Walk to counter</button><button onClick={()=>{setCafePlay(true);setJournal(false);setShowDetails(true);}}>Play a shift</button><button onClick={()=>{setCafePlay(false);setJournal(false);setShowDetails(true);}}>Manage café</button><button onClick={()=>{cancelGuide();if(unavailable){setRoom('city');setShowDetails(false);}else controller.current?.leaveCafe?.();}}>Return to square ↗</button></div>}
     <div className="town-journey-strip">
-      <button className="town-journey-summary" disabled={serving} onClick={()=>{setJournal(true);setShowDetails(true);}}><span>{journey.completed&&journey.stage===2?'THIS MONTH · '+challengesDone+'/3 CHALLENGES':journey.completed?'BADGES EARNED':journey.stage===2?'INVESTOR JOURNEY · '+(journey.step+1)+'/4':'YOUR FIRST BUSINESS · '+(journey.step+1)+'/5'}</span><strong>{journey.completed&&journey.stage===2?monthlyChallenges(state).map(c=>c.title).join(' · '):journey.title}</strong><small>{journey.completed?'Journey & monthly recap →':'Steps & monthly recap →'}</small></button>
+      <button className="town-journey-summary" disabled={serving} onClick={()=>{setJournal(true);setShowDetails(true);}}><span>{journey.completed&&journey.stage===3?'THIS MONTH · '+challengesDone+'/3 CHALLENGES':journey.completed?'BADGES EARNED':journey.stage===3?'NEIGHBOURHOOD TOUR · '+(journey.step+1)+'/5':journey.stage===2?'INVESTOR JOURNEY · '+(journey.step+1)+'/4':'YOUR FIRST BUSINESS · '+(journey.step+1)+'/5'}</span><strong>{journey.completed&&journey.stage===3?monthlyChallenges(state).map(c=>c.title).join(' · '):journey.title}</strong><small>{journey.completed?'Journey & monthly recap →':'Steps & monthly recap →'}</small></button>
       <button className="town-guide-next" disabled={guideDisabled} onClick={followJourney}>{guideText} →</button>
       <button className="town-sound" aria-pressed={sound} onClick={()=>{const enabled=!sound;controller.current?.setSound?.(enabled);setSound(enabled);}}>Sound {sound?'on':'off'}</button>
     </div>
@@ -315,7 +335,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
       <section className="town-viewport" aria-label="Neighbourhood">
         <div className="town-canvas" ref={host} />
         {serviceActive&&service&&room==='cafe'&&!showDetails&&!unavailable&&<CafeServiceHUD shift={service} practice={!!practice} point={playerPoint} paused={servicePaused||(!practice&&disabled)} onAct={actInShift} onPause={()=>setServicePaused(p=>!p)} onFinish={()=>dispatchService({type:'finish'})}/>}
-        {loading && <div className="town-loading" role="status"><span className="town-loading-orbit" /><strong>Welcome to your neighbourhood</strong><span>Opening the city…</span></div>}
+        {loading && <div className="town-loading" role="status"><span className="town-loading-orbit" /><strong>Welcome to your neighbourhood</strong><span>{progress>0&&progress<1?`Downloading the city… ${Math.round(progress*100)}%`:progress>=1?'Building the square…':'Opening the city…'}</span></div>}
         {unavailable ? <div className="town-fallback"><Building2 size={36} /><h3>Explore with the destination buttons</h3><p>This browser cannot display the 3D view. Your purchases and progress still work.</p></div> : <>
           <div className="town-world-caption"><span className="town-live-dot" /> MONTH {state.month} · {SEASON_LABEL[seasonFor(state.month)]} · {cityCaption(state,room).day}{timeOfDay&&room==='city'?` · ${timeOfDay}`:''}<span>{cityCaption(state,room).note}</span></div>
           <button ref={cameraButton} className="town-camera-menu-button" aria-expanded={cameraTools} aria-haspopup="true" onClick={()=>setCameraTools(!cameraTools)}>Camera</button>
@@ -336,9 +356,9 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
       <aside className="town-details" ref={details} tabIndex={-1} aria-label="Location opportunities" style={{display:showDetails?'block':'none'}}>
         <button className="town-close-details" aria-label="Close opportunities" onClick={()=>setShowDetails(false)}><X size={18}/></button>
         {board&&room==='city' ? <NoticeBoardPanel state={state} disabled={disabled} onNextMonth={onNextMonth}/> : rosa&&room==='city' ? <AdvisorPanel state={state} onGo={goTo}/> : room==='work' ? <WorkPanel state={state} disabled={disabled} onPromote={onPromote} onOpenLife={onOpenLife}/> : room==='home' ? <HomePanel state={state} disabled={disabled} onChangeLifestyle={onChangeLifestyle} onGo={goTo}/> : journal ? <>
-          <p className="town-eyebrow">{journey.stage===2?'INVESTOR JOURNEY':'YOUR FIRST BUSINESS'}</p><h3>{journey.title}</h3><p className="town-intro">{journey.detail}</p>
+          <p className="town-eyebrow">{journey.stage===3?'NEIGHBOURHOOD TOUR':journey.stage===2?'INVESTOR JOURNEY':'YOUR FIRST BUSINESS'}</p><h3>{journey.title}</h3><p className="town-intro">{journey.detail}</p>
           <ol className="town-journey-steps">{journey.milestones.map((step,index)=><li key={step.title} aria-current={!journey.completed&&index===journey.step?'step':undefined}><span>{step.done?'✓':index+1}</span><strong>{step.title}</strong></li>)}</ol>
-          {journey.completed?<><div className="town-badge"><span>✦</span><strong>Neighbourhood entrepreneur</strong><p>Earned in month {state.townProgress?.journeyCompletedMonth}. A milestone you earned through decisions—no cash bonus.</p></div><div className="town-badge"><span>✦</span><strong>Patient investor</strong><p>Earned in month {state.townProgress?.investorCompletedMonth}. You held through the noise.</p></div></>:journey.action==='finish'?<button className="town-primary" disabled={disabled||!onFinishJourney} onClick={onFinishJourney}>{journey.stage===2?'Complete my investor journey ✦':'Complete my opening journey ✦'}</button>:<>{journey.stage===2&&<div className="town-badge"><span>✦</span><strong>Neighbourhood entrepreneur</strong><p>Earned in month {state.townProgress?.journeyCompletedMonth}.</p></div>}<button className="town-primary" disabled={guideDisabled} onClick={followJourney}>{guideText} →</button></>}
+          {journey.completed?<><div className="town-badge"><span>✦</span><strong>Neighbourhood entrepreneur</strong><p>Earned in month {state.townProgress?.journeyCompletedMonth}. A milestone you earned through decisions—no cash bonus.</p></div><div className="town-badge"><span>✦</span><strong>Patient investor</strong><p>Earned in month {state.townProgress?.investorCompletedMonth}. You held through the noise.</p></div><div className="town-badge"><span>✦</span><strong>Settled in</strong><p>Earned in month {state.townProgress?.tourCompletedMonth}. You know where the money comes from, where it goes and who to ask.</p></div></>:journey.action==='finish'?<button className="town-primary" disabled={disabled||!onFinishJourney} onClick={onFinishJourney}>{journey.stage===3?'Complete my neighbourhood tour ✦':journey.stage===2?'Complete my investor journey ✦':'Complete my opening journey ✦'}</button>:<>{journey.stage>=2&&<div className="town-badge"><span>✦</span><strong>Neighbourhood entrepreneur</strong><p>Earned in month {state.townProgress?.journeyCompletedMonth}.</p></div>}{journey.stage===3&&<div className="town-badge"><span>✦</span><strong>Patient investor</strong><p>Earned in month {state.townProgress?.investorCompletedMonth}.</p></div>}<button className="town-primary" disabled={guideDisabled} onClick={followJourney}>{guideText} →</button></>}
           {report?.month ? <section className="town-recap"><h4>Month {report.month}: what changed</h4>
             <dl><div><dt>Cash at month start</dt><dd>{money(report.cashBefore??0)}</dd></div><div><dt>Income received</dt><dd>+{money(report.income)}</dd></div><div><dt>Of that: investments & passive work</dt><dd>{money(report.investmentIncome??0)}</dd></div>{report.assetPayments?.map((payment,index)=><div key={index}><dt>↳ {payment.name}</dt><dd>{money(payment.amount)}</dd></div>)}<div><dt>Living costs & repayments</dt><dd>−{money(report.expenses-(report.businessMaintenance??0))}</dd></div><div><dt>Extra business repairs</dt><dd>−{money(report.businessMaintenance??0)}</dd></div><div><dt>Other cash movements*</dt><dd>{money((report.cashAfter??0)-(report.cashBefore??0)-report.income+report.expenses)}</dd></div><div><dt>Later choices this month</dt><dd>{money(state.cash-(report.cashAfter??state.cash))}</dd></div><div><dt>Cash now</dt><dd>{money(state.cash)}</dd></div><div><dt>Investment price changes</dt><dd>{money(report.marketChange??0)}</dd></div></dl>
             <p>Individual lines are rounded; totals may differ by $1. Price changes affect wealth, not cash received. *Other cash movements include automatic purchases, taxes and debt adjustments.</p>

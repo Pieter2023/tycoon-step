@@ -312,6 +312,18 @@ Chrome: Work button walks to the new door; the location card reads "Main Street 
 
 Validation: 306 tests across 51 files (`test/TownWork.test.tsx`: stub reconciliation incl. layoff and recession, outlook blockers/odds/education gate/top rung, security labels, boards and room, panel gating), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/workplace-2026-09-06/`.
 
+## Neighbourhood tour, download progress, city after winning — September 6, 2026 (builds 16–17)
+
+**Download progress.** The city's three model files total about 1.6 MB; the loading overlay used to spin silently. `createTownScene` now reports one weighted fraction across the files (`onProgress`) and the overlay reads "Downloading the city… 42%", then "Building the square…". Bundle facts for the record: the 2D game's main chunk is 1.12 MB (307 KB gzipped), the city chunk with three.js 823 KB (227 KB gzipped) and loads only when the city opens; the Draco decoder (719 KB) loads only for the compressed city model.
+
+**City after winning.** The dashboard's "Enter 3D city" card was disabled once `hasWon` was true, which made the Freedom Day celebration unreachable. It now stays open (the modal's `disabled` prop still blocks money actions).
+
+**Neighbourhood tour.** A third guided arc so the newer places are discovered rather than stumbled on. `tourJourney` (stage 3) starts once the investor badge is earned: read the pay stub with the manager, check the bills at your desk, ask Rosa for a second opinion, complete a notice-board challenge, then finish for the "Settled in" badge (an ACHIEVEMENT event, no cash). The guide button chains each stop in one tap: `GuideTarget` gained manager/desk/rosa/board and `guideNextHop` walks through the office and apartment doors (`enterWork`/`walkToManager`, `enterHome`/`walkToDesk`); arriving at Rosa or the board opens their panels. Visits are recorded through `resolveTownAction` (`visit-work`, `visit-home`, `visit-rosa` → `townProgress.workVisitedMonth` etc.), so the arc survives reloads. The journal shows the three badges, the strip reads "NEIGHBOURHOOD TOUR · n/5", the dashboard card names the arc, and the year-in-review lists the badge. Once the tour is complete the guide falls back to the notice board as before.
+
+Chrome (QA save advanced past the investor journey): the card read "Neighbourhood tour · Clock in"; one tap walked to Main Street Offices, entered, reached the manager and opened the pay stub, and the label advanced to "Go home"; the next tap did the same for the apartment desk; then Rosa; the challenge milestone was already met on this save, so the strip read "You know the neighbourhood" and the journal offered "Complete my neighbourhood tour ✦".
+
+Validation: 308 tests across 52 files (`test/TownTour.test.ts`: arc order, idempotent visits, completion badge, stage selection, guide labels and hops; `test/TownExchange.test.ts` updated for the new final stage), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/tour-2026-09-06/`.
+
 ## Where the overnight session stopped
 
 Nine builds shipped to production between 23:00 and roughly 01:00 PDT: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. Each is on `origin/main` and live at https://tycoonjan22026.netlify.app. What remains needs Pieter: playing the live site by hand and listing what feels off, the physical-phone test, listening to the synthesized audio on a real speaker, and a decision on Spanish for the town copy (a large, mechanical translation job now that the English is settled).

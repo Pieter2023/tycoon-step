@@ -3306,7 +3306,7 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
         passiveIncome: Math.round(newState.yearStats.passiveIncome),
         hindsights: newState.yearStats.hindsights,
         city: {
-          badges: [newState.townProgress?.journeyCompletedMonth !== undefined ? 'Neighbourhood entrepreneur' : '', newState.townProgress?.investorCompletedMonth !== undefined ? 'Patient investor' : ''].filter(Boolean),
+          badges: [newState.townProgress?.journeyCompletedMonth !== undefined ? 'Neighbourhood entrepreneur' : '', newState.townProgress?.investorCompletedMonth !== undefined ? 'Patient investor' : '', newState.townProgress?.tourCompletedMonth !== undefined ? 'Settled in' : ''].filter(Boolean),
           challengesCompleted: (newState.townProgress?.challengeLog ?? []).filter(r => r.month > newState.month - 13).reduce((s, r) => s + r.completed.length, 0),
           cleanSweeps: (newState.townProgress?.challengeLog ?? []).filter(r => r.month > newState.month - 13 && r.total > 0 && r.completed.length === r.total).length,
           cafeProfit: newState.cafe ? Math.round(newState.yearStats.cafeProfit ?? 0) : undefined,
