@@ -67,11 +67,14 @@ export function createTownHome() {
 
 // The townhouse the apartment door belongs to: a two-storey block at the west end of the
 // promenade, facing east onto the square. Windows share the night glow with the shopfronts.
-export function createHomeFacade(door: { x: number; z: number }) {
+export type FacadePalette = { body: string; trim: string; canopy: string; roof: string };
+export const HOME_PALETTE: FacadePalette = { body: '#d8c1a1', trim: '#f3ead8', canopy: '#b8705a', roof: '#3e4a52' };
+export const OFFICE_PALETTE: FacadePalette = { body: '#b9c4cf', trim: '#eef1f3', canopy: '#3f5a73', roof: '#2f3a44' };
+export function createHomeFacade(door: { x: number; z: number }, palette: FacadePalette = HOME_PALETTE) {
   const root = new THREE.Group();
   const mat = (color: string, roughness = .7) => new THREE.MeshStandardMaterial({ color, roughness });
   const box = (w: number, h: number, d: number, x: number, y: number, z: number, material: THREE.Material, radius = .05) => { const mesh = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 2, radius), material); mesh.position.set(x, y, z); mesh.castShadow = true; mesh.receiveShadow = true; root.add(mesh); return mesh; };
-  const sand = mat('#d8c1a1'), cream = mat('#f3ead8'), clay = mat('#b8705a'), slate = mat('#3e4a52'), glass = new THREE.MeshStandardMaterial({ color: '#1d4652', roughness: .25, metalness: .1, emissive: '#ffc985', emissiveIntensity: 0 });
+  const sand = mat(palette.body), cream = mat(palette.trim), clay = mat(palette.canopy), slate = mat(palette.roof), glass = new THREE.MeshStandardMaterial({ color: '#1d4652', roughness: .25, metalness: .1, emissive: '#ffc985', emissiveIntensity: 0 });
   const front = door.x - 1.05, cx = front - 1.7;                                   // front face just behind the door frame
   box(3.4, 7.0, 6.6, cx, 3.5, door.z + .6, sand, .12);                              // body
   box(3.7, .5, 6.9, cx, .3, door.z + .6, cream, .08);                               // foundation

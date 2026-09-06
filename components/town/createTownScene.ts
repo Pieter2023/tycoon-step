@@ -8,7 +8,9 @@ import { createTownBank, clampBankPoint, bankSpot } from './townBank';
 import { createTownExchange, clampExchangePoint, exchangeSpot, ExchangeBoard } from './townExchange';
 import { createTownProperty, clampPropertyPoint, propertySpot, PropertyBoard } from './townProperty';
 import { daylight, dayPhase, createStreetLamps, Daylight } from './townDaylight';
-import { createTownHome, createHomeFacade, clampHomePoint, homeSpot } from './townHome';
+import { createTownHome, createHomeFacade, clampHomePoint, homeSpot, OFFICE_PALETTE } from './townHome';
+import { createTownWork, clampWorkPoint, workSpot } from './townWork';
+import type { WorkBoard } from '../../services/townWork';
 import { createSeasonPalette, createSeasonFall, seasonFor, Season } from './townSeasons';
 import type { Lifestyle } from '../../types';
 import { createCoffeeCart } from './townBusiness';
@@ -17,8 +19,8 @@ import { createTownLife, createCyclist, createDogWalker, createFireworks } from 
 import { residentStyle, seatActor, styleCharacter, yieldTo, Sex, YieldState } from './townResidents';
 import { createQualityGovernor, initialQuality, QUALITY_SETTINGS, QualityLevel, QualityMode } from './townQuality';
 export type TownView = { x:number; z:number; yaw:number; pitch:number; distance:number; mode?:CameraPreset };
-export type TownSpot = 'teller' | 'exit' | 'cart' | 'cafe-counter' | 'broker' | 'agent' | 'board' | 'home' | 'desk' | 'rosa' | null;
-export type TownSceneOptions = { view?:TownView; onView?:(view:TownView)=>void; onRoom?:(room:'city'|'bank'|'cafe'|'exchange'|'property'|'home')=>void; onPlayerPoint?:(point:TownPoint)=>void; onSpot?:(spot:TownSpot)=>void; onManual?:()=>void; playerSex?:Sex; quality?:QualityMode; onQuality?:(level:QualityLevel, automatic:boolean)=>void; onTimeOfDay?:(label:Daylight['label'])=>void };
+export type TownSpot = 'teller' | 'exit' | 'cart' | 'cafe-counter' | 'broker' | 'agent' | 'board' | 'home' | 'desk' | 'rosa' | 'work' | 'manager' | null;
+export type TownSceneOptions = { view?:TownView; onView?:(view:TownView)=>void; onRoom?:(room:'city'|'bank'|'cafe'|'exchange'|'property'|'home'|'work')=>void; onPlayerPoint?:(point:TownPoint)=>void; onSpot?:(spot:TownSpot)=>void; onManual?:()=>void; playerSex?:Sex; quality?:QualityMode; onQuality?:(level:QualityLevel, automatic:boolean)=>void; onTimeOfDay?:(label:Daylight['label'])=>void };
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
@@ -28,7 +30,7 @@ import { cameraRelativeMovement, normalizeStick, cameraPreset, CameraPreset, tur
 export type TownController = {
   setCafeService:(service?:CafeService)=>void; walkToServiceStation:(station:ServiceStation)=>void; getPlayerPoint:()=>TownPoint;
   enterCafe:()=>void; leaveCafe:()=>void; walkToCafeCounter:()=>void; setNeighbourhood:(month:number,cafe?:CafeState,won?:boolean)=>void;
-  enterBank:()=>void; leaveBank:()=>void; walkToTeller:()=>void; walkToExit:()=>void; enterExchange:()=>void; leaveExchange:()=>void; walkToBroker:()=>void; setBoard:(board:ExchangeBoard)=>void; enterProperty:()=>void; leaveProperty:()=>void; walkToAgent:()=>void; setListings:(board:PropertyBoard)=>void; enterHome:()=>void; leaveHome:()=>void; walkToDesk:()=>void; walkHome:()=>void; walkToRosa:()=>void; setLifestyle:(lifestyle:Lifestyle)=>void; setAdvice:(headline:string)=>void; serveCustomer:(onDone?:()=>void)=>void; celebrate:()=>void; setCamera:(mode:CameraPreset)=>void; orbit:(delta:number)=>void; zoom:(delta:number)=>void; setQuality:(mode:QualityMode)=>void; getQuality:()=>QualityLevel;
+  enterBank:()=>void; leaveBank:()=>void; walkToTeller:()=>void; walkToExit:()=>void; enterExchange:()=>void; leaveExchange:()=>void; walkToBroker:()=>void; setBoard:(board:ExchangeBoard)=>void; enterProperty:()=>void; leaveProperty:()=>void; walkToAgent:()=>void; setListings:(board:PropertyBoard)=>void; enterHome:()=>void; leaveHome:()=>void; enterWork:()=>void; leaveWork:()=>void; walkToManager:()=>void; walkToWork:()=>void; setPayroll:(board:WorkBoard)=>void; walkToDesk:()=>void; walkHome:()=>void; walkToRosa:()=>void; setLifestyle:(lifestyle:Lifestyle)=>void; setAdvice:(headline:string)=>void; serveCustomer:(onDone?:()=>void)=>void; celebrate:()=>void; setCamera:(mode:CameraPreset)=>void; orbit:(delta:number)=>void; zoom:(delta:number)=>void; setQuality:(mode:QualityMode)=>void; getQuality:()=>QualityLevel;
   walkTo: (id: TownPlaceId) => void; walkToBoard: () => void; direction: (key: string, down: boolean) => void;
   move: (x: number, z: number) => void; resetView: () => void;
   setOwned: (ids: TownPlaceId[]) => void; setBusiness: (owned:boolean, licensed:boolean, upgraded:boolean)=>void; setSound:(enabled:boolean)=>void; visitCart:()=>void; pause:(paused:boolean)=>void; dispose: () => void;
@@ -72,13 +74,14 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const cafeRoom = createCafeRoom(); scene.add(cafeRoom.root);
   const exchange = createTownExchange(); scene.add(exchange.root);
   const office = createTownProperty(); scene.add(office.root);
+  const work = createTownWork(); scene.add(work.root);
   const home = createTownHome(); scene.add(home.root);
   const shopLabel=document.createElement('canvas');shopLabel.width=1024;shopLabel.height=120;
   const shopInk=shopLabel.getContext('2d')!;shopInk.fillStyle='#365d54';shopInk.fillRect(0,0,1024,120);shopInk.fillStyle='#fff0cd';shopInk.font='600 66px sans-serif';shopInk.textAlign='center';shopInk.fillText('LITTLE SQUARE CAFÉ',512,84);
   const shopTexture=new THREE.CanvasTexture(shopLabel);shopTexture.colorSpace=THREE.SRGBColorSpace;
   const shopSign=new THREE.Mesh(new THREE.PlaneGeometry(5.7,.64),new THREE.MeshBasicMaterial({map:shopTexture}));shopSign.position.set(3.5,3.02,-2.03);shopSign.visible=false;outdoors.add(shopSign);
   const weather = createTownWeather(); outdoors.add(weather.root);
-  let cafeState:CafeState|undefined, rainy=false, cafeInside=false, exchangeInside=false, officeInside=false, homeInside=false, adviceHeadline='';
+  let cafeState:CafeState|undefined, rainy=false, cafeInside=false, exchangeInside=false, officeInside=false, homeInside=false, workInside=false, adviceHeadline='', managerHeadline='';
   let inside = false, spot:TownSpot = null, cityView:TownView | undefined;
   const player = new THREE.Group(); const saved=options.view; const spawn=saved&&isWalkable(saved)?saved:{x:0,z:7}; player.position.set(spawn.x, .22, spawn.z); scene.add(player);
   const destinationRing = new THREE.Mesh(new THREE.RingGeometry(.24, .31, 40), new THREE.MeshBasicMaterial({ color: '#fff0a4', side: THREE.DoubleSide, transparent: true, opacity: .85 }));
@@ -103,6 +106,16 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   // Your place: an apartment door at the west end of the promenade.
   const HOME={x:-15.7,z:7.4};
   const facade=createHomeFacade(HOME);outdoors.add(facade.root);
+  // Main Street Offices mirror the townhouse at the east end of the promenade (negative x scale flips the facade).
+  const WORK={x:15.7,z:7.4};
+  const officeFacade=createHomeFacade({x:-WORK.x,z:WORK.z},OFFICE_PALETTE);officeFacade.root.scale.x=-1;outdoors.add(officeFacade.root);
+  {const b=officeFacade.bounds;officeFacade.bounds=new THREE.Box3(new THREE.Vector3(-b.max.x,b.min.y,b.min.z),new THREE.Vector3(-b.min.x,b.max.y,b.max.z));
+   const frame=new THREE.Mesh(new THREE.BoxGeometry(.35,2.6,1.7),new THREE.MeshStandardMaterial({color:'#eef1f3'}));frame.position.set(16.55,1.5,WORK.z);frame.castShadow=true;outdoors.add(frame);
+   const door=new THREE.Mesh(new THREE.BoxGeometry(.08,2.1,1.0),new THREE.MeshStandardMaterial({color:'#3f5a73'}));door.position.set(16.36,1.27,WORK.z);outdoors.add(door);
+   const knob=new THREE.Mesh(new THREE.SphereGeometry(.05,8,6),new THREE.MeshStandardMaterial({color:'#c9d2d9',metalness:.6,roughness:.3}));knob.position.set(16.3,1.2,WORK.z-.35);outdoors.add(knob);
+   const step=new THREE.Mesh(new THREE.BoxGeometry(.6,.12,1.4),new THREE.MeshStandardMaterial({color:'#c3ccd3'}));step.position.set(16.1,.26,WORK.z);outdoors.add(step);
+   const sign=document.createElement('canvas');sign.width=512;sign.height=128;const ink=sign.getContext?.('2d');if(ink){ink.fillStyle='#233b4d';ink.fillRect(0,0,512,128);ink.fillStyle='#f5f0e4';ink.font='600 56px sans-serif';ink.textAlign='center';ink.fillText('MAIN ST · OFFICES',256,84);}
+   const texture=new THREE.CanvasTexture(sign);texture.colorSpace=THREE.SRGBColorSpace;const plate=new THREE.Mesh(new THREE.PlaneGeometry(1.5,.375),new THREE.MeshBasicMaterial({map:texture}));plate.position.set(16.33,2.95,WORK.z);plate.rotation.y=-Math.PI/2;outdoors.add(plate);}
   {const frame=new THREE.Mesh(new THREE.BoxGeometry(.35,2.6,1.7),new THREE.MeshStandardMaterial({color:'#e9dcc4'}));frame.position.set(-16.55,1.5,HOME.z);frame.castShadow=true;outdoors.add(frame);
    const door=new THREE.Mesh(new THREE.BoxGeometry(.08,2.1,1.0),new THREE.MeshStandardMaterial({color:'#5b7d70'}));door.position.set(-16.36,1.27,HOME.z);outdoors.add(door);
    const knob=new THREE.Mesh(new THREE.SphereGeometry(.05,8,6),new THREE.MeshStandardMaterial({color:'#d9b25a',metalness:.6,roughness:.3}));knob.position.set(-16.3,1.2,HOME.z+.35);outdoors.add(knob);
@@ -135,7 +148,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   let cameraMode:CameraPreset=saved?.mode==='overview'?'overview':'follow';
   const cafeActors:Actor[]=[];
   const makeSpeech=(parent:THREE.Object3D)=>{const canvas=document.createElement('canvas');canvas.width=768;canvas.height=110;const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,depthTest:false}));sprite.scale.set(3.1,.44,1);sprite.visible=false;parent.add(sprite);let current='';return {sprite,say(text:string,x:number,y:number,z:number){if(text!==current){current=text;const ctx=canvas.getContext('2d')!;ctx.clearRect(0,0,768,110);ctx.fillStyle='#fff6e2';ctx.beginPath();ctx.roundRect(4,4,760,102,28);ctx.fill();ctx.fillStyle='#233b33';ctx.font='600 40px sans-serif';ctx.textAlign='center';ctx.fillText(text,384,68);texture.needsUpdate=true;}sprite.position.set(x,y,z);sprite.visible=true;},hide(){sprite.visible=false;}};};
-  const tellerSpeech=makeSpeech(bank.root),brokerSpeech=makeSpeech(exchange.root),agentSpeech=makeSpeech(office.root),rosaSpeech=makeSpeech(outdoors);
+  const tellerSpeech=makeSpeech(bank.root),brokerSpeech=makeSpeech(exchange.root),agentSpeech=makeSpeech(office.root),managerSpeech=makeSpeech(work.root),rosaSpeech=makeSpeech(outdoors);
   const TELLER_LINES=['Morning, neighbour. Moving some money?','One month of bills in cash. That is the rule.','Savings sit still; investments move.'];
   let cafeService:CafeService|undefined, lastPointAt=0;
   const guestPaths=new Map<number,{key:string;path:TownPoint[];seated:boolean}>();
@@ -144,7 +157,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const steam=new THREE.Group();cafeRoom.root.add(steam);
   const readyCup=new THREE.Mesh(new THREE.CylinderGeometry(.09,.07,.2,16),new THREE.MeshStandardMaterial({color:'#fff1d4'}));readyCup.position.set(-1.05,1.47,-.42);readyCup.visible=false;cafeRoom.root.add(readyCup);
   for(let i=0;i<4;i++){const puff=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6),new THREE.MeshBasicMaterial({color:'#fff4de',transparent:true,opacity:.35}));puff.position.set(-.6,1.7+i*.16,-.5);steam.add(puff);}steam.visible=false;
-  let playerActor: Actor | undefined; const pedestrians: (Actor & { offset: number; lane: number; seat?: number; yield: YieldState })[] = [];
+  let playerActor: Actor | undefined, manager: Actor | undefined; const workActors: Actor[] = []; const pedestrians: (Actor & { offset: number; lane: number; seat?: number; yield: YieldState })[] = [];
   const addActor = (root: THREE.Object3D, clips: THREE.AnimationClip[]): Actor => {
     const mixer = new THREE.AnimationMixer(root), actions: Record<string, THREE.AnimationAction> = {};
     for (const clip of clips){const action=mixer.clipAction(clip);if(['Serve','Wave','Celebrate'].includes(clip.name)){action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;}actions[clip.name]=action;}
@@ -196,6 +209,10 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     const agentRoot = character.scene.clone(true);
     styleCharacter(agentRoot, { sex: 'f', hair: 'tail', colors: { shirt: '#8a5c8a', hair: '#71503a', skin: '#e2b78c', trousers: '#354955', skirt: '#5d4a6b' } });
     agentRoot.position.set(0,.22,-1.5); office.root.add(agentRoot); agent = addActor(agentRoot,character.animations);
+    const managerRoot = character.scene.clone(true);
+    styleCharacter(managerRoot, { sex: 'm', hair: 'short', beard: true, colors: { shirt: '#3f5a73', hair: '#252a2e', skin: '#865d44', trousers: '#2f3a44' } });
+    managerRoot.position.set(0,.22,-1.5); work.root.add(managerRoot); manager = addActor(managerRoot,character.animations);
+    for (const [i, [x, z]] of [[-3.4, 3.3], [3.4, 3.3]].entries()) { const colleague = character.scene.clone(true); styleCharacter(colleague, residentStyle(16 + i)); colleague.position.set(x,-.1,z+.05); colleague.rotation.y=Math.PI; work.root.add(colleague); workActors.push(addActor(colleague, character.animations)); }
     for (const [i, [x, z]] of [[-2.9, 2.0], [2.9, 4.4]].entries()) {
       const trader = character.scene.clone(true); styleCharacter(trader, residentStyle(14 + i));
       trader.position.set(x, .22, z); trader.rotation.y = x < 0 ? -Math.PI / 2 : Math.PI / 2; exchange.root.add(trader); cafeActors.push({ ...addActor(trader, character.animations), root: trader } as Actor & { root: THREE.Object3D });
@@ -222,7 +239,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     ready = true; onReady?.();
   }).catch(() => { if (alive) onFailure(); });
   const walls = TOWN_PLACES.map(p => new THREE.Box3(new THREE.Vector3(p.x - 3.45, 0, -8.6), new THREE.Vector3(p.x + 3.45, 11, -2.2)));
-  walls.push(facade.bounds);
+  walls.push(facade.bounds);walls.push(officeFacade.bounds);
   // Tree crowns only matter when the camera itself would sit inside one; a ray merely passing
   // through a canopy on its way up must not drag the camera onto the player's shoulders.
   const crowns=[[-16,-1,1.35],[16,-1,1.4],[-12,8,1.5],[12,8,1.5],[-9,13,1.25],[9,13,1.3],[-18,12,1.4],[18,12,1.5]].map(([x,z,scale])=>new THREE.Box3(new THREE.Vector3(x-1.85*scale,1.6*scale,z-1.65*scale),new THREE.Vector3(x+1.85*scale,4.5*scale,z+1.65*scale)));
@@ -253,7 +270,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     if (!pointers.has(event.pointerId)) return; pointers.delete(event.pointerId);
     if (isWalkTap(Math.hypot(event.clientX-dragStart.x,event.clientY-dragStart.y),hadPinch,dragged) && event.button === 0 && ready && !paused) {
       const rect=canvas.getBoundingClientRect(); pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1); raycaster.setFromCamera(pointer,camera);
-      if (raycaster.ray.intersectPlane(floor,point)) { const target=inside?(cafeInside?clampCafePoint(point):exchangeInside?clampExchangePoint(point):officeInside?clampPropertyPoint(point):homeInside?clampHomePoint(point):clampBankPoint(point)):clampTownPoint(point); path=inside?[target]:findTownPath(player.position,target); const end=path.at(-1);if(end){destinationRing.position.set(end.x,.235,end.z);destinationRing.visible=true;} options.onManual?.(); }
+      if (raycaster.ray.intersectPlane(floor,point)) { const target=inside?(cafeInside?clampCafePoint(point):exchangeInside?clampExchangePoint(point):officeInside?clampPropertyPoint(point):homeInside?clampHomePoint(point):workInside?clampWorkPoint(point):clampBankPoint(point)):clampTownPoint(point); path=inside?[target]:findTownPath(player.position,target); const end=path.at(-1);if(end){destinationRing.position.set(end.x,.235,end.z);destinationRing.visible=true;} options.onManual?.(); }
     }
   };
   const cancel = () => { pointers.clear(); hadPinch=true;dragged=true; lastPinch=0; };
@@ -281,7 +298,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       }
       velocity.lerp(new THREE.Vector2(movement.x*speed,movement.z*speed),1-Math.exp(-dt*(movement.x||movement.z?10:18))); if(velocity.length()<.025) velocity.set(0,0);
       const proposed={x:player.position.x+velocity.x*dt,z:player.position.z+velocity.y*dt};
-      const next=inside?(cafeInside?clampCafePoint(proposed):exchangeInside?clampExchangePoint(proposed):officeInside?clampPropertyPoint(proposed):homeInside?clampHomePoint(proposed):clampBankPoint(proposed)):slideMovement(player.position,proposed);
+      const next=inside?(cafeInside?clampCafePoint(proposed):exchangeInside?clampExchangePoint(proposed):officeInside?clampPropertyPoint(proposed):homeInside?clampHomePoint(proposed):workInside?clampWorkPoint(proposed):clampBankPoint(proposed)):slideMovement(player.position,proposed);
       const actualSpeed=Math.hypot(next.x-player.position.x,next.z-player.position.z)/Math.max(dt,.001); player.position.x=next.x;player.position.z=next.z;
       if(actualSpeed>.08)player.rotation.y=turnTowards(player.rotation.y,Math.atan2(velocity.x,velocity.y),dt);
       else if(inside&&(spot==='teller'||spot==='cafe-counter'||spot==='broker'||spot==='agent'||spot==='desk'||!!cafeService?.brewing))player.rotation.y=turnTowards(player.rotation.y,Math.PI,dt);
@@ -317,9 +334,9 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
         if(dogWalker&&pedestrians[10])dogWalker.update(dt,elapsed,pedestrians[10].root,pedestrians[10].root.visible);
         ambience?.tick(Math.hypot(here.x,here.z-12));
       }
-      const nextSpot:TownSpot=inside?(cafeInside?cafeSpot(player.position):exchangeInside?exchangeSpot(player.position):officeInside?propertySpot(player.position):homeInside?homeSpot(player.position):bankSpot(player.position)):cart.root.visible&&Math.hypot(player.position.x-2.2,player.position.z-8.7)<2?'cart':Math.hypot(player.position.x-BOARD.x,player.position.z-BOARD.z)<1.7?'board':Math.hypot(player.position.x-HOME.x,player.position.z-HOME.z)<1.5?'home':Math.hypot(player.position.x-ROSA.x,player.position.z-ROSA.z)<1.8?'rosa':null;
+      const nextSpot:TownSpot=inside?(cafeInside?cafeSpot(player.position):exchangeInside?exchangeSpot(player.position):officeInside?propertySpot(player.position):homeInside?homeSpot(player.position):workInside?workSpot(player.position):bankSpot(player.position)):cart.root.visible&&Math.hypot(player.position.x-2.2,player.position.z-8.7)<2?'cart':Math.hypot(player.position.x-BOARD.x,player.position.z-BOARD.z)<1.7?'board':Math.hypot(player.position.x-HOME.x,player.position.z-HOME.z)<1.5?'home':Math.hypot(player.position.x-WORK.x,player.position.z-WORK.z)<1.5?'work':Math.hypot(player.position.x-ROSA.x,player.position.z-ROSA.z)<1.8?'rosa':null;
       if(nextSpot!==spot){spot=nextSpot;options.onSpot?.(spot);}
-      const current=inside?(cafeInside?(spot==='cafe-counter'?'business':null):exchangeInside?(spot==='broker'?'exchange':null):officeInside?(spot==='agent'?'property':null):homeInside?null:(spot==='teller'?'bank':null)):spot==='cart'?'business':nearbyPlace(player.position);
+      const current=inside?(cafeInside?(spot==='cafe-counter'?'business':null):exchangeInside?(spot==='broker'?'exchange':null):officeInside?(spot==='agent'?'property':null):homeInside||workInside?null:(spot==='teller'?'bank':null)):spot==='cart'?'business':nearbyPlace(player.position);
       if(current!==near){near=current;onNear(current);}if(!path.length)destinationRing.visible=false;
       if(cafeInside&&elapsed-lastPointAt>.12){lastPointAt=elapsed;options.onPlayerPoint?.({x:player.position.x,z:player.position.z});}
     }
@@ -328,7 +345,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     const light=inside?daylight(.22,false):daylight(phaseOverride??dayPhase(townMonth,elapsed,reducedMotion),rainy);
     if(!inside&&(seasonOverride??season)==='winter'){light.sunIntensity*=.8;light.sunColor='#e8f0ff';}
     sun.position.copy(light.sun);sun.intensity=light.sunIntensity;sun.color.set(light.sunColor);hemi.color.set(light.sky);hemi.groundColor.set(light.ground);hemi.intensity=light.skyIntensity;scene.environmentIntensity=light.ambient;
-    renderer.toneMappingExposure=Number(light.exposure);lamps.set(inside?0:light.lamps);if(glassMaterial)glassMaterial.emissiveIntensity=light.windows*.9;facade.glass.emissiveIntensity=light.windows*.9;
+    renderer.toneMappingExposure=Number(light.exposure);lamps.set(inside?0:light.lamps);if(glassMaterial)glassMaterial.emissiveIntensity=light.windows*.9;facade.glass.emissiveIntensity=light.windows*.9;officeFacade.glass.emissiveIntensity=light.windows*.9;
     if(!inside){(scene.background as THREE.Color).set(light.background);if(scene.fog instanceof THREE.Fog)scene.fog.color.set(light.background);ambience?.night(light.night?1:light.lamps*.6);}
     if(!inside&&light.label!==timeLabel){timeLabel=light.label;options.onTimeOfDay?.(light.label);}
     const playing=cafeInside&&cafeService?.status==='active';
@@ -377,7 +394,9 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     }
     if(!inside&&pedestrians[8]){if(spot==='rosa'&&adviceHeadline)rosaSpeech.say(adviceHeadline,ROSA.x+.15,2.55,ROSA.z);else rosaSpeech.hide();}
     if(agent&&officeInside){animateActor(agent,spot==='agent'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='agent'&&agentHeadline)agentSpeech.say(agentHeadline,0,2.45,-1.5);else agentSpeech.hide();}
-    if(teller&&inside&&!cafeInside&&!exchangeInside&&!officeInside&&!homeInside){animateActor(teller,spot==='teller'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='teller')tellerSpeech.say(TELLER_LINES[Math.floor(elapsed/6)%TELLER_LINES.length],0,2.45,-1.5);else tellerSpeech.hide();}
+    if(workInside)for(const actor of workActors){animateActor(actor,'Idle',reducedMotion?0:dt);seatActor(actor.root);}
+    if(manager&&workInside){animateActor(manager,spot==='manager'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='manager'&&managerHeadline)managerSpeech.say(managerHeadline,0,2.45,-1.5);else managerSpeech.hide();}
+    if(teller&&inside&&!cafeInside&&!exchangeInside&&!officeInside&&!homeInside&&!workInside){animateActor(teller,spot==='teller'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='teller')tellerSpeech.say(TELLER_LINES[Math.floor(elapsed/6)%TELLER_LINES.length],0,2.45,-1.5);else tellerSpeech.hide();}
     if(broker&&exchangeInside){animateActor(broker,spot==='broker'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='broker'&&brokerHeadline)brokerSpeech.say(brokerHeadline,0,2.45,-1.5);else brokerSpeech.hide();}
     if(exchangeInside)for(const actor of cafeActors.slice(6))animateActor(actor,'Idle',reducedMotion?0:dt);
     const cafePortrait=cafeInside&&camera.aspect<.8;
@@ -403,16 +422,16 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     cart.presentCup(cupPosition);
     renderer.render(scene,camera);
   };
-  const transition = (enter:boolean, room:'bank'|'cafe'|'exchange'|'property'|'home'='bank') => {
+  const transition = (enter:boolean, room:'bank'|'cafe'|'exchange'|'property'|'home'|'work'='bank') => {
     if(!ready||enter===inside)return;
-    const cafe=room==='cafe', trading=room==='exchange', estate=room==='property', flat=room==='home';
+    const cafe=room==='cafe', trading=room==='exchange', estate=room==='property', flat=room==='home', desk=room==='work';
     clearMovement();stopPath();cancel();paused=false;
     if(enter){cityView={x:player.position.x,z:player.position.z,yaw,pitch,distance:zoomDistance,mode:cameraMode};player.position.set(0,.22,5);yaw=.12;const preset=cameraPreset(cameraMode,true);pitch=preset.pitch;zoomDistance=preset.distance;}
     else {const view=cityView??{x:-10.5,z:-1.1,yaw:.12,pitch:.4,distance:9};player.position.set(view.x,.22,view.z);yaw=view.yaw;pitch=view.pitch;zoomDistance=view.distance;}
-    inside=enter;cafeInside=enter&&cafe;exchangeInside=enter&&trading;officeInside=enter&&estate;homeInside=enter&&flat;const backdrop=enter?(trading?'#1e2a33':estate?'#d8cfc4':flat?'#d4cbbd':'#ccd7cd'):rainy?'#adbec7':'#bdd7e4';scene.background=new THREE.Color(backdrop);scene.fog=new THREE.Fog(backdrop,34,90);bank.root.visible=enter&&!cafe&&!trading&&!estate&&!flat;cafeRoom.root.visible=enter&&cafe;exchange.root.visible=enter&&trading;office.root.visible=enter&&estate;home.root.visible=enter&&flat;ambience?.update(rainy,inside,document.hidden);outdoors.visible=!enter;near=null;spot=null;onNear(null);options.onSpot?.(null);options.onRoom?.(enter?room:'city');
+    inside=enter;cafeInside=enter&&cafe;exchangeInside=enter&&trading;officeInside=enter&&estate;homeInside=enter&&flat;workInside=enter&&desk;const backdrop=enter?(trading?'#1e2a33':estate?'#d8cfc4':flat?'#d4cbbd':desk?'#d3dbe2':'#ccd7cd'):rainy?'#adbec7':'#bdd7e4';scene.background=new THREE.Color(backdrop);scene.fog=new THREE.Fog(backdrop,34,90);bank.root.visible=enter&&!cafe&&!trading&&!estate&&!flat&&!desk;work.root.visible=enter&&desk;cafeRoom.root.visible=enter&&cafe;exchange.root.visible=enter&&trading;office.root.visible=enter&&estate;home.root.visible=enter&&flat;ambience?.update(rainy,inside,document.hidden);outdoors.visible=!enter;near=null;spot=null;onNear(null);options.onSpot?.(null);options.onRoom?.(enter?room:'city');
     player.rotation.y=Math.PI;cameraTarget.set(player.position.x,1.65,player.position.z);distance=zoomDistance;
     camera.position.set(cameraTarget.x+Math.sin(yaw)*Math.cos(pitch)*distance,cameraTarget.y+Math.sin(pitch)*distance,cameraTarget.z+Math.cos(yaw)*Math.cos(pitch)*distance);
-    canvas.setAttribute('aria-label',enter?(cafe?'3D café. Walk to the counter to manage your business.':trading?'3D trading floor. Walk to the broker or the city exit.':estate?'3D property office. Walk to the agent or the city exit.':flat?'3D apartment. Walk to the desk or the square exit.':'3D bank lobby. Walk to the teller or the city exit.'):'3D city. Tap pavement to walk.');
+    canvas.setAttribute('aria-label',enter?(cafe?'3D café. Walk to the counter to manage your business.':trading?'3D trading floor. Walk to the broker or the city exit.':estate?'3D property office. Walk to the agent or the city exit.':flat?'3D apartment. Walk to the desk or the square exit.':desk?'3D office. Walk to your manager or the square exit.':'3D bank lobby. Walk to the teller or the city exit.'):'3D city. Tap pavement to walk.');
   };
   frame=requestAnimationFrame(tick);
   return {
@@ -432,6 +451,10 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     walkToAgent(){if(officeInside){clearMovement();path=[{x:0,z:.75}];}},
     setListings(board){office.setBoard(board);agentHeadline=board.headline;},
     enterHome(){if(spot==='home'&&!inside)transition(true,'home');},leaveHome(){transition(false);},
+    enterWork(){if(spot==='work'&&!inside)transition(true,'work');},leaveWork(){transition(false);},
+    walkToManager(){if(workInside){clearMovement();path=[{x:0,z:.75}];}},
+    walkToWork(){if(inside)transition(false);clearMovement();path=findTownPath(player.position,{x:WORK.x,z:WORK.z});const end=path.at(-1);if(end){destinationRing.position.set(end.x,.235,end.z);destinationRing.visible=true;}},
+    setPayroll(board){work.setBoard(board);managerHeadline=board.headline;},
     walkToDesk(){if(homeInside){clearMovement();path=[{x:0,z:.75}];}},
     walkHome(){if(inside)transition(false);clearMovement();path=findTownPath(player.position,{x:HOME.x,z:HOME.z});const end=path.at(-1);if(end){destinationRing.position.set(end.x,.235,end.z);destinationRing.visible=true;}},
     walkToRosa(){if(inside)transition(false);clearMovement();path=findTownPath(player.position,{x:ROSA.x+1.3,z:ROSA.z+.4});const end=path.at(-1);if(end){destinationRing.position.set(end.x,.235,end.z);destinationRing.visible=true;}},
@@ -440,7 +463,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     walkToCafeCounter(){if(cafeInside){clearMovement();path=[{x:0,z:.8}];}},
     setNeighbourhood(month,cafe,won=false){cafeState=cafe;townMonth=month;celebrating=won;season=seasonFor(month);palette?.apply(seasonOverride??season);shopSign.visible=!!cafe;rainy=cafeWeather(month);cafeRoom.setState(cafeService?.status==='active'?{seats:cafeService.seats,machine:cafeService.machine}:cafe);if(!(scene.background instanceof THREE.Color))scene.background=new THREE.Color('#bdd7e4');ambience?.update(rainy,inside,document.hidden);},
     enterBank(){if(near==='bank'&&!inside)transition(true,'bank');},leaveBank(){transition(false);},
-    walkToTeller(){if(inside&&!cafeInside&&!exchangeInside&&!officeInside&&!homeInside){clearMovement();path=[{x:0,z:.75}];}},
+    walkToTeller(){if(inside&&!cafeInside&&!exchangeInside&&!officeInside&&!homeInside&&!workInside){clearMovement();path=[{x:0,z:.75}];}},
     walkToExit(){if(inside){clearMovement();path=[{x:0,z:6.1}];}},
     serveCustomer(onDone){if(inside||!ready||reducedMotion){onDone?.();return;}clearMovement();stopPath();saleChimed=false;serviceReturn={x:player.position.x,z:player.position.z};serviceView={yaw,pitch,distance:zoomDistance};serviceDone=onDone;serviceStage='approach';path=findTownPath(player.position,{x:2.2,z:7.4});},
     celebrate(){ambience?.chime('celebrate');if(!reducedMotion){celebrationUntil=elapsed+3;clearMovement();stopPath();}},

@@ -3379,6 +3379,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
         <TownModal state={gameState} disabled={isProcessing || !!gameState.pendingScenario || gameState.hasWon || gameState.isBankrupt} reduceMotion={!!reduceMotion}
           onBuy={(item,quantity)=>handleBuyAsset(item,undefined,quantity)} onClose={() => setShowTown(false)} saveError={saveError} onBackup={downloadCurrentProgress}
           onFinishJourney={()=>setGameState(prev=>isProcessing?prev:completeActiveJourney(prev))}
+          onPromote={handleManualPromotion} onOpenLife={(tab)=>{setShowTown(false);navigateToTab(tab);}}
           onSell={handleSellAsset}
           onMortgage={item=>setShowMortgageModal(item)}
           onChangeLifestyle={handleChangeLifestyle}

@@ -16,7 +16,7 @@ export function cityCaption(state: Pick<GameState, 'month' | 'hasWon' | 'cafe'>,
 export type GuideTarget = 'teller' | 'business' | 'cart' | 'cafe' | 'broker';
 export type GuideContext = {
   journey: Pick<ActiveJourney, 'completed' | 'action' | 'button' | 'step'> & { stage?: 1 | 2 };
-  room: 'city' | 'bank' | 'cafe' | 'exchange' | 'property' | 'home';
+  room: 'city' | 'bank' | 'cafe' | 'exchange' | 'property' | 'home' | 'work';
   near: TownPlaceId | null;
   spot: TownSpot;
   showDetails: boolean;

@@ -101,3 +101,10 @@
 .tycoon-high-contrast .town-eyebrow,.tycoon-high-contrast .town-journey-summary span,.tycoon-high-contrast .town-journey-summary small,.tycoon-high-contrast .town-camera-menu p,.tycoon-high-contrast .town-world-caption span,.tycoon-high-contrast .town-details p,.tycoon-high-contrast .town-details small,.tycoon-high-contrast .town-details li{color:#f7f3e8}
 .tycoon-high-contrast .town-world-caption,.tycoon-high-contrast .town-location,.tycoon-high-contrast .town-camera-help,.tycoon-high-contrast .town-quality-note{background:#0f2420;border:1px solid #f3eddc}
 .tycoon-high-contrast .town-modal :focus-visible{outline:3px solid #ffe08a;outline-offset:2px}
+
+/* Main Street Offices panel */
+.town-work-block{margin-top:18px;padding:14px;border:1px solid #476359;border-radius:12px;background:#22403a}.town-work-block h4{font-size:13px;color:#f1d396;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.town-stub{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:12px;color:#dfe8dc}.town-stub dt small{display:block;font-size:10px;color:#a9bfae}.town-stub dd{text-align:right;font-variant-numeric:tabular-nums;color:#f5eed9}.town-stub dd.is-negative{color:#f2a7a0}.town-stub .is-total{border-top:1px solid #6f8a7a;padding-top:6px;font-weight:700;color:#ffe5a2}
+.town-meter{height:8px;border-radius:999px;background:#33524a;overflow:hidden;margin:8px 0}.town-meter span{display:block;height:100%;background:#d9c18b}
+.town-list{margin:8px 0;padding-left:0;list-style:none;font-size:11px;line-height:1.7;color:#c8d7c8}.town-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.town-tag{font-size:10px;padding:2px 8px;border-radius:999px;border:1px solid}.town-tag-good{color:#9be7b5;border-color:#9be7b5}.town-tag-warn{color:#f1d396;border-color:#f1d396}.town-tag-bad{color:#f2a7a0;border-color:#f2a7a0}

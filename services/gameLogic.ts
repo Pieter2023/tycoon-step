@@ -159,7 +159,7 @@ const getCharacterPerkEffects = (state: GameState) => {
   return state.character?.perk?.effects || {};
 };
 
-const getNegotiationRaiseBonus = (state: GameState): number => {
+export const getNegotiationRaiseBonus = (state: GameState): number => {
   const bestScore = state.negotiationsCourse?.bestScore ?? 0;
   const certifiedBonus = state.negotiationsCourse?.certified ? 0.01 : 0;
   const scoreBonus = (bestScore / 15) * 0.01;
