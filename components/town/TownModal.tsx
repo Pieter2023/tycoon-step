@@ -22,6 +22,7 @@ import { townJourney } from '../../services/townJourney';
 import type { CameraPreset } from './townControls';
 import type { TownView } from './createTownScene';
 import { guideLabel, guideNextHop, GuideTarget } from './townGuide';
+import { characterSex } from './townResidents';
 
 type Props = {
   state: GameState;
@@ -99,7 +100,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onClos
   useEffect(() => {
     if (!host.current) return;
     setLoading(true);
-    try { controller.current = createTownScene(host.current, id => { setNear(id); if(!id)setShowDetails(false); }, () => inspectRef.current(), () => { setUnavailable(true); setLoading(false); setShowDetails(true); }, reduceMotion, () => setLoading(false), {view:state.townView,onView:onRememberView,onRoom:value=>{setRoom(value);setDestination(null);setShowDetails(false);setJournal(false);},onSpot:setSpot,onPlayerPoint:setPlayerPoint,onManual:cancelGuide}); }
+    try { controller.current = createTownScene(host.current, id => { setNear(id); if(!id)setShowDetails(false); }, () => inspectRef.current(), () => { setUnavailable(true); setLoading(false); setShowDetails(true); }, reduceMotion, () => setLoading(false), {view:state.townView,onView:onRememberView,onRoom:value=>{setRoom(value);setDestination(null);setShowDetails(false);setJournal(false);},onSpot:setSpot,onPlayerPoint:setPlayerPoint,onManual:cancelGuide,playerSex:characterSex(state.character)}); }
     catch { setUnavailable(true); setLoading(false); setShowDetails(true); }
     return () => { controller.current?.dispose(); controller.current = null; };
   }, [reduceMotion]);

@@ -152,3 +152,25 @@ Practice shift timing was left as is: three guests, ~25 seconds with an attentiv
 Validation: 243 tests across 39 files passed (`test/TownGuide.test.tsx` added: labels for every stage, door chaining, jog rule, teller ordering), TypeScript and the production build passed, `git diff --check` clean. Logs: [tests](verification/pacing-2026-09-05/tests.log), [build](verification/pacing-2026-09-05/build.log). Browser replay covered the whole loop from a new game, including a ground tap cancelling a guided walk and a full practice shift (3/3 served, $3 illustrative profit, cash unchanged). Console clear.
 
 Limits: desktop Chrome only; the physical-phone check is still open. The user's 5187 save was not opened or changed. `dist/` was rebuilt at the end of this pass, so an already-open 5187 page needs a full refresh before opening the city.
+
+## Street life, character polish, vehicles and sound — September 5, 2026 (late evening)
+
+Request: make the square feel more alive, give residents clearly male and female features, add vehicles, and make the sounds more realistic and relevant. Local only, uncommitted.
+
+Art (Blender, headless, `scripts/build-town-extras.py`, new; run between the base build and the refinement script):
+
+- The single animated character now carries optional parts on its Head, Torso and Hips pivots: `Fem_HairLong`, `Fem_HairSide`, `Fem_Fringe`, `Fem_Ponytail`, `Fem_Earring`, `Fem_Lips`, `Fem_Bust`, `Fem_Skirt`, `Masc_Beard`, `Masc_Cap`. All six clips are unchanged. Character export grew from 242,648 to 333,824 bytes.
+- New `town-vehicles.glb` (100,568 bytes, Draco): a hatchback and a delivery van with named wheels and hubs, headlamp/tail-lamp materials and a recolourable paint material. Editable source `assets/town/town-vehicles.blend`.
+
+Runtime:
+
+- `components/town/townResidents.ts` (new): `characterSex` maps the eight story characters, reads the pictured emoji for custom avatars and settles deterministically otherwise; `residentStyle` alternates men and women with varied hair, beards, caps and clothes; `styleCharacter` toggles the parts, narrows or broadens the jacket and recolours cloned materials; `seatActor` poses a sitter with feet on the ground. The player's figure follows the chosen character, the teller is a woman, the café staff and guests (Mia, Sam, Leo) are styled individually.
+- `components/town/townTraffic.ts` (new): six vehicles on two right-hand lanes of Main Street, wheels spinning, headlamps lit in rain. `vehicleSpeed` rolls a vehicle to a stop 2.6 m short of anything ahead in its lane (the player on the road, or the vehicle in front) and pulls away when clear; the braking band covers the whole carriageway and not the pavements. Vehicles report each pass for a panned whoosh.
+- `components/town/townLife.ts` (new): seven pigeons pecking around the fountain that scatter when the player comes within 2.1 m and land 5–8 m away inside the square; bunting between the four lamp posts with waving pennants.
+- Twelve residents (was eight) now walk on the shop pavement and the promenade instead of the road, and two rest on the promenade benches facing the fountain; café regulars stand at the shopfront.
+- `components/town/townAtmosphere.ts`: the ambience is now a layered synthesized soundscape — breeze and city hum that muffles indoors, birdsong on dry days only, rain hiss, the fountain heard only nearby, a stereo-panned whoosh for each passing car, shoe-step bursts that differ indoors, an espresso machine while a drink brews, and chimes for order, serve, walk-out, cart sale and the badge. Still no downloads or licensed audio; sound stays off by default.
+- Dev builds expose `window.__town` (traffic, pigeons, player position) for console QA; production strips it.
+
+Validation: 251 tests across 40 files passed (`test/TownLife.test.ts` added: sex mapping, style toggles with material cloning, seated pose, lane coverage and braking curve, pigeon flee/landing rules, GLB contents and size caps), TypeScript and the production build passed, `git diff --check` clean. Logs: [tests](verification/street-life-2026-09-05/tests.log), [build](verification/street-life-2026-09-05/build.log). Browser replay in Chrome at 61 fps: traffic braking confirmed from the dev handle (lead car stopped at 2.6 m, two queued behind), pigeon scatter confirmed (two flew and landed on the far side), women and men distinguishable at a glance in the square, at the cart queue, at the teller and in the café; sound toggled on with a clean console.
+
+Limits: sounds were verified to schedule without errors, not listened to on a physical device. Model rebuild order is documented in `assets/town/README.md`. Physical-phone frame rate with the extra residents and vehicles remains untested. `dist/` was rebuilt at the end of this pass; refresh an open 5187 page before opening the city.

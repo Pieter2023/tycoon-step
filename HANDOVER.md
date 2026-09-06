@@ -1,12 +1,12 @@
 # Start here — Tycoon handover
 
-Updated September 5, 2026, 21:45 PDT. This is the current session handover. Older dated deployment claims in other documents describe earlier versions, not the new city work.
+Updated September 5, 2026, 22:15 PDT. This is the current session handover. Older dated deployment claims in other documents describe earlier versions, not the new city work.
 
 ## Status and exact project
 
-- **Implemented and tested locally; NOT committed, pushed or publicly deployed.** The latest request was to play the bank → cart → café loop and tune its pacing; that pass is done (see below). Publication was not requested.
+- **Two local commits made on September 5 (`e909349` access invite links, `a2968e9` the game work + pacing pass); NOT pushed or deployed.** The street-life/character/vehicle/sound pass that followed is **uncommitted** working-tree work. Publication was not requested.
 - Active folder: `/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2`.
-- Branch: `codex/game-overhaul-20260503-223748`. Local HEAD: `1fc8227` (`feat(monitor): add prism-monitor/v1 status endpoint (Netlify function)`). This commit does **not** contain the new working-tree game changes.
+- Branch: `codex/game-overhaul-20260503-223748`. Local HEAD: `a2968e9` (game work + pacing pass). Uncommitted on top: street life, character sex features, vehicles and the soundscape (see item 8).
 - Configured remote: `https://github.com/Pieter2023/tycoon-step.git`. Remote branch/deployment state was not fetched or verified for this handover.
 - Many tracked files are modified and important new files are untracked, including `components/town/`, services, tests, Blender sources and runtime models. Preserve the entire working folder. Do not assume a fresh clone or a git patch alone contains this work.
 - Existing unrelated edits also exist in `ModeSelector.tsx`, `index.tsx`, `netlify.toml`, `services/accessControl.ts`, its test, monetization docs and `graphify-out/`. Review the full diff before staging. Do not reset, clean, discard or blanket-stage the folder.
@@ -23,6 +23,7 @@ A polished, stylised city inspired by The Sims, with a character-following camer
 4. **Bank and cart:** walkable bank/teller, savings transfers, loan comparisons and a separate cart owner shift with price/stock choices, animation and receipt.
 5. **Living city and café:** rain/puddles, residents, optional ambience; walkable café, lease, furnishings, price/stock/staff plans, monthly reports and net-worth accounting.
 6. **Hands-on café shift:** walk to take orders, brew, carry and serve coffee; arriving/queued/seated guests, patience, reactions, optional helper, waste and profit/loss receipt. Free practice requires no ownership and changes no money. Paid owner shifts persist and resume paused.
+8. **Street life, character polish, vehicles, sound (late evening, uncommitted):** one animated character with optional female/male parts (`townResidents.ts` styles player, twelve residents, teller, café staff and guests); cars and a van on Main Street that brake for the player and queue (`townTraffic.ts`); pigeons that scatter and bunting between lamp posts (`townLife.ts`); two bench sitters; a layered synthesized soundscape with birdsong, traffic, fountain, footsteps, espresso machine and service chimes (`townAtmosphere.ts`). New Blender step `scripts/build-town-extras.py`; new `public/models/town/town-vehicles.glb`. Receipt and measurements in `docs/completed-improvements.md`.
 7. **Loop pacing pass (evening):** the guide button is now one tap per mission leg. A guided walk chains through the bank door to the teller (and into the café) on its own; any manual input cancels it. Long routes and the cart's customer visit jog (5.3 s instead of 10.8 s). Side panels scroll to the new step after a purchase/permit, the reserve confirmation sits first in the teller panel, guide labels track where the player stands, and the guide can confirm the reserve, pay the permit, start a practice shift and complete the journey when the matching panel is open. Timings and the before/after table are in the receipt. No financial rule or save shape changed.
 
 The current scene is a small playable preview. Detailed crowd collision, full conversations, free furniture placement and a complete restaurant/open-world simulation are not implemented.
@@ -66,18 +67,19 @@ These are last-observed snapshots, not values to restore over newer play:
 |---|---|
 | App/state and city entry | `App.tsx`, `components/v2/CommandDashboard.tsx`, `components/modals/ScenarioModal.tsx` |
 | 3D lifecycle, movement, guests, camera | `components/town/createTownScene.ts`, `townWorld.ts`, `townControls.ts`, `townNavigation.ts`, `town.css` |
+| Street life | `components/town/townResidents.ts` (sex/style/seating), `townTraffic.ts`, `townLife.ts` (pigeons, bunting), `townAtmosphere.ts` (weather + soundscape) |
 | Rooms and ambience | `components/town/townBank.ts`, `townCafeRoom.ts`, `townAtmosphere.ts` |
 | UI orchestration | `components/town/TownModal.tsx`, `townGuide.ts` (guide labels + one-tap chaining), `TellerPanel.tsx`, `CartShiftPanel.tsx`, `CafePanel.tsx`, `CafeServicePanel.tsx`, `CafeServiceHUD.tsx` |
 | Finance and activities | `services/townProgress.ts`, `townJourney.ts`, `townActivities.ts`, `townCafe.ts`, `cafeService.ts`, `gameLogic.ts` |
 | Foundations and persistence | `services/firstSteps.ts`, `investmentModel.ts`, `storageService.ts`, `hooks/useSaveLoad.ts`, `types.ts` |
-| Editable art and rebuild | `assets/town/`, `scripts/build-town-assets.py`, `scripts/refine-town-character.py`; see `assets/town/README.md` |
+| Editable art and rebuild | `assets/town/`, `scripts/build-town-assets.py` → `build-town-extras.py` → `refine-town-character.py` in that order; see `assets/town/README.md` |
 | Runtime models/decoder | `public/models/town/`, `public/decoders/draco/` |
 
 ## Validation and evidence
 
-Latest validation (evening pacing pass): **243 tests / 39 files passed**, TypeScript + production build passed; `git diff --check` passed. Existing chunk-size warnings remain. `dist/` was rebuilt at 21:41, so an already-open 5187 page needs a full refresh before opening the city. This handover does not claim a fresh deployment or repeat financial/cloud testing.
+Latest validation (street-life pass): **251 tests / 40 files passed**, TypeScript + production build passed; `git diff --check` passed. Existing chunk-size warnings remain. `dist/` was rebuilt at the end of that pass, so an already-open 5187 page needs a full refresh before opening the city. This handover does not claim a fresh deployment or repeat financial/cloud testing.
 
-- Portable logs: [tests](docs/verification/pacing-2026-09-05/tests.log), [build](docs/verification/pacing-2026-09-05/build.log); earlier stage logs in `docs/verification/gameplay-2026-09-05/`.
+- Portable logs: [tests](docs/verification/street-life-2026-09-05/tests.log), [build](docs/verification/street-life-2026-09-05/build.log); earlier logs in `docs/verification/pacing-2026-09-05/` and `gameplay-2026-09-05/`.
 - Full chronological implementation/playtest receipt: [docs/completed-improvements.md](docs/completed-improvements.md). Earlier test counts and balances in that file are historical checkpoints.
 - Regression checklist: [docs/qa-checklist.md](docs/qa-checklist.md).
 - Service tests: `test/CafeService.test.ts`, `test/CafeServicePanel.test.tsx`, `test/CafeServiceResume.test.tsx`; broader tests use `Town*`, `FinancialLearning`, `DecisionAutosave` and existing service suites.
@@ -86,7 +88,7 @@ Latest validation (evening pacing pass): **243 tests / 39 files passed**, TypeSc
 ## Next session priorities
 
 1. Read this file, check the active folder/dirty state and current preview/save, then ask for or follow Pieter's next direction. No new feature or public deployment was authorized by the documentation request.
-2. **Physical-phone check remains outstanding:** actual touch/multitouch, camera feel, frame rate, thermal behaviour, orientation and suspend/resume. A desktop browser viewport is not a physical-device test.
+2. **Physical-phone check remains outstanding:** actual touch/multitouch, camera feel, frame rate (now with twelve residents, six vehicles and pigeons), thermal behaviour, orientation, suspend/resume, and listening to the new soundscape on a real speaker. A desktop browser viewport is not a physical-device test.
 3. Pacing/clarity of the connected loop was tuned on September 5 evening (desktop Chrome). Still open: Pieter playing it by hand, character contact and crowd movement. New town/café copy is largely English-only; a full screen-reader, contrast and localization review remains open.
 4. If publication is requested, preserve a complete recoverable copy of tracked and untracked work, review unrelated changes, recheck tests/build, inspect the real hosting target and remote branches, create/verify a staging deployment, then publish within the authorized scope. The historical Netlify site name is `tycoonjan22026`; reverify it. Do not blindly run an old branch-to-main push recipe.
 5. More interiors, missions, voice or external art services are possible later choices, not a committed queue. Blender is already available; Higgsfield/Mixamo were not used for this stage. Quote current paid tiers only when a concrete need arises.

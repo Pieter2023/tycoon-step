@@ -6,9 +6,12 @@ import * as THREE from 'three';
 import { findTownPath, slideMovement, isWalkable } from './townNavigation';
 import { createTownBank, clampBankPoint, bankSpot } from './townBank';
 import { createCoffeeCart } from './townBusiness';
+import { createTownTraffic } from './townTraffic';
+import { createTownLife } from './townLife';
+import { residentStyle, seatActor, styleCharacter, Sex } from './townResidents';
 export type TownView = { x:number; z:number; yaw:number; pitch:number; distance:number; mode?:CameraPreset };
 export type TownSpot = 'teller' | 'exit' | 'cart' | 'cafe-counter' | null;
-export type TownSceneOptions = { view?:TownView; onView?:(view:TownView)=>void; onRoom?:(room:'city'|'bank'|'cafe')=>void; onPlayerPoint?:(point:TownPoint)=>void; onSpot?:(spot:TownSpot)=>void; onManual?:()=>void };
+export type TownSceneOptions = { view?:TownView; onView?:(view:TownView)=>void; onRoom?:(room:'city'|'bank'|'cafe')=>void; onPlayerPoint?:(point:TownPoint)=>void; onSpot?:(spot:TownSpot)=>void; onManual?:()=>void; playerSex?:Sex };
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
@@ -73,9 +76,13 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   camera.position.set(1,5.4,15); camera.lookAt(cameraTarget);
   if(saved){yaw=Number.isFinite(saved.yaw)?saved.yaw:.12;pitch=Number.isFinite(saved.pitch)?THREE.MathUtils.clamp(saved.pitch,.16,1.05):.4;zoomDistance=Number.isFinite(saved.distance)?THREE.MathUtils.clamp(saved.distance,4,20):9;distance=zoomDistance;cameraTarget.set(spawn.x,1.65,spawn.z);}
   const cart=createCoffeeCart();outdoors.add(cart.root);let cartLicensed=false,paused=false;
+  const life=createTownLife(reducedMotion);outdoors.add(life.root);
+  let traffic:ReturnType<typeof createTownTraffic>|undefined;
   let ambience:ReturnType<typeof createTownAmbience>|undefined;
   let audioContext:AudioContext|undefined, soundEnabled=false,lastStep=0;
-  const stepSound=()=>{if(!soundEnabled||!audioContext||audioContext.state!=='running')return;const oscillator=audioContext.createOscillator(),gain=audioContext.createGain();oscillator.type='triangle';oscillator.frequency.setValueAtTime(95,audioContext.currentTime);gain.gain.setValueAtTime(.025,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.055);oscillator.connect(gain);gain.connect(audioContext.destination);oscillator.start();oscillator.stop(audioContext.currentTime+.06);oscillator.onended=()=>{oscillator.disconnect();gain.disconnect();};};
+  const stepSound=(speed:number)=>{if(!soundEnabled||!audioContext||audioContext.state!=='running')return;ambience?.step(inside,speed);};
+  let brewingBefore=false,saleChimed=false,serviceCounts={ordered:0,served:0,left:0};
+  const countGuests=(service?:CafeService)=>({ordered:service?.guests.filter(g=>g.status!=='coming'&&g.status!=='queued').length??0,served:service?.guests.filter(g=>g.status==='served').length??0,left:service?.guests.filter(g=>g.status==='left').length??0});
   let teller:Actor | undefined, serviceUntil=0, serviceStage:'approach'|'serve'|'return'|null=null, serviceDone:(()=>void)|undefined, celebrationUntil=0;
   let serviceReturn:TownPoint={x:2.2,z:9.8},serviceView:{yaw:number;pitch:number;distance:number}|undefined;
   let cameraMode:CameraPreset=saved?.mode==='overview'?'overview':'follow';
@@ -86,7 +93,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const heldCup=new THREE.Mesh(new THREE.CylinderGeometry(.09,.07,.2,16),new THREE.MeshStandardMaterial({color:'#fff1d4'}));heldCup.visible=false;cafeRoom.root.add(heldCup);
   const steam=new THREE.Group();cafeRoom.root.add(steam);
   for(let i=0;i<4;i++){const puff=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6),new THREE.MeshBasicMaterial({color:'#fff4de',transparent:true,opacity:.35}));puff.position.set(-.6,1.7+i*.16,-.5);steam.add(puff);}steam.visible=false;
-  let playerActor: Actor | undefined; const pedestrians: (Actor & { offset: number; lane: number })[] = [];
+  let playerActor: Actor | undefined; const pedestrians: (Actor & { offset: number; lane: number; seat?: number })[] = [];
   const addActor = (root: THREE.Object3D, clips: THREE.AnimationClip[]): Actor => {
     const mixer = new THREE.AnimationMixer(root), actions: Record<string, THREE.AnimationAction> = {};
     for (const clip of clips){const action=mixer.clipAction(clip);if(['Serve','Wave','Celebrate'].includes(clip.name)){action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;}actions[clip.name]=action;}
@@ -102,22 +109,36 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   // Each successful load is released even if the other request fails or the view closes.
   const loaded: THREE.Object3D[] = [];
   const load = async (url: string) => { const gltf = await loader.loadAsync(url); if (!alive) disposeTree(gltf.scene); else loaded.push(gltf.scene); return gltf; };
-  Promise.all([load('/models/town/freedom-square.glb'), load('/models/town/town-character.glb')]).then(([town, character]) => {
+  // Vehicles are optional: the square still opens if only their file fails.
+  Promise.all([load('/models/town/freedom-square.glb'), load('/models/town/town-character.glb'), load('/models/town/town-vehicles.glb').catch(() => null)]).then(([town, character, vehicles]) => {
     if (!alive) return;
     for (const root of [town.scene, character.scene]) root.traverse(o => { if (o instanceof THREE.Mesh) { o.castShadow = true; o.receiveShadow = true; } });
     outdoors.add(town.scene); player.add(character.scene); playerActor = addActor(character.scene, character.animations);
-    for (let i = 0; i < 8; i++) {
+    const playerSex = options.playerSex ?? 'm';
+    styleCharacter(character.scene, { sex: playerSex, hair: playerSex === 'f' ? 'long' : 'short' });
+    if (vehicles) { traffic = createTownTraffic(vehicles.scene, reducedMotion); outdoors.add(traffic.root); }
+    // Dev-only QA handle for inspecting traffic and pigeons from the console; stripped from production builds.
+    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { traffic, life, player: () => ({ x: player.position.x, z: player.position.z }) };
+    // Twelve neighbours: walkers on both pavements plus two resting on the promenade benches.
+    for (let i = 0; i < 12; i++) {
       const root = character.scene.clone(true); root.scale.setScalar(.86 + (i % 3) * .07);
-      root.traverse(o => { if (o instanceof THREE.Mesh && !Array.isArray(o.material) && ['shirt','skin','trousers','hair'].includes(o.material.name)) { o.material = o.material.clone(); const palettes:Record<string,string[]>={shirt:['#779fab','#aa716a','#7d9873','#c7b58c','#967caf'],skin:['#bb805b','#f0cba5','#865d44','#d4a57d','#e2b78c'],trousers:['#354955','#4a5465','#596555','#687684','#414f67'],hair:['#322d2b','#71503a','#252a2e','#b48e61','#44302b']};(o.material as THREE.MeshStandardMaterial).color.set(palettes[o.material.name][i%5]); } });
-      outdoors.add(root); pedestrians.push({ ...addActor(root, character.animations), offset: i * 5.9, lane: i % 2 ? 4.9 : 2.1 });
+      styleCharacter(root, residentStyle(i));
+      outdoors.add(root); pedestrians.push({ ...addActor(root, character.animations), offset: i * 5.3, lane: i % 2 ? 6.35 : -.2, seat: i === 8 ? -6 : i === 9 ? 6 : undefined });
     }
     const tellerRoot = character.scene.clone(true);
-    tellerRoot.traverse(o=>{if(o instanceof THREE.Mesh&&!Array.isArray(o.material)&&o.material.name==='shirt'){o.material=o.material.clone();(o.material as THREE.MeshStandardMaterial).color.set('#487b74');}});
+    styleCharacter(tellerRoot, { sex: 'f', hair: 'long', colors: { shirt: '#487b74', hair: '#3a2a24', skin: '#d4a57d', trousers: '#354955' } });
     tellerRoot.position.set(0,.22,-1.5); bank.root.add(tellerRoot);
     teller = addActor(tellerRoot,character.animations);
+    const cafeStyles = [
+      { sex: 'm' as const, hair: 'short' as const, beard: true, colors: { shirt: '#477b64', skin: '#865d44', hair: '#252a2e' } },
+      { sex: 'f' as const, hair: 'tail' as const, colors: { shirt: '#477b64', skin: '#f0cba5', hair: '#b48e61', trousers: '#4a5465' } },
+      { sex: 'f' as const, hair: 'long' as const, colors: { shirt: '#bf896a', skin: '#d4a57d', hair: '#71503a', skirt: '#4f6f86' } },
+      { sex: 'm' as const, hair: 'short' as const, cap: true, colors: { shirt: '#7e88ac', skin: '#bb805b', hair: '#322d2b', cap: '#5a3f3a' } },
+      { sex: 'm' as const, hair: 'short' as const, beard: true, colors: { shirt: '#d0ad65', skin: '#e2b78c', hair: '#44302b' } },
+    ];
     for(let i=0;i<5;i++) {
       const root=character.scene.clone(true); root.scale.setScalar(i>1?.9:1);
-      root.traverse(o=>{if(o instanceof THREE.Mesh&&!Array.isArray(o.material)&&o.material.name==='shirt'){o.material=o.material.clone();(o.material as THREE.MeshStandardMaterial).color.set(i<2?'#477b64':['#bf896a','#7e88ac','#d0ad65'][i-2]);}});
+      styleCharacter(root, cafeStyles[i]);
       root.position.set(i<2?(i===0?.8:-1.5):2.6,.22,i<2?-1.5:.8+(i-2)*1.2); root.rotation.y=i<2?0:Math.PI;
       cafeRoom.root.add(root); cafeActors.push(addActor(root,character.animations));
     }
@@ -191,21 +212,32 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       if(serviceStage==='approach'&&!path.length){serviceStage='serve';serviceUntil=elapsed+4;yaw=.95;pitch=.65;zoomDistance=7.5;}
       if(serviceStage==='serve'){player.rotation.y=turnTowards(player.rotation.y,0,dt);if(elapsed>=serviceUntil){serviceStage='return';path=findTownPath(player.position,serviceReturn);}}
       if(serviceStage==='return'&&!path.length){serviceStage=null;if(serviceView){yaw=serviceView.yaw;pitch=serviceView.pitch;zoomDistance=serviceView.distance;}serviceDone?.();serviceDone=undefined;}
-      if(actualSpeed>.3 && elapsed-lastStep>(actualSpeed>3.3?.27:.40)){stepSound();lastStep=elapsed;}
+      if(actualSpeed>.3 && elapsed-lastStep>(actualSpeed>3.3?.27:.40)){stepSound(actualSpeed);lastStep=elapsed;}
       if(playerActor){const moving=actualSpeed>.08;const clip=serviceStage==='serve'||(cafeInside&&cafeService?.brewing)?'Serve':elapsed<celebrationUntil?'Celebrate':moving?(actualSpeed>2.8?'Run':'Walk'):'Idle';animateActor(playerActor,clip,reducedMotion&& !moving?0:dt,moving?actualSpeed/(actualSpeed>2.8?1.6875:1.3125):1);}
       if(!inside) for(const [index,npc] of pedestrians.entries()) {
-        const t=((reducedMotion?0:elapsed*.8)+npc.offset)%56,forward=t<28;
+        if(npc.seat!==undefined){
+          // Resting on a promenade bench, facing the fountain; feet reach the pavement.
+          npc.root.visible=true;npc.root.position.set(npc.seat+.15,-.09,7.22);npc.root.rotation.y=0;
+          animateActor(npc,'Idle',reducedMotion?0:dt);seatActor(npc.root);continue;
+        }
+        const t=((reducedMotion?0:elapsed*.8)+npc.offset)%64,forward=t<32;
         // One customer browses at the licensed cart, away from the walking lanes.
         const visiting=cartLicensed&&index===0;
         const queued=cartLicensed&&index>0&&index<(rainy?2:3);
-        const cafeVisitor=!!cafeState?.plan.open&&index>=5;
+        const cafeVisitor=!!cafeState?.plan.open&&index>=5&&index<8;
         npc.root.visible=!(rainy&&cafeVisitor&&index===7);
         const serving=visiting&&serviceStage==='serve';
         const approach=serving?Math.min(1,(4-(serviceUntil-elapsed))/.7,(serviceUntil-elapsed)/.7):0;
         const previous=npc.root.position.clone();
-        npc.root.position.set(visiting?1.1+approach*1.1:queued?1.1-index*.9:cafeVisitor?3.8+(index-5)*.65:forward?-14+t:42-t,.22,visiting?9.5+approach*.15:queued?9.5:cafeVisitor?-.4:npc.lane);
+        npc.root.position.set(visiting?1.1+approach*1.1:queued?1.1-index*.9:cafeVisitor?3.8+(index-5)*.65:forward?-16+t:48-t,.22,visiting?9.5+approach*.15:queued?9.5:cafeVisitor?-.9:npc.lane);
         npc.root.rotation.y=visiting||queued||cafeVisitor?Math.PI:forward?Math.PI/2:-Math.PI/2;
         if(!reducedMotion){const v=npc.root.position.distanceTo(previous)/Math.max(.001,dt);animateActor(npc,serving&&approach>=1?'Serve':v>.08?'Walk':'Idle',dt,serving&&approach>=1?1:Math.min(2,v/1.3125));}
+      }
+      if(!inside){
+        const here={x:player.position.x,z:player.position.z};
+        for(const pass of traffic?.update(dt,here,rainy,true)??[])ambience?.carPass(pass.pan,pass.closeness);
+        life.update(dt,elapsed,here,true);
+        ambience?.tick(Math.hypot(here.x,here.z-12));
       }
       const nextSpot:TownSpot=inside?(cafeInside?cafeSpot(player.position):bankSpot(player.position)):cart.root.visible&&Math.hypot(player.position.x-2.2,player.position.z-8.7)<2?'cart':null;
       if(nextSpot!==spot){spot=nextSpot;options.onSpot?.(spot);}
@@ -217,6 +249,9 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     weather.update(elapsed,rainy,reducedMotion);
     const playing=cafeInside&&cafeService?.status==='active';
     heldCup.visible=false;steam.visible=!!(playing&&cafeService?.brewing);
+    const brewingNow=!!(playing&&cafeService?.brewing&&!paused);
+    if(brewingNow!==brewingBefore){brewingBefore=brewingNow;ambience?.machine(brewingNow);}
+    if(playing){const counts=countGuests(cafeService);if(counts.served>serviceCounts.served)ambience?.chime('serve');else if(counts.left>serviceCounts.left)ambience?.chime('left');else if(counts.ordered>serviceCounts.ordered)ambience?.chime('order');serviceCounts=counts;}
     if(steam.visible&&!reducedMotion)steam.children.forEach((p,i)=>{p.position.y=1.65+(elapsed*.3+i*.16)%.7;p.position.x=-.6+Math.sin(elapsed*2+i)*.06;});
     guestLabels.forEach(label=>label.sprite.visible=false);
     if(cafeInside) for(const [i,actor] of cafeActors.entries()) {
@@ -269,6 +304,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     let cupPosition:THREE.Vector3|null=null;
     if(serviceStage==='serve'&&!reducedMotion&&playerActor&&pedestrians[0]){
       const t=(4-(serviceUntil-elapsed))/4;
+      if(t>.62&&!saleChimed){saleChimed=true;ambience?.chime('sale');}
       const giver=playerActor.root.getObjectByName('Grip1'),receiver=pedestrians[0].root.getObjectByName('Grip1');
       if(giver&&receiver&&t>.12&&t<.87){scene.updateMatrixWorld(true);cupPosition=giver.getWorldPosition(new THREE.Vector3());const target=receiver.getWorldPosition(new THREE.Vector3());const f=THREE.MathUtils.smoothstep(t,.42,.65);cupPosition.lerp(target,f);cupPosition.y+=.04;}
     }
@@ -289,7 +325,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   return {
     setCafeService(value){
       const fresh=value?.status==='active'&&(!cafeService||cafeService.status!=='active'||value.month!==cafeService.month||(value.elapsed===0&&cafeService.elapsed>0));
-      cafeService=value;
+      cafeService=value;serviceCounts=countGuests(value);
       if(fresh){guestPaths.clear();cafeActors.slice(2).forEach((actor,i)=>actor.root.position.set(2.6,.22,6.4+i*.3));}
       cafeRoom.setState(value?.status==='active'?{seats:value.seats,machine:value.machine}:cafeState);
     },
@@ -301,8 +337,8 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     enterBank(){if(near==='bank'&&!inside)transition(true);},leaveBank(){transition(false);},
     walkToTeller(){if(inside){clearMovement();path=[{x:0,z:.75}];}},
     walkToExit(){if(inside){clearMovement();path=[{x:0,z:6.1}];}},
-    serveCustomer(onDone){if(inside||!ready||reducedMotion){onDone?.();return;}clearMovement();stopPath();serviceReturn={x:player.position.x,z:player.position.z};serviceView={yaw,pitch,distance:zoomDistance};serviceDone=onDone;serviceStage='approach';path=findTownPath(player.position,{x:2.2,z:7.4});},
-    celebrate(){if(!reducedMotion){celebrationUntil=elapsed+3;clearMovement();stopPath();}},
+    serveCustomer(onDone){if(inside||!ready||reducedMotion){onDone?.();return;}clearMovement();stopPath();saleChimed=false;serviceReturn={x:player.position.x,z:player.position.z};serviceView={yaw,pitch,distance:zoomDistance};serviceDone=onDone;serviceStage='approach';path=findTownPath(player.position,{x:2.2,z:7.4});},
+    celebrate(){ambience?.chime('celebrate');if(!reducedMotion){celebrationUntil=elapsed+3;clearMovement();stopPath();}},
     setCamera(mode){cameraMode=mode;const preset=cameraPreset(mode,inside);yaw=.12;pitch=preset.pitch;zoomDistance=preset.distance;},
     orbit(delta){yaw+=delta;},zoom(delta){zoomDistance=THREE.MathUtils.clamp(zoomDistance+delta,inside?7:5,inside?12:18);},
     walkTo(id){if(inside)transition(false);clearMovement();path=findTownPath(player.position,{x:TOWN_PLACES.find(p=>p.id===id)!.x,z:-1.1});const end=path[path.length-1];if(end){destinationRing.position.set(end.x,.235,end.z);destinationRing.visible=true;}},
@@ -314,6 +350,6 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     move(x,z){if(serviceStage)return;stick=normalizeStick(x,z);if(stick.x||stick.z){stopPath();options.onManual?.();}},
     resetView(){yaw=.12;const preset=cameraPreset(cameraMode,inside);pitch=preset.pitch;zoomDistance=preset.distance;},
     setOwned(ids){for(const [id,object]of ownedMarkers)object.visible=ids.includes(id);},
-    dispose(){options.onView?.(inside&&cityView?cityView:{x:player.position.x,z:player.position.z,yaw,pitch,distance:zoomDistance,mode:cameraMode});ambience?.dispose();void audioContext?.close();alive=false;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',keyboard);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('contextmenu',contextMenu);canvas.removeEventListener('webglcontextlost',lost);playerActor?.mixer.stopAllAction();teller?.mixer.stopAllAction();cafeActors.forEach(a=>a.mixer.stopAllAction());pedestrians.forEach(p=>p.mixer.stopAllAction());for(const root of loaded)if(!root.parent)disposeTree(root);disposeTree(scene);draco.dispose();environment.dispose();sun.shadow.dispose();renderer.dispose();renderer.forceContextLoss();canvas.remove();}
+    dispose(){options.onView?.(inside&&cityView?cityView:{x:player.position.x,z:player.position.z,yaw,pitch,distance:zoomDistance,mode:cameraMode});ambience?.dispose();void audioContext?.close();alive=false;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',keyboard);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('contextmenu',contextMenu);canvas.removeEventListener('webglcontextlost',lost);playerActor?.mixer.stopAllAction();teller?.mixer.stopAllAction();cafeActors.forEach(a=>a.mixer.stopAllAction());pedestrians.forEach(p=>p.mixer.stopAllAction());if(traffic)disposeTree(traffic.root);disposeTree(life.root);for(const root of loaded)if(!root.parent)disposeTree(root);disposeTree(scene);draco.dispose();environment.dispose();sun.shadow.dispose();renderer.dispose();renderer.forceContextLoss();canvas.remove();}
   };
 }

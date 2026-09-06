@@ -2,7 +2,7 @@
 
 ## Current handover — September 5, 2026
 
-Read [HANDOVER.md](HANDOVER.md) before acting. The new financial foundations, Freedom Square, bank/cart, café ownership and hands-on café service are **local only, uncommitted and undeployed**. Latest validation: 243 tests / 39 files and production build passed (evening pacing pass; receipt in docs/completed-improvements.md). The user preview is `127.0.0.1:5187`; isolate QA on 5188. Preserve the existing save and all tracked/untracked work. The latest user request updates handover/docs; it does not authorize publication.
+Read [HANDOVER.md](HANDOVER.md) before acting. The new financial foundations, Freedom Square, bank/cart, café ownership and hands-on café service are **local only, uncommitted and undeployed**. Latest validation: 251 tests / 40 files and production build passed (street-life pass; receipt in docs/completed-improvements.md). Game work is committed locally as `a2968e9`; the street-life pass is uncommitted. The user preview is `127.0.0.1:5187`; isolate QA on 5188. Preserve the existing save and all tracked/untracked work. The latest user request updates handover/docs; it does not authorize publication.
 
 Current feature/source map and run instructions are in the handover. Detailed evidence is in [docs/completed-improvements.md](docs/completed-improvements.md); remaining priorities are in [docs/roadmap.md](docs/roadmap.md). Physical-phone testing remains open. No new paid service is needed for the implemented prototype.
 
@@ -16,7 +16,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (39 files / 243 tests passed at the September 5 pacing pass; integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (40 files / 251 tests passed at the September 5 street-life pass; integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)
