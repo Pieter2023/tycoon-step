@@ -28,6 +28,11 @@ Desktop and 390×844 browser layout/play checks were completed; café portrait f
 - Modal titles announced via `aria-label`.
 - Action buttons use descriptive labels or aria-labels.
 
+## 3D city (September 6, 2026)
+- Side panel and camera menu manage focus (in on open, back to trigger on close); Escape closes overlays before the city.
+- `role=status` line announces room changes; the canvas is `role=application` with keys described; Enter mirrors E.
+- Large text zooms the HUD/panels 15%; high contrast brightens copy, borders and focus rings (`town.css`, bottom).
+
 ## Screenshots
 - Not captured in this environment.
 - Suggested: capture Settings (default vs high-contrast) and HUD (before/after focus ring) for documentation.

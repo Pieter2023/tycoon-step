@@ -294,6 +294,14 @@ Validation: 295 tests across 48 files (`test/TownLife.test.ts` now checks the pe
 
 Validation: 298 tests across 49 files (`test/TownFreedom.test.ts`: sidestep direction, blocking pause, recovery; deterministic burst count, shell recycling, reduced motion; caption and Rosa's ordering), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/freedom-2026-09-06/`.
 
+## City accessibility pass — September 6, 2026 (build 14)
+
+The roadmap's open screen-reader and keyboard review of the city. In `TownModal.tsx`: the side panel (`aside`, now `tabIndex=-1`) takes focus when it opens and hands it back to the element that opened it when it closes; the camera menu focuses its first button on open and returns focus to the Camera button (now `aria-haspopup`) on close; a window-level Escape handler closes the camera menu, then the side panel, and only when neither is open does the Modal's own Escape close the city; a visually hidden `role=status` line announces "On Freedom Square" or "Inside the Community Bank" on room changes. In the scene, the canvas is `role=application` with a fuller description, and Enter (when the canvas has focus) does what E does. `town.css` now honours the game's accessibility preferences: `.tycoon-text-lg` zooms the HUD, navigation and panels by 15% without touching the 3D view; `.tycoon-high-contrast` brightens muted copy, gives every button a light border, opaque backgrounds to the caption and location cards, and a 3 px focus ring.
+
+Chrome: with both classes on `<html>` the header, destinations, journey strip and caption scaled up and gained bright borders; opening the Camera menu moved focus into it, Escape closed it, focus returned to the Camera button and the city stayed open.
+
+Validation: 301 tests across 50 files (`test/TownA11y.test.tsx`: Escape closes the panel before the city, focus moves into the panel and back to the trigger, the status line exists), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/a11y-2026-09-06/`.
+
 ## Where the overnight session stopped
 
 Nine builds shipped to production between 23:00 and roughly 01:00 PDT: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. Each is on `origin/main` and live at https://tycoonjan22026.netlify.app. What remains needs Pieter: playing the live site by hand and listing what feels off, the physical-phone test, listening to the synthesized audio on a real speaker, and a decision on Spanish for the town copy (a large, mechanical translation job now that the English is settled).

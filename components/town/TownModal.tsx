@@ -78,6 +78,21 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
   const [qualityMode,setQualityMode]=useState<QualityMode>(()=>readQualityMode());
   const [qualityLevel,setQualityLevel]=useState<QualityLevel|null>(null);
   const [qualityNote,setQualityNote]=useState<string|null>(null);
+  // Keyboard and screen-reader support: the side panel and camera menu take focus when they open and
+  // hand it back when they close; Escape closes the innermost overlay before the whole city.
+  const cameraButton=useRef<HTMLButtonElement>(null), menuBox=useRef<HTMLDivElement>(null), lastFocus=useRef<HTMLElement|null>(null), menuWasOpen=useRef(false);
+  useEffect(()=>{
+    if(showDetails){lastFocus.current=document.activeElement as HTMLElement|null;const t=setTimeout(()=>details.current?.focus(),0);return()=>clearTimeout(t);}
+    if(lastFocus.current&&document.contains(lastFocus.current)&&!details.current?.contains(lastFocus.current))lastFocus.current.focus();lastFocus.current=null;
+  },[showDetails]);
+  useEffect(()=>{
+    if(cameraTools){menuWasOpen.current=true;const t=setTimeout(()=>menuBox.current?.querySelector('button')?.focus(),0);return()=>clearTimeout(t);}
+    if(menuWasOpen.current){menuWasOpen.current=false;cameraButton.current?.focus();}
+  },[cameraTools]);
+  useEffect(()=>{
+    const onKey=(e:KeyboardEvent)=>{if(e.key!=='Escape')return;if(cameraTools){e.stopPropagation();e.preventDefault();setCameraTools(false);}else if(showDetails){e.stopPropagation();e.preventDefault();setShowDetails(false);}};
+    window.addEventListener('keydown',onKey,true);return()=>window.removeEventListener('keydown',onKey,true);
+  },[cameraTools,showDetails]);
   useEffect(()=>{if(!qualityNote)return;const t=setTimeout(()=>setQualityNote(null),7000);return()=>clearTimeout(t);},[qualityNote]);
   const [celebrating,setCelebrating]=useState<string|null>(null);
   const completedBefore=useRef(state.townProgress?.journeyCompletedMonth);
@@ -259,10 +274,11 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
   const guideText=journey.completed&&journey.stage===2?(board&&showDetails?'Close the month & judge':'Check the notice board'):guideLabel({journey,room,near,spot,showDetails,journal,serviceActive,hasCafe:!!state.cafe});
   const guideDisabled=serving||(disabled&&(journey.action==='review'||journey.action==='finish'))||(guideText==='Confirm my cash reserve'&&(disabled||state.cash<expenses))||(guideText==='Pay the $60 permit'&&(disabled||state.cash<CART_PERMIT));
   const chooseQuality=(mode:QualityMode)=>{setQualityMode(mode);saveQualityMode(mode);controller.current?.setQuality?.(mode);};
+  const roomTitle=room==='bank'?'Community Bank':room==='cafe'?'Little Square Café':room==='exchange'?'The Exchange':room==='property'?'Property & Co.':room==='home'?'Your place':'Freedom Square';
   const chooseCamera=(mode:CameraPreset)=>{setCameraMode(mode);controller.current?.setCamera?.(mode);setCameraTools(false);};
   return <Modal isOpen onClose={onClose} ariaLabel="Freedom Square 3D neighbourhood" showCloseButton={false} overlayStyle={{ padding: 0 }} contentStyle={{ maxWidth: 1500, width: '100%' }} contentClassName={`town-modal${serviceActive&&room==='cafe'?' town-in-service':''}`}>
     <header className="town-header">
-      <div><p className="town-eyebrow">Your city · playable preview</p><h2>{room==='bank'?'Community Bank':room==='cafe'?'Little Square Café':room==='exchange'?'The Exchange':room==='property'?'Property & Co.':room==='home'?'Your place':'Freedom Square'}</h2></div>
+      <div><p className="town-eyebrow">Your city · playable preview</p><h2>{roomTitle}</h2><p className="sr-only" role="status">{room==='city'?'On Freedom Square':`Inside ${roomTitle}`}</p></div>
       <div className="town-balance"><span>Cash available</span><strong>{money(state.cash)}</strong></div>
       <button className="town-icon-button" onClick={onClose} aria-label="Back to dashboard"><X size={22} /></button>
     </header>
@@ -293,9 +309,9 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
         {loading && <div className="town-loading" role="status"><span className="town-loading-orbit" /><strong>Welcome to your neighbourhood</strong><span>Opening the city…</span></div>}
         {unavailable ? <div className="town-fallback"><Building2 size={36} /><h3>Explore with the destination buttons</h3><p>This browser cannot display the 3D view. Your purchases and progress still work.</p></div> : <>
           <div className="town-world-caption"><span className="town-live-dot" /> MONTH {state.month} · {SEASON_LABEL[seasonFor(state.month)]} · {cityCaption(state,room).day}{timeOfDay&&room==='city'?` · ${timeOfDay}`:''}<span>{cityCaption(state,room).note}</span></div>
-          <button className="town-camera-menu-button" aria-expanded={cameraTools} onClick={()=>setCameraTools(!cameraTools)}>Camera</button>
+          <button ref={cameraButton} className="town-camera-menu-button" aria-expanded={cameraTools} aria-haspopup="true" onClick={()=>setCameraTools(!cameraTools)}>Camera</button>
           <button className="town-reset-camera" aria-label="Reset camera" title="Reset camera (R)" onClick={() => controller.current?.resetView()}><RotateCcw size={18} /></button>
-          {cameraTools&&<div className="town-camera-menu" aria-label="Camera controls"><strong>Choose your view</strong><button aria-pressed={cameraMode==='follow'} onClick={()=>chooseCamera('follow')}>Follow character</button><button aria-pressed={cameraMode==='overview'} onClick={()=>chooseCamera('overview')}>See neighbourhood</button><div><button aria-label="Turn camera left" onClick={()=>controller.current?.orbit?.(-.3)}>↶ Left</button><button aria-label="Turn camera right" onClick={()=>controller.current?.orbit?.(.3)}>Right ↷</button></div><div><button onClick={()=>controller.current?.zoom?.(-1)}>Zoom in</button><button onClick={()=>controller.current?.zoom?.(1)}>Zoom out</button></div><p>Tap the ground to walk. Drag to adjust the view. Reset restores this preset.</p><strong>Graphics</strong><div className="town-quality-row" role="group" aria-label="Graphics quality">{QUALITY_MODES.map(mode=><button key={mode} aria-pressed={qualityMode===mode} onClick={()=>chooseQuality(mode)}>{mode==='auto'?'Auto':QUALITY_SETTINGS[mode].label}</button>)}</div><p>{qualityMode==='auto'?`Auto follows your frame rate${qualityLevel?` · now ${QUALITY_SETTINGS[qualityLevel].label}`:''}.`:QUALITY_SETTINGS[qualityMode].detail}</p><button onClick={()=>setCameraTools(false)}>Done</button></div>}
+          {cameraTools&&<div ref={menuBox} className="town-camera-menu" role="group" aria-label="Camera controls"><strong>Choose your view</strong><button aria-pressed={cameraMode==='follow'} onClick={()=>chooseCamera('follow')}>Follow character</button><button aria-pressed={cameraMode==='overview'} onClick={()=>chooseCamera('overview')}>See neighbourhood</button><div><button aria-label="Turn camera left" onClick={()=>controller.current?.orbit?.(-.3)}>↶ Left</button><button aria-label="Turn camera right" onClick={()=>controller.current?.orbit?.(.3)}>Right ↷</button></div><div><button onClick={()=>controller.current?.zoom?.(-1)}>Zoom in</button><button onClick={()=>controller.current?.zoom?.(1)}>Zoom out</button></div><p>Tap the ground to walk. Drag to adjust the view. Reset restores this preset.</p><strong>Graphics</strong><div className="town-quality-row" role="group" aria-label="Graphics quality">{QUALITY_MODES.map(mode=><button key={mode} aria-pressed={qualityMode===mode} onClick={()=>chooseQuality(mode)}>{mode==='auto'?'Auto':QUALITY_SETTINGS[mode].label}</button>)}</div><p>{qualityMode==='auto'?`Auto follows your frame rate${qualityLevel?` · now ${QUALITY_SETTINGS[qualityLevel].label}`:''}.`:QUALITY_SETTINGS[qualityMode].detail}</p><button onClick={()=>setCameraTools(false)}>Done</button></div>}
           {qualityNote&&<div className="town-quality-note" role="status">{qualityNote}</div>}
           {celebrating&&<div className="town-earned" role="status"><span>✦</span><strong>{celebrating}</strong><p>{celebrating==='Patient investor'?'You owned a slice of the market and held it through the noise.':'You opened a business and learned what it earned.'}</p></div>}
           {serving&&<div className="town-serving" role="status">Serving your customers…<span>Your shift receipt is ready in a moment.</span></div>}
@@ -308,7 +324,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
           <div className="town-camera-help"><span>Drag to look</span><span>Tap to walk</span><span>WASD · Shift to jog</span></div>
         </>}
       </section>
-      <aside className="town-details" ref={details} aria-label="Location opportunities" style={{display:showDetails?'block':'none'}}>
+      <aside className="town-details" ref={details} tabIndex={-1} aria-label="Location opportunities" style={{display:showDetails?'block':'none'}}>
         <button className="town-close-details" aria-label="Close opportunities" onClick={()=>setShowDetails(false)}><X size={18}/></button>
         {board&&room==='city' ? <NoticeBoardPanel state={state} disabled={disabled} onNextMonth={onNextMonth}/> : rosa&&room==='city' ? <AdvisorPanel state={state} onGo={goTo}/> : room==='home' ? <HomePanel state={state} disabled={disabled} onChangeLifestyle={onChangeLifestyle} onGo={goTo}/> : journal ? <>
           <p className="town-eyebrow">{journey.stage===2?'INVESTOR JOURNEY':'YOUR FIRST BUSINESS'}</p><h3>{journey.title}</h3><p className="town-intro">{journey.detail}</p>

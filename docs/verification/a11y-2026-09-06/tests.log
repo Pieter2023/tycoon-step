@@ -1,0 +1,21 @@
+
+> tycoon-financial-freedom@3.4.3 test:run
+> vitest run
+
+
+ RUN  v4.1.11 /Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2
+
+Error: Not implemented: HTMLCanvasElement.prototype.getContext (without installing the canvas npm package)
+    at module.exports (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/browser/not-implemented.js:9:17)
+    at HTMLCanvasElementImpl.getContext (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/nodes/HTMLCanvasElement-impl.js:42:5)
+    at HTMLCanvasElement.getContext (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/node_modules/jsdom/lib/jsdom/living/generated/HTMLCanvasElement.js:131:58)
+    at createTownHome (/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/components/town/townHome.ts:29:128)
+    at /Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/test/TownHome.test.ts:22:18
+    at processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at file:///Users/pietervanderwalt/Desktop/Current%20High%20Value%20Apps/tycoon-step-main%202/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20 undefined
+
+ Test Files  50 passed (50)
+      Tests  301 passed (301)
+   Start at  07:01:09
+   Duration  11.56s (transform 11.18s, setup 11.60s, import 24.88s, tests 20.78s, environment 34.69s)
+

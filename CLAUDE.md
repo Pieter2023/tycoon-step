@@ -2,7 +2,7 @@
 
 ## Current handover — September 5, 2026
 
-Read [HANDOVER.md](HANDOVER.md) before acting. The new financial foundations, Freedom Square, bank/cart, café ownership and hands-on café service are **local only, uncommitted and undeployed**. Latest validation: 295 tests / 48 files and production build passed (residents yield + Freedom Day, builds 12–13, morning of 2026-09-06; receipts in docs/completed-improvements.md). Pushed to `origin/main` and live on Netlify `tycoonjan22026` (deploy `6a9d135b…` of commit `35a074d`, verified 2026-09-06 00:20 PDT). The town scene is a code-split `TownModal-*.js` chunk, so verify town deploys by grepping that chunk, not the `index-*.js` hash. The user preview is `127.0.0.1:5187`; isolate QA on 5188. Preserve the existing save and all tracked/untracked work. Pieter authorised push + deploy on 2026-09-05 night and the branch is now live; treat further deploys as routine after green tests and a Chrome check.
+Read [HANDOVER.md](HANDOVER.md) before acting. The new financial foundations, Freedom Square, bank/cart, café ownership and hands-on café service are **local only, uncommitted and undeployed**. Latest validation: 295 tests / 48 files and production build passed (city accessibility pass, build 14, morning of 2026-09-06; receipts in docs/completed-improvements.md). Pushed to `origin/main` and live on Netlify `tycoonjan22026` (deploy `6a9d135b…` of commit `35a074d`, verified 2026-09-06 00:20 PDT). The town scene is a code-split `TownModal-*.js` chunk, so verify town deploys by grepping that chunk, not the `index-*.js` hash. The user preview is `127.0.0.1:5187`; isolate QA on 5188. Preserve the existing save and all tracked/untracked work. Pieter authorised push + deploy on 2026-09-05 night and the branch is now live; treat further deploys as routine after green tests and a Chrome check.
 
 Current feature/source map and run instructions are in the handover. Detailed evidence is in [docs/completed-improvements.md](docs/completed-improvements.md); remaining priorities are in [docs/roadmap.md](docs/roadmap.md). Physical-phone testing remains open. No new paid service is needed for the implemented prototype.
 
@@ -16,7 +16,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (49 files / 298 tests passed at the Freedom Day build; integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (50 files / 301 tests passed at the accessibility build; integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)

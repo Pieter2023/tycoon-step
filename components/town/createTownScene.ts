@@ -48,7 +48,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.6)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08;
   const canvas = renderer.domElement; canvas.tabIndex = 0; canvas.style.cssText = 'display:block;width:100%;height:100%;touch-action:none;outline:none';
-  canvas.setAttribute('aria-label', '3D city. Click pavement to walk, drag to look around, scroll to zoom. W A S D or arrows move relative to the camera.'); host.appendChild(canvas);
+  canvas.setAttribute('aria-label', '3D city. Click pavement to walk, drag to look around, scroll to zoom. W A S D or arrows move relative to the camera; E or Enter enters the place you are standing at; R resets the camera.'); canvas.setAttribute('role', 'application'); host.appendChild(canvas);
   const camera = new THREE.PerspectiveCamera(48, 1, .15, 160);
   const pmrem = new THREE.PMREMGenerator(renderer), room = new RoomEnvironment(), environment = pmrem.fromScene(room, .04); room.dispose(); pmrem.dispose();
   scene.environment = environment.texture; scene.environmentIntensity = .32;
@@ -236,7 +236,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     if (event.ctrlKey || event.altKey || event.metaKey || paused || !!serviceStage) return;
     const key = event.key.toLowerCase();
     if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(key)) { event.preventDefault(); direction(key,true); }
-    if (key === 'e' && !event.repeat && (near || spot || (cafeInside&&cafeService?.status==='active'))) { event.preventDefault(); onInteract(); }
+    if ((key === 'e' || (key === 'enter' && document.activeElement === canvas)) && !event.repeat && (near || spot || (cafeInside&&cafeService?.status==='active'))) { event.preventDefault(); onInteract(); }
     if (key === 'r') { yaw=.12;const preset=cameraPreset(cameraMode,inside);pitch=preset.pitch;zoomDistance=preset.distance; }
   };
   const keyup = (event: KeyboardEvent) => direction(event.key.toLowerCase(),false);
