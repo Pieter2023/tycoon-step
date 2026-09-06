@@ -5,7 +5,7 @@ import type { TownSpot } from './createTownScene';
 export type GuideTarget = 'teller' | 'business' | 'cart' | 'cafe' | 'broker';
 export type GuideContext = {
   journey: Pick<ActiveJourney, 'completed' | 'action' | 'button' | 'step'> & { stage?: 1 | 2 };
-  room: 'city' | 'bank' | 'cafe' | 'exchange';
+  room: 'city' | 'bank' | 'cafe' | 'exchange' | 'property';
   near: TownPlaceId | null;
   spot: TownSpot;
   showDetails: boolean;

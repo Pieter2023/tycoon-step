@@ -212,3 +212,16 @@ Overnight autonomous session; Pieter asked for the game to be built out to compl
 - Investor journey (`investorJourney` in `townJourney.ts`, shown by the guide once the opening badge is earned): read the market mood → own an index fund → hold three months → compare growth with cash income → "Patient investor" badge, no cash. `activeJourney` picks the arc; the guide button chains through the Exchange door to the broker in one tap; labels and hops tested.
 
 Validation: 263 tests across 41 files (`test/TownExchange.test.ts` added), TypeScript, production build and `git diff --check` clean. Chrome: one tap from the square reached the broker panel in 3.9 s, the visit advanced the journey to 2/4, Buy 5 took cash from $12,245 to $9,735 with the holding and ticker updating and the journey moving to "Let it ride". Console clean apart from an unrelated browser extension warning. Logs: [tests](verification/exchange-2026-09-05/tests.log), [build](verification/exchange-2026-09-05/build.log).
+
+## Property & Co. estate office — September 6, 2026 (overnight build 3)
+
+A fourth walkable interior behind the Property Office door (`components/town/townProperty.ts`): a listings wall with four framed cards drawn on canvas (house sketch, price, rent and financing tag), a title banner that reads the rate climate, a rates board on the side wall, an agent's desk with a model house, waiting sofas and the usual exit mat and talking halo. A female agent waves and speaks in a bubble.
+
+Agent panel (`PropertyPanel.tsx`) backed by `services/townProperty.ts`:
+
+- Each listing (fractional rental share, starter home, duplex) shows gross rent, then what is left after a 1%/yr upkeep allowance and an 8% vacancy allowance, then rent minus the best eligible mortgage payment, with an explicit "you would top this up from salary" when it is negative.
+- Mortgage quotes come from the game's own options and base rate (`mortgageQuote`), including eligibility reasons, and "Preview a mortgage" hands the item to the existing App mortgage modal; it is disabled when the down payment would leave less than a month of expenses.
+- Rent-or-buy comparison for the starter home or duplex across the eligible down-payment options: owner cost per month versus estimated rent (a third of expenses), first-year principal and 3% appreciation as equity, and a one-line verdict of who comes out ahead, with the caveat that prices can fall.
+- Fractional shares buy for cash through the normal purchase path.
+
+Validation: 268 tests across 42 files (`test/TownProperty.test.ts`), TypeScript, build and `git diff --check` clean. Chrome: walked to the office, entered, walked to the agent, panel opened with live prices; the mortgage preview opened the App modal. Logs: [tests](verification/property-2026-09-06/tests.log), [build](verification/property-2026-09-06/build.log).

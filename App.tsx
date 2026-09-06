@@ -3372,6 +3372,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           onBuy={(item,quantity)=>handleBuyAsset(item,undefined,quantity)} onClose={() => setShowTown(false)} saveError={saveError} onBackup={downloadCurrentProgress}
           onFinishJourney={()=>setGameState(prev=>isProcessing?prev:completeActiveJourney(prev))}
           onSell={handleSellAsset}
+          onMortgage={item=>setShowMortgageModal(item)}
           loans={adjustedLoanOptions}
           onTransfer={transfer=>setGameState(prev=>isProcessing?prev:transferTownSavings(prev,transfer))}
           onCafeServiceAction={action=>setGameState(prev=>isProcessing?prev:resolveCafeService(prev,action))}
