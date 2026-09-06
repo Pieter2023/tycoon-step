@@ -12,7 +12,7 @@ import { calculateMonthlyCashFlowEstimate, calculateNetWorth } from './services/
 import { useI18n } from './i18n';
 import CustomAvatarBuilder, { CustomAvatarResult } from './components/customAvatar/CustomAvatarBuilder';
 import UnlockModal from './components/UnlockModal';
-import { AccessTier, PURCHASE_PRICE, getAccessTier, setAccessTier, validateAccessCode } from './services/accessControl';
+import { AccessTier, PURCHASE_PRICE, clearPendingAccessInvite, getAccessTier, getPendingAccessInvite, setAccessTier, validateAccessCode } from './services/accessControl';
 import { createDailyChallengeState, getDailyChallengeId, getDailyCharacter, getDailySeed, getDailyStreak, getPreviousChallengeId, recordDailyChallengePlayed } from './services/dailyChallenge';
 import { adoptSyncCode, fetchAccountSave, fetchCloudSave, getSyncCode, isCloudSyncEnabled, isValidSyncCode, setCloudSyncEnabled, uploadCloudSave } from './services/cloudSave';
 import { AccountInfo, ensureSignedIn, getAccount, linkEmail, signInWithEmail, signOut } from './services/auth';
@@ -195,22 +195,47 @@ const ModeSelector: React.FC = () => {
   };
 
   useEffect(() => {
-    const auth = safeLocalStorageGet(AUTH_KEY);
-    if (auth === 'true') {
-      setIsAuthenticated(true);
-    } else {
-      // No password wall for first-time visitors — a stranger who lands here
-      // (e.g. from an outreach link) should be playing in one click. Drop them
-      // straight into the free demo. The full-version access-code path still
-      // lives in the UnlockModal ("I already have an access code"). The old
-      // login screen below is retained as a fallback but no longer shown.
-      safeLocalStorageSet(AUTH_KEY, 'true');
-      setAccessTier('demo');
-      setAccessTierState('demo');
-      setIsAuthenticated(true);
-      track('demo_started', { entry: 'auto' });
-    }
-    setIsLoading(false);
+    let cancelled = false;
+
+    const initializeAccess = async () => {
+      const inviteCode = getPendingAccessInvite();
+      if (inviteCode) {
+        const unlocked = await validateAccessCode(inviteCode);
+        if (cancelled) return;
+        clearPendingAccessInvite();
+        if (unlocked) {
+          safeLocalStorageSet(AUTH_KEY, 'true');
+          setAccessTier('full');
+          setAccessTierState('full');
+          setIsAuthenticated(true);
+          setIsLoading(false);
+          track('purchase_unlocked', { source: 'invite_link' });
+          return;
+        }
+      }
+
+      const auth = safeLocalStorageGet(AUTH_KEY);
+      if (auth === 'true') {
+        setIsAuthenticated(true);
+      } else {
+        // No password wall for first-time visitors — a stranger who lands here
+        // (e.g. from an outreach link) should be playing in one click. Drop them
+        // straight into the free demo. The full-version access-code path still
+        // lives in the UnlockModal ("I already have an access code"). The old
+        // login screen below is retained as a fallback but no longer shown.
+        safeLocalStorageSet(AUTH_KEY, 'true');
+        setAccessTier('demo');
+        setAccessTierState('demo');
+        setIsAuthenticated(true);
+        track('demo_started', { entry: 'auto' });
+      }
+      setIsLoading(false);
+    };
+
+    void initializeAccess();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -1056,7 +1081,9 @@ const ModeSelector: React.FC = () => {
               Tycoon turns investing, career risk, debt, education, and life events into one clear decision loop. Make the next month matter.
             </p>
 
-            <div className="mt-7 grid gap-3 sm:grid-cols-3">
+            <button onClick={modeCards[0].onClick} className="mt-5 rounded-xl bg-emerald-400 px-6 py-3 font-bold text-slate-950 hover:bg-emerald-300">Start a new game</button>
+            <p className="mt-2 text-sm text-slate-400">One decision to start. Learn the rest as you play.</p>
+            <div className="mt-7 hidden gap-3 sm:grid sm:grid-cols-3">
               {launchStats.map((stat) => {
                 const Icon = stat.icon;
                 return (
@@ -1072,7 +1099,7 @@ const ModeSelector: React.FC = () => {
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-lg border border-slate-800 bg-slate-900/60 shadow-[0_28px_70px_rgba(0,0,0,0.35)]">
+          <section className="hidden overflow-hidden rounded-lg border border-slate-800 bg-slate-900/60 shadow-[0_28px_70px_rgba(0,0,0,0.35)] lg:block">
             <div className="relative h-72">
               <img
                 src="/event-images/market_crash_opportunity.webp"

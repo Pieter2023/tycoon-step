@@ -33,8 +33,7 @@
   to = "/teacher-packet.html"
   status = 200
 
-[context.production]
-  [[context.production.redirects]]
-    from = "/*"
-    to = "/index.html"
-    status = 200
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

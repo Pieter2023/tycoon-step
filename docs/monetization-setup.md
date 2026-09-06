@@ -1,5 +1,7 @@
 # Paid Unlock — Setup Guide
 
+> **Current release boundary — September 5, 2026:** the new financial-learning and 3D city/café features are local only. This setup guide does not mean those changes are deployed. No account tier, billing setting, access configuration or payment flow was changed or revalidated in the latest gameplay work. No additional subscription is required for the implemented prototype. Before any release, read [HANDOVER.md](../HANDOVER.md) and inspect the actual hosting target and current configuration.
+
 The game now ships with a free demo + paid full-version unlock. This doc covers
 the one-time setup to start selling.
 
@@ -10,6 +12,8 @@ the one-time setup to start selling.
   modal asks for an access code — on success the same run continues.
 - **Full game**: unlocked by an access code, validated server-side by
   `netlify/functions/validate-access.ts`. Codes never ship in the JS bundle.
+- **One-click invite**: append `#access=CODE` to the live game URL. A valid
+  code unlocks the browser and is then removed from the address bar.
 - **Multiplayer**: full version only.
 - Existing beta users (already logged in) are grandfathered into the full game.
 

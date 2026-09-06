@@ -5,7 +5,9 @@ import ModeSelector from './ModeSelector';
 import ErrorBoundary from './components/ErrorBoundary';
 import { I18nProvider } from './i18n';
 import { track } from './services/analytics';
+import { captureAccessInvite } from './services/accessControl';
 
+captureAccessInvite();
 track('app_loaded');
 
 const AppRoot: React.FC = () => {

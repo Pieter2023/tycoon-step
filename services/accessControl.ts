@@ -8,6 +8,8 @@
 export type AccessTier = 'demo' | 'full';
 
 const ACCESS_TIER_KEY = 'tycoon_access_tier';
+const ACCESS_INVITE_KEY = 'tycoon_access_invite';
+let pendingInviteCode: string | null = null;
 
 // Demo players get this many in-game months before being asked to unlock.
 export const DEMO_MONTH_LIMIT = 36;
@@ -35,6 +37,57 @@ export const setAccessTier = (tier: AccessTier) => {
     localStorage.setItem(ACCESS_TIER_KEY, tier);
   } catch (e) {
     console.warn('localStorage.setItem failed:', ACCESS_TIER_KEY, e);
+  }
+};
+
+export const getAccessInvite = (href: string): { code: string; cleanUrl: string } | null => {
+  try {
+    const url = new URL(href);
+    const hashParams = new URLSearchParams(url.hash.replace(/^#/, ''));
+    const code = hashParams.get('access')?.trim();
+    if (!code) return null;
+
+    hashParams.delete('access');
+    url.hash = hashParams.toString();
+    return { code, cleanUrl: `${url.pathname}${url.search}${url.hash}` };
+  } catch {
+    return null;
+  }
+};
+
+export const captureAccessInvite = () => {
+  if (typeof window === 'undefined') return;
+  const invite = getAccessInvite(window.location.href);
+  if (!invite) return;
+
+  pendingInviteCode = invite.code;
+  try {
+    sessionStorage.setItem(ACCESS_INVITE_KEY, invite.code);
+  } catch {
+    // The in-memory copy still works when storage is restricted.
+  }
+  try {
+    window.history.replaceState(null, '', invite.cleanUrl);
+  } catch {
+    // The invite still works if a sandboxed browser blocks URL cleanup.
+  }
+};
+
+export const getPendingAccessInvite = (): string | null => {
+  if (pendingInviteCode) return pendingInviteCode;
+  try {
+    return sessionStorage.getItem(ACCESS_INVITE_KEY);
+  } catch {
+    return null;
+  }
+};
+
+export const clearPendingAccessInvite = () => {
+  pendingInviteCode = null;
+  try {
+    sessionStorage.removeItem(ACCESS_INVITE_KEY);
+  } catch {
+    // Nothing else to clear when storage is restricted.
   }
 };
 
