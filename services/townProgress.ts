@@ -1,6 +1,6 @@
 import { GameState, AssetType } from '../types';
 import { calculateMonthlyCashFlowEstimate } from './gameLogic';
-export type TownAction = 'reserve' | 'permit' | 'upgrade';
+export type TownAction = 'reserve' | 'permit' | 'upgrade' | 'visit-exchange';
 export const CART_PERMIT = 60;
 export const CART_UPGRADE = 350;
 export const coffeeCart = (state:GameState) => state.assets.find(a=>a.marketItemId==='coffee_cart'&&a.quantity>0);
@@ -14,6 +14,10 @@ export function townMission(state:GameState) {
 export function resolveTownAction(state:GameState,action:TownAction):GameState {
   if(state.pendingScenario||state.hasWon||state.isBankrupt)return state;
   let next=state,description='';
+  if(action==='visit-exchange'){
+    if(state.townProgress?.exchangeVisitedMonth!==undefined)return state;
+    return {...state,townProgress:{...state.townProgress,exchangeVisitedMonth:state.month}};
+  }
   if(action==='reserve'){
     if(state.townProgress?.reserveConfirmed||state.cash<calculateMonthlyCashFlowEstimate(state).expenses)return state;
     next={...state,townProgress:{...state.townProgress,reserveConfirmed:true}};

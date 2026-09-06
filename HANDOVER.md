@@ -1,6 +1,6 @@
 # Start here — Tycoon handover
 
-Updated September 5, 2026, 22:15 PDT. This is the current session handover. Older dated deployment claims in other documents describe earlier versions, not the new city work.
+Updated September 6, 2026, overnight autonomous build (see item 10+). This is the current session handover. Older dated deployment claims in other documents describe earlier versions, not the new city work.
 
 ## Status and exact project
 
@@ -23,7 +23,8 @@ A polished, stylised city inspired by The Sims, with a character-following camer
 4. **Bank and cart:** walkable bank/teller, savings transfers, loan comparisons and a separate cart owner shift with price/stock choices, animation and receipt.
 5. **Living city and café:** rain/puddles, residents, optional ambience; walkable café, lease, furnishings, price/stock/staff plans, monthly reports and net-worth accounting.
 6. **Hands-on café shift:** walk to take orders, brew, carry and serve coffee; arriving/queued/seated guests, patience, reactions, optional helper, waste and profit/loss receipt. Free practice requires no ownership and changes no money. Paid owner shifts persist and resume paused.
-9. **Cyclist, dog walker, café shift rework (night, uncommitted):** bike and dog models in the vehicles file; `createCyclist`/`createDogWalker` in `townLife.ts`; café service now supports taking orders while a drink brews, collecting ready drinks from the machine, a helper who takes orders, four guests on busy days, tighter patience, tips for quick service and a 0–3 star rating. Receipt in `docs/completed-improvements.md`.
+10. **Overnight build 1–2 (committed):** café reputation links owner-shift stars to monthly demand; the Exchange is a walkable trading floor with a ticker, broker speech bubble and broker panel (market mood, S&P/dividend/bitcoin with Buy 1/5/10 and Sell all, contributions calculator); a teaching market index in `GameState.marketIndex`; a second guided arc, the investor journey, ending in the Patient investor badge. Receipts in `docs/completed-improvements.md`.
+9. **Cyclist, dog walker, café shift rework (committed `17add88`):** bike and dog models in the vehicles file; `createCyclist`/`createDogWalker` in `townLife.ts`; café service now supports taking orders while a drink brews, collecting ready drinks from the machine, a helper who takes orders, four guests on busy days, tighter patience, tips for quick service and a 0–3 star rating. Receipt in `docs/completed-improvements.md`.
 8. **Street life, character polish, vehicles, sound (late evening, commit `8baad7d`):** one animated character with optional female/male parts (`townResidents.ts` styles player, twelve residents, teller, café staff and guests); cars and a van on Main Street that brake for the player and queue (`townTraffic.ts`); pigeons that scatter and bunting between lamp posts (`townLife.ts`); two bench sitters; a layered synthesized soundscape with birdsong, traffic, fountain, footsteps, espresso machine and service chimes (`townAtmosphere.ts`). New Blender step `scripts/build-town-extras.py`; new `public/models/town/town-vehicles.glb`. Receipt and measurements in `docs/completed-improvements.md`.
 7. **Loop pacing pass (evening):** the guide button is now one tap per mission leg. A guided walk chains through the bank door to the teller (and into the café) on its own; any manual input cancels it. Long routes and the cart's customer visit jog (5.3 s instead of 10.8 s). Side panels scroll to the new step after a purchase/permit, the reserve confirmation sits first in the teller panel, guide labels track where the player stands, and the guide can confirm the reserve, pay the permit, start a practice shift and complete the journey when the matching panel is open. Timings and the before/after table are in the receipt. No financial rule or save shape changed.
 
@@ -68,7 +69,8 @@ These are last-observed snapshots, not values to restore over newer play:
 |---|---|
 | App/state and city entry | `App.tsx`, `components/v2/CommandDashboard.tsx`, `components/modals/ScenarioModal.tsx` |
 | 3D lifecycle, movement, guests, camera | `components/town/createTownScene.ts`, `townWorld.ts`, `townControls.ts`, `townNavigation.ts`, `town.css` |
-| Street life | `components/town/townResidents.ts` (sex/style/seating), `townTraffic.ts`, `townLife.ts` (pigeons, bunting), `townAtmosphere.ts` (weather + soundscape) |
+| Street life | `components/town/townResidents.ts` (sex/style/seating), `townTraffic.ts`, `townLife.ts` (pigeons, bunting, cyclist, dog), `townAtmosphere.ts` (weather + soundscape) |
+| Exchange | `components/town/townExchange.ts` (room + canvas ticker), `ExchangePanel.tsx`, `services/townMarket.ts` (mood, index change, downside copy), `marketIndexStep` in `gameLogic.ts`, `investorJourney`/`activeJourney` in `townJourney.ts` |
 | Rooms and ambience | `components/town/townBank.ts`, `townCafeRoom.ts`, `townAtmosphere.ts` |
 | UI orchestration | `components/town/TownModal.tsx`, `townGuide.ts` (guide labels + one-tap chaining), `TellerPanel.tsx`, `CartShiftPanel.tsx`, `CafePanel.tsx`, `CafeServicePanel.tsx`, `CafeServiceHUD.tsx` |
 | Finance and activities | `services/townProgress.ts`, `townJourney.ts`, `townActivities.ts`, `townCafe.ts`, `cafeService.ts`, `gameLogic.ts` |
@@ -78,9 +80,9 @@ These are last-observed snapshots, not values to restore over newer play:
 
 ## Validation and evidence
 
-Latest validation (café/cyclist pass): **254 tests / 40 files passed**, TypeScript + production build passed; `git diff --check` passed. Existing chunk-size warnings remain. `dist/` was rebuilt at the end of that pass, so an already-open 5187 page needs a full refresh before opening the city. This handover does not claim a fresh deployment or repeat financial/cloud testing.
+Latest validation (overnight build 2, Exchange): **263 tests / 41 files passed**, TypeScript + production build passed; `git diff --check` passed. Existing chunk-size warnings remain. `dist/` was rebuilt at the end of that pass, so an already-open 5187 page needs a full refresh before opening the city. This handover does not claim a fresh deployment or repeat financial/cloud testing.
 
-- Portable logs: [tests](docs/verification/cafe-cyclist-2026-09-05/tests.log), [build](docs/verification/cafe-cyclist-2026-09-05/build.log); earlier in `street-life-2026-09-05/`, earlier logs in `docs/verification/pacing-2026-09-05/` and `gameplay-2026-09-05/`.
+- Portable logs: [tests](docs/verification/exchange-2026-09-05/tests.log), [build](docs/verification/exchange-2026-09-05/build.log); earlier in `cafe-cyclist-2026-09-05/`, `street-life-2026-09-05/`, earlier logs in `docs/verification/pacing-2026-09-05/` and `gameplay-2026-09-05/`.
 - Full chronological implementation/playtest receipt: [docs/completed-improvements.md](docs/completed-improvements.md). Earlier test counts and balances in that file are historical checkpoints.
 - Regression checklist: [docs/qa-checklist.md](docs/qa-checklist.md).
 - Service tests: `test/CafeService.test.ts`, `test/CafeServicePanel.test.tsx`, `test/CafeServiceResume.test.tsx`; broader tests use `Town*`, `FinancialLearning`, `DecisionAutosave` and existing service suites.

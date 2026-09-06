@@ -1379,6 +1379,17 @@ export const updateMarketCycle = (state: GameState): GameState => {
 // ============================================
 // ASSET PRICE UPDATE
 // ============================================
+// Teaching index for the Exchange ticker: follows the market cycle with a deterministic wobble
+// (no rand() so daily-challenge worlds stay in sync). Exaggerated versus asset prices so a
+// player can read expansions and contractions off a small chart.
+export const MARKET_INDEX_MULTIPLIERS: Record<MarketCyclePhase, number> = { EXPANSION: 1.009, PEAK: 1.002, CONTRACTION: .984, TROUGH: .996 };
+export const marketIndexStep = (state: GameState): { month: number; value: number }[] => {
+  const history = state.marketIndex?.length ? state.marketIndex : [{ month: Math.max(1, state.month - 1), value: 100 }];
+  const last = history[history.length - 1].value;
+  const wobble = Math.sin(state.month * 1.7) * .012 * (state.marketCycle?.intensity ?? .5);
+  const value = last * (MARKET_INDEX_MULTIPLIERS[state.marketCycle?.phase ?? 'EXPANSION'] ?? 1) * (state.economy?.recession ? .995 : 1) * (1 + wobble);
+  return [...history, { month: state.month, value: Math.round(value * 100) / 100 }].slice(-36);
+};
 export const updateAssetPrices = (state: GameState): GameState => {
   const newState = { ...state };
   const diffSettings = DIFFICULTY_SETTINGS[state.difficulty as keyof typeof DIFFICULTY_SETTINGS] || DIFFICULTY_SETTINGS.NORMAL;
@@ -3310,6 +3321,7 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
   
   // 4. Update asset prices (affected by economy)
   newState = updateAssetPrices(newState);
+  newState.marketIndex = marketIndexStep(newState);
 
   // 4.5 Ghost holdings: track what sold assets would be worth if held
   // (deterministic — consumes no rand(), safe for daily challenges).

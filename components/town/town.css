@@ -89,3 +89,4 @@
 
 .town-tip-flash{display:inline-block;margin-left:10px;padding:3px 9px;border-radius:999px;background:#f1d38a;color:#2b3d2c;font-size:11px;font-weight:700;font-style:normal;animation:town-tip-pop .9s ease-out both}@keyframes town-tip-pop{0%{transform:scale(.6);opacity:0}25%{transform:scale(1.15);opacity:1}100%{transform:scale(1);opacity:1}}.tycoon-reduce-motion .town-tip-flash{animation:none}
 .town-reputation-bar{height:8px;border-radius:999px;background:#2a4548;overflow:hidden;margin:8px 0}.town-reputation-bar span{display:block;height:100%;background:linear-gradient(90deg,#c9a45c,#f1d38a);border-radius:999px;transition:width .4s}
+.town-sparkline{display:block;width:100%;height:64px;margin:8px 0 6px}.town-holding{font-size:11px;color:#f1d38a;margin:6px 0}

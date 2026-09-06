@@ -18,6 +18,13 @@ export const incomeLabel = (type: AssetType, id?: string): string => {
   if (type === AssetType.CRYPTO || type === AssetType.COMMODITY) return 'Cash payments';
   return 'Dividends';
 };
+// Regular contributions compounding at a teaching growth rate. Returns what was paid in and what it
+// could be worth, so the Exchange can show that time in the market matters more than timing.
+export const projectContributions = (monthly: number, years: number, annualRate: number) => {
+  const r = annualRate / 12, n = Math.round(years * 12);
+  const value = r === 0 ? monthly * n : monthly * ((Math.pow(1 + r, n) - 1) / r);
+  return { invested: monthly * n, value: Math.round(value), growth: Math.round(value - monthly * n) };
+};
 export const nominalPrice = (item: MarketItem, month: number, inflation: number): number =>
   Math.round(item.price * (item.type === AssetType.SAVINGS || item.type === AssetType.BOND ? 1 : Math.pow(1 + inflation, month / 12)));
 

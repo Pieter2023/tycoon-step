@@ -1,6 +1,6 @@
 import { resolveCafeService } from './services/cafeService';
 import { resolveCafeAction, quoteCafe } from './services/townCafe';
-import { completeTownJourney } from './services/townJourney';
+import { completeActiveJourney } from './services/townJourney';
 import { transferTownSavings, runCartShift } from './services/townActivities';
 import { resolveTownAction } from './services/townProgress';
 import FirstSteps from './components/v2/FirstSteps';
@@ -2376,7 +2376,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
   // ============================================
   // BUY ASSET (with or without mortgage)
   // ============================================
-  const handleBuyAsset = useCallback((item: MarketItem, mortgageOptionId?: string) => {
+  const handleBuyAsset = useCallback((item: MarketItem, mortgageOptionId?: string, quantity = 1) => {
+    const units = Math.max(1, Math.floor(quantity));
     if (!hasRequiredEducationForInvestment(item, gameState.education.degrees)) {
       playError();
       showNotif('Education Required', 'Complete the required education to unlock this investment.', 'error');
@@ -2462,22 +2463,23 @@ const [gameState, setGameState] = useState<GameState>(() => {
       showNotif('Property Purchased!', `Mortgage: ${formatMoneyFull(result.mortgage.monthlyPayment)}/mo`, 'success');
     } else {
       // Cash purchase
-      if (gameState.cash < price) {
+      const total = price * units;
+      if (gameState.cash < total) {
         playError();
-        showNotif('Insufficient Funds', `Need ${formatMoneyFull(price)}`, 'error');
+        showNotif('Insufficient Funds', `Need ${formatMoneyFull(total)}`, 'error');
         return;
       }
       
       playPurchase();
       setGameState(prev => {
-        if (prev.cash < price || prev.isBankrupt || prev.hasWon || prev.pendingScenario) return prev;
+        if (prev.cash < total || prev.isBankrupt || prev.hasWon || prev.pendingScenario) return prev;
         const existing = prev.assets.find(a => a.name === item.name && !a.mortgageId);
         let newAssets = [...prev.assets];
         
         if (existing) {
           const idx = newAssets.findIndex(a => a.id === existing.id);
-          const newQuantity = existing.quantity + 1;
-          const newCostBasis = ((existing.costBasis * existing.quantity) + price) / newQuantity;
+          const newQuantity = existing.quantity + units;
+          const newCostBasis = ((existing.costBasis * existing.quantity) + total) / newQuantity;
           // Recalculate average cashFlow based on new cost basis
           const newCashFlow = (incomeYield(item) * newCostBasis) / 12;
           newAssets[idx] = {
@@ -2497,7 +2499,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
             type: item.type,
             value: price,
             costBasis: price,
-            quantity: 1,
+            quantity: units,
             cashFlow: baseMonthly,
             volatility: item.volatility,
             appreciationRate: incomeYield(item) * 0.4,
@@ -2514,18 +2516,18 @@ const [gameState, setGameState] = useState<GameState>(() => {
         
         return {
           ...prev,
-          cash: prev.cash - price,
+          cash: prev.cash - total,
           assets: newAssets,
           events: [{
             id: Date.now().toString(),
             month: prev.month,
             title: `📦 Purchased ${item.name}`,
-            description: `Bought for ${formatMoneyFull(price)} cash`,
+            description: units > 1 ? `Bought ${units} units for ${formatMoneyFull(total)} cash` : `Bought for ${formatMoneyFull(price)} cash`,
             type: 'DECISION'
           }, ...prev.events]
         };
       });
-      queuePurchaseNotif(item.name, price);
+      queuePurchaseNotif(item.name, total);
     }
   }, [gameState]);
 
@@ -3367,8 +3369,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white pb-24 md:pb-4">
       {showTown && <TabErrorBoundary tabName="3D neighbourhood"><React.Suspense fallback={<Modal isOpen onClose={() => setShowTown(false)} ariaLabel="Loading neighbourhood"><p className="p-8">Opening Freedom Square…</p></Modal>}>
         <TownModal state={gameState} disabled={isProcessing || !!gameState.pendingScenario || gameState.hasWon || gameState.isBankrupt} reduceMotion={!!reduceMotion}
-          onBuy={handleBuyAsset} onClose={() => setShowTown(false)} saveError={saveError} onBackup={downloadCurrentProgress}
-          onFinishJourney={()=>setGameState(prev=>isProcessing?prev:completeTownJourney(prev))}
+          onBuy={(item,quantity)=>handleBuyAsset(item,undefined,quantity)} onClose={() => setShowTown(false)} saveError={saveError} onBackup={downloadCurrentProgress}
+          onFinishJourney={()=>setGameState(prev=>isProcessing?prev:completeActiveJourney(prev))}
+          onSell={handleSellAsset}
           loans={adjustedLoanOptions}
           onTransfer={transfer=>setGameState(prev=>isProcessing?prev:transferTownSavings(prev,transfer))}
           onCafeServiceAction={action=>setGameState(prev=>isProcessing?prev:resolveCafeService(prev,action))}
