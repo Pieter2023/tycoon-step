@@ -138,17 +138,17 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
     }`;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <section className="tycoon-panel p-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="tycoon-kicker">Capital HQ</p>
-            <h2 className="mt-2 text-3xl font-bold text-white">Turn cash into freedom, deliberately.</h2>
+            <h2 className="mt-2 text-3xl font-bold text-white">Choose your next money move.</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
-              The money screen now works like an operating dashboard: protect runway, deploy capital, and keep debt from stealing momentum.
+              Keep a cash reserve, compare investments and understand the cost of debt.
             </p>
           </div>
-          <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[520px]">
+          <div className="grid gap-2 grid-cols-3 lg:min-w-[400px]">
             <div className="rounded-lg border border-slate-800 bg-slate-950/35 p-3">
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
                 <ShieldCheck size={14} className="text-emerald-300" /> Runway
@@ -173,6 +173,9 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
         </div>
       </section>
 
+      <details className="tycoon-panel p-4">
+        <summary className="cursor-pointer text-sm font-semibold text-slate-200">View charts and financial overview</summary>
+        <div className="mt-4 space-y-4">
       <section className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 glass-panel p-6">
           <div className="flex items-center justify-between">
@@ -185,7 +188,7 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
             <p className="text-lg font-semibold text-white">{formatMoney(netWorth)}</p>
           </div>
           <div className="h-40 mt-4 min-w-[1px] min-h-[1px]">
-            <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
+            <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1} initialDimension={{width:300,height:220}}>
               <AreaChart data={netWorthHistory.map((entry) => ({ month: entry.month, value: entry.value }))}>
                 <defs>
                   <linearGradient id="netWorthGradient" x1="0" y1="0" x2="0" y2="1">
@@ -213,7 +216,7 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
                 No assets yet.
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
+              <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1} initialDimension={{width:300,height:220}}>
                 <PieChart>
                   <Pie
                     data={assetAllocation}
@@ -263,6 +266,9 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
           <p className="mt-2 text-lg font-semibold text-white">{formatMoney(portfolioValue)}</p>
         </div>
       </section>
+
+        </div>
+      </details>
 
       <section className="glass-panel p-6">
         <div className="flex flex-wrap items-center gap-2 mb-6">

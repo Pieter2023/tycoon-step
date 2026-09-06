@@ -1,5 +1,7 @@
 # Tycoon: Financial Freedom - Architecture Map
 
+> **September 5, 2026 handover:** this file remains an archived refactor/discovery record. Use [HANDOVER.md](../HANDOVER.md) for the current source map, run commands, validation and release status, and [gameplay overview](gameplay-foundation-and-3d.md) for the new city/café work. Historical completed/deployed claims below do not include the current local changes.
+
 **Version:** 3.4.3
 **Last Updated:** 2025-12-30
 **Document Type:** Technical Discovery & Planning

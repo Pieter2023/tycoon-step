@@ -1,5 +1,7 @@
 # UI Refactor Map
 
+> **September 5, 2026 handover:** this file remains an archived refactor/discovery record. Use [HANDOVER.md](../HANDOVER.md) for the current source map, run commands, validation and release status, and [gameplay overview](gameplay-foundation-and-3d.md) for the new city/café work. Historical completed/deployed claims below do not include the current local changes.
+
 > **HISTORICAL DOCUMENT (banner added 2026-06-12).** Written before the
 > v2 shell became the only shell. Stale claims below: the legacy tab nav
 > is deleted (v2Path + MoneyPage/LifePage internal tabs navigate;

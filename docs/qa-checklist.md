@@ -1,5 +1,34 @@
 # QA Checklist
 
+## Latest checkpoint and test safety
+
+September 5 pacing-pass result: **243 tests / 39 files passed**, production build passed, final local browser consoles clear. [Evidence logs](verification/pacing-2026-09-05/tests.log), [playtest receipt](completed-improvements.md), [handover](../HANDOVER.md). This documentation update did not rerun gameplay tests or publish a build.
+
+Use origin `http://127.0.0.1:5188` for QA; keep the user's `5187` save untouched. Build before opening a fresh production-preview page. Close the QA tab/server and reset temporary viewport overrides afterward.
+
+## City and café regression checklist
+
+- Guide button: from the square, one tap on "Go to the teller" should walk, enter the bank, reach the teller and open the panel with "Confirm my cash reserve" first; the button then confirms the reserve. Tapping the ground, the joystick or any nav button mid-walk must cancel the chain and clear the "Next stop" caption.
+- Guide button: after buying the cart and after paying the permit, the side panel must show the new step at the top (receipt + permit, then the shift panel), never the $350 upgrade in the old button's place. Long routes jog; the cart's customer visit should finish in about five seconds.
+- Guide button after the badge: one tap enters the café and opens the practice panel; inside an unowned café it starts a practice shift; with a café it opens management; during service it resumes.
+- Enter the city before onboarding completes; pending events remain unresolved and block spending while allowing exploration/practice.
+- Walk around street obstacles; test camera-relative keys, tap-to-walk, joystick release, camera presets and portfolio return location.
+- Enter/leave the bank; deposit and withdraw the same amount with net worth unchanged; inspect loan comparison routing.
+- Complete cart purchase/permit/owner-shift/month-review journey; verify charges, income gating, receipt persistence and a badge without a money reward.
+- Lease the café, upgrade seats/machine and verify one-time charges plus deposit/salvage in portfolio/net worth. Review price/stock/staff plans, busy/rainy profit/loss and closed-shop fixed costs.
+- Run practice without owning a café; take, brew, carry and serve all guests. Cash must remain unchanged. Compare price, supplies, helper and pace.
+- Run an owner shift: opening costs deducted once, each served drink credited once, unused stock not refunded, repeat start disabled until another month.
+- Pause, close and reload mid-shift. Resume with the same sales/cash/progress. Walking outside must stay available while café service is paused.
+- Let guests run out of patience; verify departures, wasted stock and loss explanation. Finish early and advance the month during unfinished service; no duplicate cash or refund.
+- Verify renderer-unavailable handling: financial management remains usable, but paid/practice service cannot start without the 3D view.
+- Check desktop 1280×720 and portrait 390×844, readable receipts, accessible action buttons, camera framing, console errors and reduced-motion behaviour.
+
+## Still unverified on real devices / production
+
+- Physical phone frame rate, heat, multi-touch feel, orientation and app suspension.
+- Full assistive-technology/contrast/localization audit of the new town controls.
+- Public deployment, login, cloud save restore and real payment/access-validation flows for this build. Do not treat the static local preview as proof of these.
+
 Use this list to verify critical flows after UI refactors or logic changes.
 
 ## Core Progression
@@ -36,5 +65,5 @@ Use this list to verify critical flows after UI refactors or logic changes.
 ## Save/Load
 - Save the game to a slot and reload it; verify cash, month, assets, and quests are preserved.
 
-## UI v2 Toggle
-- Enable UI v2 and confirm all five top-level pages render (Play, Money, Career, Learn, Life).
+## Main shell
+- Confirm all five top-level pages render (Play, Money, Career, Learn, Life). The v2 shell is always enabled; the old toggle was retired.

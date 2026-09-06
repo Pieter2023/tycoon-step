@@ -1,7 +1,8 @@
 import { GameState, PrestigeData } from '../types';
 import { KidsGameState } from '../kidsTypes';
 import { calculateMonthlyCashFlowEstimate, calculateNetWorth, calculateMonthlyActionsMax } from './gameLogic';
-import { CHARACTERS, getInitialQuestState, SIDE_HUSTLES } from '../constants';
+import { migrateInvestmentAssets } from './investmentModel';
+import { MARKET_ITEMS, CHARACTERS, getInitialQuestState, SIDE_HUSTLES } from '../constants';
 
 const normalizeAdultState = (state: GameState): GameState => {
   // Add defaults for newer fields so older saves keep working.
@@ -131,6 +132,8 @@ const normalizeAdultState = (state: GameState): GameState => {
   return {
     ...state,
     character,
+    assets: migrateInvestmentAssets(state.assets || [], MARKET_ITEMS),
+    reserveBaseline: state.reserveBaseline ?? (state.cash + (state.assets || []).filter(a => a.type === 'SAVINGS').reduce((n, a) => n + a.value * a.quantity, 0) - state.liabilities.reduce((n, l) => n + l.balance, 0)),
     monthlyActionsMax,
     monthlyActionsRemaining,
     tempSalaryBonus: typeof (state as any).tempSalaryBonus === 'number' ? (state as any).tempSalaryBonus : 0,
@@ -286,8 +289,10 @@ const readDB = (): SaveDB => {
 const writeDB = (db: SaveDB) => {
   try {
     localStorage.setItem(SAVE_DB_KEY, JSON.stringify(db));
+    return true;
   } catch (e) {
     console.error('Failed to write save database', e);
+    return false;
   }
 };
 
@@ -373,7 +378,7 @@ const buildKidsSummary = (
 // Public API
 // ============================================
 
-export const saveAdultGame = (state: GameState, slotId: SaveSlotId = 'autosave', label?: string): void => {
+export const saveAdultGame = (state: GameState, slotId: SaveSlotId = 'autosave', label?: string): boolean => {
   migrateLegacyAdultSaveIfNeeded();
 
   try {
@@ -391,9 +396,10 @@ export const saveAdultGame = (state: GameState, slotId: SaveSlotId = 'autosave',
       state,
     };
 
-    writeDB(db);
+    return writeDB(db);
   } catch (e) {
     console.error('Failed to save adult game', e);
+    return false;
   }
 };
 
@@ -512,6 +518,14 @@ export const hasAnySaves = (mode?: SaveMode): boolean => {
   return getSaveSummaries(mode).length > 0;
 };
 
+// Emergency export reads current memory, so quota failures cannot export an
+// older disk snapshot while claiming to protect the latest decision.
+export const exportCurrentAdultGame = (state: GameState): SaveExportPayload => ({
+  formatVersion: SAVE_EXPORT_VERSION, exportedAt: Date.now(), mode: 'adult', slotId: 'autosave',
+  entry: { schema: SAVE_SCHEMA_VERSION, gameVersion: '3.4.3', state,
+    summary: buildAdultSummary(state, 'autosave', 'Emergency backup', Date.now()) }
+});
+
 export const exportSaveSlot = (mode: SaveMode, slotId: SaveSlotId): SaveExportPayload | null => {
   const db = readDB();
   const entry = db[makeKey(mode, slotId)];
@@ -573,14 +587,14 @@ export const importSavePayload = (
     };
   }
 
-  writeDB(db);
+  if (!writeDB(db)) return null;
   return db[key].summary;
 };
 
 // ============================================
 // Backward-compatible wrappers (legacy API)
 // ============================================
-export const saveGame = (state: GameState): void => saveAdultGame(state, 'autosave');
+export const saveGame = (state: GameState): boolean => saveAdultGame(state, 'autosave');
 export const loadGame = (): GameState | null => loadAdultGame('autosave');
 export const deleteSave = (): void => deleteSaveSlot('adult', 'autosave');
 

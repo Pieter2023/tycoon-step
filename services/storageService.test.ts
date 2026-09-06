@@ -221,7 +221,7 @@ describe('storageService edge cases', () => {
     });
 
     // Should not throw, should fail gracefully
-    expect(() => saveAdultGame(state, 'slot1')).not.toThrow();
+    expect(saveAdultGame(state, 'slot1')).toBe(false);
 
     // Restore original
     localStorage.setItem = originalSetItem;

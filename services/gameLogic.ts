@@ -1,3 +1,6 @@
+import { finishCafeService } from './cafeService';
+import { cafeValue, quoteCafe } from './townCafe';
+import { incomeYield, nominalPrice } from './investmentModel';
 // Tycoon: Financial Freedom - Game Logic v3.4.3
 // Complete with Life Events, Marriage, Children, Taxes, Recessions
 
@@ -191,7 +194,7 @@ const addAutoInvestAssetUnits = (state: GameState, item: MarketItem, unitPrice: 
     const idx = newAssets.findIndex(a => a.id === existing.id);
     const newQuantity = (existing.quantity || 1) + qty;
     const newCostBasis = ((existing.costBasis * (existing.quantity || 1)) + (unitPrice * qty)) / newQuantity;
-    const newCashFlow = (item.expectedYield * newCostBasis) / 12;
+    const newCashFlow = (incomeYield(item) * newCostBasis) / 12;
     newAssets[idx] = {
       ...existing,
       quantity: newQuantity,
@@ -200,7 +203,7 @@ const addAutoInvestAssetUnits = (state: GameState, item: MarketItem, unitPrice: 
       cashFlow: newCashFlow
     };
   } else {
-    const baseMonthly = (item.expectedYield * unitPrice) / 12;
+    const baseMonthly = (incomeYield(item) * unitPrice) / 12;
     newAssets.push({
       id: `asset-${Date.now()}-${item.id}`,
       name: item.name,
@@ -210,9 +213,11 @@ const addAutoInvestAssetUnits = (state: GameState, item: MarketItem, unitPrice: 
       quantity: qty,
       cashFlow: baseMonthly,
       volatility: item.volatility,
-      appreciationRate: item.expectedYield * 0.4,
+      appreciationRate: incomeYield(item) * 0.4,
       priceHistory: [{ month: state.month, value: unitPrice }],
-      baseYield: item.expectedYield,
+      baseYield: incomeYield(item),
+          marketItemId: item.id,
+          incomeModelVersion: 2,
       industry: item.industry,
       opsUpgrade: item.type === AssetType.BUSINESS ? false : undefined,
       currentMonthIncome: item.type === AssetType.BUSINESS ? Math.round(baseMonthly) : undefined,
@@ -327,6 +332,18 @@ export const getQuestProgress = (state: GameState, questId: string): QuestProgre
   let expenseBasis: number | undefined = undefined;
 
   switch (metric) {
+    case 'RESERVE_BUILT': {
+      unit = 'money';
+      const liquid = state.cash + state.assets.filter(a => a.type === AssetType.SAVINGS).reduce((n, a) => n + a.value * a.quantity, 0);
+      const debt = state.liabilities.reduce((n, l) => n + l.balance, 0);
+      current = state.month > 1 ? Math.max(0, Math.min(liquid, liquid - debt - (state.reserveBaseline ?? (liquid - debt)))) : 0;
+      break;
+    }
+    case 'SAFE_ASSET_COUNT': {
+      const expenses = calculateMonthlyCashFlowEstimate(state).expenses;
+      current = state.cash >= expenses ? state.assets.filter(a => a.type !== AssetType.SAVINGS).length : 0;
+      break;
+    }
     case 'CASH_AMOUNT': {
       unit = 'money';
       current = state.cash || 0;
@@ -683,7 +700,7 @@ export const calculateNetWorth = (state: GameState): number => {
   const assetsValue = (state.assets || []).reduce((sum, a) => sum + (a.value * (a.quantity ?? 1)), 0);
   const vehiclesValue = state.vehicles?.reduce((sum, v) => sum + v.value, 0) || 0;
   const liabilitiesValue = state.liabilities.reduce((sum, l) => sum + l.balance, 0);
-  return state.cash + assetsValue + vehiclesValue - liabilitiesValue;
+  return state.cash + assetsValue + vehiclesValue + cafeValue(state.cafe) - liabilitiesValue;
 };
 
 // ============================================
@@ -1076,6 +1093,7 @@ const applyBusinessIncomeVariance = (state: GameState): { state: GameState; main
 
   state.assets = state.assets.map(asset => {
     if (asset.type !== AssetType.BUSINESS) return asset;
+    if (asset.marketItemId === 'coffee_cart' && state.townProgress?.permitMonth === undefined) return { ...asset, currentMonthIncome: 0 };
 
     const qty = asset.quantity ?? 1;
     const baseIncome = Math.max(0, asset.cashFlow || 0) * qty;
@@ -1151,6 +1169,19 @@ const applyBusinessIncomeVariance = (state: GameState): { state: GameState; main
 // ============================================
 // MONTHLY CASH FLOW CALCULATION
 // ============================================
+// One calculation backs the income engine, estimates and the learning receipt.
+export function calculateAssetCashPayment(state:GameState,asset:Asset,estimate=false):number {
+  if(asset.marketItemId==='coffee_cart'&&state.townProgress?.permitMonth===undefined)return 0;
+  const diff=DIFFICULTY_SETTINGS[state.difficulty as keyof typeof DIFFICULTY_SETTINGS]||DIFFICULTY_SETTINGS.NORMAL;
+  const qty=asset.quantity??1;
+  const sector=asset.type===AssetType.SAVINGS?1:(state.economy?.sectorPerformance?.[asset.industry||'diversified']||1);
+  const bonus=asset.cashFlow>0&&asset.type!==AssetType.SAVINGS?(diff.assetYieldBonus||0):0;
+  const base=!estimate&&asset.type===AssetType.BUSINESS&&typeof asset.currentMonthIncome==='number'?asset.currentMonthIncome:asset.cashFlow*qty;
+  const adjusted=base+asset.value*bonus/12*qty;
+  const income=(asset.type===AssetType.BUSINESS?adjusted:Math.max(0,adjusted))*sector*getAssetIncomeMultiplier(state,asset.id);
+  return income-(asset.type===AssetType.REAL_ESTATE?Math.round(asset.value*qty*.01/12):0);
+}
+
 export const calculateMonthlyCashFlow = (state: GameState): {
   salary: number;
   sideHustleIncome: number;
@@ -1175,24 +1206,11 @@ export const calculateMonthlyCashFlow = (state: GameState): {
   
   // Passive income from assets
   let passiveIncome = 0;
-  for (const asset of state.assets) {
-    const sectorMult = state.economy?.sectorPerformance?.[asset.industry || 'diversified'] || 1;
-    const yieldBonus = diffSettings.assetYieldBonus || 0;
-    const incomeMult = getAssetIncomeMultiplier(state, asset.id);
-    const qty = asset.quantity || 1;
-    const baseIncome = asset.type === AssetType.BUSINESS && typeof asset.currentMonthIncome === 'number'
-      ? asset.currentMonthIncome
-      : asset.cashFlow * qty;
-    const assetIncome = (baseIncome + (asset.value * yieldBonus / 12) * qty) * sectorMult * incomeMult;
-    const realEstateMaintenance = asset.type === AssetType.REAL_ESTATE
-      ? Math.round((asset.value * qty) * 0.01 / 12)
-      : 0;
-    passiveIncome += (assetIncome - realEstateMaintenance);
-  }
+  for (const asset of state.assets) passiveIncome += calculateAssetCashPayment(state,asset);
 
-  // Financial IQ slightly improves passive income efficiency (0% to +5%)
-  const fi = clampStat(state.stats?.financialIQ ?? 0);
-  passiveIncome = (passiveIncome + sideHustleBreakdown.passive) * (1 + fi * 0.0005);
+  // Knowledge informs decisions; it does not manufacture investment income.
+  passiveIncome += sideHustleBreakdown.passive;
+  if (state.cafe) passiveIncome += quoteCafe(state.cafe, state.month).profit;
   
   // Spouse income
   const spouseIncome = state.family?.spouse?.income || 0;
@@ -1262,21 +1280,11 @@ export const calculateMonthlyCashFlowEstimate = (state: GameState): {
 
   // Passive income from assets
   let passiveIncome = 0;
-  for (const asset of (state.assets || [])) {
-    const sectorMult = state.economy?.sectorPerformance?.[asset.industry || 'diversified'] || 1;
-    const yieldBonus = diffSettings.assetYieldBonus || 0;
-    const qty = asset.quantity ?? 1;
-    const incomeMult = getAssetIncomeMultiplier(state, asset.id);
-    const assetIncome = (asset.cashFlow + (asset.value * yieldBonus / 12)) * qty * sectorMult * incomeMult;
-    const realEstateMaintenance = asset.type === AssetType.REAL_ESTATE
-      ? Math.round((asset.value * qty) * 0.01 / 12)
-      : 0;
-    passiveIncome += (assetIncome - realEstateMaintenance);
-  }
+  for (const asset of (state.assets || [])) passiveIncome += calculateAssetCashPayment(state,asset,true);
 
-  // Financial IQ slightly improves passive income efficiency (0% to +5%)
-  const fi = clampStat(state.stats?.financialIQ ?? 0);
-  passiveIncome = (passiveIncome + sideHustleBreakdown.passive) * (1 + fi * 0.0005);
+  // Knowledge informs decisions; it does not manufacture investment income.
+  passiveIncome += sideHustleBreakdown.passive;
+  if (state.cafe) passiveIncome += quoteCafe(state.cafe, state.month + 1).profit;
 
   const passive = Math.round(passiveIncome);
 
@@ -1394,14 +1402,15 @@ export const updateAssetPrices = (state: GameState): GameState => {
     // Base growth/decline from market cycle
     let priceChange = (baseMult * recessionMult - 1);
     
-    // Volatility effect - SIGNIFICANTLY reduced
-    // Max swing is now ±2% for high volatility assets, ±0.5% for low volatility
-    const volatilityMult = (diffSettings.volatilityMultiplier || 1) * 0.1; // Reduce by 90%
-    const volatilityEffect = (rand() - 0.5) * 2 * asset.volatility * volatilityMult;
-    priceChange += volatilityEffect;
-    
+    // Annual volatility scaled to a monthly teaching model. Beginner mode
+    // dampens swings; normal play permits substantial losses.
+    const volatilityMult = (diffSettings.volatilityMultiplier || 1) / Math.sqrt(12);
+    priceChange += (rand() - 0.5) * 2 * asset.volatility * volatilityMult;
+    const speculative = [AssetType.STOCK, AssetType.CRYPTO, AssetType.BUSINESS].includes(asset.type);
+    if (speculative && rand() < 0.01) priceChange -= 0.25 + rand() * 0.5;
+
     // Sector performance adjustment
-    const sectorMult = state.economy?.sectorPerformance?.[asset.industry || 'diversified'] || 1;
+    const sectorMult = asset.type === AssetType.SAVINGS ? 1 : (state.economy?.sectorPerformance?.[asset.industry || 'diversified'] || 1);
     priceChange *= sectorMult;
     
     // Real estate is very stable - even further reduced volatility
@@ -1418,19 +1427,23 @@ export const updateAssetPrices = (state: GameState): GameState => {
       priceChange += 0.002;
     }
     
-    // Clamp price change to reasonable bounds (max ±5% per month)
-    priceChange = Math.max(-0.05, Math.min(0.05, priceChange));
-    
-    // Minimum value is 50% of cost basis, prevents assets from going to near-zero
-    newAsset.value = Math.max(Math.round(asset.costBasis * 0.5), Math.round(asset.value * (1 + priceChange)));
+    // Deposits retain nominal principal. Only Easy mode has a loss floor,
+    // disclosed in the UI; it is a game aid, not investment protection.
+    if (asset.type === AssetType.SAVINGS) priceChange = 0;
+    if (asset.type === AssetType.BOND) priceChange *= 0.25;
+    priceChange = Math.max(-1, Math.min(1, priceChange));
+    const floor = state.difficulty === 'EASY' ? asset.costBasis * 0.5 : 0;
+    newAsset.value = asset.type === AssetType.SAVINGS ? asset.value
+      : Math.max(Math.round(floor), Math.round(asset.value * (1 + priceChange)));
     newAsset.priceHistory = [...asset.priceHistory, { month: state.month, value: newAsset.value }].slice(-24);
 
     const qty = typeof asset.quantity === 'number' ? asset.quantity : 1;
     marketGainsThisMonth += (newAsset.value - asset.value) * qty;
     
     // Update cash flow based on current value
-    if (asset.baseYield) {
-      newAsset.cashFlow = (newAsset.value * asset.baseYield) / 12;
+    if (typeof asset.baseYield === 'number') {
+      // Price growth is unrealized value, not another cash distribution.
+      newAsset.cashFlow = newAsset.value === 0 ? 0 : (asset.costBasis * asset.baseYield) / 12;
     }
     
     return newAsset;
@@ -1484,6 +1497,7 @@ export const expectedHeldGrowth = (
     'CONTRACTION': 0.997,
     'TROUGH': 0.999
   };
+  if (position.assetType === AssetType.SAVINGS) return 0;
   const baseMult = cycleMultipliers[state.marketCycle.phase] || 1;
   const recessionMult = state.economy?.recession ? 0.998 : 1.0;
   let priceChange = baseMult * recessionMult - 1;
@@ -1497,7 +1511,8 @@ export const expectedHeldGrowth = (
     priceChange *= 0.5;
     priceChange += 0.002;
   }
-  return Math.max(-0.05, Math.min(0.05, priceChange));
+  if (position.assetType === AssetType.BOND) priceChange *= 0.25;
+  return Math.max(-1, Math.min(1, priceChange));
 };
 
 /** One-line lesson for a resolved sell, phrased for the event feed. */
@@ -1505,17 +1520,9 @@ export const buildHindsightText = (position: SoldPosition): string => {
   const delta = position.heldValue - position.saleValue;
   const pct = position.saleValue > 0 ? delta / position.saleValue : 0;
   const pctLabel = `${pct >= 0 ? '+' : ''}${Math.round(pct * 100)}%`;
-  const soldInDownturn = position.marketPhaseAtSale === 'CONTRACTION' || position.marketPhaseAtSale === 'TROUGH';
-  if (pct >= 0.05) {
-    const lesson = soldInDownturn
-      ? 'Selling in a downturn locks in losses — markets usually recover.'
-      : 'Time in the market tends to beat timing the market.';
-    return `The ${position.name} you sold for ${fmtUSD(position.saleValue)} would be worth ${fmtUSD(position.heldValue)} today (${pctLabel}). ${lesson}`;
-  }
-  if (pct <= -0.05) {
-    return `Selling ${position.name} for ${fmtUSD(position.saleValue)} turned out well — it would be worth ${fmtUSD(position.heldValue)} today (${pctLabel}).`;
-  }
-  return `Selling ${position.name} barely mattered — it would be worth about the same today (${pctLabel}).`;
+  const context = position.marketPhaseAtSale === 'CONTRACTION' || position.marketPhaseAtSale === 'TROUGH'
+    ? 'You sold during a downturn. ' : '';
+  return `Illustrative scenario: holding ${position.name} might have left a price value of ${fmtUSD(position.heldValue)} (${pctLabel}) versus the ${fmtUSD(position.saleValue)} sale. ${context}This estimate excludes random price moves, income, taxes and what you did with the proceeds. Judge the decision by your needs and risk at the time; recovery is not guaranteed.`;
 };
 
 /**
@@ -3263,6 +3270,8 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
     newState.creditLastChangeReasons = ['Starting credit profile'];
   }
   
+  if (newState.cafe?.service?.status === 'active') newState.cafe = { ...newState.cafe, service: finishCafeService(newState.cafe.service) };
+
   // 1. Advance time
   newState.month++;
   // annualReport only lives for the boundary turn (App clears it on dismiss,
@@ -3316,8 +3325,12 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
   const businessUpdate = applyBusinessIncomeVariance(newState);
   newState = businessUpdate.state;
 
+  if (newState.cafe) newState.cafe = { ...newState.cafe, lastReceipt: quoteCafe(newState.cafe, newState.month) };
+
   // 7. Calculate cash flow
   const cashFlow = calculateMonthlyCashFlow(newState);
+  const assetPayments = newState.assets.map(asset=>({name:asset.name,amount:calculateAssetCashPayment(newState,asset)}));
+  if (newState.cafe?.lastReceipt) assetPayments.push({ name: 'Your café (after all operating costs)', amount: newState.cafe.lastReceipt.profit });
   const totalExpenses = cashFlow.expenses + businessUpdate.maintenanceCost;
   const netCashFlow = cashFlow.income - totalExpenses;
   const previousNetWorth = calculateNetWorth(state);
@@ -3393,7 +3406,7 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
         if (!item || !isAutoInvestEligible(item)) continue;
         if (!hasRequiredEducationForInvestment(item, newState.education?.degrees || [])) continue;
 
-        const price = Math.round(item.price * inflationMult);
+        const price = nominalPrice(item, newState.month, newState.economy.inflationRate);
         const effectivePercent = totalPercent > 100
           ? Math.floor((alloc.percent / totalPercent) * 100)
           : alloc.percent;
@@ -3649,6 +3662,15 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
   }
 
   const monthlyReport: MonthlyReport = {
+    cafe: newState.cafe?.lastReceipt,
+    month: newState.month,
+    assetPayments,
+    salaryIncome: cashFlow.salary,
+    investmentIncome: cashFlow.passive,
+    marketChange: newState.assets.reduce((sum,a) => { const old = state.assets.find(b=>b.id===a.id); return sum + (old ? (a.value-old.value)*Math.min(a.quantity,old.quantity) : 0); }, 0),
+    businessMaintenance: businessUpdate.maintenanceCost,
+    cashBefore: state.cash,
+    cashAfter: newState.cash,
     income: cashFlow.income,
     expenses: totalExpenses,
     netWorthChange: newNetWorth - previousNetWorth,

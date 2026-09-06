@@ -1,5 +1,11 @@
 # Market Balance Notes (Mid-Tier Assets)
 
+## September 5 learning model update
+
+The guidelines below describe the older mid-tier catalogue, not a blanket promise of investment income. `services/investmentModel.ts` now distinguishes actual cash distributions from expected price growth; spot crypto/commodities have no automatic cash yield. `nominalPrice` keeps savings/bond unit pricing nominal. Use `incomeYield` and the appropriate income label when quoting an investment.
+
+The café economy and extra owner shifts use separate, explicit fictional cost/demand models in `services/townCafe.ts` and `services/cafeService.ts`. Normal café net profit already includes costs; owner-shift opening costs/sales settle separately and exactly once. See [HANDOVER.md](../HANDOVER.md) for amounts/invariants and [receipt](completed-improvements.md) for tested outcomes.
+
 Goals
 - Fill the gap between starter investments and large purchases.
 - Provide meaningful monthly cashflow without trivializing late-game assets.

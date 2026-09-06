@@ -13,3 +13,6 @@ redesign-mockup/
 devserver.log
 tycoon-eq-upgrade-code-only.zip
 public/videos/quick-tutorial.mov
+
+# Blender auto-backups (regenerate from the .blend sources)
+*.blend1

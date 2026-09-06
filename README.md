@@ -1,5 +1,11 @@
 # 💰 Tycoon: Financial Freedom Simulator v3.4.3
 
+## Continue the current work
+
+**Start with [HANDOVER.md](HANDOVER.md).** The September 5 financial-learning and 3D city/café upgrades are implemented and tested in the local preview at `http://127.0.0.1:5187/`; they have **not** been committed, pushed or publicly deployed. The working folder includes important untracked source/assets. Latest code checks: 236 tests / 38 files and production build passed; real-phone testing remains open.
+
+See [gameplay overview](docs/gameplay-foundation-and-3d.md), [implementation receipt](docs/completed-improvements.md) and [QA checklist](docs/qa-checklist.md). Existing cloud, payment and historical deployment notes below do not establish that the new features are live.
+
 A fun and educational financial simulation game with **four modes**:
 - **Adult Mode**: Full realistic financial simulation with careers, real estate, stocks, education, and life events
 - **Daily Challenge**: everyone plays the same seeded world each day — a 10-year sprint scored by final net worth, with a shareable run card, streaks, and a daily leaderboard
@@ -16,8 +22,8 @@ Progress can sync across devices via cloud saves (private sync code or an email-
 
 ## 📚 Project Docs
 
-- [CLAUDE.md](CLAUDE.md) — quick orientation: commands, architecture, gotchas (current truth)
-- [docs/roadmap.md](docs/roadmap.md) — current state and prioritized next work (current truth)
+- [CLAUDE.md](CLAUDE.md) — quick orientation: commands, architecture and historical service notes; read HANDOVER.md first
+- [docs/roadmap.md](docs/roadmap.md) — current priorities followed by archived roadmap history
 - [docs/monetization-setup.md](docs/monetization-setup.md) — how to start selling (Gumroad + Netlify env)
 - [docs/b2b-classroom-packs.md](docs/b2b-classroom-packs.md) + [docs/outreach-drafts.md](docs/outreach-drafts.md) — B2B classroom offer: strategy + ready-to-paste copy
 - [docs/architecture-map.md](docs/architecture-map.md) — deeper technical map (HISTORICAL snapshot; see banner)

@@ -1,8 +1,16 @@
+import { resolveCafeService } from './services/cafeService';
+import { resolveCafeAction, quoteCafe } from './services/townCafe';
+import { completeTownJourney } from './services/townJourney';
+import { transferTownSavings, runCartShift } from './services/townActivities';
+import { resolveTownAction } from './services/townProgress';
+import FirstSteps from './components/v2/FirstSteps';
+import { resolveFirstRepair } from './services/firstSteps';
+import { incomeYield, nominalPrice, migrateInvestmentAssets } from './services/investmentModel';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { GameState, AssetType, MarketItem, Lifestyle, Character, Asset, SideHustle, EducationOption, Liability, PlayerConfig, MonthlyActionId, TABS, TabId, EducationLevel, PlayerStats } from './types';
 import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, AUTO_INVEST_PRESETS } from './constants';
-import { processTurn, calculateMonthlyCashFlowEstimate, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier, checkPromotion, MAX_SOLD_POSITIONS } from './services/gameLogic';
+import { calculateMonthlyActionsMax, processTurn, calculateMonthlyCashFlowEstimate, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier, checkPromotion, MAX_SOLD_POSITIONS } from './services/gameLogic';
 import { playMoneyGain, playMoneyLoss, playClick, playPurchase, playSell, playAchievement, playLevelUp, playVictory, playWarning, playTick, playNotification, playError, setMuted } from './services/audioService';
 import { SaveSlotId } from './services/storageService';
 import confetti from 'canvas-confetti';
@@ -108,7 +116,7 @@ const getAssetIcon = (type: AssetType) => {
 
 const getOpsUpgradeCost = (asset: Asset) => {
   const qty = asset.quantity || 1;
-  return Math.max(750, Math.round(asset.value * qty * 0.06));
+  return asset.marketItemId==='coffee_cart'?350:Math.max(750, Math.round(asset.value * qty * 0.06));
 };
 
 type CashFlowHistoryEntry = {
@@ -293,7 +301,7 @@ const buildMortgagePreview = ({
   const loanAmount = Math.max(0, price - down);
   const rate = baseRate + opt.interestRateSpread + creditAdjust.rateAdjustment;
   const payment = calculateLoanPayment(loanAmount, rate, opt.termYears * 12);
-  const rentIncome = Math.round((item.expectedYield * price) / 12);
+  const rentIncome = Math.round((incomeYield(item) * price) / 12);
   const maintenance = estimatePropertyMaintenance(price);
   const cashflowImpact = Math.round(rentIncome - payment - maintenance);
   const meetsIncomeReq = !opt.requirements?.income || cashFlow.income >= opt.requirements.income;
@@ -572,10 +580,13 @@ interface AppProps {
   accessTier?: AccessTier;
 }
 
+const TownModal = React.lazy(() => import('./components/town/TownModal'));
 const App: React.FC<AppProps> = ({ onBackToMenu, initialGameState, playerConfig, isMultiplayer, onTurnComplete, accessTier }) => {
   const { t, locale } = useI18n();
   const [tier, setTier] = useState<AccessTier>(accessTier ?? getAccessTier());
   const [showDemoLimitModal, setShowDemoLimitModal] = useState(false);
+  const [showTown, setShowTown] = useState(false);
+  const [townOpenedMoney,setTownOpenedMoney]=useState(false);
   const renderStart = import.meta.env.DEV ? performance.now() : 0;
   const isResumingFromSave = !isMultiplayer && !!initialGameState && !!initialGameState.character;
   const [gameStarted, setGameStarted] = useState(isMultiplayer ? true : isResumingFromSave);
@@ -583,7 +594,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const base: any = initialGameState || INITIAL_GAME_STATE;
   return {
     ...base,
-    assets: base.assets ?? [],
+    reserveBaseline: base.reserveBaseline ?? (base.cash + (base.assets ?? []).filter((a: Asset) => a.type === AssetType.SAVINGS).reduce((n: number, a: Asset) => n + a.value * a.quantity, 0) - (base.liabilities ?? []).reduce((n: number, l: Liability) => n + l.balance, 0)),
+    assets: migrateInvestmentAssets(base.assets ?? [], MARKET_ITEMS),
     liabilities: base.liabilities ?? [],
     mortgages: base.mortgages ?? [],
     events: base.events ?? [],
@@ -664,7 +676,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
   } | null>(null);
   const [monthlyReport, setMonthlyReport] = useState<any>(null);
   const [dashboardModal, setDashboardModal] = useState<null | 'netWorth' | 'cashFlow' | 'credit' | 'ai'>(null);
-  const [showCharacterSelect, setShowCharacterSelect] = useState(false);
+  const [showCharacterSelect, setShowCharacterSelect] = useState(!isMultiplayer && !isResumingFromSave);
   const [showCustomAvatarBuilder, setShowCustomAvatarBuilder] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<keyof typeof DIFFICULTY_SETTINGS>('NORMAL');
   const [soundEnabled, setSoundEnabled] = useState(initialGameState?.soundEnabled ?? true);
@@ -864,7 +876,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
     onNavigateToLifestyle: () => navigateToTab(TABS.LIFESTYLE),
     onShowShortcuts: () => setShowShortcutsOverlay(true),
   });
-  useKeyboardShortcuts(gameShortcuts, gameStarted && !showCharacterSelect);
+  useKeyboardShortcuts(gameShortcuts, gameStarted && !showCharacterSelect && !showTown);
 
   useEffect(() => {
     if (!import.meta.env.DEV) return;
@@ -977,6 +989,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
     setImportPayload,
     importError,
     recordAutosave,
+    saveError,
+    downloadCurrentProgress,
     refreshSaveSummaries,
     openSaveManager,
     handleSaveToSlot,
@@ -987,6 +1001,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
     handleImportSave
   } = useSaveLoad({
     isMultiplayer,
+    gameStarted,
     gameState,
     currentSaveSlot,
     setCurrentSaveSlot,
@@ -1669,6 +1684,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
       character: char,
       difficulty: selectedDifficulty,
       cash: Math.max(0, startingCash),
+      reserveBaseline: Math.max(0, startingCash) - initialLiabilities.reduce((sum, loan) => sum + loan.balance, 0),
+      firstSteps: {},
       career: {
         path: char.careerPath,
         title: CAREER_PATHS[char.careerPath].levels[0].title,
@@ -1691,11 +1708,13 @@ const [gameState, setGameState] = useState<GameState>(() => {
       soundEnabled
     };
     
+    newState.monthlyActionsMax = calculateMonthlyActionsMax(newState);
+    newState.monthlyActionsRemaining = newState.monthlyActionsMax;
     setGameState(newState);
     recordAutosave(newState);
     setShowCharacterSelect(false);
     setGameStarted(true);
-    maybeConfetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+
   };
 
   const handleCreateCustomCharacter = (result: CustomAvatarResult) => {
@@ -1736,9 +1755,10 @@ const [gameState, setGameState] = useState<GameState>(() => {
     const incomeLines: TurnPreviewLine[] = [
       { label: 'Salary', value: cf.salary },
       { label: 'Side Hustles', value: cf.sideHustleIncome },
-      { label: 'Passive Income', value: cf.passive },
+      { label: 'Investments & passive work', value: cf.passive - (state.cafe ? quoteCafe(state.cafe, nextMonth).profit : 0) },
+      ...(state.cafe ? [{ label: 'Café net operating profit', value: quoteCafe(state.cafe, nextMonth).profit }] : []),
       { label: 'Spouse Income', value: cf.spouseIncome },
-    ].filter(l => l.value > 0).sort((a, b) => b.value - a.value);
+    ].filter(l => l.value !== 0).sort((a, b) => b.value - a.value);
 
     const expenseLines: TurnPreviewLine[] = [
       { label: 'Lifestyle', value: cf.lifestyleCost },
@@ -1909,6 +1929,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const pendingSideHustleMilestone = pendingSideHustle?.milestones?.[gameState.pendingSideHustleUpgrade?.milestoneIndex ?? -1];
 
   const isAutoplayBlocked =
+    showTown ||
     !!gameState.pendingScenario ||
     !!gameState.pendingSideHustleUpgrade ||
     !!marketSpecialAction ||
@@ -2040,7 +2061,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
     const budgetCap = Math.max(0, marketSpecialAction.budget);
 
     const inflationMult = Math.pow(1 + gameState.economy.inflationRate, gameState.month / 12);
-    const basePrice = Math.round(item.price * inflationMult);
+    const basePrice = nominalPrice(item, gameState.month, gameState.economy.inflationRate);
     const unitPrice = Math.max(1, Math.round(basePrice * (1 - discount)));
 
     const singleUnit = item.type === AssetType.REAL_ESTATE || item.type === AssetType.BUSINESS;
@@ -2064,7 +2085,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
     setGameState(prev => {
       const inflationMultPrev = Math.pow(1 + prev.economy.inflationRate, prev.month / 12);
-      const basePricePrev = Math.round(item.price * inflationMultPrev);
+      const basePricePrev = nominalPrice(item, prev.month, prev.economy.inflationRate);
       const unitPricePrev = Math.max(1, Math.round(basePricePrev * (1 - discount)));
       const totalCostPrev = unitPricePrev * qty;
 
@@ -2083,7 +2104,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           quantity: newQty,
           costBasis: newCostBasis,
           value: basePricePrev,
-          cashFlow: (item.expectedYield * basePricePrev) / 12,
+          cashFlow: (incomeYield(item) * basePricePrev) / 12,
           purchasePrice: unitPricePrev
         } : a);
       } else {
@@ -2095,10 +2116,12 @@ const [gameState, setGameState] = useState<GameState>(() => {
           value: basePricePrev,
           costBasis: unitPricePrev,
           quantity: qty,
-          appreciationRate: item.appreciationRate || (item.expectedYield * 0.4),
+          appreciationRate: item.appreciationRate || (incomeYield(item) * 0.4),
           volatility: item.volatility,
-          baseYield: item.expectedYield,
-          cashFlow: (item.expectedYield * basePricePrev) / 12,
+          baseYield: incomeYield(item),
+          marketItemId: item.id,
+          incomeModelVersion: 2,
+          cashFlow: (incomeYield(item) * basePricePrev) / 12,
           purchasedMonth: prev.month,
           purchasePrice: unitPricePrev,
           industry: item.industry,
@@ -2361,7 +2384,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
     }
 
     const inflationMult = Math.pow(1 + gameState.economy.inflationRate, gameState.month / 12);
-    const listPrice = Math.round(item.price * inflationMult);
+    const listPrice = nominalPrice(item, gameState.month, gameState.economy.inflationRate);
 
     // Negotiation Mastery perk: better deals on negotiable assets
     const negotiationDiscountPct = gameState.negotiationsPerks?.dealDiscountPct ?? 0;
@@ -2398,7 +2421,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
       
       playPurchase();
       setGameState(prev => {
-        const baseMonthly = (item.expectedYield * price) / 12;
+        const baseMonthly = (incomeYield(item) * price) / 12;
         const asset: Asset = {
           id: assetId,
           name: item.name,
@@ -2408,9 +2431,11 @@ const [gameState, setGameState] = useState<GameState>(() => {
           quantity: 1,
           cashFlow: baseMonthly,
           volatility: item.volatility,
-          appreciationRate: item.expectedYield * 0.4,
+          appreciationRate: incomeYield(item) * 0.4,
           priceHistory: [{ month: prev.month, value: price }],
-          baseYield: item.expectedYield,
+          baseYield: incomeYield(item),
+          marketItemId: item.id,
+          incomeModelVersion: 2,
           industry: item.industry,
           mortgageId: result.mortgage.id,
           opsUpgrade: item.type === AssetType.BUSINESS ? false : undefined,
@@ -2445,6 +2470,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
       
       playPurchase();
       setGameState(prev => {
+        if (prev.cash < price || prev.isBankrupt || prev.hasWon || prev.pendingScenario) return prev;
         const existing = prev.assets.find(a => a.name === item.name && !a.mortgageId);
         let newAssets = [...prev.assets];
         
@@ -2453,7 +2479,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           const newQuantity = existing.quantity + 1;
           const newCostBasis = ((existing.costBasis * existing.quantity) + price) / newQuantity;
           // Recalculate average cashFlow based on new cost basis
-          const newCashFlow = (item.expectedYield * newCostBasis) / 12;
+          const newCashFlow = (incomeYield(item) * newCostBasis) / 12;
           newAssets[idx] = {
             ...existing,
             quantity: newQuantity,
@@ -2464,7 +2490,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
             lastMonthIncome: item.type === AssetType.BUSINESS ? (existing.lastMonthIncome ?? Math.round(existing.cashFlow * existing.quantity)) : existing.lastMonthIncome
           };
         } else {
-          const baseMonthly = (item.expectedYield * price) / 12;
+          const baseMonthly = (incomeYield(item) * price) / 12;
           newAssets.push({
             id: 'asset-' + Date.now(),
             name: item.name,
@@ -2474,9 +2500,11 @@ const [gameState, setGameState] = useState<GameState>(() => {
             quantity: 1,
             cashFlow: baseMonthly,
             volatility: item.volatility,
-            appreciationRate: item.expectedYield * 0.4,
+            appreciationRate: incomeYield(item) * 0.4,
             priceHistory: [{ month: prev.month, value: price }],
-            baseYield: item.expectedYield,
+            baseYield: incomeYield(item),
+          marketItemId: item.id,
+          incomeModelVersion: 2,
             industry: item.industry,
             opsUpgrade: item.type === AssetType.BUSINESS ? false : undefined,
             currentMonthIncome: item.type === AssetType.BUSINESS ? Math.round(baseMonthly) : undefined,
@@ -3150,6 +3178,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 md:p-8 overflow-y-auto">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-6">
+            {onBackToMenu && <button onClick={onBackToMenu} className="mb-4 rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-200">Back to menu</button>}
             <h1 className="text-3xl font-bold text-white mb-2">Choose Your Path</h1>
             <p className="text-slate-400">⚠️ Some careers are more AI-proof than others!</p>
           </div>
@@ -3252,6 +3281,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
   };
 
   const investTabProps = {
+    startWithFullCatalogue: townOpenedMoney,
     formatMoney,
     formatMoneyFull,
     formatPercent,
@@ -3296,6 +3326,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
   };
 
   const portfolioTabProps = {
+    onEnterTown: ()=>setShowTown(true),
+    handleTownPermit: ()=>setGameState(prev=>isProcessing?prev:resolveTownAction(prev,'permit')),
     gameState,
     cashFlow,
     formatMoney,
@@ -3326,8 +3358,27 @@ const [gameState, setGameState] = useState<GameState>(() => {
     handlePayDebt
   };
 
+  const townLauncher = !isMultiplayer && !gameState.challenge ?
+    <button onClick={() => setShowTown(true)} disabled={isProcessing || gameState.hasWon || gameState.isBankrupt}
+      className="flex w-full items-center justify-between gap-4 rounded-xl border border-amber-300/30 bg-gradient-to-r from-emerald-950 to-slate-900 px-5 py-4 text-left disabled:opacity-40">
+      <span><strong className="block text-sm text-amber-100">Enter 3D city</strong><span className="mt-1 block text-xs text-slate-300">Walk around Freedom Square. Visit the bank, businesses and property office.</span></span><span className="shrink-0 text-xs text-emerald-200">Explore →</span>
+    </button> : null;
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white pb-24 md:pb-4">
+      {showTown && <TabErrorBoundary tabName="3D neighbourhood"><React.Suspense fallback={<Modal isOpen onClose={() => setShowTown(false)} ariaLabel="Loading neighbourhood"><p className="p-8">Opening Freedom Square…</p></Modal>}>
+        <TownModal state={gameState} disabled={isProcessing || !!gameState.pendingScenario || gameState.hasWon || gameState.isBankrupt} reduceMotion={!!reduceMotion}
+          onBuy={handleBuyAsset} onClose={() => setShowTown(false)} saveError={saveError} onBackup={downloadCurrentProgress}
+          onFinishJourney={()=>setGameState(prev=>isProcessing?prev:completeTownJourney(prev))}
+          loans={adjustedLoanOptions}
+          onTransfer={transfer=>setGameState(prev=>isProcessing?prev:transferTownSavings(prev,transfer))}
+          onCafeServiceAction={action=>setGameState(prev=>isProcessing?prev:resolveCafeService(prev,action))}
+          onCafeAction={action=>setGameState(prev=>isProcessing?prev:resolveCafeAction(prev,action))}
+          onRunShift={plan=>setGameState(prev=>isProcessing?prev:runCartShift(prev,plan))}
+          onAction={action=>setGameState(prev=>isProcessing?prev:resolveTownAction(prev,action))}
+          onRememberView={view=>setGameState(prev=>({...prev,townView:view}))}
+          onOpenMoney={(tab,place) => { setShowTown(false); setTownOpenedMoney(true); setV2Path('/money'); setMoneyTab(tab); if(tab==='invest'){setInvestmentFilter(place==='property'?AssetType.REAL_ESTATE:place==='business'?AssetType.BUSINESS:'ALL');setInvestmentTierFilter('ALL');setInvestmentSearch('');} }}
+          onNextMonth={() => { setShowTown(false); handleNextTurn(); }} />
+      </React.Suspense></TabErrorBoundary>}
       {/* Floating Numbers */}
       <AnimatePresence>
         {floatingNumbers.map(fn => (
@@ -3440,6 +3491,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
         />
       )}
 
+      {saveError && <div role="alert" className="fixed bottom-24 left-4 right-4 z-[100] mx-auto max-w-lg rounded-xl border border-red-400 bg-red-950 p-4 text-sm text-red-100">{saveError}<button className="mt-2 block underline" onClick={downloadCurrentProgress}>Download current progress</button><button className="mt-2 block underline" onClick={() => recordAutosave(gameState)}>Retry saving</button></div>}
       {/* Confirmation Dialog (prevents costly mis-clicks) */}
       {confirmDialog && (
         <ConfirmDialogModal config={confirmDialog} onClose={closeConfirmDialog} />
@@ -3529,7 +3581,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
       )}
 
       {/* Scenario Modal */}
-      {gameState.pendingScenario && (
+      {gameState.pendingScenario && !showTown && (
         <ScenarioModal
           scenario={gameState.pendingScenario}
           optionsRef={coachAssetsSellRef}
@@ -3539,6 +3591,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           autoPlaySpeed={autoPlaySpeed}
           autoplaySpeedLabel={autoplaySpeedLabel}
           onToggleAutoplay={toggleAutoplay}
+          onExploreTown={!isMultiplayer && !gameState.challenge ? () => setShowTown(true) : undefined}
           onOpenImage={openImageLightbox}
           onChoose={handleScenarioChoice}
         />
@@ -3809,6 +3862,12 @@ const [gameState, setGameState] = useState<GameState>(() => {
           >
             {v2Path === '/play' && mobileTab === 'dashboard' && (
               <CommandDashboard
+                firstSteps={<>{townLauncher}<FirstSteps
+                  state={gameState} disabled={isProcessing || !!gameState.pendingScenario || !!gameState.isBankrupt || gameState.hasWon}
+                  onChoose={choice => setGameState(prev => resolveFirstRepair(prev, choice))}
+                  onReview={() => setGameState(prev => ({ ...prev, firstSteps: { ...prev.firstSteps, reviewed: true } }))}
+                  onInvest={() => navigateToTab(TABS.INVEST)} onNextMonth={handleNextTurn}
+                /></>}
                 onOpenDetail={(kind) => setDashboardModal(kind)}
                 cashValue={gameState.cash}
                 netWorthValue={netWorth}
@@ -3896,6 +3955,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
             )}
             {v2Path === '/money' && (
               <TabErrorBoundary tabName="Money">
+  {townOpenedMoney && <div className="mb-4"><button className="rounded-xl bg-emerald-950 border border-emerald-600 px-5 py-3" onClick={()=>setShowTown(true)}>← Return to city</button></div>}
   <MoneyPageLayout
                   gameState={gameState}
                   netWorth={netWorth}
@@ -4051,6 +4111,12 @@ const [gameState, setGameState] = useState<GameState>(() => {
           >
             {v2Path === '/play' && (
               <CommandDashboard
+                firstSteps={<>{townLauncher}<FirstSteps
+                  state={gameState} disabled={isProcessing || !!gameState.pendingScenario || !!gameState.isBankrupt || gameState.hasWon}
+                  onChoose={choice => setGameState(prev => resolveFirstRepair(prev, choice))}
+                  onReview={() => setGameState(prev => ({ ...prev, firstSteps: { ...prev.firstSteps, reviewed: true } }))}
+                  onInvest={() => navigateToTab(TABS.INVEST)} onNextMonth={handleNextTurn}
+                /></>}
                 onOpenDetail={(kind) => setDashboardModal(kind)}
                 cashValue={gameState.cash}
                 netWorthValue={netWorth}
@@ -4088,6 +4154,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
             )}
             {v2Path === '/money' && (
               <TabErrorBoundary tabName="Money">
+  {townOpenedMoney && <div className="mb-4"><button className="rounded-xl bg-emerald-950 border border-emerald-600 px-5 py-3" onClick={()=>setShowTown(true)}>← Return to city</button></div>}
   <MoneyPageLayout
                   gameState={gameState}
                   netWorth={netWorth}

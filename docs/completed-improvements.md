@@ -1,0 +1,154 @@
+# Gameplay foundation and Freedom Square
+
+> Current handover: `/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2/HANDOVER.md`. Latest implementation: hands-on café service; 236 tests / 38 files passed. All September upgrades remain local, uncommitted and undeployed. This document is chronological: earlier test counts, missing-feature lists and balances are historical checkpoints, not current state. Documentation refreshed September 5, 2026.
+
+Implemented locally, September 5, 2026. No deployment or account signup performed.
+
+## Five foundation improvements
+
+- Save each committed single-player decision. Failed writes show a persistent warning; a downloadable backup captures current in-memory progress even when storage is full. Imported saves report write failures honestly.
+- Separate investment cash payments from price changes. Spot cryptocurrency pays no passive income. Existing holdings migrate without changing cash, quantities, cost basis or completed goals. Savings principal stays nominal; financial knowledge no longer manufactures investment income.
+- Permit deeper losses on normal and harder difficulties. Easy's artificial loss protection is disclosed. Hindsight comparisons are explicitly illustrative; recovery is never presented as certain. Difficulty cannot turn shareholder dividends into charges.
+- Start with a playable repair decision, a simple dashboard and three introductory investments. The complete catalogue, charts and help remain accessible. Mobile layouts and onboarding overlays were checked.
+- Require earned reserve progress and a cash buffer for the first-investment goal. New borrowing does not count as building reserves. No character immediately earns a starter goal from initial cash.
+
+## 3D integration
+
+Select **Enter 3D city** at the top of Play, available immediately. Pending event dialogs also offer this button: exploration preserves the event and purchases stay disabled until the decision is resolved. This preview is for normal single-player runs.
+
+The optional, lazily loaded Three.js scene provides camera-relative keyboard movement, tap-to-walk and an analogue touch joystick. Four destinations connect to the existing purchase handler and save system: Community Bank, Stock Exchange, Main Street Businesses and Property Office. Location offers show learning context, cash remaining and portfolio ownership. Autoplay and dashboard keyboard shortcuts pause while the town is open. Month review and detailed finance screens remain accessible.
+
+The city now uses original Blender-built assets: detailed pastel shopfronts, balconies, street furniture, trees and a fountain. The articulated character blends idle, walking and running animations; five residents stroll through the neighbourhood. A closer camera follows the character, with drag-to-orbit, wheel/pinch zoom and a reset button. Location choices open on inspection so the city fills the view.
+
+Blender 5.2.1 LTS is installed locally. Editable source models, a regeneration script and runtime models are included; see `assets/town/README.md`. The city model uses Draco compression and is approximately 1.1 MB; the character is approximately 201 KB. No asset service, API key or external account is required. WebGL failure or context loss switches to destination-based offers. Graphics resources are released on exit.
+
+## Validation
+
+- 200 automated tests across 30 files pass, including decision saves, failed storage writes, migration, financial learning, earned rewards and town fallback/quotes.
+- TypeScript and production build pass. Existing large initial/chart bundle warnings remain; the 3D bundle only loads when opened.
+- Chrome production-preview checks cover desktop/mobile, walking, deposits, stock purchases, unaffordable offers, refresh persistence, autoplay pause and WebGL fallback.
+- The upgraded city was additionally checked in the in-app browser at desktop and 390 × 844 phone viewport sizes: camera dragging, joystick movement/release, animated walking, bank offers, a test deposit and saved balance after refresh. Physical phones have not been tested.
+- Dependency updates stay within existing declared version ranges; npm audit reports zero known vulnerabilities at verification time. npm 11 resolved an npm 10 dependency-updater error.
+
+## Costs and next stage
+
+Additional required subscription budget for this prototype: **$0/month**. Three.js is MIT licensed. Blender is free and is now installed and used for the city and animated character. No paid tier is required. Higgsfield is optional and has not been installed or subscribed to. Any paid tool should be selected and its current minimum tier quoted before signup. Existing hosting and AI usage costs are separate.
+
+Sources: [Three.js licence](https://threejs.org/license/), [Blender](https://www.blender.org/about/).
+
+This is a playable 3D foundation, not a completed open world. Additional building interiors, broader NPC conversations, more ownership upgrades, physical-device performance testing and a public release remain later work. The financial economy still uses simplified, fictional assumptions. Authentication/cloud services and payments were not exercised in this local work.
+
+
+## City gameplay polish — September 5, 2026
+
+- Movement uses obstacle-aware routes, buffered corners and collision sliding around benches, trees, planters, lamp posts, tables and the coffee cart. The following camera moves inward when buildings or tree crowns obstruct it. Residents use clear walking lanes.
+- City position, camera angle and zoom save when leaving the scene. Property and business links open the correct catalogue; a Return to city button restores the location. Full catalogue links bypass the initial three-investment guide.
+- A four-step mission connects a cash-reserve plan, an affordable Coffee Cart (base $1,500, inflation-adjusted), a one-time $60 trading permit, and a first trading-month review. The permit genuinely gates coffee income; confirming the reserve awards no cash. The permit can also be paid from the portfolio so non-city game modes remain usable.
+- Ownership adds a coffee cart, equipment and a customer to the square. A $350 weather-cover/storage upgrade appears in the world and uses the existing operations-upgrade effects on volatility and maintenance odds. Different resident appearances and optional synthetic footsteps add life without new services.
+- Location offers show price, risk, expected monthly cash, costs, a reserve warning and an illustrative quiet-month outcome. The month recap records actual cash income, per-asset contributions, costs, other cash movements and price changes separately, and survives reload.
+
+Validation includes pure financial/route tests, a movement simulation of the café-to-cart path, and a rendered regression for property navigation. Browser playthrough covers mission actions, permit/upgrade charges, property routing, preserved location, trading income, saved progress, and desktop/phone-sized layouts. Existing build-size warnings remain; no paid integrations or public deployment were performed.
+
+
+## Bank interior and coffee activity — September 5, 2026
+
+Implemented in the local preview at http://127.0.0.1:5187/.
+
+- Walk to the bank, enter a furnished 3D lobby, approach the animated teller, and walk back out. Camera angles keep the counter and walking corridor accessible. The original Blender character is reused; the new lobby is authored with runtime geometry.
+- Deposit or withdraw a whole-dollar amount using the same High-Yield Savings holdings as the portfolio. Transfers preserve net worth. The teller also compares existing loan offers, including payments, approximate total interest and remaining monthly surplus; applications continue through the existing banking screen.
+- Continue from the teller to Main Street or your owned cart. A new Your cart shortcut makes the activity easy to find.
+- Run one extra owner-operated pop-up shift per month. Choose $3/$5 pricing and 12/24 cups of fresh stock. All stock costs $2 per cup, plus $18 shift staffing/stall costs. Fixed, disclosed teaching demand varies with the month, price and rain cover. The forecast shows break-even and profit/loss before committing.
+- A short customer/cup animation leads to a receipt. Cash settles once on opening, so closing or reloading does not repeat the reward or escape a loss. Regular monthly cart operations remain separate. The existing $350 cover/storage upgrade helps rainy-shift demand.
+
+Validation: 210 tests across 32 files passed; production build and whitespace checks passed. Rendered tests covered bank entry/teller/exit, a $500 deposit and withdrawal, loan comparisons, bank-to-cart walking, customer animation, a profitable $18 shift and a loss-making $6 shift, receipt persistence, next-month unlock, and desktop (1280×720) / phone-sized (390×844) layouts. The receipt scroll position and animation message obstruction found during testing were fixed and rechecked.
+
+Scope: local preview only; no public deployment, purchase, signup or subscription. Additional required subscription budget remains $0/month. Physical devices, full voice dialogue, building interiors beyond the bank, and detailed hand/foot contact animation remain future work.
+
+Handoff: the user's original preview was refreshed and left inside the bank, with $16,330 cash and $24,250 net worth preserved. The pending Flat Tire Fiasco decision remains unresolved and correctly disables transactions. Current user-preview console has no warnings or errors. The separate test preview encountered one stale asset URL while a build was replacing files; refreshing after completion resolved it. Test tab/server closed, temporary viewport override reset; user preview remains running.
+
+
+## Character, controls and opening journey — September 5, 2026
+
+- Refined the original Blender character with ankle joints, grounded walk/run cycles, smoother speed-matched playback and gentler turns/stops. Added Serve, Wave and Celebrate clips plus hand grip anchors. The character asset is about 237 KB.
+- The serving sequence walks to the operator side, frames the customer and handoff from the side, then returns the character and camera to their previous positions. A teller greeting and milestone celebration use the new clips. Reduced-motion mode skips optional interaction animation.
+- Added Follow character and See neighbourhood camera presets, left/right rotation and zoom buttons. Presets save with the existing camera state. Drag sensitivity is lower, and a pinch gesture cannot become an accidental walking tap. Destination markers reflect reachable ground.
+- Replaced the passive mission strip with a five-step opening journey and a contextual next-action button: reserve → cart → permit → owner shift → monthly review. Pending events take priority. A persistent Neighbourhood entrepreneur badge rewards completion without adding money. Older saves continue from their existing financial progress.
+
+Validation: 215 automated tests across 33 files passed; production build and whitespace checks passed. A fresh browser game completed the entire journey, from paying the initial repair through the bank, buying/licensing the cart, serving, advancing the month, reviewing results and earning the badge. The test balance was $11,245 before and after the badge. Save/reload retained the badge and camera preset. Desktop 1280×720 and phone-sized 390×844 views were checked, including camera presets, rotation/zoom buttons, tap-to-walk, serving camera, receipt and next-action controls.
+
+Limits: physical-phone testing remains outstanding. Browser layout checks do not establish real-device frame rates or multi-touch feel. Living-neighbourhood expansion and a walkable café remain the next stages. No paid subscriptions, public deployment or external account changes were made.
+
+Handoff for this stage: refreshed the user preview and reopened the bank. The original $16,330 cash / $24,250 net worth and waiting Flat Tire Fiasco event were preserved. The new guide correctly prioritizes that event. Both current browser consoles were clear. The isolated QA tab/server were closed and the viewport override reset.
+
+## Living neighbourhood and café — September 5, 2026
+
+Implemented locally at http://127.0.0.1:5187/.
+
+- Added a walkable café interior with counter, staff, customer queue, optional seating, upgraded espresso machine, plants and pendant lights. Ownership changes the outdoor shop sign. The café shortcut and post-journey guidance connect the room to the existing cart progression.
+- After owning a licensed cart and running an owner shift, lease the café for $3,000: $1,200 refundable deposit and $1,800 fit-out. Rent is $600/month; utilities are $120. One barista costs $600/month, a second adds $400; supplies cost $2 per stocked cup. All are fictional teaching assumptions.
+- Choose $4/$6 pricing, 400/700 cups of stock, staffing and open/closed status. Saved plans repeat on each month advance. A closed shop still pays rent and utilities. Seating costs $650 and increases demand; a $900 machine increases capacity. Staff help during crowds, and lower pricing can be useful during rain. Forecasts explicitly disclose fixed demand.
+- Monthly receipts show sales, stock waste, wages, rent, utilities and net profit/loss. Net profit flows into the existing income engine exactly once per turn. Deposits and equipment salvage appear in net worth and the portfolio. Ending the lease returns the displayed deposit/salvage and stops future café bills; the cart remains separate.
+- Added rain streaks, puddles, cooler rainy lighting, more street residents, queues and optional synthesized water/rain ambience. Reduced-motion mode omits falling rain. Rain geometry and audio resources are released on exit.
+- Fixed the non-3D cart-animation fallback, negative business income visibility in month previews, and the portfolio chart's initial sizing warning found during testing.
+
+Validation: 225 tests across 35 files passed; production build and whitespace checks passed. Browser playthrough at 1280×720 and 390×844 covered walking in/out, leasing, price/stock/staff changes, upgrades, an actual $1,440 loss and $580 profit, saved receipts/furnishings after reload, temporary closure without immediate cash changes, the continuing $720 rent/utilities forecast, portfolio value and return navigation. The final plan comparison showed extra staffing lifting a busy-month forecast from $580 to $1,080. Final browser console was clear after the chart fix.
+
+Limits: this remains a local playable preview with stylised geometry and simple resident/queue animation. Furniture uses preset positions; there is no free-placement editor or complete crowd collision simulation. Physical-phone performance and multitouch feel still need device testing. No new account, paid service, signup, deployment, commit or push was needed. Additional required subscription cost: $0/month.
+
+Original save: $16,330 cash / $24,250 net worth preserved, with the Flat Tire Fiasco event still waiting. Café ownership unlocks through the cart journey; the room can be viewed first. The separate QA save finishes at month 4 with $12,235 cash, both café upgrades and the latest $580 trading receipt; the next saved plan has two staff and forecasts $1,080 on a busy month.
+
+## Hands-on café service — September 5, 2026
+
+Implemented in the local preview at http://127.0.0.1:5187/.
+
+- A short playable café shift now connects walking to the order counter, preparing a named drink at the machine, carrying the cup, and delivering it to a table or takeaway customer. The next-action button walks to the correct place; a second press performs the action. Keyboard E and the existing movement controls also work.
+- Guests arrive, queue, sit, show their order, lose patience, and react to service. Added seated poses, carried cups, coffee steam, guest labels and a compact shift display. Portrait framing keeps the tables and queue in view.
+- Practice is repeatable, available without ownership, and never changes money. Owner shifts require an open owned café and are limited to one per game month. Supplies and extra operating/helper costs are charged at the start; each completed sale adds cash exactly once. Saved shifts resume paused. Leaving or hiding the game pauses the timer. Advancing the month ends unfinished service without another payout.
+- Price, fresh supplies, staffing and pace affect the shift. Receipts explain sales, committed stock costs, wages, waste and profit/loss. The short activity is separate from regular monthly café trading. These remain simplified fictional teaching assumptions.
+
+Validation: 236 tests across 38 files passed, the production build passed, and the whitespace check passed. Tests cover spatial interaction, brewing delays, patience, stock waste, cash settlement, invalid purchases, save/reload, month advance, unavailable 3D rendering and paused-shift re-entry. A return-to-game movement bug found during review was fixed and regression-tested.
+
+Browser playthrough: completed all three practice deliveries at 1280×720, yielding $12 sales, $9 costs and $3 illustrative profit without changing the test balance. The isolated owner shift charged $9, credited two $4 deliveries, preserved progress through reload, and ended with one impatient guest and the correct $1 loss. Remaining deliveries and the loss receipt were checked at 390×844. The final test browser console had no warnings or errors. An earlier open test page encountered a stale asset during rebuilding; a fresh page after the finished build loaded correctly. Existing build-size warnings remain.
+
+Scope: local playable preview only; no deployment, commit, purchase or external account changes. No additional subscriptions are required ($0/month). Physical-phone performance and multitouch feel remain untested. Character contact and crowd movement are still simplified; this is a small service activity, not a complete restaurant simulator.
+
+The isolated QA save finishes at month 4 with $12,234 cash and the owner-shift receipt recorded. On returning to the user's original preview, its current balance was $16,180 with $24,100 net worth; that newer progress was preserved through refresh, rather than replacing it with an earlier checkpoint. The QA tab and server were closed and the temporary viewport override reset.
+
+Final handoff: the original game is open inside Little Square Café with a free practice shift paused and a visible Resume button. Cash remains $16,180. The original preview console is clear. Practice does not require a café lease and does not spend or earn game money.
+
+## Loop pacing pass — September 5, 2026 (evening)
+
+Played the connected bank → cart → café loop as a fresh player (Alex, month 1) on an isolated origin and timed every leg, then tuned the parts that felt slow or unclear. Code is local only; nothing was committed or deployed.
+
+What the playthrough found (before):
+
+- Reaching the teller took four taps (Go to the teller → Enter the bank → Walk to teller → Talk to teller) plus a scroll, because the reserve confirmation sat at the bottom of the teller panel under the deposit tools. About 12 seconds of walking at 2.1 units/s.
+- After buying the cart or paying the permit, the side panel kept its old scroll position, so the new step (permit, then the shift panel) was off-screen and the $350 weather-cover upsell sat where the previous button had been.
+- The cart's scripted customer visit took 10.8 seconds of non-interactive walking.
+- Guide labels went stale: "View the coffee cart" while the offer was already open, "Go to your cart" while standing at the cart, "View the café space" on arrival at the door, "Manage your café" inside a café the player does not own, and the finish button was at the bottom of a long recap.
+- The café-space shortcut appeared during the cart mission and pulled attention away from the coffee cart offer.
+
+What changed:
+
+- `components/town/townGuide.ts` (new): `guideLabel` names the exact next tap for every position, and `guideNextHop` chains a guided walk through the bank door, up to the teller, and into the café. `TownModal` keeps a guided target while walking; any manual input (ground tap, joystick, keys, destination/interior buttons) cancels it and clears the "Next stop" caption. The guide button now also confirms the reserve, pays the $60 permit, starts a practice shift and completes the journey when the matching panel is open, with cash guards.
+- `components/town/townControls.ts`: `routeSpeed` jogs on routes longer than four units and during the scripted cart service, walking the last stretch; `createTownScene` uses it for tap-to-walk and guided routes and reports manual input through a new `onManual` option.
+- `TellerPanel`: the reserve step renders first until confirmed, then becomes the "Next: visit your business" pointer under the transfer tools.
+- `TownModal`: the details panel scrolls to the top whenever the mission step, cart spot or completion changes; the finish button sits under the milestone list; the café shortcut is hidden until the cart is licensed.
+- `vite.config.ts`: pre-bundles Three.js and its example modules so opening the city in `vite dev` no longer forces a mid-session reload or loads two copies of Three (dev only; production bundles were already single-copy).
+
+Measured after (same fresh game, Chrome, 61 fps):
+
+| Leg | Before | After |
+|---|---|---|
+| Square → reserve confirmation visible | 4 taps + scroll, ~12 s | 1 tap, 5.1 s |
+| Bank → cart offer open | 2 taps, ~7.5 s | 1 tap, 4.8 s |
+| Main Street → cart panel open | 2 taps, ~4.4 s | 1 tap, 2.2 s |
+| Cart customer visit | 10.8 s | 5.3 s |
+| Square → café practice panel open | 3 taps, ~6 s | 1 tap, 2.4 s |
+| Complete journey | open recap + scroll + tap | 2 taps |
+
+Practice shift timing was left as is: three guests, ~25 seconds with an attentive player, relaxed patience 90 s / rush 35 s. No financial rule, price, cost or save shape changed.
+
+Validation: 243 tests across 39 files passed (`test/TownGuide.test.tsx` added: labels for every stage, door chaining, jog rule, teller ordering), TypeScript and the production build passed, `git diff --check` clean. Logs: [tests](verification/pacing-2026-09-05/tests.log), [build](verification/pacing-2026-09-05/build.log). Browser replay covered the whole loop from a new game, including a ground tap cancelling a guided walk and a full practice shift (3/3 served, $3 illustrative profit, cash unchanged). Console clear.
+
+Limits: desktop Chrome only; the physical-phone check is still open. The user's 5187 save was not opened or changed. `dist/` was rebuilt at the end of this pass, so an already-open 5187 page needs a full refresh before opening the city.

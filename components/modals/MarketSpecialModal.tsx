@@ -1,3 +1,4 @@
+import { incomeYield } from '../../services/investmentModel';
 import React from 'react';
 import Modal from '../Modal';
 import { AssetType, GameState } from '../../types';
@@ -152,7 +153,7 @@ const MarketSpecialModal: React.FC<MarketSpecialModalProps> = ({
                             {d.affordable ? `Max ${d.singleUnit ? 1 : d.maxUnits}` : 'Too expensive'}
                           </div>
                           <div className="text-slate-400 mt-1">
-                            ~{formatMoneyFull((d.item.expectedYield * d.discounted) / 12)}/mo
+                            ~{formatMoneyFull((incomeYield(d.item) * d.discounted) / 12)}/mo
                           </div>
                         </div>
                       </div>

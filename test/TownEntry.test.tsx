@@ -1,0 +1,42 @@
+import React from 'react';
+import { render, screen, within, cleanup, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, expect, it, vi } from 'vitest';
+import App from '../App';
+import { I18nProvider } from '../i18n';
+import { CHARACTERS, INITIAL_GAME_STATE } from '../constants';
+import { loadAdultGame } from '../services/storageService';
+vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
+vi.mock('../components/town/createTownScene', () => ({ createTownScene: () => { throw new Error('No WebGL in this test'); } }));
+const initial = () => ({ ...structuredClone(INITIAL_GAME_STATE), character: CHARACTERS[0], firstSteps: {}, cash: 10000 });
+afterEach(() => { cleanup(); localStorage.clear(); });
+it('offers the city before the opening mission is completed', () => {
+  render(<I18nProvider><App initialGameState={initial()} /></I18nProvider>);
+  expect(screen.getByRole('button', { name: /Enter 3D city/ })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'A surprise bill. Your first decision.' })).toBeVisible();
+});
+it('lets the player explore and return without resolving or bypassing a pending event', async () => {
+  const user = userEvent.setup();
+  const state = { ...initial(), pendingScenario: { id: 'waiting-repair', title: 'Repair waiting', description: 'Choose how to pay.', category: 'VEHICLE' as const, options: [{ label: 'Pay for repair', outcome: { cashChange: -150, message: 'Repaired.' } }] } };
+  render(<I18nProvider><App initialGameState={state} /></I18nProvider>);
+  await user.click(within(screen.getByRole('dialog', { name: 'Scenario' })).getByRole('button', { name: /Enter 3D city/ }));
+  const city = await screen.findByRole('dialog', { name: 'Freedom Square 3D neighbourhood' });
+  expect(screen.queryByRole('dialog', { name: 'Scenario' })).toBeNull();
+  await user.click(within(city).getByRole('button', { name: 'Walk to Community Bank' }));
+  expect(within(city).getByRole('button', { name: 'Deposit $1,000' })).toBeDisabled();
+  await user.click(within(city).getByRole('button', { name: 'Return to event' }));
+  expect(await screen.findByRole('heading', { name: 'Repair waiting' })).toBeVisible();
+  expect(loadAdultGame()!.cash).toBe(10000);
+  expect(loadAdultGame()!.pendingScenario!.id).toBe('waiting-repair');
+});
+it('opens the property catalogue directly from the city and provides a return route', async () => {
+  const user=userEvent.setup();render(<I18nProvider><App initialGameState={initial()} /></I18nProvider>);
+  await user.click(screen.getByRole('button',{name:/Enter 3D city/}));
+  const city=await screen.findByRole('dialog',{name:'Freedom Square 3D neighbourhood'});
+  await user.click(within(city).getByRole('button',{name:'Walk to Property Office'}));
+  await user.click(within(city).getByRole('button',{name:/Compare properties and mortgages/}));
+  await waitFor(()=>expect(screen.getByRole('heading',{name:'Starter Home'})).toBeVisible());
+  expect(screen.queryByRole('heading',{name:'High-Yield Savings'})).toBeNull();
+  await user.click(screen.getByRole('button',{name:/Return to city/}));
+  expect(await screen.findByRole('dialog',{name:'Freedom Square 3D neighbourhood'})).toBeVisible();
+});

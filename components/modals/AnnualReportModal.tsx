@@ -52,17 +52,18 @@ const AnnualReportModal: React.FC<AnnualReportModalProps> = ({ report, onDismiss
       </div>
 
       <div className="rounded-xl border border-violet-400/30 bg-violet-400/10 p-4 mb-4">
-        <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-300 mb-1">What if you hadn't invested?</p>
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-300 mb-1">What contributed to this year?</p>
         <p className="text-sm text-slate-200">
-          Without your investments, you'd have ended the year at <span className="font-bold text-white">{formatMoney(cashOnlyNetWorth)}</span>.{' '}
+          Removing only recorded investment income and price changes gives <span className="font-bold text-white">{formatMoney(cashOnlyNetWorth)}</span>.{' '}
           {investingEdge > 0 ? (
-            <>Your money earned <span className="font-bold text-emerald-300">{formatMoney(investingEdge)}</span> on its own — that's compounding working for you.</>
+            <>Your money earned <span className="font-bold text-emerald-300">{formatMoney(investingEdge)}</span> through payments and price changes. Only reinvested earnings compound.</>
           ) : investingEdge < 0 ? (
-            <>Your portfolio lost <span className="font-bold text-red-300">{formatMoney(-investingEdge)}</span> this year. Paper losses only become real when you sell — downturns usually recover.</>
+            <>Your portfolio lost <span className="font-bold text-red-300">{formatMoney(-investingEdge)}</span> this year. A lower market value reduces your wealth even before you sell. Recovery is uncertain; review your cash needs and concentration.</>
           ) : (
-            <>All of this year's progress came from work. Assets that pay you are how the climb gets easier.</>
+            <>Recorded investment contributions were flat this year.</>
           )}
         </p>
+        <p className="mt-2 text-xs text-slate-400">This is an accounting comparison, not a replay of another strategy. It excludes alternative uses of the cash, taxes and financing effects.</p>
       </div>
 
       {report.hindsights.length > 0 && (

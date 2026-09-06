@@ -48,6 +48,7 @@ interface ScenarioModalProps {
   onToggleAutoplay: () => void;
   onOpenImage: (src: string, alt: string) => void;
   onChoose: (optionIndex: number) => void;
+  onExploreTown?: () => void;
 }
 
 const ScenarioModal: React.FC<ScenarioModalProps> = ({
@@ -60,7 +61,8 @@ const ScenarioModal: React.FC<ScenarioModalProps> = ({
   autoplaySpeedLabel,
   onToggleAutoplay,
   onOpenImage,
-  onChoose
+  onChoose,
+  onExploreTown
 }) => {
   const { t } = useI18n();
   return (
@@ -146,6 +148,7 @@ const ScenarioModal: React.FC<ScenarioModalProps> = ({
 
       <h2 className="text-2xl font-bold text-white text-center mb-2">{t(scenario.title)}</h2>
       <p className="text-slate-400 text-center mb-6">{t(scenario.description)}</p>
+      {onExploreTown && <button onClick={onExploreTown} className="mb-4 w-full rounded-xl border border-emerald-400/40 bg-emerald-950 px-4 py-3 text-left text-emerald-100"><strong className="block">Enter 3D city</strong><span className="mt-1 block text-xs">Explore now and return to this decision afterwards.</span></button>}
       <div
         ref={optionsRef}
         className={`space-y-3 ${optionsHighlightClass}`}

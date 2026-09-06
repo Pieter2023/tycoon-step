@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { GameState } from '../types';
 import {
   saveAdultGame,
@@ -8,6 +8,7 @@ import {
   deleteSaveSlot,
   renameSaveSlot,
   exportSaveSlot,
+  exportCurrentAdultGame,
   importSavePayload,
   SaveSlotId,
   SaveSummary
@@ -21,6 +22,7 @@ const SAVE_SLOTS: SaveSlotId[] = ['autosave', 'slot1', 'slot2', 'slot3'];
 
 interface SaveLoadDeps {
   isMultiplayer?: boolean;
+  gameStarted: boolean;
   gameState: GameState;
   currentSaveSlot: SaveSlotId;
   setCurrentSaveSlot: Dispatch<SetStateAction<SaveSlotId>>;
@@ -46,6 +48,7 @@ interface SaveLoadDeps {
 export const useSaveLoad = (deps: SaveLoadDeps) => {
   const {
     isMultiplayer,
+    gameStarted,
     gameState,
     currentSaveSlot,
     setCurrentSaveSlot,
@@ -67,6 +70,7 @@ export const useSaveLoad = (deps: SaveLoadDeps) => {
     slot2: '',
     slot3: ''
   });
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [lastAutosaveAt, setLastAutosaveAt] = useState<number | null>(() => {
     if (isMultiplayer) return null;
     return getSaveSummary('adult', 'autosave')?.updatedAt ?? null;
@@ -92,7 +96,13 @@ export const useSaveLoad = (deps: SaveLoadDeps) => {
     // Daily challenge runs are ephemeral sprints — never clobber the player's
     // adult-mode autosave with them.
     if (state.challenge) return;
-    saveAdultGame(state, 'autosave');
+    try {
+      if (!saveAdultGame(state, 'autosave')) throw new Error('Save failed');
+      setSaveError(null);
+    } catch {
+      setSaveError('Progress could not be saved on this device. Download your current progress below before closing, or free up browser storage and retry.');
+      return;
+    }
     const now = Date.now();
     setLastAutosaveAt(now);
     setAutosaveNow(now);
@@ -107,6 +117,28 @@ export const useSaveLoad = (deps: SaveLoadDeps) => {
       }).catch(() => undefined);
     }
   }, [isMultiplayer]);
+
+  // Persist every committed decision before paint, including purchases, sales,
+  // borrowing and training. Monthly-only saves silently lost between-turn work.
+  useLayoutEffect(() => {
+    if (gameStarted && gameState.character && !isMultiplayer && !gameState.challenge) recordAutosave(gameState);
+  }, [gameStarted, gameState, isMultiplayer, recordAutosave]);
+
+  const downloadCurrentProgress = () => {
+    try {
+      const blob = new Blob([JSON.stringify(exportCurrentAdultGame(gameState), null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'tycoon-current-progress.json';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      showNotif('Download failed', 'Keep this tab open and retry saving after freeing browser storage.', 'error');
+    }
+  };
 
   const relativeTimeFormatter = useMemo(() => {
     try {
@@ -163,7 +195,8 @@ export const useSaveLoad = (deps: SaveLoadDeps) => {
     try {
       const trimmedLabelRaw = slotId === 'autosave' ? undefined : label?.trim();
       const trimmedLabel = trimmedLabelRaw && trimmedLabelRaw.length > 0 ? trimmedLabelRaw : undefined;
-      saveAdultGame(gameState, slotId, trimmedLabel);
+      if (!saveAdultGame(gameState, slotId, trimmedLabel)) throw new Error('Save failed');
+      setSaveError(null);
       setCurrentSaveSlot(slotId);
       if (slotId === 'autosave') {
         const now = Date.now();
@@ -293,6 +326,8 @@ export const useSaveLoad = (deps: SaveLoadDeps) => {
   };
 
   return {
+    downloadCurrentProgress,
+    saveError,
     saveSlots: SAVE_SLOTS,
     showSaveManager,
     setShowSaveManager,

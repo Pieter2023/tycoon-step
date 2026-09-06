@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
 	  AlertTriangle,
@@ -42,6 +42,7 @@ import NextBestStep from './NextBestStep';
 type TrendPoint = { label: string; value: number };
 
 type CommandDashboardProps = {
+  firstSteps?: React.ReactNode;
   cashValue: number;
   netWorthValue: number;
   passiveValue: number;
@@ -450,6 +451,7 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
     onShowToast
   } = props;
 
+  const [focusedView, setFocusedView] = useState(!!gameState.firstSteps);
   const latestReport = gameState.lastMonthlyReport;
   const netCashFlow = latestReport ? latestReport.income - latestReport.expenses : null;
   const cashTrend = cashSparkline.length >= 2
@@ -572,8 +574,29 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
     }
   ];
 
+  const viewToggle = <button onClick={() => setFocusedView(!focusedView)} className="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-200">{focusedView ? 'Open full dashboard' : 'Use simple view'}</button>;
+  if (focusedView) return <div className="space-y-4">
+    {props.firstSteps}
+    <div className="grid grid-cols-3 gap-2">
+      {[['Cash', formatMoney(cashValue)], ['Net Worth', formatMoney(netWorthValue)], ['Passive Income', `${formatMoney(passiveValue)}/mo`]].map(([label,value]) => <div key={label} className="rounded-xl bg-slate-900 p-3"><p className="text-xs text-slate-400">{label}</p><p className="mt-1 text-lg font-bold text-white">{value}</p></div>)}
+    </div>
+    <section className="tycoon-panel p-4">
+      <h2 className="text-lg font-bold">Shape this month</h2>
+      <p className="mt-1 text-sm text-slate-300">{monthlyActions.remaining} of {monthlyActions.max} actions left. Balance income, learning and rest.</p>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">{monthlyActions.actions.filter(a => a.id !== 'HUSTLE_SPRINT' || gameState.activeSideHustles.length > 0).map(action =>
+        <button key={action.id} disabled={action.disabled} onClick={() => onUseMonthlyAction(action.id)} className="rounded-lg border border-slate-700 p-3 text-left disabled:opacity-45 hover:border-emerald-400">
+          <strong className="text-sm text-white">{action.title}</strong><span className="block text-xs leading-5 text-slate-300">{action.subtitle}</span><span className="block text-xs text-slate-400">{action.disabledReason || action.details}</span>
+        </button>)}</div>
+    </section>
+    {gameState.firstSteps?.reviewed && <section className="tycoon-panel p-4"><h2 className="mb-3 text-lg font-bold">Your next milestone</h2><NextBestStep gameState={gameState} isProcessing={isProcessing} onClaimQuest={onClaimQuest} onOpenGoals={onOpenGoals} /></section>}
+    <details className="tycoon-panel p-4"><summary className="cursor-pointer text-sm font-semibold">Recent decisions and events</summary><div className="mt-3"><EventFeed events={events} limit={3} /></div></details>
+    <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-slate-400">Freedom target: {formatMoney(targetPassive)}/mo · {ratioLabel} covered</p>{viewToggle}</div>
+  </div>;
+
   return (
     <div className="space-y-5">
+      {props.firstSteps}
+      <div className="flex justify-end">{viewToggle}</div>
       <section className="grid gap-4 xl:grid-cols-[1.5fr_0.9fr]">
         <div className="tycoon-panel p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

@@ -1,3 +1,4 @@
+import { incomeYield, nominalPrice } from '../services/investmentModel';
 import { Dispatch, SetStateAction, useMemo, useState } from 'react';
 import type confetti from 'canvas-confetti';
 import { GameState, AssetType, MarketItem, Asset } from '../types';
@@ -50,7 +51,7 @@ export const useBatchBuy = (deps: BatchBuyDeps) => {
         const item = MARKET_ITEMS.find(i => i.id === id);
         if (!item) return null;
 
-        const unitPrice = Math.round(item.price * inflationMult);
+        const unitPrice = nominalPrice(item, gameState.month, gameState.economy.inflationRate);
         return {
           id,
           item,
@@ -146,7 +147,7 @@ export const useBatchBuy = (deps: BatchBuyDeps) => {
         const item = line.item;
         if (!isBatchBuyEligible(item)) continue;
 
-        const unitPrice = Math.round(item.price * inflationMult);
+        const unitPrice = nominalPrice(item, prev.month, prev.economy.inflationRate);
         const qty = Math.max(1, line.qty);
         const lineTotal = unitPrice * qty;
 
@@ -167,11 +168,11 @@ export const useBatchBuy = (deps: BatchBuyDeps) => {
             quantity: newQty,
             costBasis: newCostBasis,
             value: unitPrice,
-            cashFlow: (item.expectedYield * unitPrice) / 12,
+            cashFlow: (incomeYield(item) * unitPrice) / 12,
             purchasePrice: unitPrice
           } : a);
         } else {
-          const baseMonthly = (item.expectedYield * unitPrice) / 12;
+          const baseMonthly = (incomeYield(item) * unitPrice) / 12;
           const newAsset: Asset = {
             id: 'asset-' + Date.now().toString() + '-' + item.id,
             name: item.name,
@@ -179,9 +180,11 @@ export const useBatchBuy = (deps: BatchBuyDeps) => {
             value: unitPrice,
             costBasis: unitPrice,
             quantity: qty,
-            appreciationRate: item.appreciationRate || (item.expectedYield * 0.4),
+            appreciationRate: item.appreciationRate || (incomeYield(item) * 0.4),
             volatility: item.volatility,
-            baseYield: item.expectedYield,
+            baseYield: incomeYield(item),
+          marketItemId: item.id,
+          incomeModelVersion: 2,
             cashFlow: baseMonthly,
             purchasedMonth: prev.month,
             purchasePrice: unitPrice,

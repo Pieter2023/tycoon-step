@@ -14,7 +14,7 @@ import eventLibrary from './data/events.json';
 export const DIFFICULTY_SETTINGS = {
   EASY: {
     label: '😊 Easy',
-    description: 'Perfect for learning. Higher starting cash, better yields.',
+    description: 'Learning mode: extra starting support, smaller price swings and a 50% purchase-price floor. This protection is fictional.',
     startingCash: 15000,
     salaryMultiplier: 1.2,
     expenseMultiplier: 0.8,
@@ -369,7 +369,7 @@ export const MARKET_ITEMS: MarketItem[] = [
   { id: 'muni', name: 'Municipal Bonds', type: AssetType.BOND, price: 5000, expectedYield: 0.04, volatility: 0.03, risk: 'LOW', description: 'Tax-advantaged local government bonds', industry: 'government' },
   
   // INDEX FUNDS
-  { id: 'sp500', name: 'S&P 500 Index', type: AssetType.INDEX_FUND, price: 500, expectedYield: 0.10, volatility: 0.15, risk: 'MEDIUM', description: 'Top 500 US companies', educationalNote: 'Best long-term investment for most people.', industry: 'diversified' },
+  { id: 'sp500', name: 'S&P 500 Index', type: AssetType.INDEX_FUND, price: 500, expectedYield: 0.10, volatility: 0.15, risk: 'MEDIUM', description: 'Top 500 US companies', educationalNote: 'Diversifies company risk. Prices can fall; growth is not spendable income.', industry: 'diversified' },
   { id: 'total', name: 'Total Stock Market', type: AssetType.INDEX_FUND, price: 400, expectedYield: 0.095, volatility: 0.16, risk: 'MEDIUM', description: 'Entire US stock market', industry: 'diversified' },
   { id: 'intl', name: 'International Index', type: AssetType.INDEX_FUND, price: 300, expectedYield: 0.08, volatility: 0.18, risk: 'MEDIUM', description: 'Non-US developed markets', industry: 'international' },
   { id: 'emerging', name: 'Emerging Markets', type: AssetType.INDEX_FUND, price: 250, expectedYield: 0.11, volatility: 0.25, risk: 'HIGH', description: 'Developing economies', industry: 'international' },
@@ -417,6 +417,7 @@ export const MARKET_ITEMS: MarketItem[] = [
   { id: 'commercial', name: 'Commercial Property', type: AssetType.REAL_ESTATE, price: 1200000, expectedYield: 0.10, volatility: 0.15, risk: 'HIGH', description: 'Retail/office space', industry: 'real_estate', canMortgage: true, mortgageOptions: ['investment_25'] },
   
   // BUSINESSES
+  { id: 'coffee_cart', name: 'Coffee Cart', type: AssetType.BUSINESS, price: 1500, expectedYield: 0.24, volatility: 0.18, risk: 'MEDIUM', tier: 'STARTER', description: 'A small staffed coffee cart. $60 one-time permit before trading.', educationalNote: 'Operating profit includes routine supplies and staffing. Repairs and taxes are extra. Income varies.', industry: 'retail' },
   { id: 'vending', name: 'Vending Route', type: AssetType.BUSINESS, price: 15000, expectedYield: 0.15, volatility: 0.20, risk: 'MEDIUM', description: '10 vending machines', educationalNote: 'Semi-passive income. Requires restocking.', industry: 'retail' },
   { id: 'laundromat', name: 'Laundromat', type: AssetType.BUSINESS, price: 200000, expectedYield: 0.18, volatility: 0.15, risk: 'MEDIUM', description: 'Self-service laundry facility', industry: 'services' },
   { id: 'carwash', name: 'Car Wash', type: AssetType.BUSINESS, price: 350000, expectedYield: 0.16, volatility: 0.18, risk: 'HIGH', description: 'Automated car wash business', industry: 'services' },
@@ -2239,7 +2240,7 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
     description: 'quests.Q_BUFFER_2K.description',
     category: 'FOUNDATION',
     difficulty: 'EASY',
-    metric: 'CASH_AMOUNT',
+    metric: 'RESERVE_BUILT',
     target: 2000,
     reward: { cash: 200, stats: { financialIQ: 2 } },
     hint: 'quests.Q_BUFFER_2K.hint'
@@ -2250,7 +2251,7 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
     description: 'quests.Q_FIRST_INVESTMENT.description',
     category: 'INVESTING',
     difficulty: 'EASY',
-    metric: 'OWN_ASSET_COUNT',
+    metric: 'SAFE_ASSET_COUNT',
     target: 1,
     reward: { cash: 150, stats: { financialIQ: 3 } },
     hint: 'quests.Q_FIRST_INVESTMENT.hint'
@@ -2489,8 +2490,8 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
     category: 'FOUNDATION',
     difficulty: 'EASY',
     characterId: 'maria',
-    metric: 'CASH_RESERVE_MONTHS',
-    target: 1,
+    metric: 'RESERVE_BUILT',
+    target: 1000,
     reward: { stats: { stress: -5, health: 3 } },
     hint: 'quests.Q_MARIA_BUFFER.hint'
   },
@@ -2539,8 +2540,8 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
     category: 'FOUNDATION',
     difficulty: 'EASY',
     characterId: 'sarah',
-    metric: 'CASH_AMOUNT',
-    target: 5000,
+    metric: 'RESERVE_BUILT',
+    target: 2500,
     reward: { cash: 200, stats: { fulfillment: 2 } },
     hint: 'quests.Q_SARAH_TOOLKIT.hint'
   },
@@ -2614,8 +2615,8 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
     category: 'FOUNDATION',
     difficulty: 'EASY',
     characterId: 'linda',
-    metric: 'CASH_RESERVE_MONTHS',
-    target: 2,
+    metric: 'RESERVE_BUILT',
+    target: 2000,
     reward: { stats: { stress: -6, happiness: 2 } },
     hint: 'quests.Q_LINDA_BUFFER_2.hint'
   },
@@ -2639,8 +2640,8 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
     category: 'FOUNDATION',
     difficulty: 'EASY',
     characterId: 'tyler',
-    metric: 'CASH_AMOUNT',
-    target: 6000,
+    metric: 'RESERVE_BUILT',
+    target: 1500,
     reward: { cash: 200, stats: { networking: 4 } },
     hint: 'quests.Q_TYLER_PIPELINE.hint'
   },

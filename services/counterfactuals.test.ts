@@ -92,15 +92,18 @@ describe('buildHindsightText', () => {
     expect(text).toContain('downturn');
   });
 
-  it('credits a good sell', () => {
+  it('does not judge a sale solely by a hypothetical price', () => {
     const text = buildHindsightText(ghost({ saleValue: 10000, heldValue: 8000 }));
-    expect(text).toContain('turned out well');
+    expect(text).toContain('Illustrative scenario');
+    expect(text).toContain('Judge the decision by your needs');
+    expect(text).not.toContain('turned out well');
     expect(text).toContain('-20%');
   });
 
-  it('calls a wash a wash', () => {
+  it('labels small differences as estimates rather than certain outcomes', () => {
     const text = buildHindsightText(ghost({ saleValue: 10000, heldValue: 10100 }));
-    expect(text).toContain('barely mattered');
+    expect(text).toContain('This estimate excludes');
+    expect(text).toContain('recovery is not guaranteed');
   });
 });
 

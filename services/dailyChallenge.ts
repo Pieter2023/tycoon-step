@@ -173,6 +173,7 @@ export const createDailyChallengeState = (date: Date = new Date()): GameState =>
     character: char,
     difficulty: DAILY_CHALLENGE_DIFFICULTY,
     cash: Math.max(0, startingCash),
+    reserveBaseline: Math.max(0, startingCash) - initialLiabilities.reduce((n, l) => n + l.balance, 0),
     career: {
       path: char.careerPath,
       title: career.levels[0].title,

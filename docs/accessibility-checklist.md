@@ -1,5 +1,11 @@
 # Accessibility Checklist
 
+## September 5 city additions
+
+New city/café controls expose labelled destinations, order actions, pause/resume, guest patience and textual receipts. Keyboard movement/E, next-action walking buttons and the joystick coexist. Financial offers provide a fallback if WebGL is unavailable; hands-on serving requires the 3D renderer. Optional effects respect reduced motion.
+
+Desktop and 390×844 browser layout/play checks were completed; café portrait framing was widened. These checks are not a full accessibility certification. Screen-reader usability of the world/task flow, keyboard-only navigation through every shift, colour contrast of all overlays and real-phone touch/multitouch remain explicit follow-ups. Most new town text is English-only. See [QA checklist](qa-checklist.md) and [handover](../HANDOVER.md).
+
 ## Contrast audit
 - Muted text on dark backgrounds (e.g., `text-slate-500`, `text-slate-400`) was too low contrast in dense UI areas.
 - Small label text in summary cards and status chips also relied on muted tones.

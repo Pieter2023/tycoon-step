@@ -128,6 +128,7 @@ export const useCoachHints = (deps: CoachHintsDeps) => {
   useEffect(() => {
     if (!gameStarted || isMultiplayer) return;
     try {
+      if (activeTab !== TABS.SELF_LEARN) return;
       if (localStorage.getItem(SELF_LEARN_HINT_STORAGE_KEY) === '1') return;
       const hintTimer = window.setTimeout(() => {
         triggerCoachHint({

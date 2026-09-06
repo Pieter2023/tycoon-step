@@ -91,7 +91,7 @@ const TurnPreviewModal: React.FC<TurnPreviewModalProps> = ({
           {preview.incomeLines.slice(0, 5).map((l) => (
             <div key={l.label} className="flex items-center justify-between text-sm">
               <span className="text-slate-300">{l.label}</span>
-              <span className="text-emerald-200 font-medium">{formatMoneyFull(l.value)}</span>
+              <span className={`font-medium ${l.value < 0 ? 'text-red-300' : 'text-emerald-200'}`}>{formatMoneyFull(l.value)}</span>
             </div>
           ))}
         </div>
@@ -121,6 +121,7 @@ const TurnPreviewModal: React.FC<TurnPreviewModalProps> = ({
       </div>
     </div>
 
+    {gameState.cafe && <p className="mt-3 text-xs text-slate-300">Café net operating profit includes all café stock, wages, rent and utilities. A loss reduces the income total above. Annual taxes are separate.</p>}
     <div className={`mt-4 p-4 rounded-xl border ${
       preview.warningLevel === 'SHORTFALL' ? 'bg-red-900/20 border-red-700/40' :
       preview.warningLevel === 'LOW_BUFFER' ? 'bg-amber-900/20 border-amber-700/40' :

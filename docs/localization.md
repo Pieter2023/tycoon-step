@@ -1,5 +1,7 @@
 # Localization Guide
 
+> **September 5 scope note:** the existing translation system remains in place, but most new `components/town/` labels, guest text and service receipts are currently English literals. Do not describe the city/café as fully localized. Extract these strings, check plural/currency formatting and test layout expansion before claiming another language is supported for the new activity. See [HANDOVER.md](../HANDOVER.md).
+
 ## Overview
 This project uses a lightweight i18n layer in `i18n/index.ts` with JSON translation files in `i18n/translations/`.
 

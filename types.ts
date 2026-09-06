@@ -70,6 +70,8 @@ export type QuestCategory =
   | 'CREDIT';
 
 export type QuestMetric =
+  | 'RESERVE_BUILT'
+  | 'SAFE_ASSET_COUNT'
   | 'CASH_AMOUNT'
   | 'OWN_ASSET_COUNT'
   | 'TOTAL_INVESTED'
@@ -162,6 +164,8 @@ export interface Character {
 }
 
 export interface Asset {
+  marketItemId?: string;
+  incomeModelVersion?: 2;
   id: string;
   name: string;
   type: AssetType;
@@ -521,6 +525,11 @@ export interface PrestigeData {
 }
 
 export interface GameState {
+  cafe?: import('./services/townCafe').CafeState;
+  townProgress?: { reserveConfirmed?: boolean; permitMonth?: number; lastShift?: import('./services/townActivities').CartReceipt; firstShiftMonth?: number; journeyCompletedMonth?: number };
+  townView?: { x: number; z: number; yaw: number; pitch: number; distance: number; mode?: 'follow' | 'overview' };
+  reserveBaseline?: number;
+  firstSteps?: { repairChoice?: 'cash' | 'loan'; repairMonth?: number; reviewed?: boolean };
   month: number;
   year: number;
   cash: number;
@@ -721,6 +730,15 @@ export interface AutoInvestSettings {
 }
 
 export interface MonthlyReport {
+  cafe?: import('./services/townCafe').CafeReceipt;
+  month?: number;
+  assetPayments?: { name:string; amount:number }[];
+  salaryIncome?: number;
+  investmentIncome?: number;
+  marketChange?: number;
+  businessMaintenance?: number;
+  cashBefore?: number;
+  cashAfter?: number;
   income: number;
   expenses: number;
   netWorthChange: number;

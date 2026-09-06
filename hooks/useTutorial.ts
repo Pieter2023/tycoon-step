@@ -28,7 +28,7 @@ export const useTutorial = (deps: TutorialDeps) => {
   const [autoTutorialPopups, setAutoTutorialPopups] = useState(() => {
     try {
       const stored = localStorage.getItem(AUTO_TUTORIAL_POPUPS_STORAGE_KEY);
-      return stored === null ? true : stored === '1';
+      return stored === null ? false : stored === '1';
     } catch (e) {
       console.warn('Failed to read tutorial popup preference:', e);
       return true;
@@ -46,7 +46,7 @@ export const useTutorial = (deps: TutorialDeps) => {
   // Tutorial state - track which tips have been shown
   const [showTutorial, setShowTutorial] = useState(() => {
     try {
-      return localStorage.getItem(ONBOARDING_SEEN_STORAGE_KEY) !== '1';
+      return localStorage.getItem(AUTO_TUTORIAL_POPUPS_STORAGE_KEY) === '1' && localStorage.getItem(ONBOARDING_SEEN_STORAGE_KEY) !== '1';
     } catch (e) {
       console.warn('Failed to read onboarding preference:', e);
       return true;
@@ -66,7 +66,7 @@ export const useTutorial = (deps: TutorialDeps) => {
   const shouldShowOnboarding = useCallback(() => {
     if (!autoTutorialPopups) return false;
     try {
-      return localStorage.getItem(ONBOARDING_SEEN_STORAGE_KEY) !== '1';
+      return localStorage.getItem(AUTO_TUTORIAL_POPUPS_STORAGE_KEY) === '1' && localStorage.getItem(ONBOARDING_SEEN_STORAGE_KEY) !== '1';
     } catch (e) {
       console.warn('Failed to read onboarding preference:', e);
       return false;
@@ -88,19 +88,6 @@ export const useTutorial = (deps: TutorialDeps) => {
       console.warn('Failed to save tips preference:', e);
     }
   }, [hideTipsEverywhere]);
-
-  useEffect(() => {
-    if (!gameStarted || isMultiplayer) return;
-    if (import.meta.env.MODE === 'test') return;
-    if (isResumingFromSave || !autoTutorialPopups || hideTipsEverywhere) return;
-    try {
-      const seen = localStorage.getItem(QUICK_TUTORIAL_STORAGE_KEY) === '1';
-      if (!seen) setShowQuickTutorial(true);
-    } catch (e) {
-      console.warn('Failed to read quick tutorial preference:', e);
-      setShowQuickTutorial(true);
-    }
-  }, [autoTutorialPopups, gameStarted, hideTipsEverywhere, isMultiplayer, isResumingFromSave]);
 
   // Turning auto-popups off dismisses an in-progress tutorial for good.
   useEffect(() => {

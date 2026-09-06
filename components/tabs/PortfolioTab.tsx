@@ -1,3 +1,4 @@
+import { cafeValue, quoteCafe } from '../../services/townCafe';
 import React, { useMemo } from 'react';
 import { Wallet } from 'lucide-react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
@@ -5,6 +6,8 @@ import { AssetType, TABS, TabId } from '../../types';
 import { Card } from '../ui';
 
 type PortfolioTabProps = {
+  onEnterTown?: ()=>void;
+  handleTownPermit?: ()=>void;
   gameState: any;
   cashFlow: any;
   formatMoney: (value: number) => string;
@@ -48,7 +51,7 @@ const PortfolioTab: React.FC<PortfolioTabProps> = (props) => {
       indexFunds: 0,
       bonds: 0,
       realEstate: 0,
-      business: 0,
+      business: cafeValue(gameState.cafe),
       crypto: 0,
       savings: 0
     };
@@ -92,7 +95,7 @@ const PortfolioTab: React.FC<PortfolioTabProps> = (props) => {
       { name: 'Crypto', value: totals.crypto, color: '#a855f7' },
       { name: 'Savings', value: totals.savings, color: '#22c55e' }
     ].filter((entry) => entry.value > 0);
-  }, [gameState.assets, gameState.cash]);
+  }, [gameState.assets, gameState.cash, gameState.cafe]);
 
   const totalAssetValue = useMemo(() => {
     return assetAllocation.reduce((sum, entry) => sum + entry.value, 0);
@@ -104,7 +107,7 @@ const PortfolioTab: React.FC<PortfolioTabProps> = (props) => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card className="p-4">
           <p className="text-slate-400 text-xs">Total Assets</p>
-          <p className="text-xl font-bold text-white">{formatMoney(gameState.assets.reduce((s, a) => s + a.value * a.quantity, 0))}</p>
+          <p className="text-xl font-bold text-white">{formatMoney(gameState.assets.reduce((s, a) => s + a.value * a.quantity, 0) + cafeValue(gameState.cafe))}</p>
         </Card>
         <Card className="p-4">
           <p className="text-slate-400 text-xs">Passive Income</p>
@@ -116,10 +119,16 @@ const PortfolioTab: React.FC<PortfolioTabProps> = (props) => {
         </Card>
         <Card className="p-4">
           <p className="text-slate-400 text-xs">Positions</p>
-          <p className="text-xl font-bold text-white">{gameState.assets.length}</p>
+          <p className="text-xl font-bold text-white">{gameState.assets.length + (gameState.cafe ? 1 : 0)}</p>
         </Card>
       </div>
 
+      {gameState.cafe && <Card className="p-5 border-emerald-700">
+        <h3 className="font-bold text-lg text-emerald-200">Little Square Café</h3>
+        <p className="text-sm text-slate-300 mt-2">Deposit and equipment resale: {formatMoney(cafeValue(gameState.cafe))}. Next month’s net operating profit: {formatMoney(quoteCafe(gameState.cafe,gameState.month+1).profit)}.</p>
+        <p className="text-xs text-slate-400 mt-2">Included in your business assets and income. Manage prices, staff, furnishings or end the lease from the café counter.</p>
+        {props.onEnterTown&&<button className="mt-3 px-4 py-3 rounded-xl bg-emerald-800 text-white" onClick={props.onEnterTown}>Return to city to manage café →</button>}
+      </Card>}
       {assetAllocation.length > 0 && (
         <Card className="p-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -131,7 +140,7 @@ const PortfolioTab: React.FC<PortfolioTabProps> = (props) => {
               </p>
             </div>
             <div className="h-40 w-full md:w-56">
-              <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
+              <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1} initialDimension={{width:300,height:220}}>
                 <PieChart>
                   <Pie
                     data={assetAllocation}
@@ -189,13 +198,14 @@ const PortfolioTab: React.FC<PortfolioTabProps> = (props) => {
             const profitLoss = totalValue - totalCost;
             const profitPercent = totalCost > 0 ? ((totalValue / totalCost) - 1) * 100 : 0;
             const isBusiness = asset.type === AssetType.BUSINESS;
-            const displayedIncome = isBusiness && typeof asset.currentMonthIncome === 'number'
+            const unlicensedCart=asset.marketItemId==='coffee_cart'&&gameState.townProgress?.permitMonth===undefined;
+            const displayedIncome = unlicensedCart ? 0 : isBusiness && typeof asset.currentMonthIncome === 'number'
               ? asset.currentMonthIncome
               : asset.cashFlow * asset.quantity;
             const lastBusinessIncome = isBusiness
               ? (typeof asset.lastMonthIncome === 'number' ? asset.lastMonthIncome : Math.round(displayedIncome))
               : null;
-            const businessRange = isBusiness ? getBusinessIncomeRange(asset) : null;
+            const businessRange = unlicensedCart ? {min:0,max:0} : isBusiness ? getBusinessIncomeRange(asset) : null;
             const maintenanceStatus = isBusiness ? asset.maintenanceStatus : undefined;
             const opsUpgradeCost = isBusiness ? getOpsUpgradeCost(asset) : null;
             const mortgage = asset.mortgageId
@@ -230,6 +240,7 @@ const PortfolioTab: React.FC<PortfolioTabProps> = (props) => {
                       )}
                       {isBusiness && (
                         <div className="mt-2 space-y-1 text-xs text-slate-400">
+                          {unlicensedCart&&<><p className="text-amber-200">A one-time trading permit is needed before earning income.</p><button disabled={!props.handleTownPermit||gameState.cash<60||!!gameState.pendingScenario} className="rounded-lg bg-emerald-800 px-3 py-2 disabled:opacity-40" onClick={props.handleTownPermit}>Pay trading permit $60</button></>}
                           <p>Expected range: {formatMoney(businessRange?.min || 0)}–{formatMoney(businessRange?.max || 0)}/mo</p>
                           <p>Last month: {formatMoney(lastBusinessIncome || 0)}/mo</p>
                           {maintenanceStatus && (
@@ -255,7 +266,7 @@ const PortfolioTab: React.FC<PortfolioTabProps> = (props) => {
                             : ''
                           }`}
                       >
-                        Sell
+                        {asset.type===AssetType.SAVINGS?'Withdraw':'Sell'}
                       </button>
                       {isBusiness && (
                         <button

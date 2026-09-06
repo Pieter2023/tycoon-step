@@ -1,5 +1,13 @@
 # Tycoon: Financial Freedom Simulator
 
+## Current handover — September 5, 2026
+
+Read [HANDOVER.md](HANDOVER.md) before acting. The new financial foundations, Freedom Square, bank/cart, café ownership and hands-on café service are **local only, uncommitted and undeployed**. Latest validation: 243 tests / 39 files and production build passed (evening pacing pass; receipt in docs/completed-improvements.md). The user preview is `127.0.0.1:5187`; isolate QA on 5188. Preserve the existing save and all tracked/untracked work. The latest user request updates handover/docs; it does not authorize publication.
+
+Current feature/source map and run instructions are in the handover. Detailed evidence is in [docs/completed-improvements.md](docs/completed-improvements.md); remaining priorities are in [docs/roadmap.md](docs/roadmap.md). Physical-phone testing remains open. No new paid service is needed for the implemented prototype.
+
+The older dated service, business and deployment sections below are historical reference. They are not proof of current hosting/account state and do not supersede this handover.
+
 Financial life-sim game (React 18 + TypeScript + Vite + Tailwind 4). Player advances
 month-by-month building passive income; wins when passive income ≥ 110% of expenses.
 Target market: **North America** (USD, FHA loans, US credit scores — intentional).
@@ -8,8 +16,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (22 files / 159 tests, all green as of
-  2026-06-12; ALL integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (39 files / 243 tests passed at the September 5 pacing pass; integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)
@@ -115,7 +122,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
   copy (NGPF/Reddit posts + email variants) in `docs/outreach-drafts.md`
 - `docs/architecture-map.md`, `docs/implementation-plan.md`,
   `docs/ui-refactor-map.md` — HISTORICAL (pre-refactor snapshots; each
-  carries a banner). This file + `docs/roadmap.md` are the current truth.
+  carries a banner). `HANDOVER.md` is the current starting point; `docs/roadmap.md` separates current priorities from history.
 
 ## Daily Challenge (built 2026-06-11, live)
 
@@ -161,15 +168,19 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 - **Dev fallback**: plain `vite dev` has no functions, so DEV builds accept the
   code `Bokke` locally (see `validateAccessCode`).
 
-## Deployment
+## Deployment reference — verify before use
 
-- Netlify site **tycoonjan22026** auto-deploys `main` on push
-  (github.com/Pieter2023/tycoon-step). Working branch
-  `codex/game-overhaul-20260503-223748`; deploy with:
-  `git push origin codex/game-overhaul-20260503-223748 codex/game-overhaul-20260503-223748:main`
-- Env vars set: `ACCESS_CODES`, `GUMROAD_PRODUCT_ID`, `OPENAI_API_KEY` (secret).
-- **Gotcha**: warm Netlify function instances cache env values — after changing
-  an env var, trigger a redeploy or the function keeps the old value.
+The historical host is Netlify site `tycoonjan22026`, associated with
+`github.com/Pieter2023/tycoon-step`. The local branch remains
+`codex/game-overhaul-20260503-223748`, but the new game work is uncommitted.
+No remote branch comparison or public-site verification was performed for
+this handover. Read HANDOVER.md for the release boundary and inspect the
+actual hosting project before publishing. The old direct branch-to-main
+push recipe is intentionally removed so it cannot be mistaken for the next step.
+
+Function configuration uses server environment variables. Do not copy their
+values into documentation. Historical gotcha: changing an environment value
+may require redeployment to replace warm function instances.
 
 ## Gotchas
 
@@ -183,7 +194,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
   like a "bounce to menu" bug but isn't; production is unaffected.
 - Old `main` git history tracks node_modules/dist/.env.local — **never run
   `git checkout main` / `reset --hard` across that boundary locally**; it will
-  try to delete those from disk. Update remote main via push (cmd above).
+  try to delete those from disk. Use a separately reviewed release workflow; see HANDOVER.md.
 
 ## Conversion / GTM funnel work (2026-06-28)
 
@@ -247,10 +258,9 @@ Next (Pieter, human GTM — see the GTM plan + `docs/outreach-drafts.md`):
 3. Post to **FinLit Fanatics** (NOT "NGPF Fans" — the drafts have the name
    wrong), email teachers/Jump$tart affiliates, attach the lesson plan.
 
-## Current state & next steps (2026-06-13)
+## Archived state & next steps (2026-06-13)
 
-**Everything in the roadmap queue is shipped, verified live, and deployed.**
-Working tree clean; remote main == working branch. The feature surface:
+**Historical June snapshot only:** that earlier roadmap queue was reported shipped and deployed, with a clean tree and matching branches. This does not describe the September working tree. The feature surface:
 daily challenge (+ streaks, OG tags, leaderboard with account linking),
 run summary card, learning counterfactuals (sell hindsights +
 year-in-review), cloud saves (sync code + accounts), email login with
@@ -272,7 +282,7 @@ the orphaned `services/tabState.ts` + its test (suite 23→22 files,
 161→159 tests) and wrote the B2B outreach copy
 (`docs/outreach-drafts.md`). App.tsx is now ~4.35k lines.
 
-**No queued build work.** Open threads, in priority order:
+**Historical June queue, superseded by HANDOVER.md.** Its open threads were:
 1. **B2B outreach (Pieter, not code)** — ready-to-paste copy is in
    `docs/outreach-drafts.md`; strategy/fulfillment in
    `docs/b2b-classroom-packs.md`. Next actions: optionally create the

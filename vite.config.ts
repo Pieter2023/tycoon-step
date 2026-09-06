@@ -5,6 +5,11 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   appType: 'spa',
+  // Pre-bundle Three.js with its example loaders so opening the 3D city in `vite dev`
+  // neither triggers a mid-session full reload nor loads two copies of Three.
+  optimizeDeps: {
+    include: ['three', 'three/examples/jsm/loaders/GLTFLoader.js', 'three/examples/jsm/loaders/DRACOLoader.js', 'three/examples/jsm/environments/RoomEnvironment.js', 'three/examples/jsm/geometries/RoundedBoxGeometry.js']
+  },
   server: {
     port: 5173,
     host: '127.0.0.1',

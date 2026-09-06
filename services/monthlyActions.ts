@@ -76,7 +76,7 @@ export const getMonthlyActionsSummary = (state: GameState, isProcessing: boolean
     {
       id: 'TRAINING',
       title: 'Skill Training',
-      subtitle: '+12 Financial IQ (stronger investing)',
+      subtitle: '+12 Financial IQ (learning progress)',
       details: 'Cost: $300 • -8 energy • +4 stress',
       effects: ['-$300 cash', '+12 Financial IQ', '-8 energy', '+4 stress'],
       category: 'growth',

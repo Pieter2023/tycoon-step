@@ -1,3 +1,4 @@
+import { incomeYield, incomeLabel, nominalPrice } from '../../services/investmentModel';
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Badge, Button } from '../ui';
@@ -6,6 +7,7 @@ import { AUTO_INVEST_PRESETS, MARKET_ITEMS } from '../../constants';
 import { QuizQuestion } from '../../data/learning';
 
 type InvestTabProps = {
+  startWithFullCatalogue?: boolean;
   t?: any;
   formatMoney: (value: number) => string;
   formatMoneyFull: (value: number) => string;
@@ -96,7 +98,12 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
   const [compareMode, setCompareMode] = useState(false);
   const [compareSelection, setCompareSelection] = useState<string[]>([]);
   const [autoAddId, setAutoAddId] = useState<string>('');
-  const [autoInvestOpen, setAutoInvestOpen] = useState(true);
+  const [autoInvestOpen, setAutoInvestOpen] = useState(false);
+  const [showAllInvestments, setShowAllInvestments] = useState(!!props.startWithFullCatalogue || !gameState.firstSteps || gameState.month > 3);
+  useEffect(()=>{if(props.startWithFullCatalogue)setShowAllInvestments(true);},[props.startWithFullCatalogue]);
+  const starterIds = ['hysa', 'tbill', 'sp500'];
+  const guided = !showAllInvestments && investmentFilter === 'ALL' && investmentTierFilter === 'ALL' && !investmentSearch;
+  const visibleInvestments = guided ? filteredInvestments.filter(item => starterIds.includes(item.id)) : filteredInvestments;
 
   const selectedInvestments = useMemo(() => {
     return compareSelection
@@ -131,19 +138,24 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
   }, [autoAddId, autoInvestOptions]);
 
   const getLockupPeriod = (item: MarketItem) => {
-    if (item.type === AssetType.SAVINGS && /locked/i.test(item.description)) return '12 mo';
-    if (item.type === AssetType.BOND) return '6-12 mo';
+    if (item.type === AssetType.SAVINGS && /locked/i.test(item.description)) return '12-mo term (simplified)';
+    if (item.type === AssetType.BOND) return 'Varies by product';
     if (item.type === AssetType.REAL_ESTATE || item.type === AssetType.BUSINESS) return 'Long-term';
     return 'Liquid';
   };
 
   const getPassiveIncome = (item: MarketItem, price: number) => {
-    const monthly = Math.round((price * item.expectedYield) / 12);
+    const monthly = Math.round((price * incomeYield(item)) / 12);
     return `${formatMoneyFull(monthly)}/mo`;
   };
 
   return (
     <div>
+      <div className="mb-4 rounded-xl border border-slate-700 p-4 text-sm leading-6 text-slate-300">
+        <strong className="text-white">Income and price growth are different.</strong> Interest, dividends, rent and profit can provide cash. A higher market price increases wealth, but you must sell to spend it. All rates below are fictional teaching assumptions, not live offers or guaranteed returns.
+        <p className="mt-2 text-xs text-amber-200">{gameState.difficulty === 'EASY' ? 'Easy mode: investment prices cannot fall below 50% of purchase cost. This is a learning aid, not real protection.' : 'Prices can fall substantially, including below half the purchase price. Speculative investments can lose all their value.'}</p>
+      </div>
+      {guided && <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-slate-300">Start by comparing savings, interest and dividends.</p><button onClick={() => setShowAllInvestments(true)} className="rounded-lg border border-slate-600 px-3 py-2 text-sm">Explore all 45 investments</button></div>}
       {showQuiz && quizQuestions.length > 0 && (
         <div className="mb-4 glass-panel p-4">
           <div className="flex items-start justify-between gap-3 mb-3">
@@ -256,7 +268,7 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <p className="text-slate-400 text-sm">
-          Available: {formatMoney(gameState.cash)} • {filteredInvestments.length} investments
+          Available: {formatMoney(gameState.cash)} • {visibleInvestments.length} investments
         </p>
 
         <div className="flex items-center gap-2">
@@ -426,7 +438,7 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                   const item = autoInvestOptions.find((entry) => entry.id === alloc.itemId);
                   if (!item) return null;
                   const inflationMult = Math.pow(1 + gameState.economy.inflationRate, gameState.month / 12);
-                  const price = Math.round(item.price * inflationMult);
+                  const price = nominalPrice(item, gameState.month, gameState.economy.inflationRate);
                   const totalWithout = autoTotalPercent - alloc.percent;
                   const maxAllowed = Math.max(0, 100 - totalWithout);
 
@@ -516,7 +528,7 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                         <tr className="border-t border-slate-800">
                           <td className="py-2 pr-3 text-slate-400">Cost</td>
                           {selectedInvestments.map((item) => {
-                            const price = Math.round(item.price * inflationMult);
+                            const price = nominalPrice(item, gameState.month, gameState.economy.inflationRate);
                             return (
                               <td key={`cost-${item.id}`} className="py-2 pr-3 text-white">
                                 {formatMoney(price)}
@@ -525,10 +537,10 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                           })}
                         </tr>
                         <tr className="border-t border-slate-800">
-                          <td className="py-2 pr-3 text-slate-400">Expected return</td>
+                          <td className="py-2 pr-3 text-slate-400">Cash income rate</td>
                           {selectedInvestments.map((item) => (
                             <td key={`return-${item.id}`} className="py-2 pr-3 text-emerald-300">
-                              {formatPercent(item.expectedYield)}/yr
+                              {formatPercent(incomeYield(item))}/yr
                             </td>
                           ))}
                         </tr>
@@ -551,7 +563,7 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                         <tr className="border-t border-slate-800">
                           <td className="py-2 pr-3 text-slate-400">Dividends / passive</td>
                           {selectedInvestments.map((item) => {
-                            const price = Math.round(item.price * inflationMult);
+                            const price = nominalPrice(item, gameState.month, gameState.economy.inflationRate);
                             return (
                               <td key={`income-${item.id}`} className="py-2 pr-3">
                                 {getPassiveIncome(item, price)}
@@ -571,9 +583,9 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
 
       {/* Investment Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredInvestments.map((item, idx) => {
+        {visibleInvestments.map((item, idx) => {
           const inflationMult = Math.pow(1 + gameState.economy.inflationRate, gameState.month / 12);
-          const price = Math.round(item.price * inflationMult);
+          const price = nominalPrice(item, gameState.month, gameState.economy.inflationRate);
           const canAffordCash = gameState.cash >= price;
           const canMortgage = item.canMortgage && gameState.cash >= price * 0.035;
           const tier = getItemTier(item);
@@ -647,8 +659,9 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                   <p className="text-white font-bold">{formatMoney(price)}</p>
                 </div>
                 <div className="bg-slate-900/50 rounded-lg p-2">
-                  <p className="text-slate-500">Yield (APY)</p>
-                  <p className="text-emerald-400 font-bold">{formatPercent(item.expectedYield)}/yr</p>
+                  <p className="text-slate-400">{incomeLabel(item.type, item.id)} / year</p>
+                  <p className="text-emerald-400 font-bold">{formatPercent(incomeYield(item))}/yr</p>
+                  <p className="mt-1 text-xs text-slate-300">{getPassiveIncome(item, price)} before costs and tax</p>
                 </div>
               </div>
               <div className="flex items-center justify-between text-[11px] text-slate-400 mb-3">
