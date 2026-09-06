@@ -1,5 +1,5 @@
 import type { GameState } from '../types';
-import { jobBoard } from './townCareer';
+import { jobBoard, reviewPromotionBonus } from './townCareer';
 import { tl, isSpanish } from '../i18n/town';
 import { CAREER_PATHS, EDUCATION_OPTIONS, DIFFICULTY_SETTINGS } from '../constants';
 import { calculateEffectiveMonthlySalary, calculateAnnualTaxes, calculateMonthlyCashFlow, calculateMonthlyCashFlowEstimate, getEducationSalaryMultiplier, getNegotiationRaiseBonus } from './gameLogic';
@@ -43,7 +43,7 @@ export function promotionOutlook(state: GameState): Outlook {
   const monthsShort = Math.max(0, nextLevel.experienceRequired - career.experience);
   const educationNeeded = nextLevel.educationRequired && nextLevel.educationCategory ? `${words(nextLevel.educationRequired)} in ${words(nextLevel.educationCategory)}` : undefined;
   const educationMet = !educationNeeded || state.education.degrees.some(id => { const e = EDUCATION_OPTIONS.find(o => o.id === id); return !!e && LEVEL_ORDER.indexOf(e.level) >= LEVEL_ORDER.indexOf(nextLevel.educationRequired!) && e.category === nextLevel.educationCategory; });
-  let chance = .15 + (state.stats.happiness - 50) / 500 + state.stats.networking / 500 - (state.stats.stress - 30) / 500 + getNegotiationRaiseBonus(state);
+  let chance = .15 + (state.stats.happiness - 50) / 500 + state.stats.networking / 500 - (state.stats.stress - 30) / 500 + getNegotiationRaiseBonus(state) + reviewPromotionBonus(state);
   if (recession) chance *= .5; chance = Math.max(0, Math.min(1, chance));
   const eligible = monthsShort === 0 && educationMet && (state.jobLossMonthsRemaining ?? 0) === 0;
   const blockers: string[] = [], boosters: string[] = [];
@@ -54,6 +54,7 @@ export function promotionOutlook(state: GameState): Outlook {
   if (state.stats.stress > 60) blockers.push(tl('High stress is counting against you','El estrés alto juega en tu contra'));
   if (state.stats.networking >= 40) boosters.push(tl('Your network is working for you','Tu red de contactos trabaja para ti')); else boosters.push(tl('Networking would raise your odds','Hacer contactos subiría tus probabilidades'));
   if (state.stats.happiness >= 65) boosters.push(tl('Managers notice people who enjoy the work','Los jefes notan a quien disfruta el trabajo'));
+  const reviewBonus = reviewPromotionBonus(state); if (reviewBonus > 0) boosters.push(`${tl('Your last review','Tu última evaluación')} (${state.townProgress?.lastReview?.grade}) ${tl('is working for you','juega a tu favor')}`); else if (reviewBonus < 0) blockers.push(`${tl('Your last review','Tu última evaluación')} (${state.townProgress?.lastReview?.grade}) ${tl('is counting against you','juega en tu contra')}`);
   const multiplier = DIFFICULTY_SETTINGS[state.difficulty as keyof typeof DIFFICULTY_SETTINGS]?.salaryMultiplier ?? 1;
   return { title: career.title, level: career.level, top: false, next: { title: nextLevel.title, salary: Math.max(career.salary, Math.round(nextLevel.baseSalary * multiplier)), experienceRequired: nextLevel.experienceRequired }, experience: career.experience, monthsShort, educationNeeded, educationMet, eligible, chance: eligible ? chance : 0, expectedMonths: eligible && chance > 0 ? Math.max(1, Math.round(1 / chance)) : null, recession, blockers, boosters };
 }

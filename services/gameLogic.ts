@@ -1,4 +1,5 @@
 import { finishCafeService } from './cafeService';
+import { applyPerformanceReview, applyLayoff } from './townCareer';
 import { cafeValue, driftReputation, quoteCafe, settleCafeMonth } from './townCafe';
 import { closeChallengeMonth, snapshotFor } from './townChallenges';
 import { incomeYield, nominalPrice } from './investmentModel';
@@ -3023,6 +3024,13 @@ export const applyScenarioOutcome = (state: GameState, outcome: any): GameState 
 // ============================================
 // APPLY MONTHLY ACTION (Adult mode)
 // ============================================
+// Counts desk actions for the workplace's annual performance review.
+const recordWorkAction = (s: GameState, key: 'overtime' | 'network' | 'training') => {
+  const stats = s.yearStats ?? { startNetWorth: calculateNetWorth(s), marketGains: 0, passiveIncome: 0, hindsights: [] };
+  const work = { overtime: 0, network: 0, training: 0, ...(stats.workActions ?? {}) }; work[key] += 1;
+  s.yearStats = { ...stats, workActions: work };
+};
+
 export const applyMonthlyAction = (
   state: GameState,
   actionId: MonthlyActionId
@@ -3089,7 +3097,7 @@ export const applyMonthlyAction = (
       const bonus = Math.max(0, Math.round(salary * 0.10));
       newState.tempSalaryBonus = (newState.tempSalaryBonus || 0) + bonus;
       applyStats({ energy: -15, stress: +12, happiness: -3, health: -1 });
-      title = '🕒 Work Overtime';
+      title = '🕒 Work Overtime'; recordWorkAction(newState, 'overtime');
       description = `You picked up extra hours. Next month salary bonus: +$${bonus.toLocaleString()}.`;
       break;
     }
@@ -3107,7 +3115,7 @@ export const applyMonthlyAction = (
         description = 'You met new people and strengthened your professional network.';
       }
 
-      title = '🤝 Networking Event';
+      title = '🤝 Networking Event'; recordWorkAction(newState, 'network');
       break;
     }
     case 'TRAINING': {
@@ -3122,7 +3130,7 @@ export const applyMonthlyAction = (
         };
       }
 
-      title = '📚 Skill Training';
+      title = '📚 Skill Training'; recordWorkAction(newState, 'training');
       description = 'You invested in learning. Financial IQ increased, improving decision quality over time.';
       break;
     }
@@ -3304,6 +3312,8 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
     // Year-in-review: close out the year's stats. The net worth here is as of
     // the end of the year just finished (this turn's changes haven't run yet).
     const endNetWorth = calculateNetWorth(state);
+    // Performance review for the year that closed (city workplace); pays any bonus before the report is built.
+    if (!newState.challenge) Object.assign(newState, applyPerformanceReview(newState));
     if (newState.yearStats && !newState.challenge) {
       newState.annualReport = {
         year: Math.floor((newState.month - 2) / 12) + 1,
@@ -3319,6 +3329,7 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
           cafeProfit: newState.cafe ? Math.round(newState.yearStats.cafeProfit ?? 0) : undefined,
           cafeReputation: newState.cafe ? Math.round(newState.cafe.reputation ?? 50) : undefined,
           ownerShifts: newState.yearStats.ownerShifts ?? 0,
+          review: newState.townProgress?.lastReview?.month === newState.month ? { grade: newState.townProgress.lastReview.grade, score: newState.townProgress.lastReview.score, bonus: newState.townProgress.lastReview.bonus } : undefined,
         }
       };
     }
@@ -3644,6 +3655,10 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
     ...(state.netWorthHistory || []),
     { month: newState.month, value: newNetWorth }
   ].slice(newState.challenge ? -(newState.challenge.targetMonths + 1) : -60);
+
+  // 16.4 Layoff hazard (city workplace): AI exposure, recession and the last review set the odds; one seeded roll per turn.
+  if (!newState.challenge) Object.assign(newState, applyLayoff(newState, rand()));
+  if (newState.yearStats && (state.jobLossMonthsRemaining ?? 0) > 0) newState.yearStats = { ...newState.yearStats, monthsUnemployed: (newState.yearStats.monthsUnemployed ?? 0) + 1 };
 
   // 16.5 Job loss shock countdown
   // Decrement AFTER cashflow is calculated (so you lose income for the full N months).

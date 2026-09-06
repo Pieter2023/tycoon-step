@@ -528,7 +528,7 @@ export interface PrestigeData {
 
 export interface GameState {
   cafe?: import('./services/townCafe').CafeState;
-  townProgress?: { reserveConfirmed?: boolean; permitMonth?: number; lastShift?: import('./services/townActivities').CartReceipt; firstShiftMonth?: number; journeyCompletedMonth?: number; exchangeVisitedMonth?: number; investorCompletedMonth?: number; lastRaiseAskMonth?: number; careerChangedMonth?: number; workVisitedMonth?: number; homeVisitedMonth?: number; rosaVisitedMonth?: number; tourCompletedMonth?: number; challengeSnapshot?: import('./services/townChallenges').ChallengeSnapshot; challengeLog?: import('./services/townChallenges').ChallengeResult[] };
+  townProgress?: { reserveConfirmed?: boolean; permitMonth?: number; lastShift?: import('./services/townActivities').CartReceipt; firstShiftMonth?: number; journeyCompletedMonth?: number; exchangeVisitedMonth?: number; investorCompletedMonth?: number; lastRaiseAskMonth?: number; careerChangedMonth?: number; lastReview?: import('./services/townCareer').PerformanceReview; laidOffMonth?: number; lastSearchMonth?: number; workVisitedMonth?: number; homeVisitedMonth?: number; rosaVisitedMonth?: number; tourCompletedMonth?: number; challengeSnapshot?: import('./services/townChallenges').ChallengeSnapshot; challengeLog?: import('./services/townChallenges').ChallengeResult[] };
   /** Teaching market index (starts at 100), one point per month, kept for three years. Drawn on the Exchange ticker. */
   marketIndex?: { month: number; value: number }[];
   townView?: { x: number; z: number; yaw: number; pitch: number; distance: number; mode?: 'follow' | 'overview' };
@@ -668,6 +668,9 @@ export interface YearStats {
   /** Café operating profit and paid owner shifts this year (city section of the annual report). */
   cafeProfit?: number;
   ownerShifts?: number;
+  /** Desk actions taken this year and months spent between jobs (performance review inputs). */
+  workActions?: { overtime: number; network: number; training: number };
+  monthsUnemployed?: number;
 }
 
 export interface AnnualReport {
@@ -679,7 +682,7 @@ export interface AnnualReport {
   passiveIncome: number;
   hindsights: { month: number; text: string }[];
   /** What the city added this year: badges earned, notice-board record, café trading. */
-  city?: { badges: string[]; challengesCompleted: number; cleanSweeps: number; cafeProfit?: number; cafeReputation?: number; ownerShifts: number };
+  city?: { badges: string[]; challengesCompleted: number; cleanSweeps: number; cafeProfit?: number; cafeReputation?: number; ownerShifts: number; review?: { grade: string; score: number; bonus: number } };
 }
 
 export interface EQCourseState {

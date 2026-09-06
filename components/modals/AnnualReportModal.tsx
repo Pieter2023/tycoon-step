@@ -74,6 +74,7 @@ const AnnualReportModal: React.FC<AnnualReportModalProps> = ({ report, onDismiss
             Notice board: <span className="font-bold text-white">{report.city.challengesCompleted}</span> challenges completed{report.city.cleanSweeps ? <>, <span className="font-bold text-white">{report.city.cleanSweeps}</span> clean sweep{report.city.cleanSweeps === 1 ? '' : 's'}</> : null}.
             {report.city.cafeProfit !== undefined && <> The café made <span className={`font-bold ${report.city.cafeProfit >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>{formatMoney(report.city.cafeProfit)}</span> after all operating costs across {report.city.ownerShifts} owner shift{report.city.ownerShifts === 1 ? '' : 's'}; reputation stands at {report.city.cafeReputation}/100.</>}
           </p>
+          {report.city.review && <p className="mt-2 text-sm text-slate-200">Performance review: <span className="font-bold text-white">{report.city.review.grade}</span> ({report.city.review.score}/100){report.city.review.bonus ? <> · bonus <span className="font-bold text-emerald-300">{formatMoney(report.city.review.bonus)}</span> paid</> : null}.</p>}
           <p className="mt-2 text-xs text-slate-400">Badges and challenges never added cash; the habits behind them did the work.</p>
         </div>
       )}
