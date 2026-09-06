@@ -85,6 +85,21 @@ export function styleCharacter(root: THREE.Object3D, style: ResidentStyle) {
   });
 }
 
+// Walking residents make room for the player instead of walking through them: within range they
+// drift to the side of their lane away from the player, and if the player stands right in their
+// path they wait. `state` persists per resident; `wait` is time the resident has stood still, which
+// the scene subtracts from its lane clock so the walk resumes from where it paused.
+export const YIELD_RANGE = 1.7, YIELD_SIDE = .72, YIELD_BLOCK = .95;
+export type YieldState = { side: number; wait: number };
+export function yieldTo(resident: { x: number; z: number; forward: boolean }, player: { x: number; z: number }, dt: number, state: YieldState): YieldState {
+  const dx = player.x - resident.x, dz = player.z - resident.z, ahead = resident.forward ? dx : -dx;
+  const close = Math.abs(dx) < YIELD_RANGE && Math.abs(dz) < 1.15;
+  const target = close ? (dz >= 0 ? -YIELD_SIDE : YIELD_SIDE) : 0;
+  state.side += (target - state.side) * Math.min(1, dt * 4.5);
+  if (close && ahead > 0 && ahead < YIELD_BLOCK && Math.abs(dz - state.side) < .55) state.wait += dt;
+  return state;
+}
+
 // Seated pose for benches and café chairs. Two-bone legs reach the floor from the seat
 // height instead of folding under the seat, so feet rest on the pavement.
 export function seatActor(root: THREE.Object3D, thigh = -1.05, knee = .35) {

@@ -19,6 +19,7 @@ export function adviseFrom(state: GameState): Advice[] {
   const lifestyleCost = LIFESTYLE_OPTS[state.lifestyle]?.cost ?? 0;
   const passiveShare = flow.passive / expenses;
   const out: Advice[] = [];
+  if (state.hasWon) out.push({ id: 'won', tone: 'good', title: 'You did it. Your money works so you do not have to.', text: `Passive income of ${money(flow.passive)} a month covers ${money(expenses)} of bills with room to spare. The trap now is lifestyle creep: every upgrade raises the bar your investments have to clear. Keep the reserve, keep investing, and enjoy the square.` });
   if (state.cash < expenses) out.push({ id: 'thin', tone: 'warn', title: 'Your cash is thinner than one month of bills.', text: `You have ${money(state.cash)} against ${money(expenses)} of monthly costs. One surprise and you are borrowing. Park the next paycheque before anything else.`, place: 'bank' });
   if (expensiveBalance > 0 && investedValue > 0) out.push({ id: 'expensive-debt', tone: 'warn', title: `You are paying ${Math.round(Math.max(...expensiveDebt.map(l => l.interestRate)) * 100)}% interest while hoping for 10% returns.`, text: `${money(expensiveBalance)} of expensive debt is a guaranteed loss every month. Clearing it beats almost any investment you can buy.`, place: 'bank' });
   else if (expensiveBalance > 0) out.push({ id: 'expensive-debt-only', tone: 'tip', title: 'Expensive debt first.', text: `${money(expensiveBalance)} at high interest is the most reliable return in the game: every dollar repaid stops costing you.`, place: 'bank' });

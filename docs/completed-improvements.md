@@ -286,6 +286,14 @@ Chrome close-ups at the front door, mid-walk and on Rosa's bench showed slim fig
 
 Validation: 295 tests across 48 files (`test/TownLife.test.ts` now checks the petite scales, the recoloured legs and that men and the source materials are untouched), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/petite-2026-09-06/`.
 
+## Residents make room, and Freedom Day — September 6, 2026 (builds 12–13)
+
+**Crowd contact.** Residents used to walk straight through the player. `yieldTo` in `components/town/townResidents.ts` now gives each walking resident a lateral drift: within 1.7 units along the lane and 1.15 across it they ease 0.72 units to the side of the lane away from the player, and if the player stands directly in their path within 0.95 units they wait (their pause is subtracted from the lane clock, so the walk resumes where it stopped rather than teleporting). Cart customers, café visitors and bench sitters are unaffected. Measured in Chrome with the player standing on the promenade lane: four residents passed in 28 s, the closest at 0.74 units, all on the far side; none walked through.
+
+**Freedom Day.** Reaching financial freedom used to change nothing in the city. Now, while `state.hasWon` is true: the caption reads FREEDOM DAY with "Passive income covers your life · the square is celebrating you" (indoors: "come outside for the fireworks"); fireworks burst over the fountain and promenade every 2.2 s from deterministic origins (72 additive particles per shell, thrown outward and pulled down by gravity, faded over 1.9 s; four shells recycled; nothing under reduced motion); a celebration chime sounds on every third burst; and Rosa's first line becomes "You did it. Your money works so you do not have to." with a warning about lifestyle creep, ahead of every other rule. `cityCaption` in `townGuide.ts` now owns the caption copy. Verified in Chrome at night from the overview camera.
+
+Validation: 298 tests across 49 files (`test/TownFreedom.test.ts`: sidestep direction, blocking pause, recovery; deterministic burst count, shell recycling, reduced motion; caption and Rosa's ordering), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/freedom-2026-09-06/`.
+
 ## Where the overnight session stopped
 
 Nine builds shipped to production between 23:00 and roughly 01:00 PDT: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. Each is on `origin/main` and live at https://tycoonjan22026.netlify.app. What remains needs Pieter: playing the live site by hand and listing what feels off, the physical-phone test, listening to the synthesized audio on a real speaker, and a decision on Spanish for the town copy (a large, mechanical translation job now that the English is settled).

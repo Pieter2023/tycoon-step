@@ -1,6 +1,17 @@
 import type { ActiveJourney } from '../../services/townJourney';
 import type { TownPlaceId } from './townWorld';
 import type { TownSpot } from './createTownScene';
+import type { GameState } from '../../types';
+import { cafeWeather } from '../../services/townCafe';
+
+// The caption over the 3D view: what kind of day it is and one line of colour. Financial freedom
+// turns every day into Freedom Day until the player closes the game.
+export function cityCaption(state: Pick<GameState, 'month' | 'hasWon' | 'cafe'>, room: string): { day: string; note: string } {
+  const rainy = cafeWeather(state.month);
+  if (state.hasWon) return { day: 'FREEDOM DAY', note: room === 'city' ? 'Passive income covers your life · the square is celebrating you' : 'Financially free · come outside for the fireworks' };
+  if (room === 'cafe') return { day: rainy ? 'RAIN' : 'MARKET DAY', note: state.cafe?.plan.open ? 'Trading plan saved · staff at work' : 'Your next chapter' };
+  return rainy ? { day: 'RAIN', note: 'Rainy afternoon · quieter streets' } : { day: 'MARKET DAY', note: 'Market day · neighbours out and about' };
+}
 
 export type GuideTarget = 'teller' | 'business' | 'cart' | 'cafe' | 'broker';
 export type GuideContext = {

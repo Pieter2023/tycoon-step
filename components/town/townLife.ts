@@ -69,6 +69,42 @@ export function createTownLife(reducedMotion: boolean) {
   return { root, pigeons, update };
 }
 
+// Fireworks over the fountain once the player is financially free: bursts every couple of seconds,
+// each a shell of particles thrown outward and pulled down by gravity, fading as it falls. Burst
+// positions and colours are deterministic so the show looks the same on every device.
+export const BURST_EVERY = 2.2, BURST_LIFE = 1.9, BURST_PARTICLES = 72;
+export const burstOrigin = (index: number) => ({ x: ((index * 7.3) % 14) - 7, y: 6.2 + ((index * 3.1) % 2.4), z: 9.5 + ((index * 2.7) % 4) });
+export function createFireworks(reducedMotion: boolean) {
+  const root = new THREE.Group(); root.visible = false;
+  const colours = ['#ffd166', '#ef476f', '#7ad7f0', '#9be27a', '#ffffff', '#f5a3ff'];
+  const shells = Array.from({ length: 4 }, (_, i) => {
+    const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(BURST_PARTICLES * 3), 3));
+    const points = new THREE.Points(geometry, new THREE.PointsMaterial({ color: colours[i % colours.length], size: .34, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })); points.frustumCulled = false; points.visible = false; root.add(points);
+    const directions = new Float32Array(BURST_PARTICLES * 3);
+    for (let p = 0; p < BURST_PARTICLES; p++) { const u = ((p * 0.618034) % 1) * Math.PI * 2, v = Math.acos(1 - 2 * (((p + .5) / BURST_PARTICLES))); directions.set([Math.sin(v) * Math.cos(u), Math.cos(v), Math.sin(v) * Math.sin(u)], p * 3); }
+    return { points, directions, born: -1, origin: { x: 0, y: 0, z: 0 } };
+  });
+  let launched = 0, next = 0;
+  return {
+    root, shells,
+    get launched() { return launched; },
+    // Returns true on the frame a new shell bursts (the caller can play a sound).
+    update(dt: number, elapsed: number, active: boolean): boolean {
+      const show = active && !reducedMotion; root.visible = show; if (!show) { next = elapsed + .8; return false; }
+      let burst = false;
+      if (elapsed >= next) { const shell = shells[launched % shells.length]; shell.born = elapsed; shell.origin = burstOrigin(launched); (shell.points.material as THREE.PointsMaterial).color.set(colours[launched % colours.length]); shell.points.visible = true; launched++; next = elapsed + BURST_EVERY; burst = true; }
+      for (const shell of shells) {
+        if (shell.born < 0) continue;
+        const age = elapsed - shell.born; if (age > BURST_LIFE) { shell.points.visible = false; shell.born = -1; continue; }
+        const radius = 3.4 * (1 - Math.exp(-age * 2.2)), fall = 1.6 * age * age, positions = shell.points.geometry.attributes.position as THREE.BufferAttribute;
+        for (let p = 0; p < BURST_PARTICLES; p++) positions.setXYZ(p, shell.origin.x + shell.directions[p * 3] * radius, shell.origin.y + shell.directions[p * 3 + 1] * radius - fall, shell.origin.z + shell.directions[p * 3 + 2] * radius);
+        positions.needsUpdate = true; (shell.points.material as THREE.PointsMaterial).opacity = Math.max(0, 1 - age / BURST_LIFE);
+      }
+      return burst;
+    },
+  };
+}
+
 // A cyclist on the kerb lane: the frame comes from the vehicle model, the rider is a plain
 // character clone posed by hand each frame (no mixer), pedalling with the wheels.
 export function createCyclist(bike: THREE.Object3D, rider: THREE.Object3D, reducedMotion: boolean) {

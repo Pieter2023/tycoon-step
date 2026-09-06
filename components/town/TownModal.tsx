@@ -35,6 +35,7 @@ import { nominalPrice } from '../../services/investmentModel';
 import type { CameraPreset } from './townControls';
 import { readQualityMode, saveQualityMode, QUALITY_SETTINGS, QUALITY_MODES, QualityMode, QualityLevel } from './townQuality';
 import type { TownView } from './createTownScene';
+import { cityCaption } from './townGuide';
 import { guideLabel, guideNextHop, GuideTarget } from './townGuide';
 import { characterSex } from './townResidents';
 
@@ -165,7 +166,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
     const timer=setInterval(()=>{if(!document.hidden)dispatchService({type:'tick'});},1000);
     return ()=>clearInterval(timer);
   },[serviceActive,servicePaused,showDetails,room,loading,unavailable,!!practice,disabled,onCafeServiceAction]);
-  useEffect(()=>{controller.current?.setNeighbourhood?.(state.month,state.cafe);},[state.month,state.cafe,reduceMotion]);
+  useEffect(()=>{controller.current?.setNeighbourhood?.(state.month,state.cafe,state.hasWon);},[state.month,state.cafe,state.hasWon,reduceMotion]);
   useEffect(()=>{controller.current?.setBusiness?.(!!cart,state.townProgress?.permitMonth!==undefined,!!cart?.opsUpgrade);},[cart,state.townProgress?.permitMonth,reduceMotion]);
   useEffect(()=>{
     if(!shiftRequested.current||state.townProgress?.lastShift?.month!==state.month)return;
@@ -291,7 +292,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
         {serviceActive&&service&&room==='cafe'&&!showDetails&&!unavailable&&<CafeServiceHUD shift={service} practice={!!practice} point={playerPoint} paused={servicePaused||(!practice&&disabled)} onAct={actInShift} onPause={()=>setServicePaused(p=>!p)} onFinish={()=>dispatchService({type:'finish'})}/>}
         {loading && <div className="town-loading" role="status"><span className="town-loading-orbit" /><strong>Welcome to your neighbourhood</strong><span>Opening the city…</span></div>}
         {unavailable ? <div className="town-fallback"><Building2 size={36} /><h3>Explore with the destination buttons</h3><p>This browser cannot display the 3D view. Your purchases and progress still work.</p></div> : <>
-          <div className="town-world-caption"><span className="town-live-dot" /> MONTH {state.month} · {SEASON_LABEL[seasonFor(state.month)]} · {cafeWeather(state.month)?'RAIN':'MARKET DAY'}{timeOfDay&&room==='city'?` · ${timeOfDay}`:''}<span>{room==='cafe'?(state.cafe?.plan.open?'Trading plan saved · staff at work':'Your next chapter'):cafeWeather(state.month)?'Rainy afternoon · quieter streets':'Market day · neighbours out and about'}</span></div>
+          <div className="town-world-caption"><span className="town-live-dot" /> MONTH {state.month} · {SEASON_LABEL[seasonFor(state.month)]} · {cityCaption(state,room).day}{timeOfDay&&room==='city'?` · ${timeOfDay}`:''}<span>{cityCaption(state,room).note}</span></div>
           <button className="town-camera-menu-button" aria-expanded={cameraTools} onClick={()=>setCameraTools(!cameraTools)}>Camera</button>
           <button className="town-reset-camera" aria-label="Reset camera" title="Reset camera (R)" onClick={() => controller.current?.resetView()}><RotateCcw size={18} /></button>
           {cameraTools&&<div className="town-camera-menu" aria-label="Camera controls"><strong>Choose your view</strong><button aria-pressed={cameraMode==='follow'} onClick={()=>chooseCamera('follow')}>Follow character</button><button aria-pressed={cameraMode==='overview'} onClick={()=>chooseCamera('overview')}>See neighbourhood</button><div><button aria-label="Turn camera left" onClick={()=>controller.current?.orbit?.(-.3)}>↶ Left</button><button aria-label="Turn camera right" onClick={()=>controller.current?.orbit?.(.3)}>Right ↷</button></div><div><button onClick={()=>controller.current?.zoom?.(-1)}>Zoom in</button><button onClick={()=>controller.current?.zoom?.(1)}>Zoom out</button></div><p>Tap the ground to walk. Drag to adjust the view. Reset restores this preset.</p><strong>Graphics</strong><div className="town-quality-row" role="group" aria-label="Graphics quality">{QUALITY_MODES.map(mode=><button key={mode} aria-pressed={qualityMode===mode} onClick={()=>chooseQuality(mode)}>{mode==='auto'?'Auto':QUALITY_SETTINGS[mode].label}</button>)}</div><p>{qualityMode==='auto'?`Auto follows your frame rate${qualityLevel?` · now ${QUALITY_SETTINGS[qualityLevel].label}`:''}.`:QUALITY_SETTINGS[qualityMode].detail}</p><button onClick={()=>setCameraTools(false)}>Done</button></div>}
