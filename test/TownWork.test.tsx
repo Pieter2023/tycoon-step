@@ -54,7 +54,7 @@ describe('Main Street Offices', () => {
     expect(board.title).toBe('PAYROLL · JUNIOR DEVELOPER'); expect(board.ladder[0].state).toBe('current'); expect(board.ladder[1].state).toBe('next'); expect(board.ladder[2].state).toBe('later');
     expect(board.lines.at(-1)?.label).toMatch(/Income tax/);
     expect(clampWorkPoint({ x: 9, z: -3 })).toEqual({ x: 2.5, z: .4 }); expect(workSpot({ x: .2, z: .9 })).toBe('manager'); expect(workSpot({ x: 0, z: 6.2 })).toBe('exit'); expect(workSpot({ x: 2, z: 3 })).toBeNull();
-    const room = createTownWork(); let meshes = 0; room.root.traverse(o => { if (o instanceof THREE.Mesh) meshes++; }); expect(meshes).toBeGreaterThan(25);
+    const room = createTownWork(); expect(room.root.visible).toBe(false); let meshes = 0; room.root.traverse(o => { if (o instanceof THREE.Mesh) meshes++; }); expect(meshes).toBeGreaterThan(25);
     expect(() => room.setBoard(board)).not.toThrow();
   });
   it('renders the manager panel with a stub, a gated promotion button and study links', () => {

@@ -11,7 +11,7 @@ export const clampWorkPoint = (p: TownPoint): TownPoint => ({ x: Math.max(-2.5, 
 export const workSpot = (p: TownPoint): 'manager' | 'exit' | null => Math.hypot(p.x, p.z - .75) < 1.1 ? 'manager' : Math.hypot(p.x, p.z - 6.1) < .85 ? 'exit' : null;
 
 export function createTownWork() {
-  const root = new THREE.Group();
+  const root = new THREE.Group(); root.visible = false;   // shown only after the office door transition
   const box = (w: number, h: number, d: number, x: number, y: number, z: number, color: string, radius = .05) => {
     const mesh = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 2, radius), new THREE.MeshStandardMaterial({ color, roughness: .65 }));
     mesh.position.set(x, y, z); mesh.castShadow = true; mesh.receiveShadow = true; root.add(mesh); return mesh;
