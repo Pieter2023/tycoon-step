@@ -59,7 +59,7 @@ tail = attach(sphere('Fem_Ponytail', (0, .31, .10), (.09, .11, .27), 'hair'), he
 for x in [-.265, .265]: attach(sphere('Fem_Earring', (x, -.005, .085), (.03, .03, .03), 'gold'), head)
 attach(box('Fem_Lips', (0, -.219, .036), (.088, .024, .026), 'lips', .01), head)
 for x in [-.10, .10]: attach(sphere('Fem_Bust', (x, -.165, .35), (.095, .07, .085), 'shirt'), torso)
-attach(cylinder('Fem_Skirt', (0, 0, -.20), .34, .40, 'skirt', .21, .02), hips)
+attach(cylinder('Fem_Skirt', (0, 0, -.21), .40, .44, 'skirt', .32, .02), hips)   # A-line: top wider than the hips so trousers never show through
 attach(sphere('Masc_Beard', (0, -.135, -.02), (.20, .155, .105), 'hair'), head)
 attach(cylinder('Masc_Cap', (0, .01, .37), .27, .11, 'cap', .25, .02), head)
 attach(box('Masc_CapBrim', (0, -.27, .335), (.25, .17, .03), 'cap', .01), head)

@@ -48,22 +48,38 @@ export function residentStyle(index: number): ResidentStyle {
 // Applies a style to one cloned character: shows the sex-specific parts exported by
 // scripts/build-town-extras.py, broadens or narrows the jacket, and recolours by material name.
 // Materials are cloned before recolouring so the source model and other residents stay intact.
+// Women get a petite build: the whole figure a little shorter, hips and torso narrower (which
+// also brings the shoulder pivots in), slimmer limbs, and the head kept near its normal size.
+// Pivots are scaled rather than moved because the clips key pivot positions every frame.
+export const FEMALE_BUILD = { height: .95, hips: [.90, .93, 1], torso: [.88, .93, 1], head: [1.18, 1.05, 1], sleeve: [.82, .85, .96], forearm: [.84, .86, .97], leg: [.84, .86, 1] } as const;
 export function styleCharacter(root: THREE.Object3D, style: ResidentStyle) {
   const female = style.sex === 'f';
+  const set = (object: THREE.Object3D, scale: readonly [number, number, number] | number) => typeof scale === 'number' ? object.scale.setScalar(scale) : object.scale.set(...scale);
+  const figure = root.getObjectByName('Character') ?? root; set(figure, female ? FEMALE_BUILD.height : 1);
   root.traverse(object => {
+    if (object.name === 'Hips') set(object, female ? FEMALE_BUILD.hips : 1);
+    else if (object.name === 'Torso') set(object, female ? FEMALE_BUILD.torso : 1);
+    else if (object.name === 'Head') set(object, female ? FEMALE_BUILD.head : 1);
     if (!(object instanceof THREE.Mesh)) return;
     const name = object.name;
+    if (name.startsWith('Sleeve')) set(object, female ? FEMALE_BUILD.sleeve : 1);
+    else if (name.startsWith('Forearm') || name.startsWith('Hand')) set(object, female ? FEMALE_BUILD.forearm : 1);
+    else if (name.startsWith('Trouser leg') || name.startsWith('Lower leg')) set(object, female ? FEMALE_BUILD.leg : 1);
+    else if (name.startsWith('Neck')) set(object, female ? .88 : 1);
+    else if (name.startsWith('Fem_Bust')) set(object, .85);
     if (name.startsWith('Fem_HairLong') || name.startsWith('Fem_HairSide')) object.visible = female && style.hair === 'long';
     else if (name.startsWith('Fem_Ponytail')) object.visible = female && style.hair === 'tail';
     else if (name.startsWith('Fem_')) object.visible = female;
     else if (name.startsWith('Masc_Beard')) object.visible = !female && !!style.beard;
     else if (name.startsWith('Masc_Cap')) object.visible = !female && !!style.cap;
     else if (name.startsWith('Smile')) object.visible = !female;
-    if (name.startsWith('Jacket')) object.scale.set(female ? .90 : 1.07, 1, female ? .95 : 1.02);
-    if (name.startsWith('Tailored trousers')) object.scale.set(female ? 1.08 : 1, 1, 1);
+    if (name.startsWith('Jacket')) object.scale.set(female ? .92 : 1.07, female ? .96 : 1, female ? .97 : 1.02);
+    if (name.startsWith('Tailored trousers')) object.scale.set(1, 1, 1);
     if (name.startsWith('Face')) object.scale.set(female ? .94 : 1, 1, 1);
     if (Array.isArray(object.material)) return;
-    const colour = style.colors?.[object.material.name as keyof NonNullable<ResidentStyle['colors']>];
+    // Under a skirt the legs are bare (or tights), not trousers: recolour them to the skin tone.
+    const legs = female && (name.startsWith('Trouser leg') || name.startsWith('Lower leg'));
+    const colour = legs ? style.colors?.skin ?? '#d4a57d' : style.colors?.[object.material.name as keyof NonNullable<ResidentStyle['colors']>];
     if (!colour) return;
     const material = (object.material as THREE.MeshStandardMaterial).clone(); material.color.set(colour); object.material = material;
   });

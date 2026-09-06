@@ -278,6 +278,14 @@ Chrome: Smooth removed the tree and building shadows and the stored mode read `l
 
 Validation: 295 tests across 48 files (`test/TownQuality.test.ts`: device guess, stored mode, demotion with warm-up and tab-switch handling, promotion with cooldown, fixed choice never overridden), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/quality-2026-09-06/`.
 
+## Petite women and A-line skirts — September 6, 2026 (build 11)
+
+Pieter's morning feedback: the women were "very muscular and the dresses look odd with pants shining through". Two causes. The skirt was a cone narrower at the hips (radius 0.21) than the trousers sphere under it (0.29), so the trousers poked through; and women shared the male body with only the jacket narrowed. Now `Fem_Skirt` (`scripts/build-town-extras.py`) is an A-line cone, top 0.32 and hem 0.40 reaching the knee, so nothing underneath can show, and `styleCharacter` (`components/town/townResidents.ts`) applies a petite build to women: the figure 5% shorter, hips and torso pivots narrowed (which also brings the shoulder pivots inward without moving them, since the clips key pivot positions), sleeves, forearms and legs slimmed, the head compensated to stay near its normal size, the bust reduced, and the leg meshes under the skirt recoloured to the skin tone so they read as bare legs rather than trousers. Men are untouched. Model rebuilt through the extras and refine scripts; `MODEL_VERSION` bumped to 20260906a.
+
+Chrome close-ups at the front door, mid-walk and on Rosa's bench showed slim figures, skirts covering the hips and thighs, and skin-toned legs; residents at distance still read as distinct women and men.
+
+Validation: 295 tests across 48 files (`test/TownLife.test.ts` now checks the petite scales, the recoloured legs and that men and the source materials are untouched), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/petite-2026-09-06/`.
+
 ## Where the overnight session stopped
 
 Nine builds shipped to production between 23:00 and roughly 01:00 PDT: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. Each is on `origin/main` and live at https://tycoonjan22026.netlify.app. What remains needs Pieter: playing the live site by hand and listing what feels off, the physical-phone test, listening to the synthesized audio on a real speaker, and a decision on Spanish for the town copy (a large, mechanical translation job now that the English is settled).

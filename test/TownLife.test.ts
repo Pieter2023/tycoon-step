@@ -30,8 +30,10 @@ describe('residents read as different people', () => {
   it('shows female parts only on women, beards and caps only on men, and keeps the source model untouched', () => {
     const build = () => {
       const root = new THREE.Group(); const shirt = new THREE.MeshStandardMaterial({ color: '#ffffff', name: 'shirt' });
+      const figure = new THREE.Group(); figure.name = 'Character'; root.add(figure); const hips = new THREE.Group(); hips.name = 'Hips'; figure.add(hips);
       for (const name of ['Fem_Skirt', 'Fem_HairLong', 'Fem_HairSide.001', 'Fem_Ponytail', 'Fem_Lips', 'Masc_Beard', 'Masc_Cap', 'Masc_CapBrim', 'Smile', 'Jacket']) { const mesh = new THREE.Mesh(new THREE.BoxGeometry(), shirt); mesh.name = name; root.add(mesh); }
-      return { root, shirt };
+      const trousers = new THREE.MeshStandardMaterial({ color: '#354955', name: 'trousers' }); const leg = new THREE.Mesh(new THREE.BoxGeometry(), trousers); leg.name = 'Lower leg'; hips.add(leg);
+      return { root, shirt, trousers, figure, hips, leg };
     };
     const woman = build(); styleCharacter(woman.root, { sex: 'f', hair: 'tail', colors: { shirt: '#ff0000' } });
     const visible = (root: THREE.Object3D, name: string) => root.getObjectByName(name)!.visible;
@@ -39,9 +41,12 @@ describe('residents read as different people', () => {
     expect(visible(woman.root, 'Masc_Beard')).toBe(false); expect(visible(woman.root, 'Masc_Cap')).toBe(false); expect(visible(woman.root, 'Smile')).toBe(false);
     expect(woman.shirt.color.getHexString()).toBe('ffffff'); // cloned, not mutated
     expect((woman.root.getObjectByName('Jacket') as THREE.Mesh).scale.x).toBeLessThan(1);
+    expect(woman.figure.scale.y).toBeLessThan(1); expect(woman.hips.scale.x).toBeLessThan(1); expect(woman.leg.scale.x).toBeLessThan(1); // petite build
+    expect((woman.leg.material as THREE.MeshStandardMaterial).color.getHexString()).not.toBe('354955'); expect(woman.trousers.color.getHexString()).toBe('354955'); // bare legs under the skirt, source untouched
     const man = build(); styleCharacter(man.root, { sex: 'm', hair: 'short', beard: true, cap: true });
     expect(visible(man.root, 'Fem_Skirt')).toBe(false); expect(visible(man.root, 'Fem_Lips')).toBe(false); expect(visible(man.root, 'Masc_Beard')).toBe(true); expect(visible(man.root, 'Masc_CapBrim')).toBe(true);
     expect((man.root.getObjectByName('Jacket') as THREE.Mesh).scale.x).toBeGreaterThan(1);
+    expect(man.figure.scale.y).toBe(1); expect(man.hips.scale.x).toBe(1); expect((man.leg.material as THREE.MeshStandardMaterial).color.getHexString()).toBe('354955');
   });
   it('seats a character with feet levelled by the ankle joint', () => {
     const root = new THREE.Group();
