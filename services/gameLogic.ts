@@ -1,5 +1,5 @@
 import { finishCafeService } from './cafeService';
-import { cafeValue, driftReputation, quoteCafe } from './townCafe';
+import { cafeValue, driftReputation, quoteCafe, settleCafeMonth } from './townCafe';
 import { closeChallengeMonth, snapshotFor } from './townChallenges';
 import { incomeYield, nominalPrice } from './investmentModel';
 // Tycoon: Financial Freedom - Game Logic v3.4.3
@@ -3341,7 +3341,14 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
   // Notice-board challenges are judged on the month that is ending, then a fresh snapshot starts the next one.
   const challengeResult = closeChallengeMonth(state);
   // A month with no hands-on shift lets the café's reputation drift back toward average before trading settles.
-  if (newState.cafe) { const rested = newState.cafe.service?.month === state.month ? newState.cafe : driftReputation(newState.cafe); newState.cafe = { ...rested, lastReceipt: quoteCafe(rested, newState.month) }; }
+  if (newState.cafe) {
+    const rested = newState.cafe.service?.month === state.month ? newState.cafe : driftReputation(newState.cafe);
+    // Incidents follow the owner's choices (equipment, reputation, staffing); their cash effect lands here, outside the forecast.
+    const settled = settleCafeMonth(rested, newState.month);
+    newState.cafe = settled.cafe;
+    if (settled.incidentCost) newState.cash -= settled.incidentCost;
+    if (settled.receipt.incidents?.length) newState.events = [...settled.receipt.incidents.map(i => ({ id: `cafe-incident-${newState.month}-${i.id}`, month: newState.month, title: '☕ ' + i.title, description: i.detail + (i.cost > 0 ? ` Cost $${i.cost}.` : i.cost < 0 ? ` Extra $${-i.cost} in sales.` : '') + (i.capacityLoss ? ' Fewer cups could be served this month.' : ''), type: 'NEWS' as const })), ...newState.events];
+  }
   newState.townProgress = { ...newState.townProgress, challengeLog: challengeResult ? [...(newState.townProgress?.challengeLog ?? []), challengeResult].slice(-12) : newState.townProgress?.challengeLog, challengeSnapshot: snapshotFor(newState) };
 
   // 7. Calculate cash flow

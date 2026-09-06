@@ -78,3 +78,38 @@ describe('café reputation ties hands-on shifts to monthly trading',()=>{
   expect(later.cafe!.lastReceipt!.reputation).toBe(59);
  });
 });
+
+import { cafeIncidents, settleCafeMonth } from '../services/townCafe';
+describe('café incidents follow the owner\'s choices',()=>{
+ const shop=():CafeState=>({openedMonth:1,seats:false,machine:false,plan:{price:6,stock:400,helper:true,open:true},reputation:50});
+ it('is deterministic per month, quiet when closed or brand new, and never touches the forecast',()=>{
+  const c=shop();expect(cafeIncidents(c,1)).toEqual([]);expect(cafeIncidents({...c,plan:{...c.plan,open:false}},9)).toEqual([]);
+  for(let m=2;m<40;m++){expect(cafeIncidents(c,m)).toEqual(cafeIncidents(c,m));expect(quoteCafe(c,m).incidents).toBeUndefined();}
+ });
+ it('breaks the basic machine about three times as often as the upgrade',()=>{
+  const months=Array.from({length:600},(_,i)=>i+2);
+  const basic=months.filter(m=>cafeIncidents(shop(),m).some(i=>i.id==='breakdown')).length;
+  const upgraded=months.filter(m=>cafeIncidents({...shop(),machine:true},m).some(i=>i.id==='breakdown')).length;
+  expect(basic).toBeGreaterThan(upgraded*2);expect(basic/600).toBeGreaterThan(.1);expect(basic/600).toBeLessThan(.25);
+ });
+ it('fails inspections and loses staff when reputation is poor, earns praise and regulars when it is strong',()=>{
+  const months=Array.from({length:120},(_,i)=>i+2);
+  const poor=months.flatMap(m=>cafeIncidents({...shop(),reputation:20},m)).map(i=>i.id), strong=months.flatMap(m=>cafeIncidents({...shop(),reputation:90},m)).map(i=>i.id);
+  expect(poor).toContain('inspection-fail');expect(poor).toContain('staff-quit');expect(poor).not.toContain('regulars');
+  expect(strong).toContain('inspection-pass');expect(strong).toContain('regulars');expect(strong).not.toContain('staff-quit');expect(strong).not.toContain('inspection-fail');
+  expect(months.flatMap(m=>cafeIncidents({...shop(),reputation:20,plan:{...shop().plan,helper:false}},m)).map(i=>i.id)).not.toContain('staff-quit');
+ });
+ it('settles costs, lost capacity and reputation, and the turn deducts exactly that from cash',()=>{
+  const c=shop();const month=Array.from({length:60},(_,i)=>i+2).find(m=>cafeIncidents(c,m).some(i=>i.id==='breakdown'))!;
+  const {cafe,receipt,incidentCost}=settleCafeMonth(c,month);
+  expect(receipt.incidents?.some(i=>i.id==='breakdown')).toBe(true);expect(receipt.profit).toBe(receipt.revenue-receipt.costs-receipt.incidents!.reduce((s,i)=>s+i.cost,0));
+  expect(cafe.reputation).toBe(50+receipt.incidents!.reduce((s,i)=>s+i.reputation,0));expect(incidentCost).toBeGreaterThanOrEqual(250);
+  vi.spyOn(Math,'random').mockReturnValue(.5);
+  let s={...base(),month:month-1,cafe:{...c,reputation:50}} as GameState;s={...s,assets:[...s.assets]};
+  const quiet={...s,cafe:{...s.cafe!,plan:{...s.cafe!.plan,open:false}}};
+  const withIncident=processTurn(s).newState, without=processTurn({...s,cafe:{...s.cafe!,machine:true}}).newState;
+  expect(withIncident.events.some(e=>e.title.includes('broke down'))).toBe(true);
+  expect(withIncident.cafe!.lastReceipt!.incidents!.length).toBeGreaterThan(0);
+  expect(quiet.cafe!.plan.open).toBe(false);
+ });
+});

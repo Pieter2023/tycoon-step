@@ -11,7 +11,7 @@ export function CafeLedger({ receipt }: { receipt: CafeReceipt }) {
     <div><dt>Staff wages</dt><dd>−{money(receipt.wages)}</dd></div>
     <div><dt>Rent + utilities</dt><dd>−{money(receipt.rent + receipt.utilities)}</dd></div>
     <div><dt>{receipt.profit < 0 ? 'Operating loss' : 'Operating profit'}</dt><dd>{money(receipt.profit)}</dd></div>
-  </dl><p>{receipt.stock - receipt.sold} cups’ worth of supplies wasted. Net operating profit is already part of monthly income; these costs are not deducted twice. Annual game taxes are separate.</p></div>;
+  </dl>{receipt.incidents?.length ? <ul className="town-incidents">{receipt.incidents.map(i => <li key={i.id}><strong>{i.title}</strong> {i.detail} {i.cost > 0 ? `−$${i.cost}.` : i.cost < 0 ? `+$${-i.cost}.` : ''}{i.reputation ? ` Reputation ${i.reputation > 0 ? '+' : ''}${i.reputation}.` : ''}</li>)}</ul> : null}<p>{receipt.stock - receipt.sold} cups’ worth of supplies wasted. Net operating profit is already part of monthly income; these costs are not deducted twice. Annual game taxes are separate.</p></div>;
 }
 export default function CafePanel({ state, disabled, onAction, onNextMonth }: { state: GameState; disabled: boolean; onAction?: (action: CafeAction) => void; onNextMonth: () => void }) {
   const cafe = state.cafe;

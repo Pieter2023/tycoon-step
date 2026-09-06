@@ -5,7 +5,8 @@ export const CAFE_FITOUT = 1800;
 export const CAFE_RENT = 600;
 export const CAFE_UPGRADES = { seats: 650, machine: 900 } as const;
 export type CafePlan = { price: 4 | 6; stock: 400 | 700; helper: boolean; open: boolean };
-export type CafeReceipt = { month: number; rainy: boolean; sold: number; stock: number; revenue: number; supplies: number; wages: number; rent: number; utilities: number; costs: number; profit: number; demand: number; capacity: number; reputation?: number };
+export type CafeIncident = { id: 'breakdown' | 'inspection-fail' | 'inspection-pass' | 'staff-quit' | 'regulars'; title: string; detail: string; cost: number; reputation: number; capacityLoss?: number };
+export type CafeReceipt = { month: number; rainy: boolean; sold: number; stock: number; revenue: number; supplies: number; wages: number; rent: number; utilities: number; costs: number; profit: number; demand: number; capacity: number; reputation?: number; incidents?: CafeIncident[] };
 // Reputation 0–100 (missing = 50 for older saves). Hands-on owner shifts move it by their star rating;
 // months without a shift drift it back toward 50 as the neighbourhood forgets. It scales monthly demand.
 export type CafeState = { service?: import('./cafeService').CafeService; openedMonth: number; plan: CafePlan; seats: boolean; machine: boolean; lastReceipt?: CafeReceipt; reputation?: number };
@@ -57,4 +58,33 @@ export function resolveCafeAction(state: GameState, action: CafeAction): GameSta
     description = `Ended the café lease and returned the keys. Recovered $${refund} in deposit and equipment resale. Future café bills stop; the coffee cart remains yours.`;
   } else return state;
   return { ...state, cash, cafe, events: [{ id: `cafe-${crypto.randomUUID()}`, month: state.month, title: action.type === 'lease' ? 'Your first café' : action.type === 'close' ? 'Café lease ended' : 'Café decision', description, type: 'DECISION' }, ...state.events] };
+}
+
+// Surprises that follow from the owner's choices, not the forecast: a basic machine breaks three
+// times as often as the upgrade, inspections punish a poor reputation and praise a strong one,
+// second baristas quit unloved shops, and regulars turn up for the well-run ones. Deterministic
+// per month (no rand) so forecasts stay honest and daily-challenge worlds stay in sync.
+const roll = (month: number, salt: number) => { let h = (Math.imul(month * 977 + salt * 131, 2654435761) >>> 0); h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13; return (h >>> 0) / 4294967296; };
+export function cafeIncidents(cafe: CafeState, month: number): CafeIncident[] {
+  if (!cafe.plan.open || month <= cafe.openedMonth) return [];
+  const rep = reputationOf(cafe), out: CafeIncident[] = [];
+  if (roll(month, 1) < (cafe.machine ? 1 / 18 : 1 / 6)) out.push(cafe.machine
+    ? { id: 'breakdown', title: 'The espresso machine needed a service', detail: 'Even the big machine needs attention now and then: $180 for the engineer.', cost: 180, reputation: -1 }
+    : { id: 'breakdown', title: 'The old coffee machine broke down', detail: 'It gave up mid-week: $250 repair and a slow few days while it was out. The upgraded machine breaks a third as often.', cost: 250, reputation: -2, capacityLoss: 80 });
+  if (roll(month, 2) < .25) {
+    if (rep < 40) out.push({ id: 'inspection-fail', title: 'Health inspection: improvement notice', detail: 'Standards matched the café’s reputation. A $150 fine and a notice in the window; regulars noticed too.', cost: 150, reputation: -6 });
+    else if (rep >= 70) out.push({ id: 'inspection-pass', title: 'Health inspection: top marks', detail: 'A spotless visit. The certificate goes in the window and word spreads.', cost: 0, reputation: 4 });
+  }
+  if (cafe.plan.helper && rep < 45 && roll(month, 3) < .3) out.push({ id: 'staff-quit', title: 'Your second barista quit', detail: 'Nobody stays at a struggling shop. The wage was paid, but you ran short-handed and capacity fell. Reputation keeps staff.', cost: 0, reputation: -2, capacityLoss: 300 });
+  if (rep >= 80 && roll(month, 4) < .35) out.push({ id: 'regulars', title: 'The regulars brought friends', detail: 'A busy week of word of mouth: extra sales on the receipt, and the neighbourhood talks.', cost: -120, reputation: 2 });
+  return out;
+}
+// Settles a month with its incidents: capacity losses cut sales, costs and windfalls hit the profit line, reputation moves.
+export function settleCafeMonth(cafe: CafeState, month: number): { cafe: CafeState; receipt: CafeReceipt; incidentCost: number } {
+  const incidents = cafeIncidents(cafe, month), quote = quoteCafe(cafe, month);
+  const capacityLoss = incidents.reduce((s, i) => s + (i.capacityLoss ?? 0), 0), cost = incidents.reduce((s, i) => s + i.cost, 0);
+  const sold = Math.max(0, Math.min(quote.sold, quote.capacity - capacityLoss)), revenue = sold * cafe.plan.price;
+  const receipt: CafeReceipt = { ...quote, sold, revenue, profit: revenue - quote.costs - cost, incidents };
+  const reputation = Math.max(0, Math.min(100, reputationOf(cafe) + incidents.reduce((s, i) => s + i.reputation, 0)));
+  return { cafe: { ...cafe, reputation, lastReceipt: receipt }, receipt, incidentCost: cost + (quote.revenue - revenue) };
 }
