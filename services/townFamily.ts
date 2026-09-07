@@ -39,7 +39,7 @@ export type Household = { status: HouseholdStatus; statusLabel: string; spouse?:
 export function household(state: GameState): Household {
   const f = state.family, flow = calculateMonthlyCashFlowEstimate(state);
   const status: HouseholdStatus = f?.spouse ? 'married' : f?.isEngaged ? 'engaged' : f?.inRelationship ? 'dating' : 'single';
-  const statusLabel = { single: tl('Single','Sin pareja'), dating: tl('In a relationship','En una relación'), engaged: tl('Engaged','Comprometido'), married: tl('Married','Casado') }[status];
+  const statusLabel = { single: tl('Single','Sin pareja'), dating: tl('In a relationship','En una relación'), engaged: tl('Engaged','Prometidos'), married: tl('Married','Casados') }[status];
   const children = (f?.children ?? []).map(c => childCard(state, c));
   const childrenMonthly = children.reduce((s, c) => s + c.monthly, 0);
   const spouse = f?.spouse ? { name: f.spouse.name, job: CAREER_PATHS[f.spouse.careerPath]?.name ?? f.spouse.careerPath, income: f.spouse.income, yearsMarried: Math.floor(Math.max(0, state.month - f.spouse.marriedMonth) / 12), share: Math.round(f.spouse.income / Math.max(1, flow.income) * 100), coverage: Math.round(f.spouse.income / Math.max(1, flow.expenses) * 100) } : undefined;

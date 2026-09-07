@@ -35,3 +35,7 @@ This project uses a lightweight i18n layer in `i18n/index.ts` with JSON translat
 ## Notes
 - The default locale is stored in `localStorage` under `tycoon_locale`.
 - The HTML `lang` attribute is updated when the locale changes.
+
+## City copy review (2026-09-07)
+
+All 1,474 `tl(en, es)` pairs in the city were read in one sitting (extract with a regex over `components/town`, `services/town*`, `i18n/town.ts`). House rules that came out of it: tú register everywhere; Latin American vocabulary (renta, enganche, cochera, auto, tasa anual, sala de operaciones); avoid gendered participles addressed to the player ("Te damos la bienvenida", "Ya puedes pasar a", "¿Te despidieron?"); couples' statuses in plural ("Prometidos", "Casados"); badge names keep the generic masculine. The dashboard's `es.json` is the June translation and has not had the same read.

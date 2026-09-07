@@ -74,7 +74,7 @@ export function managerLine(state: GameState): string {
   const out = promotionOutlook(state);
   if ((state.jobLossMonthsRemaining ?? 0) > 0) return tl('Come back when you are working again. Your desk will be here.','Vuelve cuando estés trabajando de nuevo. Tu escritorio seguirá aquí.');
   if (out.top) return tl('You run this place now. Keep it that way.','Ahora tú diriges este lugar. Que siga así.');
-  if (out.eligible) return `${tl('You are ready for','Estás listo para')} ${out.next!.title}. ${tl('Ask me.','Pídemelo.')}`;
+  if (out.eligible) return `${tl('You are ready for','Ya puedes pasar a')} ${out.next!.title}. ${tl('Ask me.','Pídemelo.')}`;
   if (out.monthsShort > 0) return `${out.monthsShort} ${tl(out.monthsShort === 1 ? 'more month and we talk about' : 'more months and we talk about', out.monthsShort === 1 ? 'mes más y hablamos de' : 'meses más y hablamos de')} ${out.next!.title}.`;
   return `${out.next!.title} ${tl('needs a','necesita un título de')} ${out.educationNeeded}. ${tl('Night school?','¿Escuela nocturna?')}`;
 }

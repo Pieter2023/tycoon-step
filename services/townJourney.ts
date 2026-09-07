@@ -51,7 +51,7 @@ export function investorJourney(state: GameState) {
   const completed = state.townProgress?.investorCompletedMonth !== undefined;
   const milestones = [
     { title: tl('Read the market mood at the Exchange','Lee el ánimo del mercado en la Bolsa'), done: visited },
-    { title: tl('Own a slice of the whole market','Sé dueño de una parte de todo el mercado'), done: bought !== undefined },
+    { title: tl('Own a slice of the whole market','Ten una parte de todo el mercado'), done: bought !== undefined },
     { title: `${tl('Hold it for','Consérvalo durante')} ${HOLD_MONTHS} ${tl('months','meses')}`, done: held },
     { title: tl('Compare growth with cash income','Compara el crecimiento con el ingreso en efectivo'), done: completed },
   ];
@@ -87,7 +87,7 @@ export function tourJourney(state: GameState) {
   const step = completed ? 5 : milestones.findIndex(m => !m.done);
   let title = '', detail = '', button = '', action: JourneyAction = 'journal';
   if (completed) { title = tl('Settled in','Ya eres del barrio'); detail = tl('You know where your money comes from, where it goes and who to ask. The board sets a fresh goal every month.','Sabes de dónde viene tu dinero, a dónde va y a quién preguntar. El tablón pone una meta nueva cada mes.'); button = tl('View your journey','Ver tu recorrido'); }
-  else if (step === 0) { title = tl('Clock in','Ficha tu entrada'); detail = tl('Your salary funds everything else. Walk to Main Street Offices and read the pay stub with your manager: what comes off, and what the next title needs.','Tu sueldo financia todo lo demás. Ve a las Oficinas de Main Street y lee el recibo de sueldo con tu jefe: qué se descuenta y qué necesita el siguiente puesto.'); button = tl('Go to work','Ir al trabajo'); action = 'work'; }
+  else if (step === 0) { title = tl('Clock in','Marca tu entrada'); detail = tl('Your salary funds everything else. Walk to Main Street Offices and read the pay stub with your manager: what comes off, and what the next title needs.','Tu sueldo financia todo lo demás. Ve a las Oficinas de Main Street y lee el recibo de sueldo con tu jefe: qué se descuenta y qué necesita el siguiente puesto.'); button = tl('Go to work','Ir al trabajo'); action = 'work'; }
   else if (step === 1) { title = tl('Know your bills','Conoce tus facturas'); detail = tl('Go home and sit at your desk. Lifestyle is the one bill you choose; see what share of your pay it takes.','Ve a casa y siéntate en tu escritorio. El estilo de vida es la única factura que eliges; mira qué parte de tu sueldo se lleva.'); button = tl('Go home','Ir a casa'); action = 'home'; }
   else if (step === 2) { title = tl('Get a second opinion','Pide una segunda opinión'); detail = tl('Rosa on the west bench reads your real numbers and says what a sensible friend would. Ask her.','Rosa, en el banco del oeste, lee tus números reales y dice lo que diría una amiga sensata. Pregúntale.'); button = tl('Talk to Rosa','Hablar con Rosa'); action = 'rosa'; }
   else if (step === 3) { title = tl('Take a challenge','Acepta un reto'); detail = tl('The notice board sets three small goals each month and judges them when the month closes. Complete one.','El tablón pone tres metas pequeñas cada mes y las evalúa al cerrar el mes. Completa una.'); button = tl('Read the board','Leer el tablón'); action = 'board'; }

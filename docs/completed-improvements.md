@@ -532,6 +532,16 @@ Pieter's pick: "Remove the dead CharacterSelect component, keep going." `compone
 
 Validation: 363 tests across 64 files (the removed snapshot test held two), TypeScript, build and `git diff --check` clean; the production bundle is unchanged in behaviour.
 
+## Spanish read of the city copy — September 7, 2026 (build 37)
+
+Pieter's pick: "Do the native-speaker read of the Spanish copy, keep going." This is a careful editorial read rather than a native speaker's ear; Pieter should still hand the city to a Latin American Spanish speaker for an afternoon. Method: every `tl(en, es)` pair in the city (1,474 pairs across 55 files: the town panels, scene labels and town services) was extracted to one file and read in full, with a heuristic pass first (untranslated strings, Spain-only vocabulary, missing ¿¡, unbalanced brackets, usted slips). Register is a consistent tú throughout; terms are consistent (renta, enganche, cochera, auto, ingresos extra, surtido, cajero, corredor, tablón); accents and inverted marks are right.
+
+**Fixed (21 strings).** Gendered lines made neutral: the four "Bienvenido a…" greetings are now "Te damos la bienvenida a…" and "Welcome inside" is "Adelante."; "Fuiste dueño de una parte del mercado" → "Tuviste una parte del mercado…"; "Estás listo para {title}" → "Ya puedes pasar a {title}"; "¿Despedido?" → "¿Te despidieron?"; "Sé dueño de una parte de todo el mercado" → "Ten una parte de todo el mercado"; the family status labels read "Prometidos"/"Casados" (a couple) instead of "Comprometido"/"Casado". Spain-only terms replaced with Latin American ones: "TAE" → "tasa anual", "parqué" → "sala de operaciones" (three places). Phrasing: "Múdate por $3,000" (that is moving house) → "Instálate por $3,000" for the café lease; "Ficha tu entrada" → "Marca tu entrada"; the Exchange's "$50 arriba/abajo" → "de ganancia/de pérdida"; the kids' goal jar's "una promesa contigo" → "una promesa que te haces".
+
+**Left as is, deliberately.** Badge names "Emprendedor del barrio" and "Inversor paciente" keep the generic masculine that Spanish uses for titles; "Hola, vecino." likewise. Quest titles and the dashboard come from `i18n/translations/es.json` (the June translation) and were outside this read.
+
+Validation: 363 tests across 64 files, TypeScript, build and `git diff --check` clean.
+
 ## Where the sessions stopped (September 6, 2026, morning)
 
 Overnight (23:00 to about 01:00 PDT) nine builds shipped: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. The morning session (about 06:00 to 07:30 PDT) added eight more, each verified in Chrome, receipted above and pushed to `origin/main`: the townhouse around the apartment door and the camera-canopy fix; adaptive graphics quality; petite women with A-line skirts; residents that make room; Freedom Day; the city accessibility pass; Main Street Offices (pay stub, promotion outlook, job security); the neighbourhood tour with download progress and the city open after winning; and Rosa's promotion nudge.
