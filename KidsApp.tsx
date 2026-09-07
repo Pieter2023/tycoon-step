@@ -1,5 +1,6 @@
 // Kids Mode - Money Quest! (Ages 8-10)
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, Suspense } from 'react';
+const KidsSquareModal = React.lazy(() => import('./components/town/KidsSquareModal'));
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { 
@@ -26,6 +27,7 @@ const KidsApp: React.FC<KidsAppProps> = ({ onBackToMenu, initialGameState }) => 
   const [showCharacterSelect, setShowCharacterSelect] = useState(!isResumingFromSave);
   const [selectedDifficulty, setSelectedDifficulty] = useState(initialGameState?.difficulty || 'NORMAL');
   const [activeTab, setActiveTab] = useState<'home' | 'earn' | 'spend' | 'goals'>('home');
+  const [showSquare, setShowSquare] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCelebration, setShowCelebration] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -791,6 +793,10 @@ const KidsApp: React.FC<KidsAppProps> = ({ onBackToMenu, initialGameState }) => 
                 {isProcessing ? '⏳ Loading...' : '▶️ Next Week!'} 
                 <ArrowRight size={28} />
               </motion.button>
+
+              {/* 3D square */}
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setShowSquare(true)} className="w-full py-4 bg-gradient-to-r from-sky-400 to-emerald-400 text-white font-bold text-xl rounded-2xl shadow-lg mb-6 flex items-center justify-center gap-2">🏙️ Visit your square</motion.button>
+              {showSquare && <Suspense fallback={null}><KidsSquareModal state={gameState} processing={isProcessing} onClose={() => setShowSquare(false)} onStartHustle={handleStartHustle} onBuy={handleBuyCollectible} onSetGoal={handleSetGoal} onNextWeek={handleNextWeek} /></Suspense>}
 
               {/* Quick Stats */}
               <div className="grid grid-cols-2 gap-4 mb-6">

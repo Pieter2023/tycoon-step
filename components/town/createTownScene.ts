@@ -21,7 +21,7 @@ import { residentStyle, seatActor, styleCharacter, yieldTo, Sex, YieldState } fr
 import { createQualityGovernor, initialQuality, QUALITY_SETTINGS, QualityLevel, QualityMode } from './townQuality';
 export type TownView = { x:number; z:number; yaw:number; pitch:number; distance:number; mode?:CameraPreset };
 export type TownSpot = 'teller' | 'exit' | 'cart' | 'cafe-counter' | 'broker' | 'agent' | 'board' | 'home' | 'desk' | 'rosa' | 'work' | 'manager' | null;
-export type TownSceneOptions = { view?:TownView; onView?:(view:TownView)=>void; onRoom?:(room:'city'|'bank'|'cafe'|'exchange'|'property'|'home'|'work')=>void; onPlayerPoint?:(point:TownPoint)=>void; onSpot?:(spot:TownSpot)=>void; onManual?:()=>void; playerSex?:Sex; quality?:QualityMode; onQuality?:(level:QualityLevel, automatic:boolean)=>void; onProgress?:(fraction:number)=>void; onTimeOfDay?:(label:Daylight['label'])=>void };
+export type TownSceneOptions = { view?:TownView; onView?:(view:TownView)=>void; onRoom?:(room:'city'|'bank'|'cafe'|'exchange'|'property'|'home'|'work')=>void; onPlayerPoint?:(point:TownPoint)=>void; onSpot?:(spot:TownSpot)=>void; onManual?:()=>void; playerSex?:Sex; playerScale?:number; quality?:QualityMode; onQuality?:(level:QualityLevel, automatic:boolean)=>void; onProgress?:(fraction:number)=>void; onTimeOfDay?:(label:Daylight['label'])=>void };
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
@@ -188,6 +188,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     town.scene.traverse(o => { if (o instanceof THREE.Mesh && !Array.isArray(o.material) && o.material.name === 'glass' && o.material instanceof THREE.MeshStandardMaterial) { glassMaterial = o.material; glassMaterial.emissive.set('#ffc985'); glassMaterial.emissiveIntensity = 0; } });
     const playerSex = options.playerSex ?? 'm';
     styleCharacter(character.scene, { sex: playerSex, hair: playerSex === 'f' ? 'long' : 'short' });
+    if (options.playerScale) character.scene.scale.setScalar(options.playerScale);   // kids mode: a smaller figure
     if (vehicles) {
       traffic = createTownTraffic(vehicles.scene, reducedMotion); outdoors.add(traffic.root);
       const bike = vehicles.scene.getObjectByName('Bike'), dog = vehicles.scene.getObjectByName('Dog');
