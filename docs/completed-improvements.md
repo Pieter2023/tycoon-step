@@ -386,6 +386,16 @@ Chrome (QA save between jobs, B review on file): the one-on-one opened with the 
 
 Validation: 324 tests across 56 files (`test/TownMentor.test.tsx`: openers and points, proposal from weak spots, acceptance and idempotence, tracking through the log, judging completed and missed, the credit on the next review, the lifted notice through `processTurn`, the panel), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/mentor-2026-09-06/`.
 
+## The side-hustle desk at home — September 6, 2026 (build 24)
+
+Pieter's pick: the Life tab's side hustles, playable from the city. They live at home, at the desk by the window, because that is where a second income actually happens.
+
+`services/townHustle.ts` reads the existing catalogue, state and income model so the numbers match the dashboard exactly: each hustle is priced on the teaching estimate for that hustle alone (the midpoint of its range trimmed by how far automation has come and by any upgrades), with its hours a week, energy and stress cost, automation exposure, start-up cost and requirements, and the exact reason a start is blocked: already running, not enough cash, a missing qualification, career level or path, or not enough energy this month. Running hustles show the months in and how far the next milestone is. The desk block in `HomePanel` lists running hustles with Stop, offers the Hustle Sprint monthly action through the same handler and limit as the dashboard, surfaces a milestone prompt that opens the dashboard's upgrade chooser, and folds the catalogue behind "Start a hustle". Starting and stopping call App's existing handlers, so the events, notifications and checks are the ones the Life tab already uses. The flat gains a hustle corner (a work table with a laptop and a mug, parcels stacked beside it, more parcels from the second hustle) that appears only while something runs.
+
+Chrome: at the desk the block read "A second engine…" with thirteen hustles in the catalogue; starting Food Delivery from it showed "$1,048/mo · 12 h/week", the running card with Stop, the Sprint card, and the corner appeared beside the main desk; stopping it cleared both.
+
+Validation: 327 tests across 57 files (`test/TownHustle.test.tsx`: pricing, block reasons, milestones, summary, the panel's start/stop/sprint/upgrade wiring, the corner's visibility), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/hustle-2026-09-06/`.
+
 ## Where the sessions stopped (September 6, 2026, morning)
 
 Overnight (23:00 to about 01:00 PDT) nine builds shipped: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. The morning session (about 06:00 to 07:30 PDT) added eight more, each verified in Chrome, receipted above and pushed to `origin/main`: the townhouse around the apartment door and the camera-canopy fix; adaptive graphics quality; petite women with A-line skirts; residents that make room; Freedom Day; the city accessibility pass; Main Street Offices (pay stub, promotion outlook, job security); the neighbourhood tour with download progress and the city open after winning; and Rosa's promotion nudge.

@@ -112,3 +112,5 @@
 .town-raise{margin-top:8px}.town-raise .town-primary{width:100%}.town-factors{columns:2;column-gap:12px;margin-top:4px}.town-job{margin-top:10px;padding:10px;border:1px solid #476359;border-radius:10px;background:#1f3934}.town-job strong{font-size:12px;color:#f1d396}.town-job button{margin-top:6px}
 
 .town-quote{font-style:italic;color:#e9dfc4}
+
+.town-catalogue{margin-top:10px}.town-catalogue summary{cursor:pointer;font-size:12px;color:#f1d396;padding:8px 0}

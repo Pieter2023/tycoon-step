@@ -53,10 +53,18 @@ export function createTownHome() {
   box(1.9, .25, 1.1, 0, 1.0, -.6, '#141414', from[4]); box(1.9, .9, 1.1, 0, .5, -.6, '#1a1a1a', from[4]); box(1.5, .06, .28, 0, 1.13, -.02, '#f6f6f6', from[4]); box(.5, .4, .5, 0, .42, .75, '#141414', from[4]);
   cyl(.02, 1.0, 0, 4.1, 2.4, '#c9a94a', from[4]); for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; const bulb = new THREE.Mesh(new THREE.SphereGeometry(.09, 10, 8), new THREE.MeshStandardMaterial({ color: '#ffe9b8', emissive: '#ffcf7a', emissiveIntensity: .6 })); bulb.position.set(Math.cos(a) * .55, 3.55, 2.4 + Math.sin(a) * .55); from[4].add(bulb); }
   box(3.2, .05, 1.6, 0, 3.6, 2.4, '#c9a94a', from[4], .02); plant(-4.3, 2.8, 1.5, from[4]); plant(4.3, .6, 1.4, from[4]);
+  // Side-hustle corner by the window: a work table with a laptop and parcels, shown while any hustle runs.
+  const hustle = new THREE.Group(); hustle.visible = false; root.add(hustle);
+  box(1.2, .06, .7, -2.4, .95, -.6, '#a8865d', hustle); for (const dx of [-.5, .5]) box(.06, .7, .6, -2.4 + dx, .6, -.6, '#7a5a3c', hustle);
+  box(.5, .03, .34, -2.4, 1.0, -.55, '#2b2f36', hustle, .01); box(.5, .32, .03, -2.4, 1.16, -.72, '#101a22', hustle, .01);        // laptop
+  box(.12, .2, .08, -1.95, 1.09, -.5, '#d9d2c2', hustle, .02);                                                                     // mug
+  const parcels = new THREE.Group(); hustle.add(parcels);
+  box(.5, .4, .5, -3.3, .45, -.4, '#c9a071', parcels, .02); box(.4, .3, .4, -3.3, .8, -.4, '#d9b58a', parcels, .02); box(.45, .35, .45, -3.3, .42, .25, '#c9a071', parcels, .02);
   root.visible = false;
   const wallColours = ['#bdb6ac', '#e9e1d0', '#f2ead9', '#faf5ea', '#fbf7ee'], floorColours = ['#b9ad98', '#d9cbb3', '#c8b291', '#d8c9ae', '#e9e4dc'];
   return {
     root,
+    setHustles(count: number) { hustle.visible = count > 0; parcels.visible = count > 1; },
     setLifestyle(lifestyle: Lifestyle) {
       const tier = tierIndex(lifestyle);
       only.forEach((g, i) => { g.visible = i === tier; }); from.forEach((g, i) => { g.visible = tier >= i; });
