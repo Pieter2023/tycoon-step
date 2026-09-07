@@ -476,6 +476,18 @@ Pieter's pick: "Build the insurance at the bank, keep going." The game had no in
 
 Validation: 353 tests across 62 files (`test/TownInsurance.test.tsx`), TypeScript, build and `git diff --check` clean. Log in `docs/verification/live-play-2026-09-06/build-31-insurance.md`.
 
+## The quest log on the notice board — September 7, 2026 (build 32)
+
+Pieter's pick: "Build the quest log on the notice board, keep going." The dashboard's goal system (up to three active quests, rewards to claim, a playstyle track, character questlines) lived only behind the Quick-actions menu; the square's board carried the month's three challenges and nothing else.
+
+**On the board (`NoticeBoardPanel`).** Below the challenges, a Quest log block: the count done, the track tag (Investor / Entrepreneur / Debt Crusher) once the game has inferred one, rewards ready to claim with a Claim button that pays through App's existing claim handler (same reward, confetti and toast as the dashboard), the active quests with live progress bars, the exact progress in the quest's own unit (money, count, months), the reward, and the hint; "Up next" lists locked quests whose prerequisites are met; a link opens the full log. `services/townQuests.ts` reads the quest state and `getQuestProgress`, formats rewards in plain words ("+$200 · +2 financial IQ"), and never changes state. Quest titles are the app's translation keys, so the panel translates them with the same `t` the dashboard uses; the rest of the copy is bilingual through `tl`.
+
+**On the paper.** The 3D board's sheet was a static drawing of three blank lines. It is now redrawn from the live state (`noticeSheet` → the scene's `setNotices`): the board title, a subtitle with the month and either "N rewards to claim" or "N of M quests done", then up to six lines with a tick for each challenge already done and a highlighted line for each reward waiting. Walk up to the board and it says what the panel says.
+
+**Verified in Chrome (5188)** with the seeded save (two rewards waiting, three active, Entrepreneur track): the Board button opened the panel with "Quest log · 0/19 · Entrepreneur", First Investment and Side Hustle Kickoff marked "Reward ready", Build Your Reserve at $0 of $2,000 with its hint; Claim on First Investment took cash from $2,570 to $2,720 and the header to 1/19 with one reward left. No console errors.
+
+Validation: 356 tests across 63 files (`test/TownQuests.test.tsx`: board state, sheet, claim from the panel), TypeScript, build and `git diff --check` clean. Log in `docs/verification/live-play-2026-09-06/build-32-quests.md`.
+
 ## Where the sessions stopped (September 6, 2026, morning)
 
 Overnight (23:00 to about 01:00 PDT) nine builds shipped: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. The morning session (about 06:00 to 07:30 PDT) added eight more, each verified in Chrome, receipted above and pushed to `origin/main`: the townhouse around the apartment door and the camera-canopy fix; adaptive graphics quality; petite women with A-line skirts; residents that make room; Freedom Day; the city accessibility pass; Main Street Offices (pay stub, promotion outlook, job security); the neighbourhood tour with download progress and the city open after winning; and Rosa's promotion nudge.

@@ -14,6 +14,7 @@ import { createTownWork, clampWorkPoint, workSpot } from './townWork';
 import { createTownCollege, clampCollegePoint, collegeSpot, createCollegeFacade } from './townCollege';
 import type { CollegeBoard } from '../../services/townCollege';
 import type { Figures } from '../../services/townFamily';
+import type { NoticeSheet } from '../../services/townQuests';
 import type { WorkBoard } from '../../services/townWork';
 import { createSeasonPalette, createSeasonFall, seasonFor, Season } from './townSeasons';
 import type { Lifestyle } from '../../types';
@@ -34,7 +35,7 @@ import { cameraRelativeMovement, normalizeStick, cameraPreset, CameraPreset, tur
 export type TownController = {
   setCafeService:(service?:CafeService)=>void; walkToServiceStation:(station:ServiceStation)=>void; getPlayerPoint:()=>TownPoint;
   enterCafe:()=>void; leaveCafe:()=>void; walkToCafeCounter:()=>void; setNeighbourhood:(month:number,cafe?:CafeState,won?:boolean)=>void;
-  enterBank:()=>void; leaveBank:()=>void; walkToTeller:()=>void; walkToExit:()=>void; enterExchange:()=>void; leaveExchange:()=>void; walkToBroker:()=>void; setBoard:(board:ExchangeBoard)=>void; enterProperty:()=>void; leaveProperty:()=>void; walkToAgent:()=>void; setListings:(board:PropertyBoard)=>void; enterHome:()=>void; leaveHome:()=>void; enterWork:()=>void; leaveWork:()=>void; walkToManager:()=>void; walkToWork:()=>void; setPayroll:(board:WorkBoard)=>void; enterCollege:()=>void; leaveCollege:()=>void; walkToRegistrar:()=>void; walkToCollege:()=>void; setSyllabus:(board:CollegeBoard)=>void; setFamily:(figures:Figures)=>void; walkToDesk:()=>void; walkHome:()=>void; walkToRosa:()=>void; setLifestyle:(lifestyle:Lifestyle)=>void; setHustles:(count:number)=>void; setAdvice:(headline:string)=>void; serveCustomer:(onDone?:()=>void)=>void; celebrate:()=>void; setCamera:(mode:CameraPreset)=>void; orbit:(delta:number)=>void; zoom:(delta:number)=>void; setQuality:(mode:QualityMode)=>void; getQuality:()=>QualityLevel;
+  enterBank:()=>void; leaveBank:()=>void; walkToTeller:()=>void; walkToExit:()=>void; enterExchange:()=>void; leaveExchange:()=>void; walkToBroker:()=>void; setBoard:(board:ExchangeBoard)=>void; enterProperty:()=>void; leaveProperty:()=>void; walkToAgent:()=>void; setListings:(board:PropertyBoard)=>void; enterHome:()=>void; leaveHome:()=>void; enterWork:()=>void; leaveWork:()=>void; walkToManager:()=>void; walkToWork:()=>void; setPayroll:(board:WorkBoard)=>void; enterCollege:()=>void; leaveCollege:()=>void; walkToRegistrar:()=>void; walkToCollege:()=>void; setSyllabus:(board:CollegeBoard)=>void; setFamily:(figures:Figures)=>void; setNotices:(notice:NoticeSheet)=>void; walkToDesk:()=>void; walkHome:()=>void; walkToRosa:()=>void; setLifestyle:(lifestyle:Lifestyle)=>void; setHustles:(count:number)=>void; setAdvice:(headline:string)=>void; serveCustomer:(onDone?:()=>void)=>void; celebrate:()=>void; setCamera:(mode:CameraPreset)=>void; orbit:(delta:number)=>void; zoom:(delta:number)=>void; setQuality:(mode:QualityMode)=>void; getQuality:()=>QualityLevel;
   walkTo: (id: TownPlaceId) => void; walkToBoard: () => void; direction: (key: string, down: boolean) => void;
   move: (x: number, z: number) => void; resetView: () => void;
   setOwned: (ids: TownPlaceId[]) => void; setBusiness: (owned:boolean, licensed:boolean, upgraded:boolean)=>void; setSound:(enabled:boolean)=>void; visitCart:()=>void; pause:(paused:boolean)=>void; dispose: () => void;
@@ -135,12 +136,16 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const COLLEGE={x:4.4,z:9.6};
   const collegeFacade=createCollegeFacade({x:COLLEGE.x,z:10.4});outdoors.add(collegeFacade.root);
   const ROSA={x:-6,z:7.4};
-  // Community notice board on the square: this month's challenges live here.
+  // Community notice board on the square: this month's challenges and the quest log live here.
   const BOARD={x:-6.2,z:9.6};
+  let drawNotices:(notice:NoticeSheet)=>void=()=>{};
   {const post=new THREE.Mesh(new THREE.BoxGeometry(.12,1.9,.12),new THREE.MeshStandardMaterial({color:'#4a3b2c'}));post.position.set(BOARD.x,1.15,BOARD.z);post.castShadow=true;outdoors.add(post);
    const panel=new THREE.Mesh(new THREE.BoxGeometry(1.7,1.1,.08),new THREE.MeshStandardMaterial({color:'#5f4a36'}));panel.position.set(BOARD.x,1.75,BOARD.z);panel.castShadow=true;outdoors.add(panel);
-   const paper=document.createElement('canvas');paper.width=768;paper.height=480;const ink=paper.getContext('2d')!;ink.fillStyle='#f6ecd6';ink.fillRect(0,0,768,480);ink.fillStyle='#3a5a4a';ink.font='600 58px sans-serif';ink.textAlign='center';ink.fillText(tl('NOTICE BOARD','TABLÓN DE ANUNCIOS'),384,90);ink.fillStyle='#6b5a44';ink.font='40px sans-serif';ink.fillText("This month's challenges",384,160);for(const y of [230,300,370]){ink.fillStyle='#fff8ea';ink.fillRect(80,y-40,608,58);ink.fillStyle='#c9b898';ink.fillRect(100,y-24,26,26);ink.fillStyle='#8a7a62';ink.fillRect(150,y-18,300,14);}
-   const texture=new THREE.CanvasTexture(paper);texture.colorSpace=THREE.SRGBColorSpace;const sheet=new THREE.Mesh(new THREE.PlaneGeometry(1.55,.97),new THREE.MeshBasicMaterial({map:texture}));sheet.position.set(BOARD.x,1.75,BOARD.z+.05);outdoors.add(sheet);
+   const paper=document.createElement('canvas');paper.width=768;paper.height=480;const paperTexture=new THREE.CanvasTexture(paper);paperTexture.colorSpace=THREE.SRGBColorSpace;
+   // The sheet is redrawn with the live challenges and quests (setNotices); this is the blank sheet until then.
+   drawNotices=(notice)=>{const ink=paper.getContext?.('2d');if(!ink)return;ink.fillStyle='#f6ecd6';ink.fillRect(0,0,768,480);ink.fillStyle='#3a5a4a';ink.font='600 54px sans-serif';ink.textAlign='center';ink.fillText(notice.title,384,78);ink.fillStyle='#6b5a44';ink.font='30px sans-serif';ink.fillText(notice.subtitle.slice(0,44),384,128);let y=190;for(const line of notice.lines.slice(0,6)){ink.fillStyle=line.ready?'#fff1c4':'#fff8ea';ink.fillRect(60,y-32,648,46);ink.fillStyle=line.done?'#3f8f5a':'#c9b898';ink.fillRect(78,y-22,24,24);if(line.done){ink.strokeStyle='#ffffff';ink.lineWidth=4;ink.beginPath();ink.moveTo(83,y-10);ink.lineTo(89,y-4);ink.lineTo(99,y-18);ink.stroke();}ink.fillStyle='#4a3b2c';ink.font='26px sans-serif';ink.textAlign='left';ink.fillText(line.text.slice(0,40),118,y-2);y+=50;}paperTexture.needsUpdate=true;};
+   drawNotices({title:tl('NOTICE BOARD','TABLÓN DE ANUNCIOS'),subtitle:tl("This month's challenges",'Los retos de este mes'),lines:[]});
+   const sheet=new THREE.Mesh(new THREE.PlaneGeometry(1.55,.97),new THREE.MeshBasicMaterial({map:paperTexture}));sheet.position.set(BOARD.x,1.75,BOARD.z+.05);outdoors.add(sheet);
    const roofBoard=new THREE.Mesh(new THREE.BoxGeometry(1.9,.08,.5),new THREE.MeshStandardMaterial({color:'#7a4a3c'}));roofBoard.position.set(BOARD.x,2.36,BOARD.z);outdoors.add(roofBoard);}
   let glassMaterial:THREE.MeshStandardMaterial|undefined, townMonth=1, phaseOverride:number|undefined, timeLabel:Daylight['label']|undefined;
   // Seasons recolour the merged city materials and drop snow or leaves.
@@ -503,6 +508,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     setLifestyle(lifestyle){home.setLifestyle(lifestyle);},
     setHustles(count){home.setHustles(count);},
     setFamily(figures){familyFigures=figures;applyFamily();},
+    setNotices(notice){drawNotices(notice);},
     setAdvice(headline){adviceHeadline=headline;},
     walkToCafeCounter(){if(cafeInside){clearMovement();path=[{x:0,z:.8}];}},
     setNeighbourhood(month,cafe,won=false){cafeState=cafe;townMonth=month;celebrating=won;season=seasonFor(month);palette?.apply(seasonOverride??season);shopSign.visible=!!cafe;rainy=cafeWeather(month);cafeRoom.setState(cafeService?.status==='active'?{seats:cafeService.seats,machine:cafeService.machine}:cafe);if(!(scene.background instanceof THREE.Color))scene.background=new THREE.Color('#bdd7e4');ambience?.update(rainy,inside,document.hidden);},
