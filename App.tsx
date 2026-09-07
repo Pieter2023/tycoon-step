@@ -1,6 +1,7 @@
 import { resolveCafeService } from './services/cafeService';
 import { fileUnemploymentClaim, benefitEligibility, benefitStatus } from './services/townBenefits';
 import { contributeCollegeFund } from './services/townFamily';
+import { buyPolicy, cancelPolicy } from './services/townInsurance';
 import { askForRaise, switchCareer, careerChangeEligibility, jobSearch, acceptRecoveryPlan } from './services/townCareer';
 import { tl } from './i18n/town';
 import { resolveCafeAction, quoteCafe } from './services/townCafe';
@@ -1774,6 +1775,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
       { label: 'Education', value: cf.educationPayment },
       { label: 'Children', value: cf.childrenExpenses },
       { label: 'Vehicles', value: cf.vehicleCosts },
+      { label: 'Insurance', value: cf.insurancePremiums },
     ].filter(l => l.value > 0).sort((a, b) => b.value - a.value);
 
     const lowBufferThreshold = Math.max(500, Math.round(cf.expenses * 0.10));
@@ -2038,7 +2040,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
       return;
     }
 
-    const newState = applyScenarioOutcome(gameState, outcome);
+    const newState = applyScenarioOutcome(gameState, outcome, option.label);
     setGameState(newState);
     recordAutosave(newState);
     if (outcome.cashChange) {
@@ -3398,7 +3400,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           onAcceptPlan={()=>{if(isProcessing)return;const next=acceptRecoveryPlan(gameState);if(next===gameState){showNotif('Not now','A plan is already running or an event is waiting.','warning');return;}setGameState(next);recordAutosave(next);showNotif('Recovery plan agreed','Three months. The office tracks each goal.','info');}}
           onFileClaim={()=>{if(isProcessing)return;const next=fileUnemploymentClaim(gameState);if(next===gameState){showNotif('Not now',benefitEligibility(gameState).reason??'Claim unavailable.','warning');return;}setGameState(next);recordAutosave(next);showNotif('Claim filed',`${benefitStatus(next)?.monthly?.toLocaleString('en-US')??''} a month from next month while you search.`,'success');}}
           onStartHustle={handleStartSideHustle} onStopHustle={handleStopSideHustle} onChooseUpgrade={()=>{setShowTown(false);setShowSideHustleUpgradeModal(true);}}
-          workActions={monthlyActionsSummary} onMonthlyAction={handleUseMonthlyAction} onEnroll={handleEnrollEducation} onCollegeFund={(childId,amount)=>{if(isProcessing)return;const next=contributeCollegeFund(gameState,childId,amount);if(next===gameState){showNotif('Not now','That transfer could not be made.','warning');return;}setGameState(next);recordAutosave(next);showNotif('College fund',`$${amount.toLocaleString('en-US')} moved to savings for college.`,'success');}}
+          workActions={monthlyActionsSummary} onMonthlyAction={handleUseMonthlyAction} onEnroll={handleEnrollEducation} onBuyPolicy={(id,deductible)=>{if(isProcessing)return;const next=buyPolicy(gameState,id,deductible);if(next===gameState){showNotif('Not now','That policy is not available right now.','warning');return;}setGameState(next);recordAutosave(next);showNotif('Covered','Premiums start next month.','success');}} onCancelPolicy={id=>{if(isProcessing)return;const next=cancelPolicy(gameState,id);if(next===gameState)return;setGameState(next);recordAutosave(next);showNotif('Cover cancelled','No premium from next month.','warning');}} onCollegeFund={(childId,amount)=>{if(isProcessing)return;const next=contributeCollegeFund(gameState,childId,amount);if(next===gameState){showNotif('Not now','That transfer could not be made.','warning');return;}setGameState(next);recordAutosave(next);showNotif('College fund',`$${amount.toLocaleString('en-US')} moved to savings for college.`,'success');}}
           onSell={handleSellAsset}
           onMortgage={item=>setShowMortgageModal(item)}
           onChangeLifestyle={handleChangeLifestyle}

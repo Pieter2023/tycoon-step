@@ -1,5 +1,6 @@
 import { finishCafeService } from './cafeService';
 import { fileUnemploymentClaim, payUnemploymentBenefit } from './townBenefits';
+import { insurancePremiums, settleClaim, settleRepairs, applyClaim } from './townInsurance';
 import { applyPerformanceReview, applyLayoff, judgeRecoveryPlan } from './townCareer';
 import { cafeValue, driftReputation, quoteCafe, settleCafeMonth } from './townCafe';
 import { closeChallengeMonth, snapshotFor } from './townChallenges';
@@ -1196,6 +1197,7 @@ export const calculateMonthlyCashFlow = (state: GameState): {
   educationPayment: number;
   childrenExpenses: number;
   vehicleCosts: number;
+  insurancePremiums: number;
   expenses: number;
 } => {
   const diffSettings = DIFFICULTY_SETTINGS[state.difficulty as keyof typeof DIFFICULTY_SETTINGS] || DIFFICULTY_SETTINGS.NORMAL;
@@ -1239,8 +1241,9 @@ export const calculateMonthlyCashFlow = (state: GameState): {
   
   // Vehicle costs
   const vehicleCosts = state.vehicles?.reduce((sum, v) => sum + v.monthlyMaintenance, 0) || 0;
+  const insurancePremiumsDue = insurancePremiums(state);
   
-  const totalExpenses = lifestyleCost + debtPayments + educationPayment + childrenExpenses + vehicleCosts;
+  const totalExpenses = lifestyleCost + debtPayments + educationPayment + childrenExpenses + vehicleCosts + insurancePremiumsDue;
   
   return {
     salary: baseSalary,
@@ -1253,6 +1256,7 @@ export const calculateMonthlyCashFlow = (state: GameState): {
     educationPayment,
     childrenExpenses,
     vehicleCosts,
+    insurancePremiums: insurancePremiumsDue,
     expenses: totalExpenses
   };
 };
@@ -1270,6 +1274,7 @@ export const calculateMonthlyCashFlowEstimate = (state: GameState): {
   educationPayment: number;
   childrenExpenses: number;
   vehicleCosts: number;
+  insurancePremiums: number;
   expenses: number;
 } => {
   const diffSettings = DIFFICULTY_SETTINGS[state.difficulty as keyof typeof DIFFICULTY_SETTINGS] || DIFFICULTY_SETTINGS.NORMAL;
@@ -1315,8 +1320,9 @@ export const calculateMonthlyCashFlowEstimate = (state: GameState): {
 
   // Vehicle costs
   const vehicleCosts = state.vehicles?.reduce((sum, v) => sum + (v.monthlyMaintenance || 0), 0) || 0;
+  const insurancePremiumsDue = insurancePremiums(state);
 
-  const expenses = lifestyleCost + debtPayments + educationPayment + childrenExpenses + vehicleCosts;
+  const expenses = lifestyleCost + debtPayments + educationPayment + childrenExpenses + vehicleCosts + insurancePremiumsDue;
 
   return {
     salary,
@@ -1329,6 +1335,7 @@ export const calculateMonthlyCashFlowEstimate = (state: GameState): {
     educationPayment,
     childrenExpenses,
     vehicleCosts,
+    insurancePremiums: insurancePremiumsDue,
     expenses,
   };
 };
@@ -2739,7 +2746,7 @@ const generateNegotiationResult = (negotiateType: string, state: GameState): Sce
 // ============================================
 // APPLY SCENARIO OUTCOME
 // ============================================
-export const applyScenarioOutcome = (state: GameState, outcome: any): GameState => {
+export const applyScenarioOutcome = (state: GameState, outcome: any, optionLabel = ''): GameState => {
   let newState = { ...state, pendingScenario: null };
   const perkEffects = getCharacterPerkEffects(state);
   const outcomeCashChange = (() => {
@@ -2804,6 +2811,11 @@ export const applyScenarioOutcome = (state: GameState, outcome: any): GameState 
   
   if (typeof outcomeCashChange === 'number' && outcomeCashChange !== 0) {
     newState.cash = Math.max(0, newState.cash + outcomeCashChange);
+    // Insurance from the city bank pays its share of a covered shock (the option's own label says whether the event already priced cover).
+    if (outcomeCashChange < 0 && state.pendingScenario) {
+      const claim = settleClaim(newState, state.pendingScenario.id, optionLabel, -outcomeCashChange);
+      if (claim) Object.assign(newState, applyClaim(newState, claim));
+    }
   }
 
   // Dynamic cash changes based on monthly salary (e.g., severance / back pay).
@@ -3392,6 +3404,10 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
   if (newState.cafe?.lastReceipt) assetPayments.push({ name: 'Your café (after all operating costs)', amount: newState.cafe.lastReceipt.profit });
   const totalExpenses = cashFlow.expenses + businessUpdate.maintenanceCost;
   const netCashFlow = cashFlow.income - totalExpenses;
+  // Business cover pays its share of this month's repair bill; premiums for every policy are counted in the cash flow above.
+  const repairClaim = settleRepairs(newState, businessUpdate.maintenanceCost);
+  if (repairClaim) Object.assign(newState, applyClaim(newState, repairClaim));
+  if (cashFlow.insurancePremiums > 0) newState.insurance = { policies: {}, claims: [], ...newState.insurance, premiumsPaid: (newState.insurance?.premiumsPaid ?? 0) + cashFlow.insurancePremiums };
   const previousNetWorth = calculateNetWorth(state);
 
   // Year-in-review accumulator
@@ -3745,7 +3761,9 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
     netWorthChange: newNetWorth - previousNetWorth,
     promoted,
     aiImpact: newState.aiDisruption?.affectedIndustries?.[newState.career?.path || 'TECH']?.automationRisk,
-    childExpenses: cashFlow.childrenExpenses
+    childExpenses: cashFlow.childrenExpenses,
+    insurancePremiums: cashFlow.insurancePremiums,
+    insurancePaid: repairClaim?.paid
   };
 
   newState.lastMonthlyReport = monthlyReport;

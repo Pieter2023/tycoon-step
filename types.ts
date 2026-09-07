@@ -556,6 +556,8 @@ export interface GameState {
   activeSideHustles: SideHustle[];
   family: Family;
   vehicles: Vehicle[];
+  // Insurance taken out at the city bank: policies, claims and premiums paid (see services/townInsurance.ts).
+  insurance?: import('./services/townInsurance').InsuranceState;
   stats: PlayerStats;
   events: LifeEvent[];
   eventTracker: EventTracker;
@@ -760,6 +762,8 @@ export interface MonthlyReport {
   aiImpact?: string;
   taxesDue?: number;
   childExpenses?: number;
+  insurancePremiums?: number;
+  insurancePaid?: number;
 }
 
 export interface CareerLevel {

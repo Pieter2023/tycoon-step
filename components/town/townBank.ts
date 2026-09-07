@@ -47,6 +47,7 @@ export function createTownBank() {
     leaves.scale.set(.7, 1.3, .7); leaves.position.set(x, 1.65, 5.2); leaves.castShadow = true; root.add(leaves);
     box(.08, .95, .08, x, 1.15, 5.2, '#836d44');
   }
+  const desk = sign(tl('INSURANCE · POLICIES','SEGUROS · PÓLIZAS'), 4.86, 2.4, 2.4, 2.4, '#3f5a73'); desk.rotation.y = -Math.PI / 2;
   box(2, .028, .85, 0, .23, 6.1, '#bd9c6a');
   const exit = sign('CITY  →', 0, .26, 6.1, 1.5); exit.rotation.x = -Math.PI / 2;
   // A soft halo indicates the point at which talking becomes available.

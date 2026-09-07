@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import InsurancePanel from './InsurancePanel';
+import type { PolicyId } from '../../services/townInsurance';
 import { tl } from '../../i18n/town';
 import { GameState } from '../../types';
 import { BankTransfer, savingsBalance } from '../../services/townActivities';
@@ -6,9 +8,10 @@ import { calculateMonthlyCashFlowEstimate } from '../../services/gameLogic';
 import { benefitEligibility, benefitStatus, BENEFIT_RATE, BENEFIT_CAP, BENEFIT_MONTHS } from '../../services/townBenefits';
 export type TownLoan = { id: string; name: string; amount: number; rate: number; term: number };
 const money = (n:number) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n);
-export default function TellerPanel({state,disabled,onTransfer,loans,onLoans,onReserve,onBusiness,onFileClaim}:{state:GameState;disabled:boolean;onTransfer?:(transfer:BankTransfer)=>void;loans:TownLoan[];onLoans:()=>void;onReserve:()=>void;onBusiness:()=>void;onFileClaim?:()=>void}) {
+export default function TellerPanel({state,disabled,onTransfer,loans,onLoans,onReserve,onBusiness,onFileClaim,onBuyPolicy,onCancelPolicy}:{state:GameState;disabled:boolean;onTransfer?:(transfer:BankTransfer)=>void;loans:TownLoan[];onLoans:()=>void;onReserve:()=>void;onBusiness:()=>void;onFileClaim?:()=>void;onBuyPolicy?:(id:PolicyId,deductible:number)=>void;onCancelPolicy?:(id:PolicyId)=>void}) {
   const unemployed=(state.jobLossMonthsRemaining??0)>0, claim=benefitStatus(state), eligibility=benefitEligibility(state);
-  const [tab,setTab]=useState<'savings'|'loans'>('savings');
+  const [tab,setTab]=useState<'savings'|'loans'|'insurance'>('savings');
+  const policies=Object.keys(state.insurance?.policies??{}).length;
   const [direction,setDirection]=useState<'deposit'|'withdraw'>('deposit');
   const [amount,setAmount]=useState('500');
   const cashFlow=calculateMonthlyCashFlowEstimate(state), savings=savingsBalance(state), value=Number(amount);
@@ -29,8 +32,8 @@ export default function TellerPanel({state,disabled,onTransfer,loans,onLoans,onR
       <p className="town-small">{tl('Insurance you already paid for through payroll. It is a bridge, not a plan: it covers part of the bills while you search, and it is why the reserve exists for the rest.','Un seguro que ya pagaste con tu nómina. Es un puente, no un plan: cubre parte de las facturas mientras buscas, y por eso existe la reserva para el resto.')} ({Math.round(BENEFIT_RATE*100)}%)</p></>}
     </div>}
     {!confirmed&&reserveBlock}
-    <div className="town-tabs" aria-label={tl('Teller services','Servicios del cajero')}><button aria-pressed={tab==='savings'} onClick={()=>setTab('savings')}>{tl('Cash & savings','Efectivo y ahorros')}</button><button aria-pressed={tab==='loans'} onClick={()=>setTab('loans')}>{tl('Compare loans','Comparar préstamos')}</button></div>
-    {tab==='savings'?<>
+    <div className="town-tabs" aria-label={tl('Teller services','Servicios del cajero')}><button aria-pressed={tab==='savings'} onClick={()=>setTab('savings')}>{tl('Cash & savings','Efectivo y ahorros')}</button><button aria-pressed={tab==='loans'} onClick={()=>setTab('loans')}>{tl('Compare loans','Comparar préstamos')}</button><button aria-pressed={tab==='insurance'} onClick={()=>setTab('insurance')}>{tl('Insurance','Seguros')}{policies?` ${policies}🛡️`:''}</button></div>
+    {tab==='insurance'?<InsurancePanel state={state} disabled={disabled} onBuyPolicy={onBuyPolicy} onCancelPolicy={onCancelPolicy}/>:tab==='savings'?<>
       <div className="town-account-balances"><div><span>{tl('Spending cash','Efectivo disponible')}</span><strong>{money(state.cash)}</strong></div><div><span>{tl('Accessible savings','Ahorros accesibles')}</span><strong>{money(savings)}</strong></div></div>
       <p className="town-small">{tl('Savings uses your existing High-Yield Savings holdings. Transfers change where money sits, not your wealth. Interest arrives with the monthly simulation.','Los ahorros usan tu cuenta de ahorro de alto rendimiento. Las transferencias cambian dónde está el dinero, no tu patrimonio. Los intereses llegan con la simulación mensual.')}</p>
       <div className="town-tabs"><button aria-pressed={direction==='deposit'} onClick={()=>setDirection('deposit')}>{tl('Deposit','Depositar')}</button><button aria-pressed={direction==='withdraw'} onClick={()=>setDirection('withdraw')}>{tl('Withdraw','Retirar')}</button></div>
