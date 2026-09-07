@@ -17,7 +17,7 @@ import type { Lifestyle } from '../../types';
 import { createCoffeeCart } from './townBusiness';
 import { createTownTraffic } from './townTraffic';
 import { createTownLife, createCyclist, createDogWalker, createFireworks } from './townLife';
-import { residentStyle, seatActor, styleCharacter, yieldTo, Sex, YieldState, WALK_KEEP_RIGHT, pushApart } from './townResidents';
+import { residentStyle, seatActor, styleCharacter, yieldTo, Sex, YieldState, WALK_KEEP_RIGHT, steerAround } from './townResidents';
 import { createQualityGovernor, initialQuality, QUALITY_SETTINGS, QualityLevel, QualityMode } from './townQuality';
 export type TownView = { x:number; z:number; yaw:number; pitch:number; distance:number; mode?:CameraPreset };
 export type TownSpot = 'teller' | 'exit' | 'cart' | 'cafe-counter' | 'broker' | 'agent' | 'board' | 'home' | 'desk' | 'rosa' | 'work' | 'manager' | null;
@@ -293,9 +293,12 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     if(ready && !paused) {
       const input=normalizeStick(stick.x+Number(keys.has('d')||keys.has('arrowright'))-Number(keys.has('a')||keys.has('arrowleft')),stick.z+Number(keys.has('s')||keys.has('arrowdown'))-Number(keys.has('w')||keys.has('arrowup')));
       let movement=cameraRelativeMovement(input.x,input.z,yaw), speed=keys.has('shift')?JOG_SPEED:WALK_SPEED;
+      const bystanders=inside||serviceStage?[]:pedestrians.filter(p=>p.root.visible).map(p=>({x:p.root.position.x,z:p.root.position.z}));
       if (!input.x && !input.z && path.length) {
         const dx=path[0].x-player.position.x,dz=path[0].z-player.position.z,len=Math.hypot(dx,dz);
-        if (len<.035) { path.shift(); movement={x:0,z:0}; velocity.set(0,0); }
+        // A waypoint someone is standing on counts as reached from arm's length, or the route would circle them forever.
+        const occupied=bystanders.some(b=>Math.hypot(b.x-path[0].x,b.z-path[0].z)<.65);
+        if (len<.035||(occupied&&len<.75)) { path.shift(); movement={x:0,z:0}; velocity.set(0,0); }
         else {
           let remaining=len; for(let i=1;i<path.length;i++)remaining+=Math.hypot(path[i].x-path[i-1].x,path[i].z-path[i-1].z);
           movement={x:dx/len,z:dz/len}; speed=Math.min(routeSpeed(remaining,keys.has('shift')||!!serviceStage),Math.sqrt(2*4.5*len),len*7);
@@ -305,9 +308,8 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       const proposed={x:player.position.x+velocity.x*dt,z:player.position.z+velocity.y*dt};
       let next=inside?(cafeInside?clampCafePoint(proposed):exchangeInside?clampExchangePoint(proposed):officeInside?clampPropertyPoint(proposed):homeInside?clampHomePoint(proposed):workInside?clampWorkPoint(proposed):clampBankPoint(proposed)):slideMovement(player.position,proposed);
       if(!inside&&!serviceStage){
-        // People: ease the player around anyone in the way. Vehicles: solid, so a stopped car is a wall, not a ghost.
-        next=pushApart(next,pedestrians.filter(p=>p.root.visible).map(p=>({x:p.root.position.x,z:p.root.position.z})),.6);
-        if(!isWalkable(next))next={x:player.position.x,z:player.position.z};
+        // People: step sideways around anyone in the way (never a wall). Vehicles: solid, so a stopped car is a wall, not a ghost.
+        const steered=steerAround(player.position,next,bystanders,.6); if(isWalkable(steered))next=steered; else {const other=steerAround(player.position,next,bystanders,.6,true); if(isWalkable(other))next=other;}
         for(const v of traffic?.obstacles()??[]){if(Math.abs(next.x-v.x)<v.halfLength+.35&&Math.abs(next.z-v.z)<v.halfWidth+.35){const keepX={x:player.position.x,z:next.z},keepZ={x:next.x,z:player.position.z};next=Math.abs(keepX.z-v.z)>=v.halfWidth+.35||Math.abs(keepX.x-v.x)>=v.halfLength+.35?keepX:Math.abs(keepZ.x-v.x)>=v.halfLength+.35||Math.abs(keepZ.z-v.z)>=v.halfWidth+.35?keepZ:{x:player.position.x,z:player.position.z};}}
       }
       const actualSpeed=Math.hypot(next.x-player.position.x,next.z-player.position.z)/Math.max(dt,.001); player.position.x=next.x;player.position.z=next.z;

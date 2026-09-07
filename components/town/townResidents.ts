@@ -89,10 +89,26 @@ export function styleCharacter(root: THREE.Object3D, style: ResidentStyle) {
 // Pavements keep right: walkers heading east and west use separate lines on each lane, so two
 // residents never share a point head-on. Half the lane offset in world units.
 export const WALK_KEEP_RIGHT = .42;
-// Eases a point out of the personal space of every listed person (radius apart), for the player.
-export function pushApart(point: { x: number; z: number }, people: { x: number; z: number }[], apart: number): { x: number; z: number } {
-  let out = { ...point };
-  for (const person of people) { const dx = out.x - person.x, dz = out.z - person.z, d = Math.hypot(dx, dz); if (d < apart) { const nx = d < 1e-4 ? 1 : dx / d, nz = d < 1e-4 ? 0 : dz / d; out = { x: person.x + nx * apart, z: person.z + nz * apart }; } }
+// Steers the player's next step sideways around anyone standing in the way. The deflection is
+// perpendicular to the direction of travel, never backwards, so a person parked on the route
+// (a queue at the cart, someone reading the notice board) is walked around instead of wedging the
+// player in place. People behind the player are ignored. `flip` takes the other side, for when the
+// near side is a wall. Callers keep the un-steered step when neither side is walkable: people are
+// soft, walls are not.
+export function steerAround(from: { x: number; z: number }, to: { x: number; z: number }, people: { x: number; z: number }[], apart: number, flip = false): { x: number; z: number } {
+  const dx = to.x - from.x, dz = to.z - from.z, len = Math.hypot(dx, dz);
+  if (len < 1e-5) return { ...to };
+  const fx = dx / len, fz = dz / len, nx = -fz, nz = fx;
+  let out = { ...to };
+  for (const person of people) {
+    if (Math.hypot(out.x - person.x, out.z - person.z) >= apart) continue;
+    const rx = person.x - from.x, rz = person.z - from.z;
+    if (rx * fx + rz * fz < -apart * .5) continue;
+    const lateral = rx * nx + rz * nz;
+    const side = (lateral > 0 ? -1 : 1) * (flip ? -1 : 1);
+    const shift = apart - Math.abs(lateral) + .03;
+    out = { x: out.x + nx * side * shift, z: out.z + nz * side * shift };
+  }
   return out;
 }
 

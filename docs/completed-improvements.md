@@ -426,6 +426,18 @@ Pieter played the live site and asked for three things: fix anything off, sort o
 
 Validation: 333 tests across 59 files (`test/TownLife.test.ts` updated for pants), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/live-play-2026-09-06/`.
 
+## Playthrough continued: nobody gets wedged, and the resume card adds up — September 6, 2026 (build 28)
+
+Continuing Pieter's "play it end to end" request after build 27 shipped.
+
+**The wedge.** Build 27's `pushApart` had a failure mode the promenade measurement did not catch: it pushed the player radially away from a person, so someone standing *on* the route (the two customers queuing at the coffee cart, anyone reading the notice board) pushed the player straight backwards, and when the pushed point was not walkable the whole step was discarded. Result: the player froze at (1.44, 9.99) beside the cart queue and every later destination click did nothing. Replaced with `steerAround`: the deflection is perpendicular to the direction of travel, never backwards, people behind the player are ignored, and if the near side is a wall the far side is tried; if neither side is walkable the un-steered step is kept, so people are soft and only walls and vehicles stop the player. A waypoint someone is standing on counts as reached from arm's length, or the route would circle them forever. Measured after the fix: the walk from the fountain through the cart queue to the west end arrives every time with a closest approach of 0.77 (was: never arrives); Rosa, the office, the board, the café and home all reached from the destination bar.
+
+**Resume card.** The mode picker's Continue card printed the raw number (`$-8,996.029`). Whole dollars with the sign first (`-$8,996`), for cash and net worth (`formatSigned` in `ModeSelector.tsx`).
+
+**Verified this round on the QA build (5188).** Café practice shift end to end (walk to counter, take three orders, brew, deliver, "What did you keep?" summary with practice-only note), Main Street Offices pay stub while between jobs, Rosa's bench, the notice board with three live challenges, the investor journey caption at 3/4, no console errors.
+
+Validation: 334 tests across 59 files (`steerAround` cases added to `test/TownLife.test.ts`), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/live-play-2026-09-06/`.
+
 ## Where the sessions stopped (September 6, 2026, morning)
 
 Overnight (23:00 to about 01:00 PDT) nine builds shipped: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. The morning session (about 06:00 to 07:30 PDT) added eight more, each verified in Chrome, receipted above and pushed to `origin/main`: the townhouse around the apartment door and the camera-canopy fix; adaptive graphics quality; petite women with A-line skirts; residents that make room; Freedom Day; the city accessibility pass; Main Street Offices (pay stub, promotion outlook, job security); the neighbourhood tour with download progress and the city open after winning; and Rosa's promotion nudge.

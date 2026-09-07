@@ -111,3 +111,23 @@ describe('exported extras', () => {
     expect(statSync('public/models/town/town-vehicles.glb').size).toBeLessThan(200_000);
   });
 });
+
+import { steerAround } from '../components/town/townResidents';
+describe('the player steps around people instead of wedging behind them', () => {
+  it('deflects sideways, keeps the forward progress, and ignores people behind', () => {
+    const from = { x: 0, z: 0 }, to = { x: .1, z: 0 };
+    const clear = steerAround(from, to, [{ x: 3, z: 0 }], .6);
+    expect(clear).toEqual(to);
+    const blocked = steerAround(from, to, [{ x: .4, z: .05 }], .6);
+    expect(blocked.x).toBeCloseTo(.1, 5);
+    expect(blocked.z).toBeLessThan(-.5);
+    expect(Math.hypot(blocked.x - .4, blocked.z - .05)).toBeGreaterThanOrEqual(.6);
+    const other = steerAround(from, to, [{ x: .4, z: -.05 }], .6);
+    expect(other.z).toBeGreaterThan(.5);
+    const flipped = steerAround(from, to, [{ x: .4, z: .05 }], .6, true);
+    expect(flipped.z).toBeGreaterThan(.5);
+    const behind = steerAround(from, to, [{ x: -.5, z: 0 }], .6);
+    expect(behind).toEqual(to);
+    expect(steerAround(from, from, [{ x: 0, z: .1 }], .6)).toEqual(from);
+  });
+});
