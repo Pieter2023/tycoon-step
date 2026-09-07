@@ -10,7 +10,7 @@ import { tl } from '../i18n/town';
 // can see it.
 export const BENEFIT_RATE = .5, BENEFIT_CAP = 2400, BENEFIT_MONTHS = 6;
 export type UnemploymentClaim = { filedMonth: number; monthly: number; monthsLeft: number; paid: number; lastPaidMonth?: number; closedMonth?: number };
-const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
+const money = (n: number) => (n < 0 ? '-' : '') + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
 
 export const involuntary = (state: GameState) => {
   const laid = state.townProgress?.laidOffMonth, changed = state.townProgress?.careerChangedMonth;

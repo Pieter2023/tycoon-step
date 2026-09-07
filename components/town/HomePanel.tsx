@@ -3,17 +3,19 @@ import type { GameState, Lifestyle, SideHustle, MonthlyActionId } from '../../ty
 import type { MonthlyActionsSummary } from '../../services/monthlyActions';
 import { hustleCards, hustleDeskSummary } from '../../services/townHustle';
 import { LIFESTYLE_OPTS } from '../../constants';
+import { household, FUND_STEPS, COLLEGE_TARGET } from '../../services/townFamily';
 import { calculateMonthlyCashFlowEstimate } from '../../services/gameLogic';
 import { adviseFrom } from '../../services/townAdvisor';
 import { TIERS } from './townHome';
 import { tl } from '../../i18n/town';
 
-const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
-type Props = { state: GameState; disabled: boolean; onChangeLifestyle?: (lifestyle: Lifestyle) => void; onGo?: (place: NonNullable<ReturnType<typeof adviseFrom>[number]['place']>) => void; onStartHustle?: (hustle: SideHustle) => void; onStopHustle?: (id: string) => void; onChooseUpgrade?: () => void; workActions?: MonthlyActionsSummary; onMonthlyAction?: (id: MonthlyActionId) => void };
+const money = (n: number) => (n < 0 ? '-' : '') + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
+type Props = { state: GameState; disabled: boolean; onChangeLifestyle?: (lifestyle: Lifestyle) => void; onGo?: (place: NonNullable<ReturnType<typeof adviseFrom>[number]['place']>) => void; onStartHustle?: (hustle: SideHustle) => void; onStopHustle?: (id: string) => void; onChooseUpgrade?: () => void; workActions?: MonthlyActionsSummary; onMonthlyAction?: (id: MonthlyActionId) => void; onCollegeFund?: (childId: string, amount: number) => void };
 
 // The desk at home: what your place costs and gives, the bills pinned to the fridge, the mail
 // (this month's decisions and events), the bookshelf, and a sticky note from Rosa.
-export default function HomePanel({ state, disabled, onChangeLifestyle, onGo, onStartHustle, onStopHustle, onChooseUpgrade, workActions, onMonthlyAction }: Props) {
+export default function HomePanel({ state, disabled, onChangeLifestyle, onGo, onStartHustle, onStopHustle, onChooseUpgrade, workActions, onMonthlyAction, onCollegeFund }: Props) {
+  const home = household(state);
   const cards = hustleCards(state), desk = hustleDeskSummary(state), sprint = workActions?.actions.find(a => a.id === 'HUSTLE_SPRINT'), pending = state.pendingSideHustleUpgrade;
   const flow = calculateMonthlyCashFlowEstimate(state), current = LIFESTYLE_OPTS[state.lifestyle];
   const debtPayments = state.liabilities.reduce((s, l) => s + l.monthlyPayment, 0) + (state.mortgages ?? []).reduce((s, m) => s + m.monthlyPayment, 0);
@@ -27,6 +29,23 @@ export default function HomePanel({ state, disabled, onChangeLifestyle, onGo, on
     <div className="town-lesson"><strong>{tl('On the fridge: this month\'s bills','En el refrigerador: las facturas de este mes')}</strong>
       <dl className="town-bills"><div><dt>{tl('Income expected','Ingresos esperados')}</dt><dd>{money(flow.income)}</dd></div><div><dt>{tl('Lifestyle','Estilo de vida')}</dt><dd>−{money(current.cost)}</dd></div><div><dt>{tl('Debt and mortgage payments','Pagos de deuda e hipoteca')}</dt><dd>−{money(debtPayments)}</dd></div><div><dt>{tl('Everything else','Todo lo demás')}</dt><dd>−{money(Math.max(0, flow.expenses - current.cost - debtPayments))}</dd></div><div><dt>{tl('Left over','Lo que queda')}</dt><dd className={flow.income - flow.expenses < 0 ? 'town-caution' : ''}>{money(flow.income - flow.expenses)}</dd></div></dl>
       <p>{tl('Passive income covers','Los ingresos pasivos cubren el')} {Math.round(Math.min(999, flow.passive / Math.max(1, flow.expenses) * 100))}% {tl('of the bills. Freedom is 110%.','de las facturas. La libertad es 110%.')}</p></div>
+    <section className="town-work-block" aria-label={tl('Family','Familia')}>
+      <h4>{tl('Family','Familia')} · {home.statusLabel}{home.childrenMonthly > 0 && <span className="town-tag">−{money(home.childrenMonthly)}/{tl('mo','mes')}</span>}</h4>
+      <p className="town-small">{home.headline}</p>
+      {home.spouse && <div className="town-job"><strong>💍 {home.spouse.name} · {home.spouse.job}</strong>
+        <p className="town-small">{money(home.spouse.income)} {tl('a month','al mes')} · {home.spouse.share}% {tl('of household income','de los ingresos del hogar')} · {tl('married','casados hace')} {home.spouse.yearsMarried} {tl(home.spouse.yearsMarried === 1 ? 'year' : 'years', home.spouse.yearsMarried === 1 ? 'año' : 'años')}</p>
+        <p className="town-small">{tl('If your pay stopped tomorrow, this income alone covers','Si tu sueldo se detuviera mañana, este ingreso por sí solo cubre el')} {home.spouse.coverage}% {tl('of the bills. Two incomes are the cheapest insurance in the game.','de las facturas. Dos ingresos son el seguro más barato del juego.')}</p></div>}
+      {home.children.map(c => <div key={c.id} className="town-job" aria-label={c.name}><strong>{c.stage === 'expected' ? '🤰' : c.stage === 'infant' ? '👶' : c.stage === 'teen' ? '🧑' : c.stage === 'college' ? '🎓' : c.stage === 'independent' ? '🏡' : '🧒'} {c.name} · {c.stageLabel}{c.ageMonths >= 0 ? ` · ${c.ageYears} ${tl(c.ageYears === 1 ? 'year old' : 'years old', c.ageYears === 1 ? 'año' : 'años')}` : ''}</strong>
+        <p className="town-small">{c.monthly > 0 ? `${money(c.monthly)} ${tl('a month now','al mes ahora')}` : tl('No monthly cost now','Sin costo mensual ahora')}{c.next ? ` · ${c.next.label} ${tl('in','en')} ${c.next.inMonths} ${tl('months at','meses, a')} ${money(c.next.monthly)}/${tl('mo','mes')}` : ''}{c.remaining > 0 ? ` · ${tl('about','unos')} ${money(c.remaining)} ${tl('more until 18','más hasta los 18')}` : ''}</p>
+        {c.canFund && <>
+          <p className="town-small">{tl('College fund','Fondo universitario')}: {money(c.fund)} {tl('set aside','apartados')}{c.fund > 0 ? ` → ${money(c.fundProjected)} ${tl('by 18 at the savings rate','a los 18 con el interés del ahorro')}` : ''}. {c.fundMonthly > 0 ? `${money(c.fundMonthly)} ${tl('a month from now reaches the','al mes desde hoy alcanza la cuenta de')} ${money(COLLEGE_TARGET)} ${tl('dream-school bill; wait and the number climbs.','de la universidad soñada; espera y la cifra sube.')}` : tl('On track for the dream-school bill.','En camino para la cuenta de la universidad soñada.')}</p>
+          <div className="town-actions">{FUND_STEPS.map(step => <button key={step} disabled={disabled || !onCollegeFund || state.cash < step} onClick={() => onCollegeFund?.(c.id, step)}>{tl('Put aside','Apartar')} {money(step)}</button>)}</div>
+          <p className="town-small">{tl('Goes into your Community Bank savings; the tally here is your own note.','Va a tu ahorro del Banco Comunitario; el registro aquí es tu propia nota.')}</p>
+        </>}
+      </div>)}
+      {home.taxBreak > 0 && <p className="town-small">{tl('Tax: each child at home takes','Impuestos: cada hijo en casa resta')} $2,000 {tl('a year off your taxable income.','al año de tu ingreso gravable.')}</p>}
+      {home.status === 'single' && <p className="town-small">{tl('Relationships, weddings and births arrive as events. What they change: a second income, a wedding bill, and about $1,200 a month per baby.','Relaciones, bodas y nacimientos llegan como eventos. Lo que cambian: un segundo ingreso, la cuenta de la boda y unos $1,200 al mes por bebé.')}</p>}
+    </section>
     <section className="town-work-block" aria-label={tl('Side-hustle desk','Escritorio de ingresos extra')}>
       <h4>{tl('Side-hustle desk','Escritorio de ingresos extra')} {desk.count > 0 && <span className="town-tag town-tag-good">{money(desk.monthly)}/{tl('mo','mes')} · {desk.hours} {tl('h/week','h/semana')}</span>}</h4>
       <p className="town-small">{desk.count ? `${tl('Your hustles cost about','Tus ingresos extra cuestan unos')} ${desk.energyCost} ${tl('energy and add','de energía y suman')} ${desk.stressCost} ${tl('stress a month. Average automation exposure','de estrés al mes. Exposición media a la automatización')} ${Math.round(desk.exposure * 100)}%.` : tl('A second engine. Every hustle is paid in hours, energy and stress before it pays in dollars; the teaching estimate below is the midpoint of its range, trimmed by how far automation has come.','Un segundo motor. Cada ingreso extra se paga en horas, energía y estrés antes de pagar en dólares; la estimación de abajo es el punto medio de su rango, recortado según cuánto ha avanzado la automatización.')}</p>

@@ -11,7 +11,7 @@ export const RAISE_COOLDOWN = 6, CAREER_CHANGE_COOLDOWN = 12, JOB_GAP_MONTHS = 1
 export type RaiseAsk = 8 | 15;
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 const multiplier = (state: GameState) => DIFFICULTY_SETTINGS[state.difficulty as keyof typeof DIFFICULTY_SETTINGS]?.salaryMultiplier ?? 1;
-const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
+const money = (n: number) => (n < 0 ? '-' : '') + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
 
 export type RaiseOdds = { chance: number; factors: { label: string; delta: number }[]; eligible: boolean; reason?: string; monthsUntil: number };
 export function raiseOdds(state: GameState, ask: RaiseAsk): RaiseOdds {

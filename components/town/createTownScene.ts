@@ -13,6 +13,7 @@ import { createTownHome, createHomeFacade, clampHomePoint, homeSpot, OFFICE_PALE
 import { createTownWork, clampWorkPoint, workSpot } from './townWork';
 import { createTownCollege, clampCollegePoint, collegeSpot, createCollegeFacade } from './townCollege';
 import type { CollegeBoard } from '../../services/townCollege';
+import type { Figures } from '../../services/townFamily';
 import type { WorkBoard } from '../../services/townWork';
 import { createSeasonPalette, createSeasonFall, seasonFor, Season } from './townSeasons';
 import type { Lifestyle } from '../../types';
@@ -33,7 +34,7 @@ import { cameraRelativeMovement, normalizeStick, cameraPreset, CameraPreset, tur
 export type TownController = {
   setCafeService:(service?:CafeService)=>void; walkToServiceStation:(station:ServiceStation)=>void; getPlayerPoint:()=>TownPoint;
   enterCafe:()=>void; leaveCafe:()=>void; walkToCafeCounter:()=>void; setNeighbourhood:(month:number,cafe?:CafeState,won?:boolean)=>void;
-  enterBank:()=>void; leaveBank:()=>void; walkToTeller:()=>void; walkToExit:()=>void; enterExchange:()=>void; leaveExchange:()=>void; walkToBroker:()=>void; setBoard:(board:ExchangeBoard)=>void; enterProperty:()=>void; leaveProperty:()=>void; walkToAgent:()=>void; setListings:(board:PropertyBoard)=>void; enterHome:()=>void; leaveHome:()=>void; enterWork:()=>void; leaveWork:()=>void; walkToManager:()=>void; walkToWork:()=>void; setPayroll:(board:WorkBoard)=>void; enterCollege:()=>void; leaveCollege:()=>void; walkToRegistrar:()=>void; walkToCollege:()=>void; setSyllabus:(board:CollegeBoard)=>void; walkToDesk:()=>void; walkHome:()=>void; walkToRosa:()=>void; setLifestyle:(lifestyle:Lifestyle)=>void; setHustles:(count:number)=>void; setAdvice:(headline:string)=>void; serveCustomer:(onDone?:()=>void)=>void; celebrate:()=>void; setCamera:(mode:CameraPreset)=>void; orbit:(delta:number)=>void; zoom:(delta:number)=>void; setQuality:(mode:QualityMode)=>void; getQuality:()=>QualityLevel;
+  enterBank:()=>void; leaveBank:()=>void; walkToTeller:()=>void; walkToExit:()=>void; enterExchange:()=>void; leaveExchange:()=>void; walkToBroker:()=>void; setBoard:(board:ExchangeBoard)=>void; enterProperty:()=>void; leaveProperty:()=>void; walkToAgent:()=>void; setListings:(board:PropertyBoard)=>void; enterHome:()=>void; leaveHome:()=>void; enterWork:()=>void; leaveWork:()=>void; walkToManager:()=>void; walkToWork:()=>void; setPayroll:(board:WorkBoard)=>void; enterCollege:()=>void; leaveCollege:()=>void; walkToRegistrar:()=>void; walkToCollege:()=>void; setSyllabus:(board:CollegeBoard)=>void; setFamily:(figures:Figures)=>void; walkToDesk:()=>void; walkHome:()=>void; walkToRosa:()=>void; setLifestyle:(lifestyle:Lifestyle)=>void; setHustles:(count:number)=>void; setAdvice:(headline:string)=>void; serveCustomer:(onDone?:()=>void)=>void; celebrate:()=>void; setCamera:(mode:CameraPreset)=>void; orbit:(delta:number)=>void; zoom:(delta:number)=>void; setQuality:(mode:QualityMode)=>void; getQuality:()=>QualityLevel;
   walkTo: (id: TownPlaceId) => void; walkToBoard: () => void; direction: (key: string, down: boolean) => void;
   move: (x: number, z: number) => void; resetView: () => void;
   setOwned: (ids: TownPlaceId[]) => void; setBusiness: (owned:boolean, licensed:boolean, upgraded:boolean)=>void; setSound:(enabled:boolean)=>void; visitCart:()=>void; pause:(paused:boolean)=>void; dispose: () => void;
@@ -166,7 +167,10 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const steam=new THREE.Group();cafeRoom.root.add(steam);
   const readyCup=new THREE.Mesh(new THREE.CylinderGeometry(.09,.07,.2,16),new THREE.MeshStandardMaterial({color:'#fff1d4'}));readyCup.position.set(-1.05,1.47,-.42);readyCup.visible=false;cafeRoom.root.add(readyCup);
   for(let i=0;i<4;i++){const puff=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6),new THREE.MeshBasicMaterial({color:'#fff4de',transparent:true,opacity:.35}));puff.position.set(-.6,1.7+i*.16,-.5);steam.add(puff);}steam.visible=false;
-  let playerActor: Actor | undefined, manager: Actor | undefined, registrar: Actor | undefined; const workActors: Actor[] = [], collegeActors: Actor[] = []; const pedestrians: (Actor & { offset: number; lane: number; seat?: number; yield: YieldState })[] = [];
+  let playerActor: Actor | undefined, manager: Actor | undefined, registrar: Actor | undefined, spouse: Actor | undefined; const workActors: Actor[] = [], collegeActors: Actor[] = [], kids: Actor[] = [];
+  // Who is home: applied when the figures change and again once the character model has loaded.
+  let familyFigures: Figures = { spouse: false, crib: false, toys: false, children: [] };
+  const applyFamily = () => { home.setFamily(familyFigures); if (spouse) spouse.root.visible = familyFigures.spouse; kids.forEach((kid, i) => { const scale = familyFigures.children[i]; kid.root.visible = scale !== undefined; if (scale !== undefined) kid.root.scale.setScalar(scale); }); }; const pedestrians: (Actor & { offset: number; lane: number; seat?: number; yield: YieldState })[] = [];
   const addActor = (root: THREE.Object3D, clips: THREE.AnimationClip[]): Actor => {
     const mixer = new THREE.AnimationMixer(root), actions: Record<string, THREE.AnimationAction> = {};
     for (const clip of clips){const action=mixer.clipAction(clip);if(['Serve','Wave','Celebrate'].includes(clip.name)){action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;}actions[clip.name]=action;}
@@ -229,6 +233,9 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     styleCharacter(registrarRoot, { sex: 'f', hair: 'long', colors: { shirt: '#6b4f8a', hair: '#4a3b2c', skin: '#c98d6a', trousers: '#3a3f47', skirt: '#4f3d66' } });
     registrarRoot.position.set(0,.22,-1.5); college.root.add(registrarRoot); registrar = addActor(registrarRoot,character.animations);
     for (const [i, [x, z]] of [[-1.6, 2.0], [1.6, 3.7]].entries()) { const student = character.scene.clone(true); styleCharacter(student, residentStyle(18 + i)); student.position.set(x,-.1,z+.05); student.rotation.y=Math.PI; college.root.add(student); collegeActors.push(addActor(student, character.animations)); }
+    const spouseRoot = character.scene.clone(true); styleCharacter(spouseRoot, residentStyle(options.playerSex === 'f' ? 22 : 21)); spouseRoot.position.set(2.0,.22,1.9); spouseRoot.rotation.y = Math.PI * .8; home.root.add(spouseRoot); spouse = addActor(spouseRoot, character.animations);
+    for (const [i, [x, z]] of [[-2.2, 3.9], [-1.2, 4.9], [2.2, 3.2]].entries()) { const kid = character.scene.clone(true); styleCharacter(kid, residentStyle(24 + i)); kid.position.set(x,.22,z); kid.rotation.y = Math.PI * (.2 + i * .5); home.root.add(kid); kids.push(addActor(kid, character.animations)); }
+    applyFamily();
     for (const [i, [x, z]] of [[-3.4, 3.3], [3.4, 3.3]].entries()) { const colleague = character.scene.clone(true); styleCharacter(colleague, residentStyle(16 + i)); colleague.position.set(x,-.1,z+.05); colleague.rotation.y=Math.PI; work.root.add(colleague); workActors.push(addActor(colleague, character.animations)); }
     for (const [i, [x, z]] of [[-2.9, 2.0], [2.9, 4.4]].entries()) {
       const trader = character.scene.clone(true); styleCharacter(trader, residentStyle(14 + i));
@@ -423,6 +430,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     if(!inside&&pedestrians[8]){if(spot==='rosa'&&adviceHeadline)rosaSpeech.say(adviceHeadline,ROSA.x+.15,2.55,ROSA.z);else rosaSpeech.hide();}
     if(agent&&officeInside){animateActor(agent,spot==='agent'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='agent'&&agentHeadline)agentSpeech.say(agentHeadline,0,2.45,-1.5);else agentSpeech.hide();}
     if(workInside)for(const actor of workActors){animateActor(actor,'Idle',reducedMotion?0:dt);seatActor(actor.root);}
+    if(homeInside){if(spouse?.root.visible)animateActor(spouse,'Idle',reducedMotion?0:dt);for(const kid of kids)if(kid.root.visible)animateActor(kid,'Idle',reducedMotion?0:dt);}
     if(collegeInside)for(const actor of collegeActors){animateActor(actor,'Idle',reducedMotion?0:dt);seatActor(actor.root);}
     if(registrar&&collegeInside){animateActor(registrar,spot==='registrar'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='registrar'&&registrarHeadline)registrarSpeech.say(registrarHeadline,0,2.45,-1.5);else registrarSpeech.hide();}
     if(manager&&workInside){animateActor(manager,spot==='manager'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='manager'&&managerHeadline)managerSpeech.say(managerHeadline,0,2.45,-1.5);else managerSpeech.hide();}
@@ -494,6 +502,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     walkToRosa(){if(inside)transition(false);clearMovement();path=findTownPath(player.position,{x:ROSA.x+1.3,z:ROSA.z+.4});const end=path.at(-1);if(end){destinationRing.position.set(end.x,.235,end.z);destinationRing.visible=true;}},
     setLifestyle(lifestyle){home.setLifestyle(lifestyle);},
     setHustles(count){home.setHustles(count);},
+    setFamily(figures){familyFigures=figures;applyFamily();},
     setAdvice(headline){adviceHeadline=headline;},
     walkToCafeCounter(){if(cafeInside){clearMovement();path=[{x:0,z:.8}];}},
     setNeighbourhood(month,cafe,won=false){cafeState=cafe;townMonth=month;celebrating=won;season=seasonFor(month);palette?.apply(seasonOverride??season);shopSign.visible=!!cafe;rainy=cafeWeather(month);cafeRoom.setState(cafeService?.status==='active'?{seats:cafeService.seats,machine:cafeService.machine}:cafe);if(!(scene.background instanceof THREE.Color))scene.background=new THREE.Color('#bdd7e4');ambience?.update(rainy,inside,document.hidden);},

@@ -60,11 +60,17 @@ export function createTownHome() {
   box(.12, .2, .08, -1.95, 1.09, -.5, '#d9d2c2', hustle, .02);                                                                     // mug
   const parcels = new THREE.Group(); hustle.add(parcels);
   box(.5, .4, .5, -3.3, .45, -.4, '#c9a071', parcels, .02); box(.4, .3, .4, -3.3, .8, -.4, '#d9b58a', parcels, .02); box(.45, .35, .45, -3.3, .42, .25, '#c9a071', parcels, .02);
+  // Family: a crib while a baby is at home and a toy box while children are small. Figures are actors, added by the scene.
+  const crib = new THREE.Group(); crib.visible = false; root.add(crib);
+  box(.95, .12, .65, -2.9, .5, 2.2, '#e8dccb', crib); for (const dx of [-.45, .45]) box(.04, .5, .65, -2.9 + dx, .62, 2.2, '#b89a7a', crib, .01); for (const dz of [-.3, .3]) box(.95, .5, .04, -2.9, .62, 2.2 + dz, '#b89a7a', crib, .01); box(.7, .08, .45, -2.9, .58, 2.2, '#f6f1e6', crib, .02);
+  const toys = new THREE.Group(); toys.visible = false; root.add(toys);
+  box(.6, .4, .5, 3.0, .42, 5.6, '#c94f3f', toys, .03); box(.62, .06, .52, 3.0, .64, 5.6, '#e8c07a', toys, .02); const ball = new THREE.Mesh(new THREE.SphereGeometry(.12, 12, 10), mat('#3f7fa8')); ball.position.set(2.5, .34, 5.3); ball.castShadow = true; toys.add(ball);
   root.visible = false;
   const wallColours = ['#bdb6ac', '#e9e1d0', '#f2ead9', '#faf5ea', '#fbf7ee'], floorColours = ['#b9ad98', '#d9cbb3', '#c8b291', '#d8c9ae', '#e9e4dc'];
   return {
     root,
     setHustles(count: number) { hustle.visible = count > 0; parcels.visible = count > 1; },
+    setFamily(figures: { crib: boolean; toys: boolean }) { crib.visible = figures.crib; toys.visible = figures.toys; },
     setLifestyle(lifestyle: Lifestyle) {
       const tier = tierIndex(lifestyle);
       only.forEach((g, i) => { g.visible = i === tier; }); from.forEach((g, i) => { g.visible = tier >= i; });

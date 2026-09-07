@@ -6,13 +6,14 @@ import { savingsBalance } from './townActivities';
 import { reputationOf } from './townCafe';
 import { promotionOutlook } from './townWork';
 import { studyPlan } from './townCollege';
+import { household } from './townFamily';
 
 // Rosa, the neighbour on the promenade bench, reads the player's actual numbers and says the
 // one or two things a sensible friend would say. Rules are ordered by urgency; each returns a
 // short observation with an optional place to go. Nothing here moves money.
 export type Advice = { id: string; tone: 'warn' | 'tip' | 'good'; title: string; text: string; place?: 'bank' | 'exchange' | 'property' | 'cafe' | 'home' | 'board' | 'work' | 'college' };
 
-const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
+const money = (n: number) => (n < 0 ? '-' : '') + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
 export function adviseFrom(state: GameState): Advice[] {
   const flow = calculateMonthlyCashFlowEstimate(state), expenses = Math.max(1, flow.expenses), income = Math.max(1, flow.income);
   const invested = state.assets.filter(a => a.type !== AssetType.SAVINGS && a.quantity > 0), investedValue = invested.reduce((s, a) => s + a.value * a.quantity, 0);
@@ -37,6 +38,8 @@ export function adviseFrom(state: GameState): Advice[] {
   const plan = studyPlan(state);
   if (outlook.next && !outlook.educationMet && !plan.enrolled) out.push({ id: 'study', tone: 'tip', title: `${outlook.next.title} ${tl('needs a qualification you do not have yet.','requiere un título que aún no tienes.')}`, text: `${tl('The college prices every course by payback.','El colegio valora cada curso por su retorno.')} ${plan.best ? `${plan.best.name} ${tl('pays for itself in about','se paga sola en unos')} ${plan.best.paybackMonths} ${tl('months.','meses.')}` : tl('Save the deposit for the cheapest step on your path.','Ahorra el anticipo del paso más barato de tu carrera.')}`, place: 'college' });
   else if (plan.best && plan.best.paybackMonths !== null && plan.best.paybackMonths <= 30 && !plan.enrolled) out.push({ id: 'quick-course', tone: 'tip', title: `${plan.best.name} ${tl('pays for itself in about','se paga sola en unos')} ${plan.best.paybackMonths} ${tl('months.','meses.')}`, text: `${money(plan.best.deposit)} ${tl('up front for about','por adelantado por unos')} ${money(plan.best.gainMonthly)} ${tl('more a month for the rest of your career. Few investments in the game pay back that fast.','más al mes por el resto de tu carrera. Pocas inversiones del juego se recuperan tan rápido.')}`, place: 'college' });
+  const kids = household(state).children.find(c => c.canFund && c.fund === 0 && c.ageMonths >= 0 && c.fundMonthly > 0);
+  if (kids && state.cash >= expenses * 2) out.push({ id: 'college-fund', tone: 'tip', title: `${kids.name} ${tl('turns 18 in','cumple 18 en')} ${kids.monthsTo18} ${tl('months.','meses.')}`, text: `${money(kids.fundMonthly)} ${tl('a month from now reaches the $60,000 dream-school bill; start later and the number climbs. Put it aside at home.','al mes desde hoy alcanza la cuenta de $60,000 de la universidad soñada; empieza después y la cifra sube. Apártalo en casa.')}`, place: 'home' });
   if (state.cafe && !state.cafe.plan.open) out.push({ id: 'cafe-closed', tone: 'warn', title: tl('Closed shops still pay rent.','Las tiendas cerradas también pagan renta.'), text: tl('$720 a month leaves while the doors are shut. Reopen with a lean plan or end the lease; limbo is the expensive choice.','$720 al mes se van mientras las puertas están cerradas. Reabre con un plan austero o termina el contrato; el limbo es la opción cara.'), place: 'cafe' });
   if (passiveShare >= 1.1) out.push({ id: 'free', tone: 'good', title: tl('Your investments cover your life.','Tus inversiones cubren tu vida.'), text: `${tl('Passive income of','Los ingresos pasivos de')} ${money(flow.passive)} ${tl('a month clears','al mes cubren')} ${money(expenses)} ${tl('of bills with room to spare. Everything from here is choice.','de facturas con margen. Todo lo que sigue es elección.')}` });
   else if (passiveShare >= .25) out.push({ id: 'progress', tone: 'good', title: `${Math.round(passiveShare * 100)}% ${tl('of your bills are paid by money you do not work for.','de tus facturas las paga dinero por el que no trabajas.')}`, text: `${money(flow.passive)} a month arrives whether you show up or not. Keep the gap wide and that number grows on its own.` });

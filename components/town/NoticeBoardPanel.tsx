@@ -3,7 +3,7 @@ import type { GameState } from '../../types';
 import { monthlyChallenges, challengeProgress, currentSnapshot, cleanSweeps, completedCount } from '../../services/townChallenges';
 import { tl } from '../../i18n/town';
 
-const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
+const money = (n: number) => (n < 0 ? '-' : '') + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
 // The square's notice board: three challenges for this month with live progress, last month's
 // verdict and the running badge count. Judged when the month closes; badges only, no cash.
 export default function NoticeBoardPanel({ state, onNextMonth, disabled }: { state: GameState; onNextMonth: () => void; disabled: boolean }) {

@@ -8,7 +8,7 @@ import { tl } from '../i18n/town';
 // what it costs in hours, energy and stress, how exposed it is to automation, and why it cannot
 // be started yet. Starting and stopping go through App's existing handlers.
 export type HustleCard = { hustle: SideHustle; active?: SideHustle; monthly: number; canStart: boolean; reason?: string; requirement?: string; nextMilestoneIn?: number };
-const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
+const money = (n: number) => (n < 0 ? '-' : '') + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
 export const hustleMonthly = (state: GameState, hustle: SideHustle) => calculateSideHustleIncomeEstimate({ ...state, activeSideHustles: [hustle], tempSideHustleMultiplier: 1 });
 export const nextMilestone = (hustle: SideHustle): { index: number; monthsLeft: number } | null => {
   const index = (hustle.upgrades ?? []).length, milestone = (hustle.milestones ?? [])[index];

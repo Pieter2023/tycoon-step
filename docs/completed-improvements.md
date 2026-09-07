@@ -450,6 +450,20 @@ Pieter asked to keep building until the game is complete. Education was the one 
 
 Validation: 343 tests across 60 files (`test/TownCollege.test.tsx`: pricing, deposit/loan rules, statuses, plan order, registrar lines, certificates, placement, guide hops, visit marker, Rosa, panel), TypeScript, build and `git diff --check` clean. Log in `docs/verification/live-play-2026-09-06/build-29-college.md`.
 
+## The family at home — September 6, 2026 (build 30)
+
+Pieter's pick: "Build the family and children at home, keep going."
+
+**Who is home.** Relationships, weddings and births still arrive as dashboard events; the flat now shows what they produced. A spouse figure stands by the kitchenette when married, a crib appears while a baby is at home, a toy box while children are small, and each child old enough to stand about gets a scaled figure (preschooler .5, school age .62, teenager .8; grown children have moved out). `householdFigures` in `services/townFamily.ts` decides, `home.setFamily` and the scene's actor list apply it, and the figures survive the character model loading late.
+
+**The family block on the desk (HomePanel).** Status (single, in a relationship, engaged, married) and a headline that names the biggest thing: "2 children cost $1,800 a month. Emma turns 18 in 136 months." The spouse card shows income, share of household income, years married, and the resilience line: if your pay stopped tomorrow, this income alone covers N% of the bills. Each child card uses the same age bands and amounts as `calculateChildrenExpenses` (a test proves the totals agree): cost now, the next stage and when it starts, and the cost of raising them to 18 from here. The **college fund** is the one action: "Put aside $250 / $1,000" moves cash into the Community Bank savings account through the teller's transfer (`contributeCollegeFund`), notes it against the child in `townProgress.collegeFund`, and posts it to the mail. The card projects what the fund grows to by 18 at the savings yield and the level monthly saving that reaches the game's $60,000 dream-school bill, with the honest note that waiting makes the number climb. Refused for grown children, non-whole amounts, more than the cash on hand, or while an event waits. Children take $2,000 a year each off taxable income, as the tax code already does. Rosa points home when a child has no fund and the cushion allows it. Bilingual.
+
+**Also fixed.** Six town formatters printed negative money as "$-1,471" (the bills' "Left over" line showed it); they now put the sign before the dollar like the rest of the city.
+
+**Verified in Chrome (5188)** with a seeded save (Taylor in healthcare, Emma 6, Liam 10 months): spouse, child figure, crib and toy box in the flat; the family block read as above; Put aside $250 for Emma took cash from $2,820 to $2,570, the card read "$250 set aside → $416 by 18 at the savings rate. $337 a month from now reaches the $60,000 dream-school bill", and the mail carried "🎓 College fund: Emma". No console errors.
+
+Validation: 348 tests across 61 files (`test/TownFamily.test.tsx`), TypeScript, build and `git diff --check` clean. Log in `docs/verification/live-play-2026-09-06/build-30-family.md`.
+
 ## Where the sessions stopped (September 6, 2026, morning)
 
 Overnight (23:00 to about 01:00 PDT) nine builds shipped: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. The morning session (about 06:00 to 07:30 PDT) added eight more, each verified in Chrome, receipted above and pushed to `origin/main`: the townhouse around the apartment door and the camera-canopy fix; adaptive graphics quality; petite women with A-line skirts; residents that make room; Freedom Day; the city accessibility pass; Main Street Offices (pay stub, promotion outlook, job security); the neighbourhood tour with download progress and the city open after winning; and Rosa's promotion nudge.
