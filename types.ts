@@ -337,6 +337,8 @@ export interface ScenarioOption {
     jobLossMonths?: number;
     // Permanent percentage change to base salary (raises, pay cuts).
     salaryChangePct?: number;
+    // The option files an unemployment claim (city bank) alongside the job loss.
+    filesUnemployment?: boolean;
     negotiateType?: string;
     // Temporarily reduces income from a specific owned asset for N months.
     assetIncomeDisruption?: {
@@ -528,7 +530,7 @@ export interface PrestigeData {
 
 export interface GameState {
   cafe?: import('./services/townCafe').CafeState;
-  townProgress?: { reserveConfirmed?: boolean; permitMonth?: number; lastShift?: import('./services/townActivities').CartReceipt; firstShiftMonth?: number; journeyCompletedMonth?: number; exchangeVisitedMonth?: number; investorCompletedMonth?: number; lastRaiseAskMonth?: number; careerChangedMonth?: number; lastReview?: import('./services/townCareer').PerformanceReview; laidOffMonth?: number; lastSearchMonth?: number; recoveryPlan?: import('./services/townCareer').RecoveryPlan; workLog?: Partial<import('./services/townCareer').WorkLog>; recoveryCredit?: { month: number; points: number }; noticeLiftedMonth?: number; workVisitedMonth?: number; homeVisitedMonth?: number; rosaVisitedMonth?: number; tourCompletedMonth?: number; challengeSnapshot?: import('./services/townChallenges').ChallengeSnapshot; challengeLog?: import('./services/townChallenges').ChallengeResult[] };
+  townProgress?: { reserveConfirmed?: boolean; permitMonth?: number; lastShift?: import('./services/townActivities').CartReceipt; firstShiftMonth?: number; journeyCompletedMonth?: number; exchangeVisitedMonth?: number; investorCompletedMonth?: number; lastRaiseAskMonth?: number; careerChangedMonth?: number; lastReview?: import('./services/townCareer').PerformanceReview; laidOffMonth?: number; lastSearchMonth?: number; recoveryPlan?: import('./services/townCareer').RecoveryPlan; workLog?: Partial<import('./services/townCareer').WorkLog>; recoveryCredit?: { month: number; points: number }; noticeLiftedMonth?: number; unemploymentClaim?: import('./services/townBenefits').UnemploymentClaim; workVisitedMonth?: number; homeVisitedMonth?: number; rosaVisitedMonth?: number; tourCompletedMonth?: number; challengeSnapshot?: import('./services/townChallenges').ChallengeSnapshot; challengeLog?: import('./services/townChallenges').ChallengeResult[] };
   /** Teaching market index (starts at 100), one point per month, kept for three years. Drawn on the Exchange ticker. */
   marketIndex?: { month: number; value: number }[];
   townView?: { x: number; z: number; yaw: number; pitch: number; distance: number; mode?: 'follow' | 'overview' };

@@ -396,6 +396,16 @@ Chrome: at the desk the block read "A second engine…" with thirteen hustles in
 
 Validation: 327 tests across 57 files (`test/TownHustle.test.tsx`: pricing, block reasons, milestones, summary, the panel's start/stop/sprint/upgrade wiring, the corner's visibility), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/hustle-2026-09-06/`.
 
+## Unemployment insurance at the bank — September 6, 2026 (build 25)
+
+Pieter's pick, and the piece that makes a layoff survivable the way it is in North America. `services/townBenefits.ts` follows the real shape: only an involuntary job loss qualifies (a city layoff, or the dashboard's job-loss event; leaving to change careers is a resignation and does not), the benefit is half of prior pay capped at $2,400 a month for up to six months of the gap, the first payment lands the month after filing, and each paid month needs a job application on record. The office's monthly search satisfies that requirement (the filing month counts); a month without one pauses the benefit with a warning, which teaches the work-search rule without stranding anyone. The claim closes the month work resumes, with a note of what was paid. `payUnemploymentBenefit` runs in `processTurn` just before the job-loss countdown and never in challenges.
+
+At the Community Bank, the teller shows the block while the player is between jobs: the rules, the claim they would get, why they do not qualify if they do not, "File the claim", then the live status (amount, months left, paid so far, whether this month's application is on record). The office's Between jobs block points at the bank and mirrors the claim. The dashboard's job-loss event has said "file for unemployment" since June without doing anything; its option now sets the layoff on record and files the claim through a new `filesUnemployment` outcome flag, so both paths meet the same rules.
+
+Chrome (QA save patched to a layoff with three months to go): the teller offered "$1,750/mo for up to 3 months" at half of $3,500, filing turned the block into the live status with "✓ Job application on record this month: the next payment is due", and the office's Between jobs block echoed the claim.
+
+Validation: 331 tests across 58 files (`test/TownBenefits.test.tsx`: eligibility incl. resignation and the cap, filing, the month-by-month pay/pause/close sequence through `processTurn`, the event option, the teller panel), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/benefits-2026-09-06/`.
+
 ## Where the sessions stopped (September 6, 2026, morning)
 
 Overnight (23:00 to about 01:00 PDT) nine builds shipped: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. The morning session (about 06:00 to 07:30 PDT) added eight more, each verified in Chrome, receipted above and pushed to `origin/main`: the townhouse around the apartment door and the camera-canopy fix; adaptive graphics quality; petite women with A-line skirts; residents that make room; Freedom Day; the city accessibility pass; Main Street Offices (pay stub, promotion outlook, job security); the neighbourhood tour with download progress and the city open after winning; and Rosa's promotion nudge.

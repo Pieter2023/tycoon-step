@@ -1,4 +1,5 @@
 import { finishCafeService } from './cafeService';
+import { fileUnemploymentClaim, payUnemploymentBenefit } from './townBenefits';
 import { applyPerformanceReview, applyLayoff, judgeRecoveryPlan } from './townCareer';
 import { cafeValue, driftReputation, quoteCafe, settleCafeMonth } from './townCafe';
 import { closeChallengeMonth, snapshotFor } from './townChallenges';
@@ -2844,6 +2845,9 @@ export const applyScenarioOutcome = (state: GameState, outcome: any): GameState 
   if (typeof outcome.jobLossMonths === 'number' && outcome.jobLossMonths > 0) {
     const current = newState.jobLossMonthsRemaining ?? 0;
     newState.jobLossMonthsRemaining = Math.max(current, Math.floor(outcome.jobLossMonths));
+    // An event-driven job loss is involuntary: it qualifies for unemployment insurance at the city bank.
+    newState.townProgress = { ...newState.townProgress, laidOffMonth: newState.month };
+    if (outcome.filesUnemployment) Object.assign(newState, fileUnemploymentClaim(newState));
   }
   
   // Handle marriage
@@ -3665,6 +3669,9 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
   if (!newState.challenge) Object.assign(newState, applyLayoff(newState, rand()));
   if (!newState.challenge) Object.assign(newState, judgeRecoveryPlan(newState));
   if (newState.yearStats && (state.jobLossMonthsRemaining ?? 0) > 0) newState.yearStats = { ...newState.yearStats, monthsUnemployed: (newState.yearStats.monthsUnemployed ?? 0) + 1 };
+
+  // 16.45 Unemployment insurance (city bank): pays for a month that opened between jobs with a job application on record.
+  if (!newState.challenge) Object.assign(newState, payUnemploymentBenefit(newState, state));
 
   // 16.5 Job loss shock countdown
   // Decrement AFTER cashflow is calculated (so you lose income for the full N months).

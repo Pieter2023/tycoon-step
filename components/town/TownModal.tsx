@@ -67,6 +67,7 @@ type Props = {
   onStartHustle?: (hustle: SideHustle) => void;
   onStopHustle?: (id: string) => void;
   onChooseUpgrade?: () => void;
+  onFileClaim?: () => void;
   workActions?: MonthlyActionsSummary;
   onMonthlyAction?: (id: MonthlyActionId) => void;
   onClose: () => void;
@@ -79,7 +80,7 @@ type Props = {
   onBackup: () => void;
 };
 const money = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
-export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell, onMortgage, onChangeLifestyle, onPromote, onOpenLife, onAskRaise, onSwitchCareer, onJobSearch, onAcceptPlan, onStartHustle, onStopHustle, onChooseUpgrade, workActions, onMonthlyAction, onClose, onOpenMoney, onNextMonth, saveError, onBackup, onAction, onRememberView, onTransfer, onRunShift, loans=[], onFinishJourney, onCafeAction, onCafeServiceAction }: Props) {
+export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell, onMortgage, onChangeLifestyle, onPromote, onOpenLife, onAskRaise, onSwitchCareer, onJobSearch, onAcceptPlan, onStartHustle, onStopHustle, onChooseUpgrade, onFileClaim, workActions, onMonthlyAction, onClose, onOpenMoney, onNextMonth, saveError, onBackup, onAction, onRememberView, onTransfer, onRunShift, loans=[], onFinishJourney, onCafeAction, onCafeServiceAction }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const details = useRef<HTMLDivElement>(null);
   const controller = useRef<TownController | null>(null);
@@ -383,7 +384,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
         </> : room==='cafe'?<>
           <div className="town-tabs"><button aria-pressed={cafePlay} onClick={()=>setCafePlay(true)}>{tl(tl('Play a shift','Jugar un turno'),'Jugar un turno')}</button><button aria-pressed={!cafePlay} disabled={serviceActive} onClick={()=>setCafePlay(false)}>{tl(tl('Manage café','Administrar el café'),'Administrar el café')}</button></div>
           {cafePlay||serviceActive?<CafeServicePanel state={state} shift={service} practice={!!practice} disabled={disabled||unavailable||loading} unavailable={unavailable||loading} onPractice={plan=>beginShift(plan,true)} onStart={plan=>beginShift(plan,false)} onResume={()=>{setServicePaused(false);setShowDetails(false);}} onExitPractice={()=>setPractice(undefined)}/>:<CafePanel state={state} disabled={disabled} onAction={onCafeAction} onNextMonth={onNextMonth}/>}
-        </> : room==='property'&&spot==='agent'?<PropertyPanel state={state} disabled={disabled} onBuy={(item,quantity)=>{pendingPurchase.current={itemId:item.id,quantity:quantityOf(item.id)};setLastPurchase(null);onBuy(item,quantity);}} onMortgage={onMortgage} onOpenMoney={()=>onOpenMoney('invest','property')}/> : room==='exchange'&&spot==='broker'?<ExchangePanel state={state} disabled={disabled} onBuy={(item,quantity)=>{pendingPurchase.current={itemId:item.id,quantity:quantityOf(item.id)};setLastPurchase(null);onBuy(item,quantity);}} onSell={onSell} onOpenMoney={()=>onOpenMoney('invest','exchange')}/> : room==='bank'&&spot==='teller'?<TellerPanel state={state} disabled={disabled} onTransfer={onTransfer} loans={loans} onLoans={()=>onOpenMoney('bank','bank')} onReserve={()=>onAction?.('reserve')} onBusiness={()=>{setShowDetails(false);if(cart)visitCart();else move('business');}}/> : place ? <>
+        </> : room==='property'&&spot==='agent'?<PropertyPanel state={state} disabled={disabled} onBuy={(item,quantity)=>{pendingPurchase.current={itemId:item.id,quantity:quantityOf(item.id)};setLastPurchase(null);onBuy(item,quantity);}} onMortgage={onMortgage} onOpenMoney={()=>onOpenMoney('invest','property')}/> : room==='exchange'&&spot==='broker'?<ExchangePanel state={state} disabled={disabled} onBuy={(item,quantity)=>{pendingPurchase.current={itemId:item.id,quantity:quantityOf(item.id)};setLastPurchase(null);onBuy(item,quantity);}} onSell={onSell} onOpenMoney={()=>onOpenMoney('invest','exchange')}/> : room==='bank'&&spot==='teller'?<TellerPanel state={state} disabled={disabled} onTransfer={onTransfer} loans={loans} onLoans={()=>onOpenMoney('bank','bank')} onReserve={()=>onAction?.('reserve')} onFileClaim={onFileClaim} onBusiness={()=>{setShowDetails(false);if(cart)visitCart();else move('business');}}/> : place ? <>
           {spot==='cart'&&state.townProgress?.permitMonth!==undefined&&<CartShiftPanel state={state} disabled={disabled||serving} onRun={onRunShift?plan=>{shiftRequested.current=true;onRunShift(plan);}:undefined}/>}
           <p className="town-eyebrow">{tl('YOU ARE AT','ESTÁS EN')} · {place.sign}</p><h3>{placeName(place.id,place.name)}</h3>
           <div className="town-lesson"><strong>{placeQuestion(place.id,place.question)}</strong><p>{placeLesson(place.id,place.lesson)}</p></div>

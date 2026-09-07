@@ -3,9 +3,11 @@ import { tl } from '../../i18n/town';
 import { GameState } from '../../types';
 import { BankTransfer, savingsBalance } from '../../services/townActivities';
 import { calculateMonthlyCashFlowEstimate } from '../../services/gameLogic';
+import { benefitEligibility, benefitStatus, BENEFIT_RATE, BENEFIT_CAP, BENEFIT_MONTHS } from '../../services/townBenefits';
 export type TownLoan = { id: string; name: string; amount: number; rate: number; term: number };
 const money = (n:number) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n);
-export default function TellerPanel({state,disabled,onTransfer,loans,onLoans,onReserve,onBusiness}:{state:GameState;disabled:boolean;onTransfer?:(transfer:BankTransfer)=>void;loans:TownLoan[];onLoans:()=>void;onReserve:()=>void;onBusiness:()=>void}) {
+export default function TellerPanel({state,disabled,onTransfer,loans,onLoans,onReserve,onBusiness,onFileClaim}:{state:GameState;disabled:boolean;onTransfer?:(transfer:BankTransfer)=>void;loans:TownLoan[];onLoans:()=>void;onReserve:()=>void;onBusiness:()=>void;onFileClaim?:()=>void}) {
+  const unemployed=(state.jobLossMonthsRemaining??0)>0, claim=benefitStatus(state), eligibility=benefitEligibility(state);
   const [tab,setTab]=useState<'savings'|'loans'>('savings');
   const [direction,setDirection]=useState<'deposit'|'withdraw'>('deposit');
   const [amount,setAmount]=useState('500');
@@ -19,6 +21,13 @@ export default function TellerPanel({state,disabled,onTransfer,loans,onLoans,onR
   return <>
     <p className="town-eyebrow">{tl('COMMUNITY BANK · TELLER','BANCO COMUNITARIO · CAJERO')}</p><h3>{tl('Hello, neighbour.','Hola, vecino.')}</h3>
     <p className="town-intro">{tl('Let\'s give your money a job—and leave enough for life.','Démosle un trabajo a tu dinero, y dejemos suficiente para vivir.')}</p>
+    {(unemployed||claim?.active)&&<div className="town-lesson" aria-label={tl('Unemployment insurance','Seguro de desempleo')}><strong>{tl('Unemployment insurance','Seguro de desempleo')}</strong>
+      {claim?.active?<><p>{money(claim.monthly)} {tl('a month','al mes')} · {claim.monthsLeft} {tl(claim.monthsLeft===1?'month left':'months left', claim.monthsLeft===1?'mes restante':'meses restantes')} · {money(claim.paid)} {tl('paid so far','pagados hasta ahora')}.</p><p className="town-small">{claim.searchedThisMonth?tl('✓ Job application on record this month: the next payment is due.','✓ Postulación registrada este mes: el próximo pago está en camino.'):tl('⚠ No job application on record this month. Apply from the office or the benefit pauses.','⚠ Sin postulación registrada este mes. Postula desde la oficina o la prestación se pausa.')}</p></>
+      :<><p>{tl('Half of your prior pay up to','La mitad de tu sueldo anterior hasta')} {money(BENEFIT_CAP)}{tl(' a month, for up to',' al mes, durante hasta')} {BENEFIT_MONTHS} {tl('months of the gap. First payment lands next month. Each paid month needs a job application on record, and the claim closes the month you are back at work.','meses de la pausa. El primer pago llega el próximo mes. Cada mes pagado necesita una postulación registrada, y la solicitud se cierra el mes en que vuelvas a trabajar.')}</p>
+      {eligibility.eligible?<p>{tl('Your claim','Tu solicitud')}: <strong>{money(eligibility.monthly)}/{tl('mo','mes')}</strong> {tl('for up to','durante hasta')} {eligibility.months} {tl(eligibility.months===1?'month.':'months.', eligibility.months===1?'mes.':'meses.')}</p>:<p className="town-small town-caution">{eligibility.reason}</p>}
+      <button className="town-primary" disabled={disabled||!eligibility.eligible||!onFileClaim} onClick={onFileClaim}>{tl('File the claim','Presentar la solicitud')}</button>
+      <p className="town-small">{tl('Insurance you already paid for through payroll. It is a bridge, not a plan: it covers part of the bills while you search, and it is why the reserve exists for the rest.','Un seguro que ya pagaste con tu nómina. Es un puente, no un plan: cubre parte de las facturas mientras buscas, y por eso existe la reserva para el resto.')} ({Math.round(BENEFIT_RATE*100)}%)</p></>}
+    </div>}
     {!confirmed&&reserveBlock}
     <div className="town-tabs" aria-label={tl('Teller services','Servicios del cajero')}><button aria-pressed={tab==='savings'} onClick={()=>setTab('savings')}>{tl('Cash & savings','Efectivo y ahorros')}</button><button aria-pressed={tab==='loans'} onClick={()=>setTab('loans')}>{tl('Compare loans','Comparar préstamos')}</button></div>
     {tab==='savings'?<>

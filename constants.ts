@@ -909,6 +909,7 @@ export const LIFE_EVENTS: Scenario[] = [
         label: 'Accept severance (2 weeks pay) + file for unemployment 🧾',
         outcome: {
           jobLossMonths: 4,
+          filesUnemployment: true,
           cashChangeSalaryMonths: 0.5,
           message: 'You were laid off. You got a small severance and filed the paperwork. Your salary will be $0 for 4 months — protect your runway.',
           statChanges: { stress: 18, happiness: -12, energy: -6 }

@@ -1,4 +1,5 @@
 import { resolveCafeService } from './services/cafeService';
+import { fileUnemploymentClaim, benefitEligibility, benefitStatus } from './services/townBenefits';
 import { askForRaise, switchCareer, careerChangeEligibility, jobSearch, acceptRecoveryPlan } from './services/townCareer';
 import { tl } from './i18n/town';
 import { resolveCafeAction, quoteCafe } from './services/townCafe';
@@ -3394,6 +3395,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           onSwitchCareer={path=>{if(isProcessing)return;const next=switchCareer(gameState,path);if(next===gameState){showNotif('Not now',careerChangeEligibility(gameState).reason??'Career change unavailable.','warning');return;}setGameState(next);recordAutosave(next);showNotif('Career change',`You start as ${next.career?.title} next month, after a month between jobs.`,'info');}}
           onJobSearch={()=>{if(isProcessing)return;const result=jobSearch(gameState);if(!result.applied){showNotif('Not now',result.line,'warning');return;}setGameState(result.state);recordAutosave(result.state);showNotif(result.success?'Offer accepted':'No offers yet',result.line,result.success?'success':'info');}}
           onAcceptPlan={()=>{if(isProcessing)return;const next=acceptRecoveryPlan(gameState);if(next===gameState){showNotif('Not now','A plan is already running or an event is waiting.','warning');return;}setGameState(next);recordAutosave(next);showNotif('Recovery plan agreed','Three months. The office tracks each goal.','info');}}
+          onFileClaim={()=>{if(isProcessing)return;const next=fileUnemploymentClaim(gameState);if(next===gameState){showNotif('Not now',benefitEligibility(gameState).reason??'Claim unavailable.','warning');return;}setGameState(next);recordAutosave(next);showNotif('Claim filed',`${benefitStatus(next)?.monthly?.toLocaleString('en-US')??''} a month from next month while you search.`,'success');}}
           onStartHustle={handleStartSideHustle} onStopHustle={handleStopSideHustle} onChooseUpgrade={()=>{setShowTown(false);setShowSideHustleUpgradeModal(true);}}
           workActions={monthlyActionsSummary} onMonthlyAction={handleUseMonthlyAction}
           onSell={handleSellAsset}

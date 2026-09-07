@@ -3,6 +3,7 @@ import type { CareerPath, MonthlyActionId } from '../../types';
 import type { MonthlyActionsSummary } from '../../services/monthlyActions';
 import { raiseOdds, jobBoard, careerChangeEligibility, layoffHazard, jobSearchOdds, reviewFactorLabel, mentorTalk, proposeRecoveryPlan, planProgress, planGoalLabel, PLAN_CREDIT, type RaiseAsk } from '../../services/townCareer';
 import { calculateMonthlyCashFlowEstimate } from '../../services/gameLogic';
+import { benefitStatus } from '../../services/townBenefits';
 import type { GameState } from '../../types';
 import { payStub, promotionOutlook, jobSecurity, managerLine, money } from '../../services/townWork';
 import { tl } from '../../i18n/town';
@@ -16,7 +17,7 @@ export default function WorkPanel({ state, disabled, onPromote, onOpenLife, onAs
   const [confirmPath, setConfirmPath] = useState<CareerPath | null>(null);
   const lastRaise = state.events.find(e => (e.title === 'Raise approved' || e.title === 'Raise declined') && e.month === state.month);
   const changeable = careerChangeEligibility(state), listings = jobBoard(state), deskActions = (workActions?.actions ?? []).filter(a => ['OVERTIME', 'NETWORK', 'TRAINING'].includes(a.id));
-  const unemployed = (state.jobLossMonthsRemaining ?? 0) > 0, search = jobSearchOdds(state), hazard = layoffHazard(state), review = state.townProgress?.lastReview, runway = Math.floor(state.cash / Math.max(1, calculateMonthlyCashFlowEstimate(state).expenses));
+  const unemployed = (state.jobLossMonthsRemaining ?? 0) > 0, benefit = benefitStatus(state), search = jobSearchOdds(state), hazard = layoffHazard(state), review = state.townProgress?.lastReview, runway = Math.floor(state.cash / Math.max(1, calculateMonthlyCashFlowEstimate(state).expenses));
   const lastSearch = state.events.find(e => e.title === 'Job search: offer accepted' && e.month === state.month);
   const talk = mentorTalk(state), plan = state.townProgress?.recoveryPlan, planActive = !!plan && !plan.result, proposal = proposeRecoveryPlan(state), planSteps = plan ? planProgress(state, plan) : [];
   const [talking, setTalking] = useState(false);
@@ -58,6 +59,7 @@ export default function WorkPanel({ state, disabled, onPromote, onOpenLife, onAs
       <ul className="town-list town-factors">{search.factors.map(f => <li key={f.label}>{f.delta >= 0 ? '↑' : '↓'} {f.label} {f.delta >= 0 ? '+' : ''}{Math.round(f.delta * 100)}%</li>)}</ul>
       {!search.eligible && <p className="town-small">{search.reason}</p>}
       {lastSearch && <p className="town-receipt" role="status">{lastSearch.description}</p>}
+      <p className="town-small">{benefit?.active ? `${tl('Unemployment benefit','Prestación por desempleo')}: ${money(benefit.monthly)}/${tl('mo','mes')} · ${benefit.monthsLeft} ${tl('left','restantes')}${benefit.searchedThisMonth ? '' : ` · ${tl('apply this month or it pauses','postula este mes o se pausa')}`}.` : tl('Laid off? The Community Bank teller files unemployment insurance: half your pay, up to six months, while you apply each month.','¿Despedido? El cajero del Banco Comunitario tramita el seguro de desempleo: la mitad de tu sueldo, hasta seis meses, mientras postules cada mes.')}</p>
     </section>}
 
     <section className="town-work-block" aria-label={tl('One-on-one with your manager','Reunión uno a uno con tu jefe')}>
