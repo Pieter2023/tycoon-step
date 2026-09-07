@@ -39,3 +39,7 @@ This project uses a lightweight i18n layer in `i18n/index.ts` with JSON translat
 ## City copy review (2026-09-07)
 
 All 1,474 `tl(en, es)` pairs in the city were read in one sitting (extract with a regex over `components/town`, `services/town*`, `i18n/town.ts`). House rules that came out of it: tú register everywhere; Latin American vocabulary (renta, enganche, cochera, auto, tasa anual, sala de operaciones); avoid gendered participles addressed to the player ("Te damos la bienvenida", "Ya puedes pasar a", "¿Te despidieron?"); couples' statuses in plural ("Prometidos", "Casados"); badge names keep the generic masculine. The dashboard's `es.json` is the June translation and has not had the same read.
+
+## Dashboard es.json rewrite (2026-09-07)
+
+The June file lacked accents and ñ, left 323 strings in English (all live: `events.*` feed `data/events.json`, character questlines, the sales certification and quiz) and had no ¿. It was regenerated from `en.json`'s structure: flatten the English, translate into a flat dict, refill the structure, assert every `{placeholder}` set matches. Keep the two vocabularies aligned with the city (ingresos extra, flujo de efectivo, cartera, contactos). Five strings equal the English by design (formats, the title, "Normal").

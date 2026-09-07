@@ -542,6 +542,16 @@ Pieter's pick: "Do the native-speaker read of the Spanish copy, keep going." Thi
 
 Validation: 363 tests across 64 files, TypeScript, build and `git diff --check` clean.
 
+## The dashboard's Spanish, rewritten — September 7, 2026 (build 38)
+
+Pieter's pick: "Read the dashboard's es.json translation too, keep going." The read turned into a rewrite. The June file had three problems the city's copy never had: it was typed without accents or ñ throughout ("Espanol", "Ultimo", "credito", "tamano"); 323 of its 620 strings were still English, and all of them are live in the UI (the event library `data/events.json` reads its titles and choices through these keys, the eight character questlines' quest titles, the Sales Accelerator certification and its fifteen-question quiz); and its questions lacked the opening ¿. It also carried anglicisms the city avoids ("side hustles", "cash flow", "picks", "slot", "onboarding").
+
+**What was done.** `i18n/translations/es.json` was regenerated key for key from the English structure (620 keys, every `{placeholder}` checked to match, no key added or dropped) with new Spanish for every string: accents and ñ throughout, ¿…? on every question, tú register, the city's vocabulary (ingresos extra, flujo de efectivo, cartera, contactos, espacio de guardado), track names that read as routes ("Ruta de inversión", "Ruta sin deudas"), the thirty translated events with their choices and outcomes, the character questlines, and the full sales certification including the quiz's prompts, options, explanations and feedback. Five strings are identical to the English by design (formats such as "{current} / {target}", the title "💰 TYCOON 💰", "Normal").
+
+Same caveat as the city: this is a careful editorial translation, not a native speaker's; the quiz in particular deserves a human read because its wrong answers are meant to sound tempting.
+
+Validation: 363 tests across 64 files, TypeScript, build and `git diff --check` clean; the quest log on the notice board renders the translated titles.
+
 ## Where the sessions stopped (September 6, 2026, morning)
 
 Overnight (23:00 to about 01:00 PDT) nine builds shipped: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. The morning session (about 06:00 to 07:30 PDT) added eight more, each verified in Chrome, receipted above and pushed to `origin/main`: the townhouse around the apartment door and the camera-canopy fix; adaptive graphics quality; petite women with A-line skirts; residents that make room; Freedom Day; the city accessibility pass; Main Street Offices (pay stub, promotion outlook, job security); the neighbourhood tour with download progress and the city open after winning; and Rosa's promotion nudge.
