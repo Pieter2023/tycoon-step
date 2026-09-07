@@ -24,7 +24,7 @@ import { createTownLife, createCyclist, createDogWalker, createFireworks } from 
 import { residentStyle, seatActor, styleCharacter, yieldTo, Sex, YieldState, WALK_KEEP_RIGHT, steerAround } from './townResidents';
 import { createQualityGovernor, initialQuality, QUALITY_SETTINGS, QualityLevel, QualityMode } from './townQuality';
 export type TownView = { x:number; z:number; yaw:number; pitch:number; distance:number; mode?:CameraPreset };
-export type TownSpot = 'teller' | 'exit' | 'cart' | 'cafe-counter' | 'broker' | 'agent' | 'board' | 'home' | 'desk' | 'rosa' | 'work' | 'manager' | 'college' | 'registrar' | null;
+export type TownSpot = 'teller' | 'exit' | 'cart' | 'cafe-counter' | 'broker' | 'agent' | 'board' | 'home' | 'desk' | 'rosa' | 'work' | 'manager' | 'college' | 'registrar' | 'garage' | null;
 export type TownSceneOptions = { view?:TownView; onView?:(view:TownView)=>void; onRoom?:(room:'city'|'bank'|'cafe'|'exchange'|'property'|'home'|'work'|'college')=>void; onPlayerPoint?:(point:TownPoint)=>void; onSpot?:(spot:TownSpot)=>void; onManual?:()=>void; playerSex?:Sex; playerScale?:number; quality?:QualityMode; onQuality?:(level:QualityLevel, automatic:boolean)=>void; onProgress?:(fraction:number)=>void; onTimeOfDay?:(label:Daylight['label'])=>void };
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
@@ -35,7 +35,7 @@ import { cameraRelativeMovement, normalizeStick, cameraPreset, CameraPreset, tur
 export type TownController = {
   setCafeService:(service?:CafeService)=>void; walkToServiceStation:(station:ServiceStation)=>void; getPlayerPoint:()=>TownPoint;
   enterCafe:()=>void; leaveCafe:()=>void; walkToCafeCounter:()=>void; setNeighbourhood:(month:number,cafe?:CafeState,won?:boolean)=>void;
-  enterBank:()=>void; leaveBank:()=>void; walkToTeller:()=>void; walkToExit:()=>void; enterExchange:()=>void; leaveExchange:()=>void; walkToBroker:()=>void; setBoard:(board:ExchangeBoard)=>void; enterProperty:()=>void; leaveProperty:()=>void; walkToAgent:()=>void; setListings:(board:PropertyBoard)=>void; enterHome:()=>void; leaveHome:()=>void; enterWork:()=>void; leaveWork:()=>void; walkToManager:()=>void; walkToWork:()=>void; setPayroll:(board:WorkBoard)=>void; enterCollege:()=>void; leaveCollege:()=>void; walkToRegistrar:()=>void; walkToCollege:()=>void; setSyllabus:(board:CollegeBoard)=>void; setFamily:(figures:Figures)=>void; setNotices:(notice:NoticeSheet)=>void; walkToDesk:()=>void; walkHome:()=>void; walkToRosa:()=>void; setLifestyle:(lifestyle:Lifestyle)=>void; setHustles:(count:number)=>void; setAdvice:(headline:string)=>void; serveCustomer:(onDone?:()=>void)=>void; celebrate:()=>void; setCamera:(mode:CameraPreset)=>void; orbit:(delta:number)=>void; zoom:(delta:number)=>void; setQuality:(mode:QualityMode)=>void; getQuality:()=>QualityLevel;
+  enterBank:()=>void; leaveBank:()=>void; walkToTeller:()=>void; walkToExit:()=>void; enterExchange:()=>void; leaveExchange:()=>void; walkToBroker:()=>void; setBoard:(board:ExchangeBoard)=>void; enterProperty:()=>void; leaveProperty:()=>void; walkToAgent:()=>void; setListings:(board:PropertyBoard)=>void; enterHome:()=>void; leaveHome:()=>void; enterWork:()=>void; leaveWork:()=>void; walkToManager:()=>void; walkToWork:()=>void; setPayroll:(board:WorkBoard)=>void; enterCollege:()=>void; leaveCollege:()=>void; walkToRegistrar:()=>void; walkToCollege:()=>void; setSyllabus:(board:CollegeBoard)=>void; setFamily:(figures:Figures)=>void; setNotices:(notice:NoticeSheet)=>void; setGarage:(cars:{paint:string}[])=>void; walkToGarage:()=>void; walkToDesk:()=>void; walkHome:()=>void; walkToRosa:()=>void; setLifestyle:(lifestyle:Lifestyle)=>void; setHustles:(count:number)=>void; setAdvice:(headline:string)=>void; serveCustomer:(onDone?:()=>void)=>void; celebrate:()=>void; setCamera:(mode:CameraPreset)=>void; orbit:(delta:number)=>void; zoom:(delta:number)=>void; setQuality:(mode:QualityMode)=>void; getQuality:()=>QualityLevel;
   walkTo: (id: TownPlaceId) => void; walkToBoard: () => void; direction: (key: string, down: boolean) => void;
   move: (x: number, z: number) => void; resetView: () => void;
   setOwned: (ids: TownPlaceId[]) => void; setBusiness: (owned:boolean, licensed:boolean, upgraded:boolean)=>void; setSound:(enabled:boolean)=>void; visitCart:()=>void; pause:(paused:boolean)=>void; dispose: () => void;
@@ -113,6 +113,9 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const lamps=createStreetLamps([-14,-7,7,14].map(x=>({x,z:5.9})));outdoors.add(lamps.root);
   // Your place: an apartment door at the west end of the promenade.
   const HOME={x:-15.7,z:7.4};
+  // The parking bay at the kerb by the townhouse: the player's first car stands here (setGarage); the panel lists any second one.
+  const GARAGE={x:-14.2,z:8.0}; const parking=new THREE.Group(); outdoors.add(parking); let carPrototype:THREE.Object3D|undefined, garageCars:{paint:string}[]=[];
+  const applyGarage=()=>{parking.clear();if(!carPrototype)return;garageCars.slice(0,1).forEach((car,i)=>{const clone=carPrototype!.clone(true);clone.traverse(o=>{if(!(o instanceof THREE.Mesh)||Array.isArray(o.material))return;o.castShadow=true;o.receiveShadow=true;const m=(o.material as THREE.MeshStandardMaterial).clone();o.material=m;if(m.name==='carPaint')m.color.set(car.paint);if(m.name==='lamp'){m.emissiveIntensity=0;}});clone.position.set(-14.7,.22,9.5);clone.rotation.y=Math.PI;parking.add(clone);});};
   const facade=createHomeFacade(HOME);outdoors.add(facade.root);
   // Main Street Offices mirror the townhouse at the east end of the promenade (negative x scale flips the facade).
   const WORK={x:15.7,z:7.4};
@@ -208,6 +211,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     if (options.playerScale) character.scene.scale.setScalar(options.playerScale);   // kids mode: a smaller figure
     if (vehicles) {
       traffic = createTownTraffic(vehicles.scene, reducedMotion); outdoors.add(traffic.root);
+      carPrototype = vehicles.scene.getObjectByName('Car') ?? undefined; applyGarage();
       const bike = vehicles.scene.getObjectByName('Bike'), dog = vehicles.scene.getObjectByName('Dog');
       if (bike) { const rider = character.scene.clone(true); styleCharacter(rider, residentStyle(12)); cyclist = createCyclist(bike, rider, reducedMotion); outdoors.add(cyclist.root); }
       if (dog) { dogWalker = createDogWalker(dog, reducedMotion); outdoors.add(dogWalker.root, dogWalker.leash); }
@@ -373,7 +377,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
         if(dogWalker&&pedestrians[10])dogWalker.update(dt,elapsed,pedestrians[10].root,pedestrians[10].root.visible);
         ambience?.tick(Math.hypot(here.x,here.z-12));
       }
-      const nextSpot:TownSpot=inside?(cafeInside?cafeSpot(player.position):exchangeInside?exchangeSpot(player.position):officeInside?propertySpot(player.position):homeInside?homeSpot(player.position):workInside?workSpot(player.position):collegeInside?collegeSpot(player.position):bankSpot(player.position)):cart.root.visible&&Math.hypot(player.position.x-2.2,player.position.z-8.7)<2?'cart':Math.hypot(player.position.x-BOARD.x,player.position.z-BOARD.z)<1.7?'board':Math.hypot(player.position.x-HOME.x,player.position.z-HOME.z)<1.5?'home':Math.hypot(player.position.x-WORK.x,player.position.z-WORK.z)<1.5?'work':Math.hypot(player.position.x-COLLEGE.x,player.position.z-COLLEGE.z)<1.5?'college':Math.hypot(player.position.x-ROSA.x,player.position.z-ROSA.z)<1.8?'rosa':null;
+      const nextSpot:TownSpot=inside?(cafeInside?cafeSpot(player.position):exchangeInside?exchangeSpot(player.position):officeInside?propertySpot(player.position):homeInside?homeSpot(player.position):workInside?workSpot(player.position):collegeInside?collegeSpot(player.position):bankSpot(player.position)):cart.root.visible&&Math.hypot(player.position.x-2.2,player.position.z-8.7)<2?'cart':Math.hypot(player.position.x-BOARD.x,player.position.z-BOARD.z)<1.7?'board':Math.hypot(player.position.x-GARAGE.x,player.position.z-GARAGE.z)<1.2?'garage':Math.hypot(player.position.x-HOME.x,player.position.z-HOME.z)<1.5?'home':Math.hypot(player.position.x-WORK.x,player.position.z-WORK.z)<1.5?'work':Math.hypot(player.position.x-COLLEGE.x,player.position.z-COLLEGE.z)<1.5?'college':Math.hypot(player.position.x-ROSA.x,player.position.z-ROSA.z)<1.8?'rosa':null;
       if(nextSpot!==spot){if(!inside&&nextSpot==='college'){yawGoal=Math.PI;yawAuto=true;}else if(!inside&&spot==='college'&&yawAuto){yawGoal=.12;yawAuto=false;}spot=nextSpot;options.onSpot?.(spot);}
       const current=inside?(cafeInside?(spot==='cafe-counter'?'business':null):exchangeInside?(spot==='broker'?'exchange':null):officeInside?(spot==='agent'?'property':null):homeInside||workInside||collegeInside?null:(spot==='teller'?'bank':null)):spot==='cart'?'business':nearbyPlace(player.position);
       if(current!==near){near=current;onNear(current);}if(!path.length)destinationRing.visible=false;
@@ -509,6 +513,8 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     setHustles(count){home.setHustles(count);},
     setFamily(figures){familyFigures=figures;applyFamily();},
     setNotices(notice){drawNotices(notice);},
+    setGarage(cars){garageCars=cars;applyGarage();},
+    walkToGarage(){if(inside)transition(false);clearMovement();path=findTownPath(player.position,{x:GARAGE.x,z:GARAGE.z});const end=path.at(-1);if(end){destinationRing.position.set(end.x,.235,end.z);destinationRing.visible=true;}},
     setAdvice(headline){adviceHeadline=headline;},
     walkToCafeCounter(){if(cafeInside){clearMovement();path=[{x:0,z:.8}];}},
     setNeighbourhood(month,cafe,won=false){cafeState=cafe;townMonth=month;celebrating=won;season=seasonFor(month);palette?.apply(seasonOverride??season);shopSign.visible=!!cafe;rainy=cafeWeather(month);cafeRoom.setState(cafeService?.status==='active'?{seats:cafeService.seats,machine:cafeService.machine}:cafe);if(!(scene.background instanceof THREE.Color))scene.background=new THREE.Color('#bdd7e4');ambience?.update(rainy,inside,document.hidden);},

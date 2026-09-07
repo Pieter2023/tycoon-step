@@ -8,11 +8,12 @@ import { promotionOutlook } from './townWork';
 import { studyPlan } from './townCollege';
 import { household } from './townFamily';
 import { offers } from './townInsurance';
+import { garage } from './townGarage';
 
 // Rosa, the neighbour on the promenade bench, reads the player's actual numbers and says the
 // one or two things a sensible friend would say. Rules are ordered by urgency; each returns a
 // short observation with an optional place to go. Nothing here moves money.
-export type Advice = { id: string; tone: 'warn' | 'tip' | 'good'; title: string; text: string; place?: 'bank' | 'exchange' | 'property' | 'cafe' | 'home' | 'board' | 'work' | 'college' };
+export type Advice = { id: string; tone: 'warn' | 'tip' | 'good'; title: string; text: string; place?: 'bank' | 'exchange' | 'property' | 'cafe' | 'home' | 'board' | 'work' | 'college' | 'garage' };
 
 const money = (n: number) => (n < 0 ? '-' : '') + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
 export function adviseFrom(state: GameState): Advice[] {
@@ -41,6 +42,9 @@ export function adviseFrom(state: GameState): Advice[] {
   else if (plan.best && plan.best.paybackMonths !== null && plan.best.paybackMonths <= 30 && !plan.enrolled) out.push({ id: 'quick-course', tone: 'tip', title: `${plan.best.name} ${tl('pays for itself in about','se paga sola en unos')} ${plan.best.paybackMonths} ${tl('months.','meses.')}`, text: `${money(plan.best.deposit)} ${tl('up front for about','por adelantado por unos')} ${money(plan.best.gainMonthly)} ${tl('more a month for the rest of your career. Few investments in the game pay back that fast.','más al mes por el resto de tu carrera. Pocas inversiones del juego se recuperan tan rápido.')}`, place: 'college' });
   const kids = household(state).children.find(c => c.canFund && c.fund === 0 && c.ageMonths >= 0 && c.fundMonthly > 0);
   if (kids && state.cash >= expenses * 2) out.push({ id: 'college-fund', tone: 'tip', title: `${kids.name} ${tl('turns 18 in','cumple 18 en')} ${kids.monthsTo18} ${tl('months.','meses.')}`, text: `${money(kids.fundMonthly)} ${tl('a month from now reaches the $60,000 dream-school bill; start later and the number climbs. Put it aside at home.','al mes desde hoy alcanza la cuenta de $60,000 de la universidad soñada; empieza después y la cifra sube. Apártalo en casa.')}`, place: 'home' });
+  // The starter car is given, not chosen; Rosa raises it only once the player has had time to build something around it.
+  const heavyCar = state.month >= 6 ? garage(state).cars.find(c => c.share >= 40 || (c.loan && !c.canSell)) : undefined;
+  if (heavyCar) out.push({ id: 'car-heavy', tone: 'warn', title: heavyCar.loan && !heavyCar.canSell ? tl('Your car loan is bigger than the car.','Tu préstamo del auto es mayor que el auto.') : `${heavyCar.share}% ${tl('of your net worth is a car.','de tu patrimonio es un auto.')}`, text: `${heavyCar.vehicle.name} ${tl('costs','cuesta')} ${money(heavyCar.trueCost)} ${tl('a month all in and will be worth about','al mes con todo y valdrá unos')} ${money(heavyCar.inFiveYears)} ${tl('in five years. The cheapest car that does the job wins.','en cinco años. Gana el auto más barato que haga el trabajo.')}`, place: 'garage' });
   const health = offers(state).find(o => o.id === 'health');
   // Rosa leaves insurance alone during the opening months (the reserve comes first), then names the bill the player could not pay.
   if (health && !health.held && state.month >= 6 && state.cash < health.example.loss) out.push({ id: 'uninsured', tone: 'warn', title: tl('One surgery would empty your account.','Una cirugía vaciaría tu cuenta.'), text: `${tl('The biggest medical bill in this game is','La factura médica más grande de este juego es de')} ${money(health.example.loss)}; ${tl('your cash is','tu efectivo es')} ${money(state.cash)}. ${tl('Health cover at the bank turns it into','El seguro de salud del banco la convierte en')} ${money(health.example.withCover)} ${tl('for','por')} ${money(health.premium)} ${tl('a month.','al mes.')}`, place: 'bank' });

@@ -7,6 +7,7 @@ export const TOWN_OBSTACLES = [
   ...[4.7,7.2].flatMap(x => [{x,z:.55,w:.5,d:.5},...[-.7,.7].map(dx=>({x:x+dx,z:.55,w:.2,d:.2}))]),
   ...[[-16,-1,1.35],[16,-1,1.4],[-12,8,1.5],[12,8,1.5]].map(([x,z,s])=>({x,z,w:s,d:s})),
   {x:2.2,z:8.7,w:.95,d:.6},
+  {x:-14.7,z:9.5,w:2.1,d:.95},   // parking bay by the townhouse (the player's car)
 ];
 export const isWalkable = (p:TownPoint,radius=.30) => {
   const bounded=clampTownPoint(p);

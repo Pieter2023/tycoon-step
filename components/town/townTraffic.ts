@@ -19,7 +19,7 @@ export function vehicleSpeed(current: number, cruise: number, obstacleAhead: num
 }
 
 export type Vehicle = { root: THREE.Object3D; wheels: THREE.Object3D[]; lamps: THREE.MeshStandardMaterial[]; lane: number; dir: 1 | -1; x: number; speed: number; cruise: number; length: number; passed: boolean };
-const PAINT = ['#c4483d', '#3f6fa8', '#e0c35a', '#5d8a6a', '#f2eee4', '#7c5aa0'];
+export const PAINT = ['#c4483d', '#3f6fa8', '#e0c35a', '#5d8a6a', '#f2eee4', '#7c5aa0'];
 
 export function createTownTraffic(vehicles: THREE.Object3D, reducedMotion: boolean) {
   const root = new THREE.Group();
