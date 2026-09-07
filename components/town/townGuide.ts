@@ -14,10 +14,10 @@ export function cityCaption(state: Pick<GameState, 'month' | 'hasWon' | 'cafe'>,
   return rainy ? { day: tl('RAIN','LLUVIA'), note: tl('Rainy afternoon · quieter streets','Tarde lluviosa · calles más tranquilas') } : { day: tl('MARKET DAY','DÍA DE MERCADO'), note: tl('Market day · neighbours out and about','Día de mercado · vecinos por la calle') };
 }
 
-export type GuideTarget = 'teller' | 'business' | 'cart' | 'cafe' | 'broker' | 'manager' | 'desk' | 'rosa' | 'board';
+export type GuideTarget = 'teller' | 'business' | 'cart' | 'cafe' | 'broker' | 'manager' | 'desk' | 'rosa' | 'board' | 'registrar';
 export type GuideContext = {
   journey: Pick<ActiveJourney, 'completed' | 'action' | 'button' | 'step'> & { stage?: 1 | 2 | 3 };
-  room: 'city' | 'bank' | 'cafe' | 'exchange' | 'property' | 'home' | 'work';
+  room: 'city' | 'bank' | 'cafe' | 'exchange' | 'property' | 'home' | 'work' | 'college';
   near: TownPlaceId | null;
   spot: TownSpot;
   showDetails: boolean;
@@ -57,9 +57,10 @@ export function guideLabel(c: GuideContext): string {
 
 // After a guided walk arrives, the next hop happens without another tap: through the
 // bank door, up to the teller, into the café. Returns what to do now, or null to wait.
-export function guideNextHop(target: GuideTarget, c: Pick<GuideContext, 'room' | 'near' | 'spot'>): 'enterBank' | 'walkToTeller' | 'enterCafe' | 'enterExchange' | 'walkToBroker' | 'enterWork' | 'walkToManager' | 'enterHome' | 'walkToDesk' | 'arrived' | null {
+export function guideNextHop(target: GuideTarget, c: Pick<GuideContext, 'room' | 'near' | 'spot'>): 'enterBank' | 'walkToTeller' | 'enterCafe' | 'enterExchange' | 'walkToBroker' | 'enterWork' | 'walkToManager' | 'enterHome' | 'walkToDesk' | 'enterCollege' | 'walkToRegistrar' | 'arrived' | null {
   const { room, near, spot } = c;
   if (target === 'manager') { if (room === 'city') return spot === 'work' ? 'enterWork' : null; if (room === 'work') return spot === 'manager' ? 'arrived' : 'walkToManager'; return null; }
+  if (target === 'registrar') { if (room === 'city') return spot === 'college' ? 'enterCollege' : null; if (room === 'college') return spot === 'registrar' ? 'arrived' : 'walkToRegistrar'; return null; }
   if (target === 'desk') { if (room === 'city') return spot === 'home' ? 'enterHome' : null; if (room === 'home') return spot === 'desk' ? 'arrived' : 'walkToDesk'; return null; }
   if (target === 'rosa') return room === 'city' && spot === 'rosa' ? 'arrived' : null;
   if (target === 'board') return room === 'city' && spot === 'board' ? 'arrived' : null;

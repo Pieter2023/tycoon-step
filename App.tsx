@@ -3397,7 +3397,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           onAcceptPlan={()=>{if(isProcessing)return;const next=acceptRecoveryPlan(gameState);if(next===gameState){showNotif('Not now','A plan is already running or an event is waiting.','warning');return;}setGameState(next);recordAutosave(next);showNotif('Recovery plan agreed','Three months. The office tracks each goal.','info');}}
           onFileClaim={()=>{if(isProcessing)return;const next=fileUnemploymentClaim(gameState);if(next===gameState){showNotif('Not now',benefitEligibility(gameState).reason??'Claim unavailable.','warning');return;}setGameState(next);recordAutosave(next);showNotif('Claim filed',`${benefitStatus(next)?.monthly?.toLocaleString('en-US')??''} a month from next month while you search.`,'success');}}
           onStartHustle={handleStartSideHustle} onStopHustle={handleStopSideHustle} onChooseUpgrade={()=>{setShowTown(false);setShowSideHustleUpgradeModal(true);}}
-          workActions={monthlyActionsSummary} onMonthlyAction={handleUseMonthlyAction}
+          workActions={monthlyActionsSummary} onMonthlyAction={handleUseMonthlyAction} onEnroll={handleEnrollEducation}
           onSell={handleSellAsset}
           onMortgage={item=>setShowMortgageModal(item)}
           onChangeLifestyle={handleChangeLifestyle}

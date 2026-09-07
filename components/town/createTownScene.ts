@@ -4,13 +4,15 @@ import { createCafeRoom, clampCafePoint, cafeSpot } from './townCafeRoom';
 import { createTownWeather, createTownAmbience } from './townAtmosphere';
 import { CafeState, cafeWeather } from '../../services/townCafe';
 import * as THREE from 'three';
-import { findTownPath, slideMovement, isWalkable } from './townNavigation';
+import { findTownPath, slideMovement, isWalkable, segmentClear } from './townNavigation';
 import { createTownBank, clampBankPoint, bankSpot } from './townBank';
 import { createTownExchange, clampExchangePoint, exchangeSpot, ExchangeBoard } from './townExchange';
 import { createTownProperty, clampPropertyPoint, propertySpot, PropertyBoard } from './townProperty';
 import { daylight, dayPhase, createStreetLamps, Daylight } from './townDaylight';
 import { createTownHome, createHomeFacade, clampHomePoint, homeSpot, OFFICE_PALETTE } from './townHome';
 import { createTownWork, clampWorkPoint, workSpot } from './townWork';
+import { createTownCollege, clampCollegePoint, collegeSpot, createCollegeFacade } from './townCollege';
+import type { CollegeBoard } from '../../services/townCollege';
 import type { WorkBoard } from '../../services/townWork';
 import { createSeasonPalette, createSeasonFall, seasonFor, Season } from './townSeasons';
 import type { Lifestyle } from '../../types';
@@ -20,8 +22,8 @@ import { createTownLife, createCyclist, createDogWalker, createFireworks } from 
 import { residentStyle, seatActor, styleCharacter, yieldTo, Sex, YieldState, WALK_KEEP_RIGHT, steerAround } from './townResidents';
 import { createQualityGovernor, initialQuality, QUALITY_SETTINGS, QualityLevel, QualityMode } from './townQuality';
 export type TownView = { x:number; z:number; yaw:number; pitch:number; distance:number; mode?:CameraPreset };
-export type TownSpot = 'teller' | 'exit' | 'cart' | 'cafe-counter' | 'broker' | 'agent' | 'board' | 'home' | 'desk' | 'rosa' | 'work' | 'manager' | null;
-export type TownSceneOptions = { view?:TownView; onView?:(view:TownView)=>void; onRoom?:(room:'city'|'bank'|'cafe'|'exchange'|'property'|'home'|'work')=>void; onPlayerPoint?:(point:TownPoint)=>void; onSpot?:(spot:TownSpot)=>void; onManual?:()=>void; playerSex?:Sex; playerScale?:number; quality?:QualityMode; onQuality?:(level:QualityLevel, automatic:boolean)=>void; onProgress?:(fraction:number)=>void; onTimeOfDay?:(label:Daylight['label'])=>void };
+export type TownSpot = 'teller' | 'exit' | 'cart' | 'cafe-counter' | 'broker' | 'agent' | 'board' | 'home' | 'desk' | 'rosa' | 'work' | 'manager' | 'college' | 'registrar' | null;
+export type TownSceneOptions = { view?:TownView; onView?:(view:TownView)=>void; onRoom?:(room:'city'|'bank'|'cafe'|'exchange'|'property'|'home'|'work'|'college')=>void; onPlayerPoint?:(point:TownPoint)=>void; onSpot?:(spot:TownSpot)=>void; onManual?:()=>void; playerSex?:Sex; playerScale?:number; quality?:QualityMode; onQuality?:(level:QualityLevel, automatic:boolean)=>void; onProgress?:(fraction:number)=>void; onTimeOfDay?:(label:Daylight['label'])=>void };
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
@@ -31,7 +33,7 @@ import { cameraRelativeMovement, normalizeStick, cameraPreset, CameraPreset, tur
 export type TownController = {
   setCafeService:(service?:CafeService)=>void; walkToServiceStation:(station:ServiceStation)=>void; getPlayerPoint:()=>TownPoint;
   enterCafe:()=>void; leaveCafe:()=>void; walkToCafeCounter:()=>void; setNeighbourhood:(month:number,cafe?:CafeState,won?:boolean)=>void;
-  enterBank:()=>void; leaveBank:()=>void; walkToTeller:()=>void; walkToExit:()=>void; enterExchange:()=>void; leaveExchange:()=>void; walkToBroker:()=>void; setBoard:(board:ExchangeBoard)=>void; enterProperty:()=>void; leaveProperty:()=>void; walkToAgent:()=>void; setListings:(board:PropertyBoard)=>void; enterHome:()=>void; leaveHome:()=>void; enterWork:()=>void; leaveWork:()=>void; walkToManager:()=>void; walkToWork:()=>void; setPayroll:(board:WorkBoard)=>void; walkToDesk:()=>void; walkHome:()=>void; walkToRosa:()=>void; setLifestyle:(lifestyle:Lifestyle)=>void; setHustles:(count:number)=>void; setAdvice:(headline:string)=>void; serveCustomer:(onDone?:()=>void)=>void; celebrate:()=>void; setCamera:(mode:CameraPreset)=>void; orbit:(delta:number)=>void; zoom:(delta:number)=>void; setQuality:(mode:QualityMode)=>void; getQuality:()=>QualityLevel;
+  enterBank:()=>void; leaveBank:()=>void; walkToTeller:()=>void; walkToExit:()=>void; enterExchange:()=>void; leaveExchange:()=>void; walkToBroker:()=>void; setBoard:(board:ExchangeBoard)=>void; enterProperty:()=>void; leaveProperty:()=>void; walkToAgent:()=>void; setListings:(board:PropertyBoard)=>void; enterHome:()=>void; leaveHome:()=>void; enterWork:()=>void; leaveWork:()=>void; walkToManager:()=>void; walkToWork:()=>void; setPayroll:(board:WorkBoard)=>void; enterCollege:()=>void; leaveCollege:()=>void; walkToRegistrar:()=>void; walkToCollege:()=>void; setSyllabus:(board:CollegeBoard)=>void; walkToDesk:()=>void; walkHome:()=>void; walkToRosa:()=>void; setLifestyle:(lifestyle:Lifestyle)=>void; setHustles:(count:number)=>void; setAdvice:(headline:string)=>void; serveCustomer:(onDone?:()=>void)=>void; celebrate:()=>void; setCamera:(mode:CameraPreset)=>void; orbit:(delta:number)=>void; zoom:(delta:number)=>void; setQuality:(mode:QualityMode)=>void; getQuality:()=>QualityLevel;
   walkTo: (id: TownPlaceId) => void; walkToBoard: () => void; direction: (key: string, down: boolean) => void;
   move: (x: number, z: number) => void; resetView: () => void;
   setOwned: (ids: TownPlaceId[]) => void; setBusiness: (owned:boolean, licensed:boolean, upgraded:boolean)=>void; setSound:(enabled:boolean)=>void; visitCart:()=>void; pause:(paused:boolean)=>void; dispose: () => void;
@@ -76,13 +78,14 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const exchange = createTownExchange(); scene.add(exchange.root);
   const office = createTownProperty(); scene.add(office.root);
   const work = createTownWork(); scene.add(work.root);
+  const college = createTownCollege(); scene.add(college.root);
   const home = createTownHome(); scene.add(home.root);
   const shopLabel=document.createElement('canvas');shopLabel.width=1024;shopLabel.height=120;
   const shopInk=shopLabel.getContext('2d')!;shopInk.fillStyle='#365d54';shopInk.fillRect(0,0,1024,120);shopInk.fillStyle='#fff0cd';shopInk.font='600 66px sans-serif';shopInk.textAlign='center';shopInk.fillText('LITTLE SQUARE CAFÉ',512,84);
   const shopTexture=new THREE.CanvasTexture(shopLabel);shopTexture.colorSpace=THREE.SRGBColorSpace;
   const shopSign=new THREE.Mesh(new THREE.PlaneGeometry(5.7,.64),new THREE.MeshBasicMaterial({map:shopTexture}));shopSign.position.set(3.5,3.02,-2.03);shopSign.visible=false;outdoors.add(shopSign);
   const weather = createTownWeather(); outdoors.add(weather.root);
-  let cafeState:CafeState|undefined, rainy=false, cafeInside=false, exchangeInside=false, officeInside=false, homeInside=false, workInside=false, adviceHeadline='', managerHeadline='';
+  let cafeState:CafeState|undefined, rainy=false, cafeInside=false, exchangeInside=false, officeInside=false, homeInside=false, workInside=false, collegeInside=false, adviceHeadline='', managerHeadline='', registrarHeadline='';
   let inside = false, spot:TownSpot = null, cityView:TownView | undefined;
   const player = new THREE.Group(); const saved=options.view; const spawn=saved&&isWalkable(saved)?saved:{x:0,z:7}; player.position.set(spawn.x, .22, spawn.z); scene.add(player);
   const destinationRing = new THREE.Mesh(new THREE.RingGeometry(.24, .31, 40), new THREE.MeshBasicMaterial({ color: '#fff0a4', side: THREE.DoubleSide, transparent: true, opacity: .85 }));
@@ -98,6 +101,8 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const fountain = new THREE.Points(droplets, new THREE.PointsMaterial({ color: '#c3f1ed', size: .047, transparent: true, opacity: .8 })); fountain.position.set(0,1.55,12); fountain.visible = !reducedMotion; outdoors.add(fountain);
   let alive = true, ready = false, contextAvailable = true, frame = 0, previousTime = performance.now(), elapsed = 0;
   let path: TownPoint[] = [], near: TownPlaceId | null = null, yaw = .12, pitch = .40, distance = 9, zoomDistance = 9;
+  // The college stands south of the square, exactly where the camera normally hangs. Arriving at its door eases the camera round to the north so the building, not its back wall, is in frame; leaving eases it home. A drag cancels the ease.
+  let yawGoal: number | undefined, yawAuto = false;
   const keys = new Set<string>(); let stick = { x: 0, z: 0 }; const velocity = new THREE.Vector2(), cameraTarget = new THREE.Vector3(0,1.65,7), desiredCamera = new THREE.Vector3();
   camera.position.set(1,5.4,15); camera.lookAt(cameraTarget);
   if(saved){yaw=Number.isFinite(saved.yaw)?saved.yaw:.12;pitch=Number.isFinite(saved.pitch)?THREE.MathUtils.clamp(saved.pitch,.16,1.05):.4;zoomDistance=Number.isFinite(saved.distance)?THREE.MathUtils.clamp(saved.distance,4,20):9;distance=zoomDistance;cameraTarget.set(spawn.x,1.65,spawn.z);}
@@ -125,6 +130,9 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
    const mailbox=new THREE.Mesh(new THREE.BoxGeometry(.3,.25,.4),new THREE.MeshStandardMaterial({color:'#b04a3c'}));mailbox.position.set(-15.9,1.4,HOME.z+1.1);outdoors.add(mailbox);
    const sign=document.createElement('canvas');sign.width=512;sign.height=128;const ink=sign.getContext('2d')!;ink.fillStyle='#233b33';ink.fillRect(0,0,512,128);ink.fillStyle='#fff0cd';ink.font='600 56px sans-serif';ink.textAlign='center';ink.fillText('12 SQUARE ST · HOME',256,84);
    const texture=new THREE.CanvasTexture(sign);texture.colorSpace=THREE.SRGBColorSpace;const plate=new THREE.Mesh(new THREE.PlaneGeometry(1.5,.375),new THREE.MeshBasicMaterial({map:texture}));plate.position.set(-16.33,2.95,HOME.z);plate.rotation.y=Math.PI/2;outdoors.add(plate);}
+  // Freedom Square Community College stands on the south lawn between the fountain and the east tree, facing the square. Its door is in clear view from the north: the only south-edge slot without a tree in front of it.
+  const COLLEGE={x:4.4,z:9.6};
+  const collegeFacade=createCollegeFacade({x:COLLEGE.x,z:10.4});outdoors.add(collegeFacade.root);
   const ROSA={x:-6,z:7.4};
   // Community notice board on the square: this month's challenges live here.
   const BOARD={x:-6.2,z:9.6};
@@ -149,7 +157,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   let cameraMode:CameraPreset=saved?.mode==='overview'?'overview':'follow';
   const cafeActors:Actor[]=[];
   const makeSpeech=(parent:THREE.Object3D)=>{const canvas=document.createElement('canvas');canvas.width=768;canvas.height=110;const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,depthTest:false}));sprite.scale.set(3.1,.44,1);sprite.visible=false;parent.add(sprite);let current='';return {sprite,say(text:string,x:number,y:number,z:number){if(text!==current){current=text;const ctx=canvas.getContext('2d')!;ctx.clearRect(0,0,768,110);ctx.fillStyle='#fff6e2';ctx.beginPath();ctx.roundRect(4,4,760,102,28);ctx.fill();ctx.fillStyle='#233b33';ctx.font='600 40px sans-serif';ctx.textAlign='center';ctx.fillText(text,384,68);texture.needsUpdate=true;}sprite.position.set(x,y,z);sprite.visible=true;},hide(){sprite.visible=false;}};};
-  const tellerSpeech=makeSpeech(bank.root),brokerSpeech=makeSpeech(exchange.root),agentSpeech=makeSpeech(office.root),managerSpeech=makeSpeech(work.root),rosaSpeech=makeSpeech(outdoors);
+  const tellerSpeech=makeSpeech(bank.root),brokerSpeech=makeSpeech(exchange.root),agentSpeech=makeSpeech(office.root),managerSpeech=makeSpeech(work.root),registrarSpeech=makeSpeech(college.root),rosaSpeech=makeSpeech(outdoors);
   const TELLER_LINES=[['Morning, neighbour. Moving some money?','Buenos días, vecino. ¿Moviendo dinero?'],['One month of bills in cash. That is the rule.','Un mes de facturas en efectivo. Esa es la regla.'],['Savings sit still; investments move.','Los ahorros se quedan quietos; las inversiones se mueven.']] as const;
   let cafeService:CafeService|undefined, lastPointAt=0;
   const guestPaths=new Map<number,{key:string;path:TownPoint[];seated:boolean}>();
@@ -158,7 +166,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const steam=new THREE.Group();cafeRoom.root.add(steam);
   const readyCup=new THREE.Mesh(new THREE.CylinderGeometry(.09,.07,.2,16),new THREE.MeshStandardMaterial({color:'#fff1d4'}));readyCup.position.set(-1.05,1.47,-.42);readyCup.visible=false;cafeRoom.root.add(readyCup);
   for(let i=0;i<4;i++){const puff=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6),new THREE.MeshBasicMaterial({color:'#fff4de',transparent:true,opacity:.35}));puff.position.set(-.6,1.7+i*.16,-.5);steam.add(puff);}steam.visible=false;
-  let playerActor: Actor | undefined, manager: Actor | undefined; const workActors: Actor[] = []; const pedestrians: (Actor & { offset: number; lane: number; seat?: number; yield: YieldState })[] = [];
+  let playerActor: Actor | undefined, manager: Actor | undefined, registrar: Actor | undefined; const workActors: Actor[] = [], collegeActors: Actor[] = []; const pedestrians: (Actor & { offset: number; lane: number; seat?: number; yield: YieldState })[] = [];
   const addActor = (root: THREE.Object3D, clips: THREE.AnimationClip[]): Actor => {
     const mixer = new THREE.AnimationMixer(root), actions: Record<string, THREE.AnimationAction> = {};
     for (const clip of clips){const action=mixer.clipAction(clip);if(['Serve','Wave','Celebrate'].includes(clip.name)){action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;}actions[clip.name]=action;}
@@ -196,7 +204,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       if (dog) { dogWalker = createDogWalker(dog, reducedMotion); outdoors.add(dogWalker.root, dogWalker.leash); }
     }
     // Dev-only QA handle for inspecting traffic and pigeons from the console; stripped from production builds.
-    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { traffic, life, cyclist, dogWalker, player: () => ({ x: player.position.x, z: player.position.z }), setPhase: (p?: number) => { phaseOverride = p; }, celebrate: (won: boolean) => { celebrating = won; }, fireworks, walk: (x: number, z: number) => { if (!inside) { clearMovement(); path = findTownPath(player.position, { x, z }); } }, residents: () => pedestrians.map(p => ({ x: p.root.position.x, z: p.root.position.z, visible: p.root.visible, seated: p.seat !== undefined })), quality: () => quality, setQuality: (mode: QualityMode) => { governor.set(initialQuality(mode, deviceHints()), mode === 'auto'); applyQuality(governor.level); }, governor, setSeason: (s?: Season) => { seasonOverride = s; palette?.apply(s ?? season); } };
+    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { traffic, life, cyclist, dogWalker, player: () => ({ x: player.position.x, z: player.position.z }), view: () => ({ yaw, pitch, distance, goal: yawGoal, camera: { x: camera.position.x, y: camera.position.y, z: camera.position.z } }), setPhase: (p?: number) => { phaseOverride = p; }, celebrate: (won: boolean) => { celebrating = won; }, fireworks, walk: (x: number, z: number) => { if (!inside) { clearMovement(); path = findTownPath(player.position, { x, z }); } }, residents: () => pedestrians.map(p => ({ x: p.root.position.x, z: p.root.position.z, visible: p.root.visible, seated: p.seat !== undefined })), quality: () => quality, setQuality: (mode: QualityMode) => { governor.set(initialQuality(mode, deviceHints()), mode === 'auto'); applyQuality(governor.level); }, governor, setSeason: (s?: Season) => { seasonOverride = s; palette?.apply(s ?? season); } };
     // Twelve neighbours: walkers on both pavements plus two resting on the promenade benches.
     for (let i = 0; i < 12; i++) {
       const root = character.scene.clone(true); root.scale.setScalar(.86 + (i % 3) * .07);
@@ -217,6 +225,10 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     const managerRoot = character.scene.clone(true);
     styleCharacter(managerRoot, { sex: 'm', hair: 'short', beard: true, colors: { shirt: '#3f5a73', hair: '#252a2e', skin: '#865d44', trousers: '#2f3a44' } });
     managerRoot.position.set(0,.22,-1.5); work.root.add(managerRoot); manager = addActor(managerRoot,character.animations);
+    const registrarRoot = character.scene.clone(true);
+    styleCharacter(registrarRoot, { sex: 'f', hair: 'long', colors: { shirt: '#6b4f8a', hair: '#4a3b2c', skin: '#c98d6a', trousers: '#3a3f47', skirt: '#4f3d66' } });
+    registrarRoot.position.set(0,.22,-1.5); college.root.add(registrarRoot); registrar = addActor(registrarRoot,character.animations);
+    for (const [i, [x, z]] of [[-1.6, 2.0], [1.6, 3.7]].entries()) { const student = character.scene.clone(true); styleCharacter(student, residentStyle(18 + i)); student.position.set(x,-.1,z+.05); student.rotation.y=Math.PI; college.root.add(student); collegeActors.push(addActor(student, character.animations)); }
     for (const [i, [x, z]] of [[-3.4, 3.3], [3.4, 3.3]].entries()) { const colleague = character.scene.clone(true); styleCharacter(colleague, residentStyle(16 + i)); colleague.position.set(x,-.1,z+.05); colleague.rotation.y=Math.PI; work.root.add(colleague); workActors.push(addActor(colleague, character.animations)); }
     for (const [i, [x, z]] of [[-2.9, 2.0], [2.9, 4.4]].entries()) {
       const trader = character.scene.clone(true); styleCharacter(trader, residentStyle(14 + i));
@@ -244,7 +256,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     ready = true; onReady?.();
   }).catch(() => { if (alive) onFailure(); });
   const walls = TOWN_PLACES.map(p => new THREE.Box3(new THREE.Vector3(p.x - 3.45, 0, -8.6), new THREE.Vector3(p.x + 3.45, 11, -2.2)));
-  walls.push(facade.bounds);walls.push(officeFacade.bounds);
+  walls.push(facade.bounds);walls.push(officeFacade.bounds);walls.push(collegeFacade.bounds);
   // Tree crowns only matter when the camera itself would sit inside one; a ray merely passing
   // through a canopy on its way up must not drag the camera onto the player's shoulders.
   const crowns=[[-16,-1,1.35],[16,-1,1.4],[-12,8,1.5],[12,8,1.5],[-9,13,1.25],[9,13,1.3],[-18,12,1.4],[18,12,1.5]].map(([x,z,scale])=>new THREE.Box3(new THREE.Vector3(x-1.85*scale,1.6*scale,z-1.65*scale),new THREE.Vector3(x+1.85*scale,4.5*scale,z+1.65*scale)));
@@ -269,13 +281,13 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     const previous = pointers.get(event.pointerId); if (!previous) return; pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
     if (pointers.size > 1) { const [a,b] = Array.from(pointers.values()); const pinch=Math.hypot(a.x-b.x,a.y-b.y); if(lastPinch && pinch>1) zoomDistance=THREE.MathUtils.clamp(zoomDistance*lastPinch/pinch,4,20); lastPinch=pinch; dragged=true; return; }
     if (Math.hypot(event.clientX-dragStart.x,event.clientY-dragStart.y)>8) dragged=true;
-    if(dragged) { yaw-=(event.clientX-previous.x)*.0035; pitch=THREE.MathUtils.clamp(pitch+(event.clientY-previous.y)*.0025,.30,.95); }
+    if(dragged) { yawGoal=undefined; yaw-=(event.clientX-previous.x)*.0035; pitch=THREE.MathUtils.clamp(pitch+(event.clientY-previous.y)*.0025,.30,.95); }
   };
   const up = (event: PointerEvent) => {
     if (!pointers.has(event.pointerId)) return; pointers.delete(event.pointerId);
     if (isWalkTap(Math.hypot(event.clientX-dragStart.x,event.clientY-dragStart.y),hadPinch,dragged) && event.button === 0 && ready && !paused) {
       const rect=canvas.getBoundingClientRect(); pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1); raycaster.setFromCamera(pointer,camera);
-      if (raycaster.ray.intersectPlane(floor,point)) { const target=inside?(cafeInside?clampCafePoint(point):exchangeInside?clampExchangePoint(point):officeInside?clampPropertyPoint(point):homeInside?clampHomePoint(point):workInside?clampWorkPoint(point):clampBankPoint(point)):clampTownPoint(point); path=inside?[target]:findTownPath(player.position,target); const end=path.at(-1);if(end){destinationRing.position.set(end.x,.235,end.z);destinationRing.visible=true;} options.onManual?.(); }
+      if (raycaster.ray.intersectPlane(floor,point)) { const target=inside?(cafeInside?clampCafePoint(point):exchangeInside?clampExchangePoint(point):officeInside?clampPropertyPoint(point):homeInside?clampHomePoint(point):workInside?clampWorkPoint(point):collegeInside?clampCollegePoint(point):clampBankPoint(point)):clampTownPoint(point); path=inside?[target]:findTownPath(player.position,target); const end=path.at(-1);if(end){destinationRing.position.set(end.x,.235,end.z);destinationRing.visible=true;} options.onManual?.(); }
     }
   };
   const cancel = () => { pointers.clear(); hadPinch=true;dragged=true; lastPinch=0; };
@@ -306,15 +318,17 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       }
       velocity.lerp(new THREE.Vector2(movement.x*speed,movement.z*speed),1-Math.exp(-dt*(movement.x||movement.z?10:18))); if(velocity.length()<.025) velocity.set(0,0);
       const proposed={x:player.position.x+velocity.x*dt,z:player.position.z+velocity.y*dt};
-      let next=inside?(cafeInside?clampCafePoint(proposed):exchangeInside?clampExchangePoint(proposed):officeInside?clampPropertyPoint(proposed):homeInside?clampHomePoint(proposed):workInside?clampWorkPoint(proposed):clampBankPoint(proposed)):slideMovement(player.position,proposed);
+      let next=inside?(cafeInside?clampCafePoint(proposed):exchangeInside?clampExchangePoint(proposed):officeInside?clampPropertyPoint(proposed):homeInside?clampHomePoint(proposed):workInside?clampWorkPoint(proposed):collegeInside?clampCollegePoint(proposed):clampBankPoint(proposed)):slideMovement(player.position,proposed);
       if(!inside&&!serviceStage){
         // People: step sideways around anyone in the way (never a wall). Vehicles: solid, so a stopped car is a wall, not a ghost.
-        const steered=steerAround(player.position,next,bystanders,.6); if(isWalkable(steered))next=steered; else {const other=steerAround(player.position,next,bystanders,.6,true); if(isWalkable(other))next=other;}
+        // A sidestep must not leave the route: the steered point has to be walkable AND still see the next waypoint, or the queue at the cart steers the player into the cart's blind side.
+        const ahead=path[0]; const clear=(p:TownPoint)=>isWalkable(p)&&(!ahead||segmentClear(p,ahead));
+        const steered=steerAround(player.position,next,bystanders,.6); if(clear(steered))next=steered; else {const other=steerAround(player.position,next,bystanders,.6,true); if(clear(other))next=other;}
         for(const v of traffic?.obstacles()??[]){if(Math.abs(next.x-v.x)<v.halfLength+.35&&Math.abs(next.z-v.z)<v.halfWidth+.35){const keepX={x:player.position.x,z:next.z},keepZ={x:next.x,z:player.position.z};next=Math.abs(keepX.z-v.z)>=v.halfWidth+.35||Math.abs(keepX.x-v.x)>=v.halfLength+.35?keepX:Math.abs(keepZ.x-v.x)>=v.halfLength+.35||Math.abs(keepZ.z-v.z)>=v.halfWidth+.35?keepZ:{x:player.position.x,z:player.position.z};}}
       }
       const actualSpeed=Math.hypot(next.x-player.position.x,next.z-player.position.z)/Math.max(dt,.001); player.position.x=next.x;player.position.z=next.z;
       if(actualSpeed>.08)player.rotation.y=turnTowards(player.rotation.y,Math.atan2(velocity.x,velocity.y),dt);
-      else if(inside&&(spot==='teller'||spot==='cafe-counter'||spot==='broker'||spot==='agent'||spot==='desk'||!!cafeService?.brewing))player.rotation.y=turnTowards(player.rotation.y,Math.PI,dt);
+      else if(inside&&(spot==='teller'||spot==='cafe-counter'||spot==='broker'||spot==='agent'||spot==='desk'||spot==='manager'||spot==='registrar'||!!cafeService?.brewing))player.rotation.y=turnTowards(player.rotation.y,Math.PI,dt);
       if(serviceStage==='approach'&&!path.length){serviceStage='serve';serviceUntil=elapsed+4;yaw=.95;pitch=.65;zoomDistance=7.5;}
       if(serviceStage==='serve'){player.rotation.y=turnTowards(player.rotation.y,0,dt);if(elapsed>=serviceUntil){serviceStage='return';path=findTownPath(player.position,serviceReturn);}}
       if(serviceStage==='return'&&!path.length){serviceStage=null;if(serviceView){yaw=serviceView.yaw;pitch=serviceView.pitch;zoomDistance=serviceView.distance;}serviceDone?.();serviceDone=undefined;}
@@ -347,12 +361,13 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
         if(dogWalker&&pedestrians[10])dogWalker.update(dt,elapsed,pedestrians[10].root,pedestrians[10].root.visible);
         ambience?.tick(Math.hypot(here.x,here.z-12));
       }
-      const nextSpot:TownSpot=inside?(cafeInside?cafeSpot(player.position):exchangeInside?exchangeSpot(player.position):officeInside?propertySpot(player.position):homeInside?homeSpot(player.position):workInside?workSpot(player.position):bankSpot(player.position)):cart.root.visible&&Math.hypot(player.position.x-2.2,player.position.z-8.7)<2?'cart':Math.hypot(player.position.x-BOARD.x,player.position.z-BOARD.z)<1.7?'board':Math.hypot(player.position.x-HOME.x,player.position.z-HOME.z)<1.5?'home':Math.hypot(player.position.x-WORK.x,player.position.z-WORK.z)<1.5?'work':Math.hypot(player.position.x-ROSA.x,player.position.z-ROSA.z)<1.8?'rosa':null;
-      if(nextSpot!==spot){spot=nextSpot;options.onSpot?.(spot);}
-      const current=inside?(cafeInside?(spot==='cafe-counter'?'business':null):exchangeInside?(spot==='broker'?'exchange':null):officeInside?(spot==='agent'?'property':null):homeInside||workInside?null:(spot==='teller'?'bank':null)):spot==='cart'?'business':nearbyPlace(player.position);
+      const nextSpot:TownSpot=inside?(cafeInside?cafeSpot(player.position):exchangeInside?exchangeSpot(player.position):officeInside?propertySpot(player.position):homeInside?homeSpot(player.position):workInside?workSpot(player.position):collegeInside?collegeSpot(player.position):bankSpot(player.position)):cart.root.visible&&Math.hypot(player.position.x-2.2,player.position.z-8.7)<2?'cart':Math.hypot(player.position.x-BOARD.x,player.position.z-BOARD.z)<1.7?'board':Math.hypot(player.position.x-HOME.x,player.position.z-HOME.z)<1.5?'home':Math.hypot(player.position.x-WORK.x,player.position.z-WORK.z)<1.5?'work':Math.hypot(player.position.x-COLLEGE.x,player.position.z-COLLEGE.z)<1.5?'college':Math.hypot(player.position.x-ROSA.x,player.position.z-ROSA.z)<1.8?'rosa':null;
+      if(nextSpot!==spot){if(!inside&&nextSpot==='college'){yawGoal=Math.PI;yawAuto=true;}else if(!inside&&spot==='college'&&yawAuto){yawGoal=.12;yawAuto=false;}spot=nextSpot;options.onSpot?.(spot);}
+      const current=inside?(cafeInside?(spot==='cafe-counter'?'business':null):exchangeInside?(spot==='broker'?'exchange':null):officeInside?(spot==='agent'?'property':null):homeInside||workInside||collegeInside?null:(spot==='teller'?'bank':null)):spot==='cart'?'business':nearbyPlace(player.position);
       if(current!==near){near=current;onNear(current);}if(!path.length)destinationRing.visible=false;
       if(cafeInside&&elapsed-lastPointAt>.12){lastPointAt=elapsed;options.onPlayerPoint?.({x:player.position.x,z:player.position.z});}
     }
+    if(yawGoal!==undefined){const delta=Math.atan2(Math.sin(yawGoal-yaw),Math.cos(yawGoal-yaw));yaw+=delta*Math.min(1,dt*2.5);if(Math.abs(delta)<.01){yaw=yawGoal;yawGoal=undefined;}}
     if(inside){yaw=THREE.MathUtils.clamp(yaw,-.65,.65);pitch=THREE.MathUtils.clamp(pitch,.5,.95);zoomDistance=THREE.MathUtils.clamp(zoomDistance,7,12);}
     weather.update(elapsed,rainy,reducedMotion);seasonFall.update(elapsed,seasonOverride??season,reducedMotion||inside);
     const light=inside?daylight(.22,false):daylight(phaseOverride??dayPhase(townMonth,elapsed,reducedMotion),rainy);
@@ -408,8 +423,10 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     if(!inside&&pedestrians[8]){if(spot==='rosa'&&adviceHeadline)rosaSpeech.say(adviceHeadline,ROSA.x+.15,2.55,ROSA.z);else rosaSpeech.hide();}
     if(agent&&officeInside){animateActor(agent,spot==='agent'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='agent'&&agentHeadline)agentSpeech.say(agentHeadline,0,2.45,-1.5);else agentSpeech.hide();}
     if(workInside)for(const actor of workActors){animateActor(actor,'Idle',reducedMotion?0:dt);seatActor(actor.root);}
+    if(collegeInside)for(const actor of collegeActors){animateActor(actor,'Idle',reducedMotion?0:dt);seatActor(actor.root);}
+    if(registrar&&collegeInside){animateActor(registrar,spot==='registrar'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='registrar'&&registrarHeadline)registrarSpeech.say(registrarHeadline,0,2.45,-1.5);else registrarSpeech.hide();}
     if(manager&&workInside){animateActor(manager,spot==='manager'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='manager'&&managerHeadline)managerSpeech.say(managerHeadline,0,2.45,-1.5);else managerSpeech.hide();}
-    if(teller&&inside&&!cafeInside&&!exchangeInside&&!officeInside&&!homeInside&&!workInside){animateActor(teller,spot==='teller'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='teller'){const line=TELLER_LINES[Math.floor(elapsed/6)%TELLER_LINES.length];tellerSpeech.say(tl(line[0],line[1]),0,2.45,-1.5);}else tellerSpeech.hide();}
+    if(teller&&inside&&!cafeInside&&!exchangeInside&&!officeInside&&!homeInside&&!workInside&&!collegeInside){animateActor(teller,spot==='teller'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='teller'){const line=TELLER_LINES[Math.floor(elapsed/6)%TELLER_LINES.length];tellerSpeech.say(tl(line[0],line[1]),0,2.45,-1.5);}else tellerSpeech.hide();}
     if(broker&&exchangeInside){animateActor(broker,spot==='broker'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='broker'&&brokerHeadline)brokerSpeech.say(brokerHeadline,0,2.45,-1.5);else brokerSpeech.hide();}
     if(exchangeInside)for(const actor of cafeActors.slice(6))animateActor(actor,'Idle',reducedMotion?0:dt);
     const cafePortrait=cafeInside&&camera.aspect<.8;
@@ -435,16 +452,16 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     cart.presentCup(cupPosition);
     renderer.render(scene,camera);
   };
-  const transition = (enter:boolean, room:'bank'|'cafe'|'exchange'|'property'|'home'|'work'='bank') => {
+  const transition = (enter:boolean, room:'bank'|'cafe'|'exchange'|'property'|'home'|'work'|'college'='bank') => {
     if(!ready||enter===inside)return;
-    const cafe=room==='cafe', trading=room==='exchange', estate=room==='property', flat=room==='home', desk=room==='work';
+    const cafe=room==='cafe', trading=room==='exchange', estate=room==='property', flat=room==='home', desk=room==='work', campus=room==='college';
     clearMovement();stopPath();cancel();paused=false;
     if(enter){cityView={x:player.position.x,z:player.position.z,yaw,pitch,distance:zoomDistance,mode:cameraMode};player.position.set(0,.22,5);yaw=.12;const preset=cameraPreset(cameraMode,true);pitch=preset.pitch;zoomDistance=preset.distance;}
     else {const view=cityView??{x:-10.5,z:-1.1,yaw:.12,pitch:.4,distance:9};player.position.set(view.x,.22,view.z);yaw=view.yaw;pitch=view.pitch;zoomDistance=view.distance;}
-    inside=enter;cafeInside=enter&&cafe;exchangeInside=enter&&trading;officeInside=enter&&estate;homeInside=enter&&flat;workInside=enter&&desk;const backdrop=enter?(trading?'#1e2a33':estate?'#d8cfc4':flat?'#d4cbbd':desk?'#d3dbe2':'#ccd7cd'):rainy?'#adbec7':'#bdd7e4';scene.background=new THREE.Color(backdrop);scene.fog=new THREE.Fog(backdrop,34,90);bank.root.visible=enter&&!cafe&&!trading&&!estate&&!flat&&!desk;work.root.visible=enter&&desk;cafeRoom.root.visible=enter&&cafe;exchange.root.visible=enter&&trading;office.root.visible=enter&&estate;home.root.visible=enter&&flat;ambience?.update(rainy,inside,document.hidden);outdoors.visible=!enter;near=null;spot=null;onNear(null);options.onSpot?.(null);options.onRoom?.(enter?room:'city');
+    inside=enter;cafeInside=enter&&cafe;exchangeInside=enter&&trading;officeInside=enter&&estate;homeInside=enter&&flat;workInside=enter&&desk;collegeInside=enter&&campus;const backdrop=enter?(trading?'#1e2a33':estate?'#d8cfc4':flat?'#d4cbbd':desk?'#d3dbe2':campus?'#e4dccb':'#ccd7cd'):rainy?'#adbec7':'#bdd7e4';scene.background=new THREE.Color(backdrop);scene.fog=new THREE.Fog(backdrop,34,90);bank.root.visible=enter&&!cafe&&!trading&&!estate&&!flat&&!desk&&!campus;work.root.visible=enter&&desk;college.root.visible=enter&&campus;cafeRoom.root.visible=enter&&cafe;exchange.root.visible=enter&&trading;office.root.visible=enter&&estate;home.root.visible=enter&&flat;ambience?.update(rainy,inside,document.hidden);outdoors.visible=!enter;near=null;spot=null;onNear(null);options.onSpot?.(null);options.onRoom?.(enter?room:'city');
     player.rotation.y=Math.PI;cameraTarget.set(player.position.x,1.65,player.position.z);distance=zoomDistance;
     camera.position.set(cameraTarget.x+Math.sin(yaw)*Math.cos(pitch)*distance,cameraTarget.y+Math.sin(pitch)*distance,cameraTarget.z+Math.cos(yaw)*Math.cos(pitch)*distance);
-    canvas.setAttribute('aria-label',enter?(cafe?'3D café. Walk to the counter to manage your business.':trading?'3D trading floor. Walk to the broker or the city exit.':estate?'3D property office. Walk to the agent or the city exit.':flat?'3D apartment. Walk to the desk or the square exit.':desk?'3D office. Walk to your manager or the square exit.':'3D bank lobby. Walk to the teller or the city exit.'):'3D city. Tap pavement to walk.');
+    canvas.setAttribute('aria-label',enter?(cafe?'3D café. Walk to the counter to manage your business.':trading?'3D trading floor. Walk to the broker or the city exit.':estate?'3D property office. Walk to the agent or the city exit.':flat?'3D apartment. Walk to the desk or the square exit.':desk?'3D office. Walk to your manager or the square exit.':campus?'3D classroom. Walk to the registrar or the square exit.':'3D bank lobby. Walk to the teller or the city exit.'):'3D city. Tap pavement to walk.');
   };
   frame=requestAnimationFrame(tick);
   return {
@@ -468,6 +485,10 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     walkToManager(){if(workInside){clearMovement();path=[{x:0,z:.75}];}},
     walkToWork(){if(inside)transition(false);clearMovement();path=findTownPath(player.position,{x:WORK.x,z:WORK.z});const end=path.at(-1);if(end){destinationRing.position.set(end.x,.235,end.z);destinationRing.visible=true;}},
     setPayroll(board){work.setBoard(board);managerHeadline=board.headline;},
+    enterCollege(){if(spot==='college'&&!inside)transition(true,'college');},leaveCollege(){transition(false);},
+    walkToRegistrar(){if(collegeInside){clearMovement();path=[{x:0,z:.75}];}},
+    walkToCollege(){if(inside)transition(false);clearMovement();path=findTownPath(player.position,{x:COLLEGE.x,z:COLLEGE.z});const end=path.at(-1);if(end){destinationRing.position.set(end.x,.235,end.z);destinationRing.visible=true;}},
+    setSyllabus(board){college.setBoard(board);registrarHeadline=board.headline;},
     walkToDesk(){if(homeInside){clearMovement();path=[{x:0,z:.75}];}},
     walkHome(){if(inside)transition(false);clearMovement();path=findTownPath(player.position,{x:HOME.x,z:HOME.z});const end=path.at(-1);if(end){destinationRing.position.set(end.x,.235,end.z);destinationRing.visible=true;}},
     walkToRosa(){if(inside)transition(false);clearMovement();path=findTownPath(player.position,{x:ROSA.x+1.3,z:ROSA.z+.4});const end=path.at(-1);if(end){destinationRing.position.set(end.x,.235,end.z);destinationRing.visible=true;}},
@@ -477,7 +498,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     walkToCafeCounter(){if(cafeInside){clearMovement();path=[{x:0,z:.8}];}},
     setNeighbourhood(month,cafe,won=false){cafeState=cafe;townMonth=month;celebrating=won;season=seasonFor(month);palette?.apply(seasonOverride??season);shopSign.visible=!!cafe;rainy=cafeWeather(month);cafeRoom.setState(cafeService?.status==='active'?{seats:cafeService.seats,machine:cafeService.machine}:cafe);if(!(scene.background instanceof THREE.Color))scene.background=new THREE.Color('#bdd7e4');ambience?.update(rainy,inside,document.hidden);},
     enterBank(){if(near==='bank'&&!inside)transition(true,'bank');},leaveBank(){transition(false);},
-    walkToTeller(){if(inside&&!cafeInside&&!exchangeInside&&!officeInside&&!homeInside&&!workInside){clearMovement();path=[{x:0,z:.75}];}},
+    walkToTeller(){if(inside&&!cafeInside&&!exchangeInside&&!officeInside&&!homeInside&&!workInside&&!collegeInside){clearMovement();path=[{x:0,z:.75}];}},
     walkToExit(){if(inside){clearMovement();path=[{x:0,z:6.1}];}},
     serveCustomer(onDone){if(inside||!ready||reducedMotion){onDone?.();return;}clearMovement();stopPath();saleChimed=false;serviceReturn={x:player.position.x,z:player.position.z};serviceView={yaw,pitch,distance:zoomDistance};serviceDone=onDone;serviceStage='approach';path=findTownPath(player.position,{x:2.2,z:7.4});},
     celebrate(){ambience?.chime('celebrate');if(!reducedMotion){celebrationUntil=elapsed+3;clearMovement();stopPath();}},

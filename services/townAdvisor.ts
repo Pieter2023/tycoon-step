@@ -5,11 +5,12 @@ import { calculateMonthlyCashFlowEstimate } from './gameLogic';
 import { savingsBalance } from './townActivities';
 import { reputationOf } from './townCafe';
 import { promotionOutlook } from './townWork';
+import { studyPlan } from './townCollege';
 
 // Rosa, the neighbour on the promenade bench, reads the player's actual numbers and says the
 // one or two things a sensible friend would say. Rules are ordered by urgency; each returns a
 // short observation with an optional place to go. Nothing here moves money.
-export type Advice = { id: string; tone: 'warn' | 'tip' | 'good'; title: string; text: string; place?: 'bank' | 'exchange' | 'property' | 'cafe' | 'home' | 'board' | 'work' };
+export type Advice = { id: string; tone: 'warn' | 'tip' | 'good'; title: string; text: string; place?: 'bank' | 'exchange' | 'property' | 'cafe' | 'home' | 'board' | 'work' | 'college' };
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
 export function adviseFrom(state: GameState): Advice[] {
@@ -33,6 +34,9 @@ export function adviseFrom(state: GameState): Advice[] {
   if (state.cafe && reputationOf(state.cafe) < 40) out.push({ id: 'cafe-rep', tone: 'warn', title: tl('The café has a reputation problem.','El café tiene un problema de reputación.'), text: `${tl('Word gets around at','Se corre la voz con')} ${reputationOf(state.cafe)}/100. ${tl('One good owner shift lifts it twelve points; a month behind the counter changes the year.','Un buen turno de dueño la sube doce puntos; un mes tras el mostrador cambia el año.')}`, place: 'cafe' });
   const outlook = promotionOutlook(state);
   if (outlook.eligible && outlook.next) out.push({ id: 'promotion', tone: 'tip', title: `${tl('You qualify for','Cumples los requisitos para')} ${outlook.next.title}. ${tl('Ask.','Pídelo.')}`, text: `${tl('Your manager will not bring it up. Each month you ask carries about a','Tu jefe no lo va a mencionar. Cada mes que preguntes hay cerca de un')} ${Math.round(outlook.chance * 100)}% ${tl('chance, and a raise compounds every month after it lands.','de probabilidad, y un aumento se capitaliza cada mes después de llegar.')}`, place: 'work' });
+  const plan = studyPlan(state);
+  if (outlook.next && !outlook.educationMet && !plan.enrolled) out.push({ id: 'study', tone: 'tip', title: `${outlook.next.title} ${tl('needs a qualification you do not have yet.','requiere un título que aún no tienes.')}`, text: `${tl('The college prices every course by payback.','El colegio valora cada curso por su retorno.')} ${plan.best ? `${plan.best.name} ${tl('pays for itself in about','se paga sola en unos')} ${plan.best.paybackMonths} ${tl('months.','meses.')}` : tl('Save the deposit for the cheapest step on your path.','Ahorra el anticipo del paso más barato de tu carrera.')}`, place: 'college' });
+  else if (plan.best && plan.best.paybackMonths !== null && plan.best.paybackMonths <= 30 && !plan.enrolled) out.push({ id: 'quick-course', tone: 'tip', title: `${plan.best.name} ${tl('pays for itself in about','se paga sola en unos')} ${plan.best.paybackMonths} ${tl('months.','meses.')}`, text: `${money(plan.best.deposit)} ${tl('up front for about','por adelantado por unos')} ${money(plan.best.gainMonthly)} ${tl('more a month for the rest of your career. Few investments in the game pay back that fast.','más al mes por el resto de tu carrera. Pocas inversiones del juego se recuperan tan rápido.')}`, place: 'college' });
   if (state.cafe && !state.cafe.plan.open) out.push({ id: 'cafe-closed', tone: 'warn', title: tl('Closed shops still pay rent.','Las tiendas cerradas también pagan renta.'), text: tl('$720 a month leaves while the doors are shut. Reopen with a lean plan or end the lease; limbo is the expensive choice.','$720 al mes se van mientras las puertas están cerradas. Reabre con un plan austero o termina el contrato; el limbo es la opción cara.'), place: 'cafe' });
   if (passiveShare >= 1.1) out.push({ id: 'free', tone: 'good', title: tl('Your investments cover your life.','Tus inversiones cubren tu vida.'), text: `${tl('Passive income of','Los ingresos pasivos de')} ${money(flow.passive)} ${tl('a month clears','al mes cubren')} ${money(expenses)} ${tl('of bills with room to spare. Everything from here is choice.','de facturas con margen. Todo lo que sigue es elección.')}` });
   else if (passiveShare >= .25) out.push({ id: 'progress', tone: 'good', title: `${Math.round(passiveShare * 100)}% ${tl('of your bills are paid by money you do not work for.','de tus facturas las paga dinero por el que no trabajas.')}`, text: `${money(flow.passive)} a month arrives whether you show up or not. Keep the gap wide and that number grows on its own.` });

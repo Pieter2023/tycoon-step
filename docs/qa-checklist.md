@@ -93,3 +93,4 @@ Use this list to verify critical flows after UI refactors or logic changes.
 
 ## Main shell
 - Confirm all five top-level pages render (Play, Money, Career, Learn, Life). The v2 shell is always enabled; the old toggle was retired.
+- College: from the fountain, the College button walks to the door on the south lawn and the camera swings to face the building (not the tree). Inside, the whiteboard lists courses on your path with payback months; the registrar panel's Enrol buttons match the Education tab (deposit, loan, prerequisite, "finish your current course first"). Enrolling debits cash, marks the College button 📚 and can cost you the reserve challenge.
