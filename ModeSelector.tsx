@@ -20,6 +20,8 @@ import { track } from './services/analytics';
 
 type GameMode = 'select' | 'adult' | 'kids' | 'daily' | 'multiplayer-setup' | 'multiplayer-game';
 
+// Whole-dollar money with the sign before the currency symbol (a save summary can be negative).
+const formatSigned = (n: number) => `${n < 0 ? '-' : ''}$${Math.abs(Math.round(n)).toLocaleString('en-US')}`;
 const AUTH_KEY = 'tycoon_authenticated';
 
 const PLAYER_COLORS = [
@@ -1183,7 +1185,7 @@ const ModeSelector: React.FC = () => {
                 >
                   <p className="flex items-center gap-2 font-bold text-white"><ArrowRight size={16} /> Continue Adult</p>
                   <p className="text-slate-300 text-sm mt-1">Year {Math.ceil((adultAutosave.month || 1) / 12)} • Month {(((adultAutosave.month || 1) - 1) % 12) + 1}</p>
-                  <p className="text-slate-400 text-xs mt-1">Cash: ${(adultAutosave.cash || 0).toLocaleString()} • Net Worth: ${(adultAutosave.netWorth || 0).toLocaleString()}</p>
+                  <p className="text-slate-400 text-xs mt-1">Cash: {formatSigned(adultAutosave.cash || 0)} • Net Worth: {formatSigned(adultAutosave.netWorth || 0)}</p>
                 </button>
               )}
 
