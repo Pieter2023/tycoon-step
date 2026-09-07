@@ -172,6 +172,7 @@ export const createDailyChallengeState = (date: Date = new Date()): GameState =>
     ...INITIAL_GAME_STATE,
     character: char,
     difficulty: DAILY_CHALLENGE_DIFFICULTY,
+    lifestyle: char.startingLifestyle ?? INITIAL_GAME_STATE.lifestyle,
     cash: Math.max(0, startingCash),
     reserveBaseline: Math.max(0, startingCash) - initialLiabilities.reduce((n, l) => n + l.balance, 0),
     career: {

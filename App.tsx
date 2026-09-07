@@ -1693,6 +1693,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
       ...INITIAL_GAME_STATE,
       character: char,
       difficulty: selectedDifficulty,
+      lifestyle: char.startingLifestyle ?? INITIAL_GAME_STATE.lifestyle,
       cash: Math.max(0, startingCash),
       reserveBaseline: Math.max(0, startingCash) - initialLiabilities.reduce((sum, loan) => sum + loan.balance, 0),
       firstSteps: {},
@@ -3271,6 +3272,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   <div className="text-center text-xs text-slate-500">
                     Starting: {formatMoney(DIFFICULTY_SETTINGS[selectedDifficulty].startingCash + (char.startingBonus.type === 'cash' && char.startingBonus.amount > 0 ? char.startingBonus.amount : 0))}
                     {char.startingBonus.amount < 0 && <span className="text-red-400"> + {formatMoney(Math.abs(char.startingBonus.amount))} debt</span>}
+                    {char.startingLifestyle && <span className="text-amber-300"> · starts {char.startingLifestyle.toLowerCase()}</span>}
                   </div>
                 </motion.div>
               );

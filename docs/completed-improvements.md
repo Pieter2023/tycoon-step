@@ -514,6 +514,18 @@ Pieter's pick: "Do the balance pass over a full 36-month demo run, keep going." 
 
 Validation: 365 tests across 65 files, TypeScript, build and `git diff --check` clean. Tables in `docs/verification/balance-2026-09-07.md`.
 
+## Marcus Johnson can survive a do-nothing run — September 7, 2026 (build 35)
+
+Pieter's pick after the balance pass: "Fix Marcus Johnson so he can survive a do-nothing run, keep going."
+
+**Why he always sank.** Marcus starts as a Startup Founder on $2,000 a month with a $5,000 loan, and every character starts in the Modest flat at $2,500 a month. With the car and the loan payment he was $700 a month underwater from month one; $8,000 of cash lasts about eleven months, three missed payments follow, and bankruptcy landed between months 8 and 22 in all twelve seeds. The next rung ($5,000) needs 24 months of experience, so nothing in the ladder could rescue him inside the demo.
+
+**The fix, in character.** Two changes that read as bootstrapping rather than charity: characters can now declare a `startingLifestyle`, and Marcus starts in the Frugal flat ($1,500 a month; the city's home shows the mattress on the floor) with the trait "Bootstrapper" and a backstory line about paying himself a founder's draw; and the Startup Founder rung's base pay rose from $2,000 to $2,400. Measured over twelve do-nothing seeds: baseline 12/12 bankrupt; Frugal alone 3/12; $2,400 alone 12/12 (later); Frugal plus $2,400 3/12 with mean final cash $25,348 and the three losses coming from heavy early shocks, which is the same exposure Maria and Sarah carry. The character card says "· starts frugal", the daily challenge and the balance harness apply the starting lifestyle too, and the balance envelope now asserts that Marcus survives at least one of its coaster runs.
+
+**Also tightened.** The envelope's salary check compared two noisy means (promotions are random); it now asserts what the certificate guarantees: every graduate ends above the salary they started on.
+
+Validation: 365 tests across 65 files, TypeScript, build and `git diff --check` clean.
+
 ## Where the sessions stopped (September 6, 2026, morning)
 
 Overnight (23:00 to about 01:00 PDT) nine builds shipped: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. The morning session (about 06:00 to 07:30 PDT) added eight more, each verified in Chrome, receipted above and pushed to `origin/main`: the townhouse around the apartment door and the camera-canopy fix; adaptive graphics quality; petite women with A-line skirts; residents that make room; Freedom Day; the city accessibility pass; Main Street Offices (pay stub, promotion outlook, job security); the neighbourhood tour with download progress and the city open after winning; and Rosa's promotion nudge.

@@ -32,3 +32,5 @@ Headless 36-month runs (Normal, 8 characters × 6 seeds), means per run:
 | Spender (Comfortable living + financed $32,000 EV) | 39/48 | $8,664 | $2,039 | $0 | the lifestyle, not the car |
 
 Health cover priced at $240/$160/$110 a month by deductible; home & car $80 + $45 a vehicle + $60 a rental; business $80 + 0.5% a year of business value. Insured event options require the policy.
+
+Marcus Johnson (2026-09-07): starts Frugal on a $2,400 founder's draw. Do-nothing runs over twelve seeds: 12/12 bankrupt before, 3/12 after (early heavy shocks), mean final cash $25,348.

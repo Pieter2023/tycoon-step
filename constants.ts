@@ -169,12 +169,13 @@ export const CHARACTERS: Character[] = [
   {
     id: 'marcus',
     name: 'Marcus Johnson',
-    backstory: 'Serial entrepreneur. High risk, high reward mentality.',
+    backstory: 'Serial entrepreneur. High risk, high reward mentality. Bootstrapping: pays himself a founder\'s draw and lives frugal until the business grows.',
     avatarEmoji: '🚀',
     avatarColor: 'from-orange-500 to-red-500',
     careerPath: 'ENTREPRENEUR',
     startingBonus: { type: 'cash', amount: -5000 },
-    traits: ['Risk-taker', 'Visionary'],
+    startingLifestyle: 'FRUGAL',
+    traits: ['Risk-taker', 'Visionary', 'Bootstrapper'],
     perk: {
       id: 'risk_operator',
       name: 'Risk Operator',
@@ -302,7 +303,7 @@ export const CAREER_PATHS: { [key in CareerPath]: CareerPathInfo } = {
     futureProofScore: 85,
     specialMechanic: 'AI is your workforce multiplier. High ceiling.',
     levels: [
-      { title: 'Startup Founder', baseSalary: 2000, experienceRequired: 0 },
+      { title: 'Startup Founder', baseSalary: 2400, experienceRequired: 0 },   // a founder's draw; balance pass 2026-09-07 (was 2000: underwater against Modest living)
       { title: 'Small Business Owner', baseSalary: 5000, experienceRequired: 24 },
       { title: 'Growing Business', baseSalary: 8000, experienceRequired: 48 },
       { title: 'Established Business', baseSalary: 12000, experienceRequired: 84 },

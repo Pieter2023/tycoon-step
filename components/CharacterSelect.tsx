@@ -249,6 +249,9 @@ const CharacterSelect: React.FC<CharacterSelectProps> = ({
                       + {formatMoney(Math.abs(char.startingBonus.amount))} debt
                     </span>
                   )}
+                  {char.startingLifestyle && (
+                    <span className="text-amber-300 ml-1">· starts {char.startingLifestyle.toLowerCase()}</span>
+                  )}
                 </div>
 
                 {/* Hover CTA */}

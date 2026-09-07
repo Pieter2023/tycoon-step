@@ -144,6 +144,8 @@ export interface Character {
   avatarImage?: string;
   careerPath: CareerPath;
   startingBonus: { type: 'cash' | 'asset' | 'skill'; amount: number };
+  // Where the character starts living; the default is the Modest flat. Marcus bootstraps from Frugal.
+  startingLifestyle?: Lifestyle;
   traits: string[];
   perk: {
     id: string;
