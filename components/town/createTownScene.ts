@@ -17,7 +17,7 @@ import type { Lifestyle } from '../../types';
 import { createCoffeeCart } from './townBusiness';
 import { createTownTraffic } from './townTraffic';
 import { createTownLife, createCyclist, createDogWalker, createFireworks } from './townLife';
-import { residentStyle, seatActor, styleCharacter, yieldTo, Sex, YieldState } from './townResidents';
+import { residentStyle, seatActor, styleCharacter, yieldTo, Sex, YieldState, WALK_KEEP_RIGHT, pushApart } from './townResidents';
 import { createQualityGovernor, initialQuality, QUALITY_SETTINGS, QualityLevel, QualityMode } from './townQuality';
 export type TownView = { x:number; z:number; yaw:number; pitch:number; distance:number; mode?:CameraPreset };
 export type TownSpot = 'teller' | 'exit' | 'cart' | 'cafe-counter' | 'broker' | 'agent' | 'board' | 'home' | 'desk' | 'rosa' | 'work' | 'manager' | null;
@@ -303,7 +303,13 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       }
       velocity.lerp(new THREE.Vector2(movement.x*speed,movement.z*speed),1-Math.exp(-dt*(movement.x||movement.z?10:18))); if(velocity.length()<.025) velocity.set(0,0);
       const proposed={x:player.position.x+velocity.x*dt,z:player.position.z+velocity.y*dt};
-      const next=inside?(cafeInside?clampCafePoint(proposed):exchangeInside?clampExchangePoint(proposed):officeInside?clampPropertyPoint(proposed):homeInside?clampHomePoint(proposed):workInside?clampWorkPoint(proposed):clampBankPoint(proposed)):slideMovement(player.position,proposed);
+      let next=inside?(cafeInside?clampCafePoint(proposed):exchangeInside?clampExchangePoint(proposed):officeInside?clampPropertyPoint(proposed):homeInside?clampHomePoint(proposed):workInside?clampWorkPoint(proposed):clampBankPoint(proposed)):slideMovement(player.position,proposed);
+      if(!inside&&!serviceStage){
+        // People: ease the player around anyone in the way. Vehicles: solid, so a stopped car is a wall, not a ghost.
+        next=pushApart(next,pedestrians.filter(p=>p.root.visible).map(p=>({x:p.root.position.x,z:p.root.position.z})),.6);
+        if(!isWalkable(next))next={x:player.position.x,z:player.position.z};
+        for(const v of traffic?.obstacles()??[]){if(Math.abs(next.x-v.x)<v.halfLength+.35&&Math.abs(next.z-v.z)<v.halfWidth+.35){const keepX={x:player.position.x,z:next.z},keepZ={x:next.x,z:player.position.z};next=Math.abs(keepX.z-v.z)>=v.halfWidth+.35||Math.abs(keepX.x-v.x)>=v.halfLength+.35?keepX:Math.abs(keepZ.x-v.x)>=v.halfLength+.35||Math.abs(keepZ.z-v.z)>=v.halfWidth+.35?keepZ:{x:player.position.x,z:player.position.z};}}
+      }
       const actualSpeed=Math.hypot(next.x-player.position.x,next.z-player.position.z)/Math.max(dt,.001); player.position.x=next.x;player.position.z=next.z;
       if(actualSpeed>.08)player.rotation.y=turnTowards(player.rotation.y,Math.atan2(velocity.x,velocity.y),dt);
       else if(inside&&(spot==='teller'||spot==='cafe-counter'||spot==='broker'||spot==='agent'||spot==='desk'||!!cafeService?.brewing))player.rotation.y=turnTowards(player.rotation.y,Math.PI,dt);
@@ -326,9 +332,9 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
         npc.root.visible=!(rainy&&cafeVisitor&&index===7);
         const serving=visiting&&serviceStage==='serve';
         const approach=serving?Math.min(1,(4-(serviceUntil-elapsed))/.7,(serviceUntil-elapsed)/.7):0;
-        if(!visiting&&!queued&&!cafeVisitor&&!reducedMotion)yieldTo({x:forward?-16+t:48-t,z:npc.lane,forward},{x:player.position.x,z:player.position.z},dt,npc.yield);
+        if(!visiting&&!queued&&!cafeVisitor&&!reducedMotion)yieldTo({x:forward?-16+t:48-t,z:npc.lane+(forward?WALK_KEEP_RIGHT:-WALK_KEEP_RIGHT),forward},{x:player.position.x,z:player.position.z},dt,npc.yield);
         const previous=npc.root.position.clone();
-        npc.root.position.set(visiting?1.1+approach*1.1:queued?1.1-index*.9:cafeVisitor?3.8+(index-5)*.65:forward?-16+t:48-t,.22,visiting?9.5+approach*.15:queued?9.5:cafeVisitor?-.9:npc.lane+npc.yield.side);
+        npc.root.position.set(visiting?1.1+approach*1.1:queued?1.1-index*.9:cafeVisitor?3.8+(index-5)*.65:forward?-16+t:48-t,.22,visiting?9.5+approach*.15:queued?9.5:cafeVisitor?-.9:npc.lane+(forward?WALK_KEEP_RIGHT:-WALK_KEEP_RIGHT)+npc.yield.side);
         npc.root.rotation.y=visiting||queued||cafeVisitor?Math.PI:forward?Math.PI/2:-Math.PI/2;
         if(!reducedMotion){const v=npc.root.position.distanceTo(previous)/Math.max(.001,dt);animateActor(npc,serving&&approach>=1?'Serve':v>.08?'Walk':'Idle',dt,serving&&approach>=1?1:Math.min(2,v/1.3125));}
       }

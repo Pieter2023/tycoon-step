@@ -35,14 +35,14 @@ describe('residents read as different people', () => {
       const trousers = new THREE.MeshStandardMaterial({ color: '#354955', name: 'trousers' }); const leg = new THREE.Mesh(new THREE.BoxGeometry(), trousers); leg.name = 'Lower leg'; hips.add(leg);
       return { root, shirt, trousers, figure, hips, leg };
     };
-    const woman = build(); styleCharacter(woman.root, { sex: 'f', hair: 'tail', colors: { shirt: '#ff0000' } });
+    const woman = build(); styleCharacter(woman.root, { sex: 'f', hair: 'tail', colors: { shirt: '#ff0000', skirt: '#8c5a7e' } });
     const visible = (root: THREE.Object3D, name: string) => root.getObjectByName(name)!.visible;
-    expect(visible(woman.root, 'Fem_Skirt')).toBe(true); expect(visible(woman.root, 'Fem_Ponytail')).toBe(true); expect(visible(woman.root, 'Fem_HairLong')).toBe(false);
+    expect(visible(woman.root, 'Fem_Skirt')).toBe(false); /* women wear pants */ expect(visible(woman.root, 'Fem_Ponytail')).toBe(true); expect(visible(woman.root, 'Fem_HairLong')).toBe(false);
     expect(visible(woman.root, 'Masc_Beard')).toBe(false); expect(visible(woman.root, 'Masc_Cap')).toBe(false); expect(visible(woman.root, 'Smile')).toBe(false);
     expect(woman.shirt.color.getHexString()).toBe('ffffff'); // cloned, not mutated
     expect((woman.root.getObjectByName('Jacket') as THREE.Mesh).scale.x).toBeLessThan(1);
     expect(woman.figure.scale.y).toBeLessThan(1); expect(woman.hips.scale.x).toBeLessThan(1); expect(woman.leg.scale.x).toBeLessThan(1); // petite build
-    expect((woman.leg.material as THREE.MeshStandardMaterial).color.getHexString()).not.toBe('354955'); expect(woman.trousers.color.getHexString()).toBe('354955'); // bare legs under the skirt, source untouched
+    expect((woman.leg.material as THREE.MeshStandardMaterial).color.getHexString()).toBe('8c5a7e'); expect(woman.trousers.color.getHexString()).toBe('354955'); // pants in the skirt palette, source untouched
     const man = build(); styleCharacter(man.root, { sex: 'm', hair: 'short', beard: true, cap: true });
     expect(visible(man.root, 'Fem_Skirt')).toBe(false); expect(visible(man.root, 'Fem_Lips')).toBe(false); expect(visible(man.root, 'Masc_Beard')).toBe(true); expect(visible(man.root, 'Masc_CapBrim')).toBe(true);
     expect((man.root.getObjectByName('Jacket') as THREE.Mesh).scale.x).toBeGreaterThan(1);

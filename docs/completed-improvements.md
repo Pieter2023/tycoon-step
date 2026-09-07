@@ -414,6 +414,18 @@ Chrome: Riley the Pet Lover on Just Right; "Visit your square" opened the square
 
 Validation: 333 tests across 59 files (`test/KidsSquare.test.tsx`: stop mapping, allowance, energy hearts, job and toy cards with reasons, shelf arrows, goal weeks-away and progress, the fallback modal driving every stop's handler), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/kids-square-2026-09-06/`.
 
+## Live playthrough, pants, and nobody walks through anybody — September 6, 2026 (build 27)
+
+Pieter played the live site and asked for three things: fix anything off, sort out the women's dresses (pants, or a dress that looks right), and stop people walking through each other and through cars.
+
+**Playthrough.** A fresh demo-tier game on the production site (Sarah Miller, Normal) ran the whole opening arc without a fault: the surprise bill, one-tap guiding into the bank and the reserve, the cart purchase, permit and first shift, the month preview and the return to the square at month 2, then the Exchange. The two visible faults were the ones Pieter named: residents overlapping head-on on the promenade, and the skirt.
+
+**Pants.** The A-line cone never read as a dress at this model's level of detail (a lampshade over stubby bare legs). Women now wear fitted pants in the brighter skirt palette with the same petite build; the skirt mesh is hidden and the legs and hips take the pants colour. The street keeps its colour variety and the silhouette reads cleanly at every distance.
+
+**Nobody walks through anybody.** Three changes in the scene. Pavements keep right: east-bound and west-bound walkers use separate lines on each lane (±0.42), so two residents never share a point head-on; the cyclist moved to the kerb so the west-bound line is clear of the bike. The player is eased out of anyone's personal space (`pushApart`, 0.6 units) and blocked by vehicles: traffic now exposes each vehicle's footprint and the movement code treats it as a wall with a 0.35 margin, so a stopped car cannot be walked through (the existing braking already keeps moving cars off the player). Measured in Chrome over twenty seconds on the promenade: closest resident-to-resident 0.84 (previously 0), resident-to-player 1.11; walking straight at a stopped van stopped the player 0.37 short of it.
+
+Validation: 333 tests across 59 files (`test/TownLife.test.ts` updated for pants), TypeScript, build and `git diff --check` clean. Logs in `docs/verification/live-play-2026-09-06/`.
+
 ## Where the sessions stopped (September 6, 2026, morning)
 
 Overnight (23:00 to about 01:00 PDT) nine builds shipped: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. The morning session (about 06:00 to 07:30 PDT) added eight more, each verified in Chrome, receipted above and pushed to `origin/main`: the townhouse around the apartment door and the camera-canopy fix; adaptive graphics quality; petite women with A-line skirts; residents that make room; Freedom Day; the city accessibility pass; Main Street Offices (pay stub, promotion outlook, job security); the neighbourhood tour with download progress and the city open after winning; and Rosa's promotion nudge.

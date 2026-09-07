@@ -114,7 +114,7 @@ export function createCyclist(bike: THREE.Object3D, rider: THREE.Object3D, reduc
   rider.position.set(-.08, .21, 0); rider.rotation.y = Math.PI / 2; root.add(rider);
   const joint = (name: string) => rider.getObjectByName(name);
   let x = -18; const speed = 4.4;
-  root.position.set(x, .22, 5.45);
+  root.position.set(x, .22, 5.3);   // kerb of the promenade, clear of the keep-right walking lines
   function update(dt: number, elapsed: number) {
     if (reducedMotion) { pose(0); return; }
     x += speed * dt; if (x > 42) x = -42; root.position.x = x;

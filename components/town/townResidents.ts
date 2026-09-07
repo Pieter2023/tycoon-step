@@ -69,6 +69,7 @@ export function styleCharacter(root: THREE.Object3D, style: ResidentStyle) {
     else if (name.startsWith('Fem_Bust')) set(object, .85);
     if (name.startsWith('Fem_HairLong') || name.startsWith('Fem_HairSide')) object.visible = female && style.hair === 'long';
     else if (name.startsWith('Fem_Ponytail')) object.visible = female && style.hair === 'tail';
+    else if (name.startsWith('Fem_Skirt')) object.visible = false;   // women wear pants (Pieter, 2026-09-06): the cone skirt never read well
     else if (name.startsWith('Fem_')) object.visible = female;
     else if (name.startsWith('Masc_Beard')) object.visible = !female && !!style.beard;
     else if (name.startsWith('Masc_Cap')) object.visible = !female && !!style.cap;
@@ -77,12 +78,22 @@ export function styleCharacter(root: THREE.Object3D, style: ResidentStyle) {
     if (name.startsWith('Tailored trousers')) object.scale.set(1, 1, 1);
     if (name.startsWith('Face')) object.scale.set(female ? .94 : 1, 1, 1);
     if (Array.isArray(object.material)) return;
-    // Under a skirt the legs are bare (or tights), not trousers: recolour them to the skin tone.
-    const legs = female && (name.startsWith('Trouser leg') || name.startsWith('Lower leg'));
-    const colour = legs ? style.colors?.skin ?? '#d4a57d' : style.colors?.[object.material.name as keyof NonNullable<ResidentStyle['colors']>];
+    // Women's pants take the (brighter) skirt palette so the street keeps its colour variety.
+    const legs = female && (name.startsWith('Trouser leg') || name.startsWith('Lower leg') || name.startsWith('Tailored trousers'));
+    const colour = legs ? style.colors?.skirt ?? style.colors?.trousers : style.colors?.[object.material.name as keyof NonNullable<ResidentStyle['colors']>];
     if (!colour) return;
     const material = (object.material as THREE.MeshStandardMaterial).clone(); material.color.set(colour); object.material = material;
   });
+}
+
+// Pavements keep right: walkers heading east and west use separate lines on each lane, so two
+// residents never share a point head-on. Half the lane offset in world units.
+export const WALK_KEEP_RIGHT = .42;
+// Eases a point out of the personal space of every listed person (radius apart), for the player.
+export function pushApart(point: { x: number; z: number }, people: { x: number; z: number }[], apart: number): { x: number; z: number } {
+  let out = { ...point };
+  for (const person of people) { const dx = out.x - person.x, dz = out.z - person.z, d = Math.hypot(dx, dz); if (d < apart) { const nx = d < 1e-4 ? 1 : dx / d, nz = d < 1e-4 ? 0 : dz / d; out = { x: person.x + nx * apart, z: person.z + nz * apart }; } }
+  return out;
 }
 
 // Walking residents make room for the player instead of walking through them: within range they

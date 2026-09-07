@@ -46,6 +46,8 @@ export function createTownTraffic(vehicles: THREE.Object3D, reducedMotion: boole
     fleet.push({ root: clone, wheels, lamps, lane: entry.lane, dir: lane.dir, x: entry.x, speed: reducedMotion ? 0 : entry.cruise, cruise: entry.cruise, length: entry.kind === 'Van' ? 4.8 : 4.2, passed: false });
   }
   // Returns the vehicles that crossed the player's x this frame, for a passing whoosh.
+  // Footprints of every vehicle for the player's collision: centre, half length along x and half width across z.
+  const obstacles = () => fleet.map(v => ({ x: v.x, z: v.root.position.z, halfLength: v.length / 2, halfWidth: 1.0 }));
   function update(dt: number, player: TownPoint, rainy: boolean, visible: boolean): { pan: number; closeness: number }[] {
     const passes: { pan: number; closeness: number }[] = [];
     root.visible = visible;
@@ -69,5 +71,5 @@ export function createTownTraffic(vehicles: THREE.Object3D, reducedMotion: boole
     }
     return passes;
   }
-  return { root, fleet, update };
+  return { root, fleet, update, obstacles };
 }
