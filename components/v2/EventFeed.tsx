@@ -16,7 +16,7 @@ const EventFeed: React.FC<EventFeedProps> = ({ events, limit = 10 }) => {
 
       <div className="space-y-2 max-h-64 overflow-y-auto pr-1 glass-scroll">
         {items.length === 0 ? (
-          <p className="text-sm text-slate-400">Advance a month to trigger events.</p>
+          <p className="text-sm text-slate-400">{t('shell.eventFeed.advance_a_month_to_trigger')}</p>
         ) : (
           items.map((event) => (
             <div

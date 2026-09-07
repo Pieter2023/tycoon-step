@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React from 'react';
 import { BriefcaseBusiness, Ellipsis, GraduationCap, HeartPulse, LayoutGrid, Play, WalletCards } from 'lucide-react';
 
@@ -46,12 +47,13 @@ const MobileShell: React.FC<MobileShellProps> = ({
   onSelectTab,
   children
 }) => {
+  const { t } = useI18n();
   const navItems: Array<{ path: MobilePath; label: string; icon: React.ElementType }> = [
-    { path: '/play', label: 'Play', icon: LayoutGrid },
-    { path: '/money', label: 'Money', icon: WalletCards },
-    { path: '/career', label: 'Career', icon: BriefcaseBusiness },
-    { path: '/learn', label: 'Learn', icon: GraduationCap },
-    { path: '/life', label: 'Life', icon: HeartPulse }
+    { path: '/play', label: t('shell.mobileShell.play'), icon: LayoutGrid },
+    { path: '/money', label: t('shell.mobileShell.money'), icon: WalletCards },
+    { path: '/career', label: t('shell.mobileShell.career'), icon: BriefcaseBusiness },
+    { path: '/learn', label: t('shell.mobileShell.learn'), icon: GraduationCap },
+    { path: '/life', label: t('shell.mobileShell.life'), icon: HeartPulse }
   ];
 
   return (
@@ -67,7 +69,7 @@ const MobileShell: React.FC<MobileShellProps> = ({
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-base font-semibold text-white">{playerName}</p>
-            <p className="text-xs text-slate-400">Year {year} • Month {month}</p>
+            <p className="text-xs text-slate-400">{t('shell.mobileShell.year_month', { year, month })}</p>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               {perkLabel && (
                 <span
@@ -79,7 +81,7 @@ const MobileShell: React.FC<MobileShellProps> = ({
               )}
               {aiRiskLabel && (
                 <span className={`ds-badge !text-[10px] ${aiRiskTone || 'ds-badge--neutral'}`}>
-                  AI Risk: {aiRiskLabel}
+                  {t('shell.mobileShell.ai_risk', { level: aiRiskLabel })}
                 </span>
               )}
             </div>
@@ -89,16 +91,16 @@ const MobileShell: React.FC<MobileShellProps> = ({
             onClick={onNextMonth}
             disabled={nextMonthDisabled}
             className="flex shrink-0 items-center gap-1.5 rounded-lg bg-emerald-400 px-3 py-2 text-xs font-bold text-slate-950 shadow-[0_12px_30px_rgba(16,185,129,0.28)] disabled:opacity-60"
-            title="Next Month (N)"
+            title={t('shell.mobileShell.next_month_shortcut')}
           >
             {isProcessing ? <Play size={16} className="animate-spin" /> : <Play size={16} />}
-            <span className="hidden min-[390px]:inline">Next</span>
+            <span className="hidden min-[390px]:inline">{t('shell.mobileShell.next')}</span>
           </button>
           <button
             type="button"
             onClick={onOpenOverflow}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-900/70"
-            aria-label="More options"
+            aria-label={t('shell.mobileShell.more_options')}
           >
             <Ellipsis size={18} />
           </button>

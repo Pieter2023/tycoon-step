@@ -1,3 +1,4 @@
+import { useI18n, type Translate } from '../../i18n';
 import React, { useMemo, useState } from 'react';
 import { BookOpen, Clock, Filter, HeartPulse, Users, Zap } from 'lucide-react';
 import Modal from '../Modal';
@@ -28,14 +29,16 @@ const actionIcon = (action: MonthlyActionCard) => {
   }
 };
 
-const filters: Array<{ id: 'all' | MonthlyActionCategory; label: string }> = [
-  { id: 'all', label: 'All' },
-  { id: 'income', label: 'Income' },
-  { id: 'growth', label: 'Growth' },
-  { id: 'recovery', label: 'Recovery' }
+const filtersFor = (t: Translate): Array<{ id: 'all' | MonthlyActionCategory; label: string }> => [
+  { id: 'all', label: t('shell.actionsDrawer.all') },
+  { id: 'income', label: t('shell.actionsDrawer.income') },
+  { id: 'growth', label: t('shell.actionsDrawer.growth') },
+  { id: 'recovery', label: t('shell.actionsDrawer.recovery') }
 ];
 
 const ActionsDrawer: React.FC<ActionsDrawerProps> = ({ isOpen, onClose, summary, onSelectAction }) => {
+  const { t } = useI18n();
+  const filters = filtersFor(t);
   const [filter, setFilter] = useState<'all' | MonthlyActionCategory>('all');
   const filteredActions = useMemo(() => {
     if (filter === 'all') return summary.actions;
@@ -46,7 +49,7 @@ const ActionsDrawer: React.FC<ActionsDrawerProps> = ({ isOpen, onClose, summary,
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      ariaLabel="All Monthly Actions"
+      ariaLabel={t('shell.actionsDrawer.all_monthly_actions')}
       closeOnOverlayClick
       closeOnEsc
       contentClassName="bg-slate-950/80 border border-slate-800/70 rounded-3xl p-6 max-w-3xl w-full backdrop-blur-xl"
@@ -54,14 +57,14 @@ const ActionsDrawer: React.FC<ActionsDrawerProps> = ({ isOpen, onClose, summary,
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-white">Monthly Actions</h2>
+            <h2 className="text-lg font-semibold text-white">{t('shell.actionsDrawer.monthly_actions')}</h2>
             <p className="text-xs text-slate-400">
               {summary.remaining} / {summary.max} remaining • {summary.reason}
             </p>
           </div>
           <div className="flex items-center gap-2 text-xs text-slate-400">
             <Filter size={14} />
-            <span>Filter</span>
+            <span>{t('shell.actionsDrawer.filter')}</span>
           </div>
         </div>
 

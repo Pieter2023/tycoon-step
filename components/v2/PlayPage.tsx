@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useEffect, useRef, useState } from 'react';
 import ModeSelector from '../../ModeSelector';
 import KpiChip from './KpiChip';
@@ -81,6 +82,7 @@ export const PlayPageLayout: React.FC<PlayPageLayoutProps> = ({
   careerPath,
   getAIRiskColor
 }) => {
+  const { t } = useI18n();
   const [actionsOpen, setActionsOpen] = useState(false);
   const lastOpenSignalRef = useRef(openActionsSignal ?? 0);
 
@@ -115,16 +117,15 @@ export const PlayPageLayout: React.FC<PlayPageLayoutProps> = ({
       </section>
 
       <section className="flex flex-wrap gap-3">
-        <KpiChip label="Cash" value={cashLabel} tone="cash" />
-        <KpiChip label="Net Worth" value={netWorthLabel} tone="networth" />
-        <KpiChip label="Passive / mo" value={passiveLabel} tone="passive" />
+        <KpiChip label={t('shell.playPage.cash')} value={cashLabel} tone="cash" />
+        <KpiChip label={t('shell.playPage.net_worth')} value={netWorthLabel} tone="networth" />
+        <KpiChip label={t('shell.playPage.passive_mo')} value={passiveLabel} tone="passive" />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
-          <h3 className="text-lg font-semibold">This Month</h3>
-          <p className="mt-2 text-sm text-slate-400">
-            Pick a few actions to shape the month ahead.
+          <h3 className="text-lg font-semibold">{t('shell.playPage.this_month')}</h3>
+          <p className="mt-2 text-sm text-slate-400">{t('shell.playPage.pick_a_few_actions_to')}
           </p>
           <div className="mt-6">
             <MonthlyActionsPreview
@@ -171,6 +172,7 @@ export const PlayPageLayout: React.FC<PlayPageLayoutProps> = ({
 };
 
 const PlayPage: React.FC = () => {
+  const { t } = useI18n();
   return <ModeSelector />;
 };
 

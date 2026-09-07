@@ -1,3 +1,4 @@
+import { useI18n, type Translate } from '../../i18n';
 import React, { useMemo } from 'react';
 import {
   Area,
@@ -32,16 +33,16 @@ type MoneyPageLayoutProps = {
   onTabChange: (tab: 'invest' | 'portfolio' | 'bank' | 'reports') => void;
 };
 
-const assetTypeLabels: Record<string, string> = {
-  [AssetType.STOCK]: 'Stocks',
-  [AssetType.INDEX_FUND]: 'Index Funds',
-  [AssetType.BOND]: 'Bonds',
-  [AssetType.REAL_ESTATE]: 'Real Estate',
-  [AssetType.BUSINESS]: 'Business',
-  [AssetType.CRYPTO]: 'Crypto',
-  [AssetType.COMMODITY]: 'Commodities',
-  [AssetType.SAVINGS]: 'Savings'
-};
+const assetTypeLabelsFor = (t: Translate): Record<string, string> => ({
+  [AssetType.STOCK]: t('shell.moneyPage.stocks'),
+  [AssetType.INDEX_FUND]: t('shell.moneyPage.index_funds'),
+  [AssetType.BOND]: t('shell.moneyPage.bonds'),
+  [AssetType.REAL_ESTATE]: t('shell.moneyPage.real_estate'),
+  [AssetType.BUSINESS]: t('shell.moneyPage.business'),
+  [AssetType.CRYPTO]: t('shell.moneyPage.crypto'),
+  [AssetType.COMMODITY]: t('shell.moneyPage.commodities'),
+  [AssetType.SAVINGS]: t('shell.moneyPage.savings')
+});
 
 const allocationColors = ['#22d3ee', '#34d399', '#a78bfa', '#fbbf24', '#f87171', '#60a5fa', '#f472b6', '#94a3b8'];
 
@@ -59,6 +60,8 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
   activeTab,
   onTabChange
 }) => {
+  const { t } = useI18n();
+  const assetTypeLabels = assetTypeLabelsFor(t);
   const netWorthHistory = useMemo(() => {
     const history = gameState.netWorthHistory || [];
     if (history.length > 0) return history;
@@ -105,19 +108,19 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
 
   const reportRows = [
     {
-      label: 'Runway',
+      label: t('shell.moneyPage.runway'),
       value: runwayMonths >= 12 ? '12+ mo' : `${runwayMonths.toFixed(1)} mo`,
       progress: Math.min(100, (runwayMonths / 6) * 100),
       tone: runwayMonths >= 3 ? 'bg-emerald-400' : runwayMonths >= 1.5 ? 'bg-amber-400' : 'bg-rose-400'
     },
     {
-      label: 'Passive coverage',
+      label: t('shell.moneyPage.passive_coverage'),
       value: `${Math.round(passiveCoverage * 100)}%`,
       progress: passiveCoverage * 100,
       tone: passiveCoverage >= 0.7 ? 'bg-emerald-400' : 'bg-cyan-400'
     },
     {
-      label: 'Savings rate',
+      label: t('shell.moneyPage.savings_rate'),
       value: formatPercent(savingsRate, 0),
       progress: Math.min(100, Math.max(0, savingsRate * 100)),
       tone: savingsRate >= 0.25 ? 'bg-emerald-400' : savingsRate >= 0.1 ? 'bg-amber-400' : 'bg-rose-400'
@@ -142,28 +145,27 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
       <section className="tycoon-panel p-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="tycoon-kicker">Capital HQ</p>
-            <h2 className="mt-2 text-3xl font-bold text-white">Choose your next money move.</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
-              Keep a cash reserve, compare investments and understand the cost of debt.
+            <p className="tycoon-kicker">{t('shell.moneyPage.capital_hq')}</p>
+            <h2 className="mt-2 text-3xl font-bold text-white">{t('shell.moneyPage.choose_your_next_money_move')}</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">{t('shell.moneyPage.keep_a_cash_reserve_compare')}
             </p>
           </div>
           <div className="grid gap-2 grid-cols-3 lg:min-w-[400px]">
             <div className="rounded-lg border border-slate-800 bg-slate-950/35 p-3">
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
-                <ShieldCheck size={14} className="text-emerald-300" /> Runway
+                <ShieldCheck size={14} className="text-emerald-300" />{t('shell.moneyPage.runway')}
               </div>
-              <p className="mt-2 text-lg font-bold text-white">{runwayMonths >= 12 ? '12+' : runwayMonths.toFixed(1)} mo</p>
+              <p className="mt-2 text-lg font-bold text-white">{t('shell.moneyPage.months_short', { value: runwayMonths >= 12 ? '12+' : runwayMonths.toFixed(1) })}</p>
             </div>
             <div className="rounded-lg border border-slate-800 bg-slate-950/35 p-3">
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
-                <Target size={14} className="text-cyan-300" /> Passive target
+                <Target size={14} className="text-cyan-300" />{t('shell.moneyPage.passive_target')}
               </div>
               <p className="mt-2 text-lg font-bold text-white">{formatMoney(passiveTarget)}/mo</p>
             </div>
             <div className="rounded-lg border border-slate-800 bg-slate-950/35 p-3">
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
-                <TrendingUp size={14} className={netMonthlyCashFlow >= 0 ? 'text-emerald-300' : 'text-rose-300'} /> Monthly delta
+                <TrendingUp size={14} className={netMonthlyCashFlow >= 0 ? 'text-emerald-300' : 'text-rose-300'} />{t('shell.moneyPage.monthly_delta')}
               </div>
               <p className={`mt-2 text-lg font-bold ${netMonthlyCashFlow >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>
                 {netMonthlyCashFlow >= 0 ? '+' : ''}{formatMoney(netMonthlyCashFlow)}
@@ -174,16 +176,16 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
       </section>
 
       <details className="tycoon-panel p-4">
-        <summary className="cursor-pointer text-sm font-semibold text-slate-200">View charts and financial overview</summary>
+        <summary className="cursor-pointer text-sm font-semibold text-slate-200">{t('shell.moneyPage.view_charts_and_financial_overview')}</summary>
         <div className="mt-4 space-y-4">
       <section className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 glass-panel p-6">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold flex items-center gap-2">
-                <LineChart size={18} className="text-emerald-300" /> Net Worth Over Time
+                <LineChart size={18} className="text-emerald-300" />{t('shell.moneyPage.net_worth_over_time')}
               </h2>
-              <p className="text-xs text-slate-400 mt-1">Track progress toward financial freedom.</p>
+              <p className="text-xs text-slate-400 mt-1">{t('shell.moneyPage.track_progress_toward_financial_freedom')}</p>
             </div>
             <p className="text-lg font-semibold text-white">{formatMoney(netWorth)}</p>
           </div>
@@ -198,7 +200,7 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
                 </defs>
                 <XAxis dataKey="month" hide />
                 <YAxis hide />
-                <Tooltip formatter={(value: number) => [formatMoneyFull(value), 'Net Worth']} />
+                <Tooltip formatter={(value: number) => [formatMoneyFull(value), t('shell.moneyPage.net_worth')]} />
                 <Area type="monotone" dataKey="value" stroke="#34d399" fill="url(#netWorthGradient)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
@@ -208,12 +210,11 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
         <div className="glass-panel p-6">
           <div className="flex items-center gap-2">
             <PieChartIcon size={18} className="text-blue-300" />
-            <h3 className="text-lg font-semibold">Asset Allocation</h3>
+            <h3 className="text-lg font-semibold">{t('shell.moneyPage.asset_allocation')}</h3>
           </div>
           <div className="h-40 mt-4 min-w-[1px] min-h-[1px]">
             {assetAllocation.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-sm text-slate-500">
-                No assets yet.
+              <div className="h-full flex items-center justify-center text-sm text-slate-500">{t('shell.moneyPage.no_assets_yet')}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1} initialDimension={{width:300,height:220}}>
@@ -233,7 +234,7 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
                   <Tooltip
                     formatter={(value: number, _name: string, props: any) => [
                       formatMoneyFull(value),
-                      props?.payload?.name || 'Asset class'
+                      props?.payload?.name || t('shell.moneyPage.asset_class')
                     ]}
                   />
                 </PieChart>
@@ -246,7 +247,7 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
       <section className="grid gap-4 md:grid-cols-3">
         <div className="glass-tile p-4">
           <div className="flex items-center gap-2 text-slate-400 text-xs">
-            <Wallet size={14} /> Net Cash Flow
+            <Wallet size={14} />{t('shell.moneyPage.net_cash_flow')}
           </div>
           <p className={`mt-2 text-lg font-semibold ${cashFlow.income - cashFlow.expenses >= 0 ? 'text-emerald-300' : 'text-red-400'}`}>
             {cashFlow.income - cashFlow.expenses >= 0 ? '+' : ''}
@@ -255,13 +256,13 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
         </div>
         <div className="glass-tile p-4">
           <div className="flex items-center gap-2 text-slate-400 text-xs">
-            <Banknote size={14} /> Total Liabilities
+            <Banknote size={14} />{t('shell.moneyPage.total_liabilities')}
           </div>
           <p className="mt-2 text-lg font-semibold text-red-400">{formatMoney(liabilitiesTotal)}</p>
         </div>
         <div className="glass-tile p-4">
           <div className="flex items-center gap-2 text-slate-400 text-xs">
-            <Wallet size={14} /> Portfolio Value
+            <Wallet size={14} />{t('shell.moneyPage.portfolio_value')}
           </div>
           <p className="mt-2 text-lg font-semibold text-white">{formatMoney(portfolioValue)}</p>
         </div>
@@ -272,17 +273,13 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
 
       <section className="glass-panel p-6">
         <div className="flex flex-wrap items-center gap-2 mb-6">
-          <button type="button" className={tabButtonClass('invest')} onClick={() => onTabChange('invest')}>
-            Invest
+          <button type="button" className={tabButtonClass('invest')} onClick={() => onTabChange('invest')}>{t('shell.moneyPage.invest')}
           </button>
-          <button type="button" className={tabButtonClass('portfolio')} onClick={() => onTabChange('portfolio')}>
-            Portfolio
+          <button type="button" className={tabButtonClass('portfolio')} onClick={() => onTabChange('portfolio')}>{t('shell.moneyPage.portfolio')}
           </button>
-          <button type="button" className={tabButtonClass('bank')} onClick={() => onTabChange('bank')}>
-            Bank
+          <button type="button" className={tabButtonClass('bank')} onClick={() => onTabChange('bank')}>{t('shell.moneyPage.bank')}
           </button>
-          <button type="button" className={tabButtonClass('reports')} onClick={() => onTabChange('reports')}>
-            Reports
+          <button type="button" className={tabButtonClass('reports')} onClick={() => onTabChange('reports')}>{t('shell.moneyPage.reports')}
           </button>
         </div>
 
@@ -304,7 +301,7 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
             <div className="tycoon-card p-5">
               <div className="flex items-center gap-2">
                 <Activity size={17} className="text-emerald-300" />
-                <h3 className="text-lg font-semibold text-white">Capital Diagnosis</h3>
+                <h3 className="text-lg font-semibold text-white">{t('shell.moneyPage.capital_diagnosis')}</h3>
               </div>
               <div className="mt-5 space-y-4">
                 {reportRows.map((row) => (
@@ -324,22 +321,20 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
             <div className="tycoon-card p-5">
               <div className="flex items-center gap-2">
                 <Target size={17} className="text-cyan-300" />
-                <h3 className="text-lg font-semibold text-white">Decision Rules</h3>
+                <h3 className="text-lg font-semibold text-white">{t('shell.moneyPage.decision_rules')}</h3>
               </div>
               <div className="mt-4 space-y-3 text-sm leading-6 text-slate-300">
-                <p>Keep at least 3 months of runway before using leverage aggressively.</p>
-                <p>Convert surplus cash into diversified assets once runway is healthy.</p>
-                <p>If monthly delta turns negative, pause new risk and fix burn rate first.</p>
+                <p>{t('shell.moneyPage.keep_at_least_3_months')}</p>
+                <p>{t('shell.moneyPage.convert_surplus_cash_into_diversified')}</p>
+                <p>{t('shell.moneyPage.if_monthly_delta_turns_negative')}</p>
               </div>
-              <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/35 px-3 py-2 text-xs text-slate-400">
-                Current interest rate: <span className="font-semibold text-white">{formatPercent(gameState.economy?.interestRate || 0.065)}</span>
+              <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/35 px-3 py-2 text-xs text-slate-400">{t('shell.moneyPage.current_interest_rate')} <span className="font-semibold text-white">{formatPercent(gameState.economy?.interestRate || 0.065)}</span>
               </div>
               <button
                 type="button"
                 onClick={() => onTabChange('invest')}
                 className="mt-5 inline-flex items-center gap-2 rounded-md bg-emerald-400 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-emerald-300"
-              >
-                Review investments
+              >{t('shell.moneyPage.review_investments')}
                 <ArrowRight size={15} />
               </button>
             </div>
@@ -351,12 +346,12 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
 };
 
 const MoneyPage: React.FC = () => {
+  const { t } = useI18n();
   return (
     <div className="space-y-6">
       <section className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6">
-        <h2 className="text-2xl font-bold">Money</h2>
-        <p className="mt-2 text-sm text-slate-400">
-          Budgeting, cash flow, investments, and assets will live here in the new layout. Coming soon.
+        <h2 className="text-2xl font-bold">{t('shell.moneyPage.money')}</h2>
+        <p className="mt-2 text-sm text-slate-400">{t('shell.moneyPage.budgeting_cash_flow_investments_and')}
         </p>
       </section>
     </div>

@@ -5,6 +5,7 @@ import { INITIAL_GAME_STATE } from '../constants';
 import { applyMonthlyAction } from '../services/gameLogic';
 import { getMonthlyActionsSummary } from '../services/monthlyActions';
 import MonthlyActionsPreview from '../components/v2/MonthlyActionsPreview';
+import { I18nProvider } from '../i18n';
 
 const ActionHarness: React.FC = () => {
   const [state, setState] = useState({
@@ -39,7 +40,7 @@ const ActionHarness: React.FC = () => {
 describe('MonthlyActionsPreview', () => {
   it('triggers action handler and updates state', async () => {
     const user = userEvent.setup();
-    render(<ActionHarness />);
+    render(<I18nProvider><ActionHarness /></I18nProvider>);
 
     const energyBefore = Number(screen.getByTestId('energy').textContent);
     await user.click(screen.getByRole('button', { name: /work overtime/i }));

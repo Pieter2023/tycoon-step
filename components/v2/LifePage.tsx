@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useMemo, useState } from 'react';
 import { Heart, Home, Users } from 'lucide-react';
 import Modal from '../Modal';
@@ -43,6 +44,7 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
   activeTab,
   onTabChange
 }) => {
+  const { t } = useI18n();
   const [openDetail, setOpenDetail] = useState<'lifestyle' | 'sidehustles' | 'family' | null>(null);
 
   const lifestyle = LIFESTYLE_OPTS[gameState.lifestyle];
@@ -50,13 +52,13 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
     const spouse = gameState.family?.spouse;
     const childrenCount = gameState.family?.children?.length || 0;
     if (!spouse && !gameState.family?.isEngaged && !gameState.family?.inRelationship) {
-      return 'Single';
+      return t('shell.lifePage.single');
     }
-    if (gameState.family?.isEngaged) return 'Engaged';
-    if (spouse) return `Married to ${spouse.name}`;
-    if (gameState.family?.inRelationship) return 'In a relationship';
-    return 'Family';
-  }, [gameState.family]);
+    if (gameState.family?.isEngaged) return t('shell.lifePage.engaged');
+    if (spouse) return t('shell.lifePage.married_to', { name: spouse.name });
+    if (gameState.family?.inRelationship) return t('shell.lifePage.in_a_relationship');
+    return t('shell.lifePage.family');
+  }, [gameState.family, t]);
 
   const tabButtonClass = (tab: string) =>
     `rounded-lg px-4 py-2 text-xs font-bold border transition ${
@@ -68,16 +70,15 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
   return (
     <div className="space-y-8">
       <section className="glass-panel p-6">
-        <h2 className="text-2xl font-bold">Life</h2>
-        <p className="mt-2 text-sm text-slate-400">
-          Balance lifestyle, side hustles, and family decisions.
+        <h2 className="text-2xl font-bold">{t('shell.lifePage.life')}</h2>
+        <p className="mt-2 text-sm text-slate-400">{t('shell.lifePage.balance_lifestyle_side_hustles_and')}
         </p>
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
         <div className="glass-panel p-5">
           <div className="flex items-center gap-2 text-sm text-slate-400">
-            <Home size={16} className="text-emerald-300" /> Lifestyle
+            <Home size={16} className="text-emerald-300" />{t('shell.lifePage.lifestyle')}
           </div>
           <p className="mt-2 text-lg font-semibold text-white capitalize">{gameState.lifestyle.toLowerCase()}</p>
           <p className="text-xs text-slate-400 mt-1">{formatMoney(lifestyle.cost)}/mo</p>
@@ -88,16 +89,15 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
               setOpenDetail('lifestyle');
             }}
             className="mt-4 rounded-md border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
-          >
-            View details
+          >{t('shell.lifePage.view_details')}
           </button>
         </div>
         <div className="glass-panel p-5">
           <div className="flex items-center gap-2 text-sm text-slate-400">
-            <Users size={16} className="text-amber-300" /> Side Hustles
+            <Users size={16} className="text-amber-300" />{t('shell.lifePage.side_hustles')}
           </div>
-          <p className="mt-2 text-lg font-semibold text-white">{gameState.activeSideHustles.length} active</p>
-          <p className="text-xs text-slate-400 mt-1">{formatMoney(cashFlow.sideHustleIncome)}/mo income</p>
+          <p className="mt-2 text-lg font-semibold text-white">{t('shell.lifePage.n_active', { count: gameState.activeSideHustles.length })}</p>
+          <p className="text-xs text-slate-400 mt-1">{t('shell.lifePage.income_per_month', { amount: formatMoney(cashFlow.sideHustleIncome) })}</p>
           <button
             type="button"
             onClick={() => {
@@ -105,16 +105,15 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
               setOpenDetail('sidehustles');
             }}
             className="mt-4 rounded-md border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
-          >
-            View details
+          >{t('shell.lifePage.view_details')}
           </button>
         </div>
         <div className="glass-panel p-5">
           <div className="flex items-center gap-2 text-sm text-slate-400">
-            <Heart size={16} className="text-pink-300" /> Family
+            <Heart size={16} className="text-pink-300" />{t('shell.lifePage.family')}
           </div>
           <p className="mt-2 text-lg font-semibold text-white">{familySummary}</p>
-          <p className="text-xs text-slate-400 mt-1">Children: {gameState.family?.children?.length || 0}</p>
+          <p className="text-xs text-slate-400 mt-1">{t('shell.lifePage.children_count', { count: gameState.family?.children?.length || 0 })}</p>
           <button
             type="button"
             onClick={() => {
@@ -122,37 +121,32 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
               setOpenDetail('family');
             }}
             className="mt-4 rounded-md border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
-          >
-            View details
+          >{t('shell.lifePage.view_details')}
           </button>
         </div>
       </section>
 
       <section className="glass-panel p-6">
         <div className="flex flex-wrap items-center gap-2 mb-6">
-          <button type="button" className={tabButtonClass('lifestyle')} onClick={() => onTabChange('lifestyle')}>
-            Lifestyle
+          <button type="button" className={tabButtonClass('lifestyle')} onClick={() => onTabChange('lifestyle')}>{t('shell.lifePage.lifestyle')}
           </button>
-          <button type="button" className={tabButtonClass('sidehustles')} onClick={() => onTabChange('sidehustles')}>
-            Side Hustles
+          <button type="button" className={tabButtonClass('sidehustles')} onClick={() => onTabChange('sidehustles')}>{t('shell.lifePage.side_hustles')}
           </button>
-          <button type="button" className={tabButtonClass('family')} onClick={() => onTabChange('family')}>
-            Family
+          <button type="button" className={tabButtonClass('family')} onClick={() => onTabChange('family')}>{t('shell.lifePage.family')}
           </button>
         </div>
 
         <div className="glass-tile p-4 text-sm text-slate-300 flex items-center justify-between">
           <span>
-            {activeTab === 'lifestyle' && 'Lifestyle choices affect expenses, happiness, and stats.'}
-            {activeTab === 'sidehustles' && 'Manage side hustles, upgrades, and income.'}
-            {activeTab === 'family' && 'Family events and relationships live here.'}
+            {activeTab === 'lifestyle' && t('shell.lifePage.lifestyle_choices_affect_expenses_happiness')}
+            {activeTab === 'sidehustles' && t('shell.lifePage.manage_side_hustles_upgrades_and')}
+            {activeTab === 'family' && t('shell.lifePage.family_events_and_relationships_live')}
           </span>
           <button
             type="button"
             onClick={() => setOpenDetail(activeTab)}
             className="rounded-md border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
-          >
-            Open details
+          >{t('shell.lifePage.open_details')}
           </button>
         </div>
       </section>
@@ -160,7 +154,7 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
       <Modal
         isOpen={openDetail === 'lifestyle'}
         onClose={() => setOpenDetail(null)}
-        ariaLabel="Lifestyle"
+        ariaLabel={t('shell.lifePage.lifestyle')}
         overlayClassName="items-stretch justify-end"
         contentClassName="h-full max-w-4xl rounded-none rounded-l-3xl p-6 overflow-y-auto"
       >
@@ -179,7 +173,7 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
       <Modal
         isOpen={openDetail === 'sidehustles'}
         onClose={() => setOpenDetail(null)}
-        ariaLabel="Side Hustles"
+        ariaLabel={t('shell.lifePage.side_hustles')}
         overlayClassName="items-center justify-center"
         contentClassName="h-[90vh] w-[96vw] max-w-6xl rounded-3xl p-6 overflow-y-auto"
       >
@@ -200,24 +194,24 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
       <Modal
         isOpen={openDetail === 'family'}
         onClose={() => setOpenDetail(null)}
-        ariaLabel="Family"
+        ariaLabel={t('shell.lifePage.family')}
         overlayClassName="items-stretch justify-end"
         contentClassName="h-full max-w-3xl rounded-none rounded-l-3xl p-6 overflow-y-auto"
       >
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-white">Family</h3>
+          <h3 className="text-xl font-semibold text-white">{t('shell.lifePage.family')}</h3>
           {!gameState.family?.spouse && !gameState.family?.isEngaged && !gameState.family?.inRelationship ? (
-            <p className="text-slate-400 text-sm">Single - romance may come your way! 💕</p>
+            <p className="text-slate-400 text-sm">{t('shell.lifePage.single_romance_may_come_your')}</p>
           ) : (
             <div className="space-y-3">
               {gameState.family?.inRelationship && !gameState.family?.isEngaged && !gameState.family?.spouse && (
                 <div className="bg-pink-500/20 rounded-lg p-2 text-center">
-                  <span className="text-pink-400 font-medium">💕 In a Relationship</span>
+                  <span className="text-pink-400 font-medium">{t('shell.lifePage.in_a_relationship')}</span>
                 </div>
               )}
               {gameState.family?.isEngaged && !gameState.family?.spouse && (
                 <div className="bg-pink-500/20 rounded-lg p-2 text-center">
-                  <span className="text-pink-400 font-medium">💍 Engaged!</span>
+                  <span className="text-pink-400 font-medium">{t('shell.lifePage.engaged')}</span>
                 </div>
               )}
               {gameState.family?.spouse && (
@@ -253,12 +247,12 @@ export const LifePageLayout: React.FC<LifePageLayoutProps> = ({
 };
 
 const LifePage: React.FC = () => {
+  const { t } = useI18n();
   return (
     <div className="space-y-6">
       <section className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6">
-        <h2 className="text-2xl font-bold">Life</h2>
-        <p className="mt-2 text-sm text-slate-400">
-          Lifestyle choices, goals, and life events will be surfaced here.
+        <h2 className="text-2xl font-bold">{t('shell.lifePage.life')}</h2>
+        <p className="mt-2 text-sm text-slate-400">{t('shell.lifePage.lifestyle_choices_goals_and_life')}
         </p>
       </section>
     </div>

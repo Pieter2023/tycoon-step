@@ -1,3 +1,4 @@
+import { useI18n, type Translate } from '../../i18n';
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -115,30 +116,31 @@ const getCreditTone = (score: number) => {
   return 'text-rose-300';
 };
 
-const getHealthTone = (score: number) => {
-  if (score >= 80) return { label: 'Excellent', className: 'text-emerald-300', bar: 'bg-emerald-400' };
-  if (score >= 62) return { label: 'Stable', className: 'text-cyan-300', bar: 'bg-cyan-400' };
-  if (score >= 45) return { label: 'Watch', className: 'text-amber-300', bar: 'bg-amber-400' };
-  return { label: 'At Risk', className: 'text-rose-300', bar: 'bg-rose-400' };
+const getHealthTone = (score: number, t: Translate) => {
+  if (score >= 80) return { label: t('shell.commandDashboard.excellent'), className: 'text-emerald-300', bar: 'bg-emerald-400' };
+  if (score >= 62) return { label: t('shell.commandDashboard.stable'), className: 'text-cyan-300', bar: 'bg-cyan-400' };
+  if (score >= 45) return { label: t('shell.commandDashboard.watch'), className: 'text-amber-300', bar: 'bg-amber-400' };
+  return { label: t('shell.commandDashboard.at_risk'), className: 'text-rose-300', bar: 'bg-rose-400' };
 };
 
 const assetTypeLabel = (type: AssetType | string) => String(type).replace(/_/g, ' ');
 
-const makeFallbackTrend = (current: number, delta: number | null, label: string): TrendPoint[] => {
+const makeFallbackTrend = (current: number, delta: number | null, label: string, t: Translate): TrendPoint[] => {
   if (typeof delta !== 'number' || !Number.isFinite(delta) || delta === 0) {
     return [
-      { label: 'Now', value: current },
+      { label: t('shell.commandDashboard.now'), value: current },
       { label, value: current }
     ];
   }
   return [
-    { label: 'Prev', value: current - delta },
+    { label: t('shell.commandDashboard.prev'), value: current - delta },
     { label, value: current }
   ];
 };
 
 const SparkArea: React.FC<{ data: TrendPoint[]; color: string; gradientId: string }> = ({ data, color, gradientId }) => {
-  const safeData = data.length >= 2 ? data : makeFallbackTrend(data[0]?.value ?? 0, null, 'Now');
+  const { t } = useI18n();
+  const safeData = data.length >= 2 ? data : makeFallbackTrend(data[0]?.value ?? 0, null, t('shell.commandDashboard.now'), t);
 
   return (
     <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
@@ -203,6 +205,7 @@ const MetricCard: React.FC<{
   gradientId: string;
   onClick?: () => void;
 }> = ({ title, value, caption, delta, trendPositive = true, icon, trend, tone, gradientId, onClick }) => {
+  const { t } = useI18n();
   const classes = metricToneClasses[tone];
   return (
     <motion.div
@@ -250,6 +253,7 @@ const ProgressRow: React.FC<{
   icon: React.ReactNode;
   tone: 'emerald' | 'cyan' | 'amber' | 'rose';
 }> = ({ label, valueLabel, progress, icon, tone }) => {
+  const { t } = useI18n();
   const toneClasses = {
     emerald: { bar: 'bg-emerald-400', text: 'text-emerald-300' },
     cyan: { bar: 'bg-cyan-400', text: 'text-cyan-300' },
@@ -288,7 +292,8 @@ const getActionTone = (actionId: MonthlyActionId) => {
 };
 
 const getAdvisorRecommendation = (
-  props: Pick<CommandDashboardProps, 'cashValue' | 'expenseValue' | 'passiveValue' | 'monthlyActions' | 'gameState' | 'isProcessing'>
+  props: Pick<CommandDashboardProps, 'cashValue' | 'expenseValue' | 'passiveValue' | 'monthlyActions' | 'gameState' | 'isProcessing'>,
+  t: Translate
 ): AdvisorRecommendation => {
   const { cashValue, expenseValue, passiveValue, monthlyActions, gameState, isProcessing } = props;
   const safetyMonths = expenseValue > 0 ? cashValue / expenseValue : 12;
@@ -307,11 +312,11 @@ const getAdvisorRecommendation = (
 
   if (gameState.pendingScenario) {
     return {
-      label: 'Event',
-      title: 'Resolve the current event first',
-      body: 'A life event is waiting for a decision. Resolve it before spending actions or advancing the month.',
-      impact: 'Prevents hidden penalties',
-      cta: 'Event open',
+      label: t('shell.commandDashboard.event'),
+      title: t('shell.commandDashboard.resolve_the_current_event_first'),
+      body: t('shell.commandDashboard.a_life_event_is_waiting'),
+      impact: t('shell.commandDashboard.prevents_hidden_penalties'),
+      cta: t('shell.commandDashboard.event_open'),
       icon: <AlertTriangle size={22} />,
       action: { type: 'none' },
       disabled: true
@@ -320,11 +325,11 @@ const getAdvisorRecommendation = (
 
   if (readyQuestCount > 0) {
     return {
-      label: 'Reward',
-      title: 'Claim your completed goal',
+      label: t('shell.commandDashboard.reward'),
+      title: t('shell.commandDashboard.claim_your_completed_goal'),
       body: `${readyQuestCount} quest reward is ready. Claiming it converts progress into cash, stats, or credit momentum.`,
-      impact: 'Immediate upgrade',
-      cta: 'Open goals',
+      impact: t('shell.commandDashboard.immediate_upgrade'),
+      cta: t('shell.commandDashboard.open_goals'),
       icon: <CheckCircle2 size={22} />,
       action: { type: 'goals' },
       disabled: isProcessing
@@ -333,11 +338,11 @@ const getAdvisorRecommendation = (
 
   if ((energy < 35 || stress > 75 || health < 45) && actionById('RECOVER')) {
     return {
-      label: 'Recovery',
-      title: 'Protect your action economy',
-      body: 'Low energy or high stress reduces how many useful decisions you get each month.',
+      label: t('shell.commandDashboard.recovery'),
+      title: t('shell.commandDashboard.protect_your_action_economy'),
+      body: t('shell.commandDashboard.low_energy_or_high_stress'),
       impact: '+Energy, -stress, +health',
-      cta: 'Use Recover',
+      cta: t('shell.commandDashboard.use_recover'),
       icon: <HeartPulse size={22} />,
       action: { type: 'monthly', actionId: 'RECOVER' },
       disabled: isProcessing
@@ -346,11 +351,11 @@ const getAdvisorRecommendation = (
 
   if (creditCardDebt > 0 && cashValue > Math.max(500, expenseValue)) {
     return {
-      label: 'Debt',
-      title: 'Attack high-interest balances',
-      body: 'Credit card debt creates drag on credit, monthly cash flow, and your ability to finance better assets.',
-      impact: 'Improves credit path',
-      cta: 'Go to Bank',
+      label: t('shell.commandDashboard.debt'),
+      title: t('shell.commandDashboard.attack_high_interest_balances'),
+      body: t('shell.commandDashboard.credit_card_debt_creates_drag'),
+      impact: t('shell.commandDashboard.improves_credit_path'),
+      cta: t('shell.commandDashboard.go_to_bank'),
       icon: <CreditCard size={22} />,
       action: { type: 'navigate', path: '/money' },
       disabled: isProcessing
@@ -359,11 +364,11 @@ const getAdvisorRecommendation = (
 
   if (safetyMonths < 2 && actionById('OVERTIME')) {
     return {
-      label: 'Runway',
-      title: 'Build a two-month safety buffer',
-      body: 'Cash runway is thin. One bad event can force missed payments or asset fire sales.',
+      label: t('shell.commandDashboard.runway'),
+      title: t('shell.commandDashboard.build_a_two_month_safety'),
+      body: t('shell.commandDashboard.cash_runway_is_thin_one'),
       impact: '+Income next month',
-      cta: 'Work Overtime',
+      cta: t('shell.commandDashboard.work_overtime'),
       icon: <ShieldCheck size={22} />,
       action: { type: 'monthly', actionId: 'OVERTIME' },
       disabled: isProcessing
@@ -372,11 +377,11 @@ const getAdvisorRecommendation = (
 
   if (passiveCoverage < 0.55 && cashValue >= Math.max(5000, expenseValue * 3)) {
     return {
-      label: 'Freedom',
-      title: 'Convert idle cash into income assets',
-      body: 'Your runway is strong enough to start pushing harder toward passive income coverage.',
-      impact: 'Raises freedom score',
-      cta: 'Shop investments',
+      label: t('shell.commandDashboard.freedom'),
+      title: t('shell.commandDashboard.convert_idle_cash_into_income'),
+      body: t('shell.commandDashboard.your_runway_is_strong_enough'),
+      impact: t('shell.commandDashboard.raises_freedom_score'),
+      cta: t('shell.commandDashboard.shop_investments'),
       icon: <Coins size={22} />,
       action: { type: 'navigate', path: '/money', tab: 'invest' },
       disabled: isProcessing
@@ -385,11 +390,11 @@ const getAdvisorRecommendation = (
 
   if ((aiRisk === 'HIGH' || aiRisk === 'CRITICAL') && cashValue >= 300) {
     return {
-      label: 'Career',
-      title: 'Future-proof your income',
-      body: 'Your career path has elevated AI exposure. Training and education reduce salary risk over time.',
-      impact: 'Reduces disruption risk',
-      cta: 'Open Learn',
+      label: t('shell.commandDashboard.career'),
+      title: t('shell.commandDashboard.future_proof_your_income'),
+      body: t('shell.commandDashboard.your_career_path_has_elevated'),
+      impact: t('shell.commandDashboard.reduces_disruption_risk'),
+      cta: t('shell.commandDashboard.open_learn'),
       icon: <Bot size={22} />,
       action: { type: 'navigate', path: '/learn' },
       disabled: isProcessing
@@ -399,11 +404,11 @@ const getAdvisorRecommendation = (
   const training = actionById('TRAINING');
   if (training) {
     return {
-      label: 'Growth',
-      title: 'Spend an action on skill compounding',
-      body: 'Financial IQ and career momentum improve the quality of later investment and promotion decisions.',
+      label: t('shell.commandDashboard.growth'),
+      title: t('shell.commandDashboard.spend_an_action_on_skill'),
+      body: t('shell.commandDashboard.financial_iq_and_career_momentum'),
       impact: '+Financial IQ',
-      cta: 'Use Training',
+      cta: t('shell.commandDashboard.use_training'),
       icon: <LineChart size={22} />,
       action: { type: 'monthly', actionId: 'TRAINING' },
       disabled: isProcessing
@@ -411,11 +416,11 @@ const getAdvisorRecommendation = (
   }
 
   return {
-    label: 'Review',
-    title: 'Pressure-test the money plan',
-    body: 'Compare cash flow, debt, and investment allocation before you advance the month.',
-    impact: 'Better next move',
-    cta: 'Open Money',
+    label: t('shell.commandDashboard.review'),
+    title: t('shell.commandDashboard.pressure_test_the_money_plan'),
+    body: t('shell.commandDashboard.compare_cash_flow_debt_and'),
+    impact: t('shell.commandDashboard.better_next_move'),
+    cta: t('shell.commandDashboard.open_money'),
     icon: <Landmark size={22} />,
     action: { type: 'navigate', path: '/money' },
     disabled: isProcessing
@@ -423,6 +428,7 @@ const getAdvisorRecommendation = (
 };
 
 const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
+  const { t } = useI18n();
   const {
     cashValue,
     netWorthValue,
@@ -456,18 +462,18 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
   const netCashFlow = latestReport ? latestReport.income - latestReport.expenses : null;
   const cashTrend = cashSparkline.length >= 2
     ? cashSparkline
-    : makeFallbackTrend(cashValue, netCashFlow, 'Now');
+    : makeFallbackTrend(cashValue, netCashFlow, t('shell.commandDashboard.now'), t);
   const netWorthTrend = netWorthSparkline.length >= 2
     ? netWorthSparkline
-    : makeFallbackTrend(netWorthValue, latestReport?.netWorthChange ?? null, 'Now');
+    : makeFallbackTrend(netWorthValue, latestReport?.netWorthChange ?? null, t('shell.commandDashboard.now'), t);
   const passiveTrendData = passiveSparkline.length >= 2
     ? passiveSparkline
     : passiveTrend.length >= 2
       ? passiveTrend
-      : makeFallbackTrend(passiveValue, passiveDelta, 'Now');
+      : makeFallbackTrend(passiveValue, passiveDelta, t('shell.commandDashboard.now'), t);
   const expenseTrendData = expenseTrend.length >= 2
     ? expenseTrend
-    : makeFallbackTrend(expenseValue, expenseDelta, 'Now');
+    : makeFallbackTrend(expenseValue, expenseDelta, t('shell.commandDashboard.now'), t);
 
   const netWorthDelta = getTrendDelta(netWorthTrend);
   const cashDelta = getTrendDelta(cashTrend);
@@ -494,7 +500,7 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
     clamp(1 - dti / 0.45, 0, 1) * 15 +
     clamp((energy + health + (100 - stress)) / 300, 0, 1) * 15
   );
-  const healthTone = getHealthTone(healthScore);
+  const healthTone = getHealthTone(healthScore, t);
 
   const allocationData = useMemo(() => {
     const byType = new Map<string, number>();
@@ -509,7 +515,7 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
   }, [gameState.assets]);
 
   const advisor = useMemo(
-    () => getAdvisorRecommendation({ cashValue, expenseValue, passiveValue, monthlyActions, gameState, isProcessing }),
+    () => getAdvisorRecommendation({ cashValue, expenseValue, passiveValue, monthlyActions, gameState, isProcessing }, t),
     [cashValue, expenseValue, passiveValue, monthlyActions, gameState, isProcessing]
   );
 
@@ -537,8 +543,8 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
   const barColors = ['#34d399', '#22d3ee', '#f59e0b', '#a78bfa', '#fb7185', '#94a3b8'];
   const quickRoutes = [
     {
-      label: 'Money',
-      title: cashValue >= expenseValue * 3 ? 'Deploy excess cash' : 'Build the buffer',
+      label: t('shell.commandDashboard.money'),
+      title: cashValue >= expenseValue * 3 ? t('shell.commandDashboard.deploy_excess_cash') : t('shell.commandDashboard.build_the_buffer'),
       detail: `${formatMoney(cashValue)} available`,
       icon: <Coins size={18} />,
       className: 'border-emerald-400/20 hover:border-emerald-300/70',
@@ -546,8 +552,8 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
       onClick: () => onNavigate('/money', 'invest')
     },
     {
-      label: 'Career',
-      title: 'Grow earned income',
+      label: t('shell.commandDashboard.career'),
+      title: t('shell.commandDashboard.grow_earned_income'),
       detail: gameState.career?.title || 'Career path',
       icon: <BriefcaseBusiness size={18} />,
       className: 'border-cyan-400/20 hover:border-cyan-300/70',
@@ -555,8 +561,8 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
       onClick: () => onNavigate('/career')
     },
     {
-      label: 'Learn',
-      title: 'Buy future leverage',
+      label: t('shell.commandDashboard.learn'),
+      title: t('shell.commandDashboard.buy_future_leverage'),
       detail: `Financial IQ ${Math.round(gameState.stats?.financialIQ ?? 0)}`,
       icon: <GraduationCap size={18} />,
       className: 'border-amber-400/20 hover:border-amber-300/70',
@@ -564,8 +570,8 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
       onClick: () => onNavigate('/learn')
     },
     {
-      label: 'Life',
-      title: stress > 65 ? 'Reduce pressure' : 'Protect capacity',
+      label: t('shell.commandDashboard.life'),
+      title: stress > 65 ? t('shell.commandDashboard.reduce_pressure') : t('shell.commandDashboard.protect_capacity'),
       detail: `Energy ${Math.round(energy)} / Stress ${Math.round(stress)}`,
       icon: <HeartPulse size={18} />,
       className: 'border-rose-400/20 hover:border-rose-300/70',
@@ -574,23 +580,23 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
     }
   ];
 
-  const viewToggle = <button onClick={() => setFocusedView(!focusedView)} className="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-200">{focusedView ? 'Open full dashboard' : 'Use simple view'}</button>;
+  const viewToggle = <button onClick={() => setFocusedView(!focusedView)} className="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-200">{focusedView ? t('shell.commandDashboard.open_full_dashboard') : t('shell.commandDashboard.use_simple_view')}</button>;
   if (focusedView) return <div className="space-y-4">
     {props.firstSteps}
     <div className="grid grid-cols-3 gap-2">
-      {[['Cash', formatMoney(cashValue)], ['Net Worth', formatMoney(netWorthValue)], ['Passive Income', `${formatMoney(passiveValue)}/mo`]].map(([label,value]) => <div key={label} className="rounded-xl bg-slate-900 p-3"><p className="text-xs text-slate-400">{label}</p><p className="mt-1 text-lg font-bold text-white">{value}</p></div>)}
+      {[[t('shell.commandDashboard.cash'), formatMoney(cashValue)], [t('shell.commandDashboard.net_worth'), formatMoney(netWorthValue)], [t('shell.commandDashboard.passive_income'), `${formatMoney(passiveValue)}/mo`]].map(([label,value]) => <div key={label} className="rounded-xl bg-slate-900 p-3"><p className="text-xs text-slate-400">{label}</p><p className="mt-1 text-lg font-bold text-white">{value}</p></div>)}
     </div>
     <section className="tycoon-panel p-4">
-      <h2 className="text-lg font-bold">Shape this month</h2>
-      <p className="mt-1 text-sm text-slate-300">{monthlyActions.remaining} of {monthlyActions.max} actions left. Balance income, learning and rest.</p>
+      <h2 className="text-lg font-bold">{t('shell.commandDashboard.shape_this_month')}</h2>
+      <p className="mt-1 text-sm text-slate-300">{t('shell.commandDashboard.actions_left', { remaining: monthlyActions.remaining, max: monthlyActions.max })}</p>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">{monthlyActions.actions.filter(a => a.id !== 'HUSTLE_SPRINT' || gameState.activeSideHustles.length > 0).map(action =>
         <button key={action.id} disabled={action.disabled} onClick={() => onUseMonthlyAction(action.id)} className="rounded-lg border border-slate-700 p-3 text-left disabled:opacity-45 hover:border-emerald-400">
           <strong className="text-sm text-white">{action.title}</strong><span className="block text-xs leading-5 text-slate-300">{action.subtitle}</span><span className="block text-xs text-slate-400">{action.disabledReason || action.details}</span>
         </button>)}</div>
     </section>
-    {gameState.firstSteps?.reviewed && <section className="tycoon-panel p-4"><h2 className="mb-3 text-lg font-bold">Your next milestone</h2><NextBestStep gameState={gameState} isProcessing={isProcessing} onClaimQuest={onClaimQuest} onOpenGoals={onOpenGoals} /></section>}
-    <details className="tycoon-panel p-4"><summary className="cursor-pointer text-sm font-semibold">Recent decisions and events</summary><div className="mt-3"><EventFeed events={events} limit={3} /></div></details>
-    <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-slate-400">Freedom target: {formatMoney(targetPassive)}/mo · {ratioLabel} covered</p>{viewToggle}</div>
+    {gameState.firstSteps?.reviewed && <section className="tycoon-panel p-4"><h2 className="mb-3 text-lg font-bold">{t('shell.commandDashboard.your_next_milestone')}</h2><NextBestStep gameState={gameState} isProcessing={isProcessing} onClaimQuest={onClaimQuest} onOpenGoals={onOpenGoals} /></section>}
+    <details className="tycoon-panel p-4"><summary className="cursor-pointer text-sm font-semibold">{t('shell.commandDashboard.recent_decisions_and_events')}</summary><div className="mt-3"><EventFeed events={events} limit={3} /></div></details>
+    <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-slate-400">{t('shell.commandDashboard.freedom_target', { target: formatMoney(targetPassive), ratio: ratioLabel })}</p>{viewToggle}</div>
   </div>;
 
   return (
@@ -602,22 +608,21 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-2xl">
               <div className="flex items-center gap-2">
-                <span className="tycoon-kicker">Command Center</span>
+                <span className="tycoon-kicker">{t('shell.commandDashboard.command_center')}</span>
                 <span className={`rounded-full border border-slate-700 px-2 py-1 text-xs font-semibold ${healthTone.className}`}>
                   {healthTone.label}
                 </span>
               </div>
-              <h2 className="mt-3 text-3xl font-bold tracking-normal text-white md:text-4xl">
-                Make the next month count.
+              <h2 className="mt-3 text-3xl font-bold tracking-normal text-white md:text-4xl">{t('shell.commandDashboard.make_the_next_month_count')}
               </h2>
               <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300">
-                Your goal is passive income above {formatMoney(targetPassive)}/mo. Current coverage is {ratioLabel}, with {monthlyActions.remaining} of {monthlyActions.max} monthly actions available.
+                {t('shell.commandDashboard.goal_sentence', { target: formatMoney(targetPassive), ratio: ratioLabel, remaining: monthlyActions.remaining, max: monthlyActions.max })}
               </p>
             </div>
 
             <div className="min-w-[220px] rounded-lg border border-slate-700/70 bg-slate-950/40 p-4">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Health Score</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{t('shell.commandDashboard.health_score')}</p>
                 <Gauge size={18} className={healthTone.className} />
               </div>
               <div className="mt-3 flex items-end gap-2">
@@ -670,7 +675,7 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
 
       <section className="grid gap-4 lg:grid-cols-3">
         <MetricCard
-          title="Cash"
+          title={t('shell.commandDashboard.cash')}
           value={formatMoney(cashValue)}
           caption={`${safetyMonths >= 12 ? '12+' : safetyMonths.toFixed(1)} months runway`}
           delta={formatSignedMoney(cashDelta, formatMoney)}
@@ -682,7 +687,7 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
           onClick={props.onOpenDetail ? () => props.onOpenDetail!('cashFlow') : undefined}
         />
         <MetricCard
-          title="Net Worth"
+          title={t('shell.commandDashboard.net_worth')}
           value={formatMoney(netWorthValue)}
           caption={`${assetCount} assets, ${formatMoney(totalDebt)} debt`}
           delta={formatSignedMoney(netWorthDelta, formatMoney)}
@@ -694,7 +699,7 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
           onClick={props.onOpenDetail ? () => props.onOpenDetail!('netWorth') : undefined}
         />
         <MetricCard
-          title="Passive Income"
+          title={t('shell.commandDashboard.passive_income')}
           value={`${formatMoney(passiveValue)}/mo`}
           caption={`${compactPercent(ratioValue)} of expenses`}
           delta={formatSignedMoney(passiveTrendDelta, formatMoney)}
@@ -732,16 +737,15 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
           <div className="tycoon-panel p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="tycoon-kicker">Monthly Actions</p>
-                <h3 className="mt-1 text-xl font-semibold text-white">Spend time where it compounds.</h3>
+                <p className="tycoon-kicker">{t('shell.commandDashboard.monthly_actions')}</p>
+                <h3 className="mt-1 text-xl font-semibold text-white">{t('shell.commandDashboard.spend_time_where_it_compounds')}</h3>
                 <p className="mt-1 text-sm text-slate-400">{monthlyActions.reason}</p>
               </div>
               <button
                 type="button"
                 onClick={onOpenActions}
                 className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm font-semibold text-slate-100 hover:border-emerald-400/50"
-              >
-                View all
+              >{t('shell.commandDashboard.view_all')}
                 <ArrowRight size={15} />
               </button>
             </div>
@@ -783,35 +787,35 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
             <div className="tycoon-panel p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="tycoon-kicker">Milestones</p>
-                  <h3 className="mt-1 text-lg font-semibold text-white">Freedom path</h3>
+                  <p className="tycoon-kicker">{t('shell.commandDashboard.milestones')}</p>
+                  <h3 className="mt-1 text-lg font-semibold text-white">{t('shell.commandDashboard.freedom_path')}</h3>
                 </div>
                 <Target size={19} className="text-emerald-300" />
               </div>
               <div className="mt-5 space-y-5">
                 <ProgressRow
-                  label="Safety runway"
+                  label={t('shell.commandDashboard.safety_runway')}
                   valueLabel={`${safetyMonths >= 12 ? '12+' : safetyMonths.toFixed(1)} mo`}
                   progress={(safetyMonths / 6) * 100}
                   icon={<ShieldCheck size={15} />}
                   tone={safetyMonths >= 3 ? 'emerald' : safetyMonths >= 1.5 ? 'amber' : 'rose'}
                 />
                 <ProgressRow
-                  label="Passive coverage"
+                  label={t('shell.commandDashboard.passive_coverage')}
                   valueLabel={`${formatMoney(passiveValue)} / ${formatMoney(targetPassive)}`}
                   progress={freedomPercent * 100}
                   icon={<Coins size={15} />}
                   tone={freedomPercent >= 0.7 ? 'emerald' : 'cyan'}
                 />
                 <ProgressRow
-                  label="Diversification"
+                  label={t('shell.commandDashboard.diversification')}
                   valueLabel={`${assetTypeCount} / 4 types`}
                   progress={(assetTypeCount / 4) * 100}
                   icon={<Landmark size={15} />}
                   tone={assetTypeCount >= 3 ? 'emerald' : 'amber'}
                 />
                 <ProgressRow
-                  label="Credit quality"
+                  label={t('shell.commandDashboard.credit_quality')}
                   valueLabel={`${creditScore}`}
                   progress={((creditScore - 300) / 550) * 100}
                   icon={<CreditCard size={15} />}
@@ -823,15 +827,14 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
             <div className="tycoon-panel p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="tycoon-kicker">Portfolio</p>
-                  <h3 className="mt-1 text-lg font-semibold text-white">Allocation</h3>
+                  <p className="tycoon-kicker">{t('shell.commandDashboard.portfolio')}</p>
+                  <h3 className="mt-1 text-lg font-semibold text-white">{t('shell.commandDashboard.allocation')}</h3>
                 </div>
                 <LineChart size={19} className="text-cyan-300" />
               </div>
               <div className="mt-4 h-56">
                 {allocationData.length === 0 ? (
-                  <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-slate-700 bg-slate-950/30 p-4 text-center text-sm text-slate-400">
-                    Buy your first income or growth asset to start building allocation history.
+                  <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-slate-700 bg-slate-950/30 p-4 text-center text-sm text-slate-400">{t('shell.commandDashboard.buy_your_first_income_or')}
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1}>
@@ -858,8 +861,8 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
           <div className="tycoon-panel p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="tycoon-kicker">Cash Flow</p>
-                <h3 className="mt-1 text-lg font-semibold text-white">Income vs expenses</h3>
+                <p className="tycoon-kicker">{t('shell.commandDashboard.cash_flow')}</p>
+                <h3 className="mt-1 text-lg font-semibold text-white">{t('shell.commandDashboard.income_vs_expenses')}</h3>
               </div>
               {(netCashFlow ?? 0) >= 0 ? (
                 <TrendingUp size={19} className="text-emerald-300" />
@@ -880,7 +883,7 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
                   <YAxis hide />
                   <RechartsTooltip
                     contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 8, color: '#fff' }}
-                    formatter={(value: number) => [formatMoney(value), 'Expenses']}
+                    formatter={(value: number) => [formatMoney(value), t('shell.commandDashboard.expenses')]}
                   />
                   <Area type="monotone" dataKey="value" stroke="#fb7185" fill="url(#expense-command-gradient)" strokeWidth={2} />
                 </AreaChart>
@@ -893,31 +896,30 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
           <div className="tycoon-panel p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="tycoon-kicker">Signals</p>
-                <h3 className="mt-1 text-lg font-semibold text-white">Risk cockpit</h3>
+                <p className="tycoon-kicker">{t('shell.commandDashboard.signals')}</p>
+                <h3 className="mt-1 text-lg font-semibold text-white">{t('shell.commandDashboard.risk_cockpit')}</h3>
               </div>
               <ActivityDot active={!gameState.pendingScenario && !gameState.isBankrupt} />
             </div>
             <div className="mt-4 space-y-3">
-              <SignalRow label="Credit score" value={`${creditScore}`} valueClass={getCreditTone(creditScore)} />
-              <SignalRow label="Debt-to-income" value={`${Math.round(dti * 100)}%`} valueClass={dti <= 0.28 ? 'text-emerald-300' : dti <= 0.43 ? 'text-amber-300' : 'text-rose-300'} />
-              <SignalRow label="Stress / energy" value={`${Math.round(stress)} / ${Math.round(energy)}`} valueClass={stress <= 55 && energy >= 45 ? 'text-emerald-300' : 'text-amber-300'} />
-              <SignalRow label="Monthly burn" value={formatMoney(expenseValue)} valueClass="text-slate-100" />
+              <SignalRow label={t('shell.commandDashboard.credit_score')} value={`${creditScore}`} valueClass={getCreditTone(creditScore)} />
+              <SignalRow label={t('shell.commandDashboard.debt_to_income')} value={`${Math.round(dti * 100)}%`} valueClass={dti <= 0.28 ? 'text-emerald-300' : dti <= 0.43 ? 'text-amber-300' : 'text-rose-300'} />
+              <SignalRow label={t('shell.commandDashboard.stress_energy')} value={`${Math.round(stress)} / ${Math.round(energy)}`} valueClass={stress <= 55 && energy >= 45 ? 'text-emerald-300' : 'text-amber-300'} />
+              <SignalRow label={t('shell.commandDashboard.monthly_burn')} value={formatMoney(expenseValue)} valueClass="text-slate-100" />
             </div>
           </div>
 
           <div className="tycoon-panel p-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <p className="tycoon-kicker">Goals</p>
-                <h3 className="mt-1 text-lg font-semibold text-white">Next best step</h3>
+                <p className="tycoon-kicker">{t('shell.commandDashboard.goals')}</p>
+                <h3 className="mt-1 text-lg font-semibold text-white">{t('shell.commandDashboard.next_best_step')}</h3>
               </div>
               <button
                 type="button"
                 onClick={onOpenGoals}
                 className="rounded-md border border-slate-700 px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:border-emerald-400/50"
-              >
-                Open
+              >{t('shell.commandDashboard.open')}
               </button>
             </div>
             <NextBestStep
@@ -931,8 +933,8 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
           <div className="tycoon-panel p-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <p className="tycoon-kicker">Timeline</p>
-                <h3 className="mt-1 text-lg font-semibold text-white">Recent events</h3>
+                <p className="tycoon-kicker">{t('shell.commandDashboard.timeline')}</p>
+                <h3 className="mt-1 text-lg font-semibold text-white">{t('shell.commandDashboard.recent_events')}</h3>
               </div>
               <span className="rounded-md border border-slate-700 px-2 py-1 text-xs font-semibold text-slate-300">
                 {events.length}
@@ -953,15 +955,18 @@ const SignalRow: React.FC<{ label: string; value: string; valueClass: string }> 
   </div>
 );
 
-const ActivityDot: React.FC<{ active: boolean }> = ({ active }) => (
+const ActivityDot: React.FC<{ active: boolean }> = ({ active }) => {
+  const { t } = useI18n();
+  return (
   <span className={`flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-semibold ${
     active
       ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300'
       : 'border-amber-500/25 bg-amber-500/10 text-amber-300'
   }`}>
     <span className={`h-2 w-2 rounded-full ${active ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-    {active ? 'Live' : 'Blocked'}
+    {active ? t('shell.commandDashboard.live') : t('shell.commandDashboard.blocked')}
   </span>
-);
+  );
+};
 
 export default CommandDashboard;

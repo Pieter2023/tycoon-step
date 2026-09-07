@@ -43,3 +43,14 @@ All 1,474 `tl(en, es)` pairs in the city were read in one sitting (extract with 
 ## Dashboard es.json rewrite (2026-09-07)
 
 The June file lacked accents and ñ, left 323 strings in English (all live: `events.*` feed `data/events.json`, character questlines, the sales certification and quiz) and had no ¿. It was regenerated from `en.json`'s structure: flatten the English, translate into a flat dict, refill the structure, assert every `{placeholder}` set matches. Keep the two vocabularies aligned with the city (ingresos extra, flujo de efectivo, cartera, contactos). Five strings equal the English by design (formats, the title, "Normal").
+
+## Dashboard shell keys (2026-09-07, build 39)
+
+Shell chrome lives under `shell.<component>.<slug>` (for example `shell.desktopShell.workspace`, `shell.commandDashboard.actions_left`, `shell.header.next_month`, `shell.quickActions.back_to_menu`). Rules that made the pass work:
+
+- Components call `const { t } = useI18n();` once, right after the parameter list. Module-level helpers that build copy take the translator as a parameter typed `Translate` (exported from `i18n/index.tsx`) so they stay pure and testable.
+- Interpolations are single keys with placeholders (`{remaining} of {max} actions left…`), never concatenated fragments; Spanish word order differs.
+- `scripts/i18n-shell-transform.py` does the mechanical rewrite (dry run by default, `--apply` writes the files and a keys JSON). It refuses strings with newlines, `;=()[]|`, or that do not start with a letter or emoji, so template strings and `{x} of {y}` sentences must be keyed by hand. Do not let it touch all-caps identifiers (`RECOVER`, `OVERTIME`).
+- Any test that renders a shell component must wrap it in `I18nProvider`; `useI18n` throws otherwise.
+- Under Vite HMR, editing the translation JSON can re-create the context and trip the error boundary ("useI18n must be used within I18nProvider"); reload the page. Production is unaffected.
+- Still English by choice: `components/tabs/*` bodies and `services/monthlyActions.ts` card copy.

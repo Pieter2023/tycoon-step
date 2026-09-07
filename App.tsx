@@ -1283,11 +1283,11 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const careerPath = gameState.career?.path || 'TECH';
   const aiImpact = gameState.aiDisruption?.affectedIndustries?.[careerPath];
   const v2NavItems: AppShellNavItem[] = [
-    { label: 'Play', path: '/play' },
-    { label: 'Money', path: '/money' },
-    { label: 'Career', path: '/career' },
-    { label: 'Learn', path: '/learn' },
-    { label: 'Life', path: '/life' }
+    { label: t('shell.nav.play'), path: '/play' },
+    { label: t('shell.nav.money'), path: '/money' },
+    { label: t('shell.nav.career'), path: '/career' },
+    { label: t('shell.nav.learn'), path: '/learn' },
+    { label: t('shell.nav.life'), path: '/life' }
   ];
   const aiRiskLabel = aiImpact?.automationRisk || 'LOW';
   const aiRiskBadgeTone =
@@ -3985,7 +3985,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 showNextMonthPreview={showNextMonthPreview}
                 onToggleMonthPreview={setShowNextMonthPreview}
                 autoplayEnabled={autoplayEnabled}
-                autoplayLabel={autoplayEnabled ? 'ON' : 'OFF'}
+                autoplayLabel={autoplayEnabled ? t('shell.header.on') : t('shell.header.off')}
                 autoplaySpeed={autoPlaySpeed}
                 autoplaySpeedOptions={AUTOPLAY_SPEED_OPTIONS}
                 autoplaySpeedLabels={AUTOPLAY_SPEED_LABELS}
@@ -4098,10 +4098,10 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   onClick={handleNextTurn}
                   disabled={isProcessing || !!gameState.pendingScenario}
                   className="flex items-center gap-2 rounded-full bg-emerald-400/90 px-5 py-2 text-sm font-semibold text-slate-950 shadow-[0_12px_30px_rgba(16,185,129,0.35)] disabled:opacity-60"
-                  title="Next Month (N)"
+                  title={t('shell.header.next_month_shortcut')}
                 >
                   {isProcessing ? <Play size={16} className="animate-spin" /> : <Play size={16} />}
-                  Next Month
+                  {t('shell.header.next_month')}
                 </button>
                 <button
                   type="button"
@@ -4114,7 +4114,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   title={`${autoplayTooltip} • Shortcut: T`}
                 >
                   {autoplayEnabled ? <FastForward size={14} /> : <Pause size={14} />}
-                  Autoplay {autoplayEnabled ? 'ON' : 'OFF'}
+                  {t('shell.header.autoplay')} {autoplayEnabled ? t('shell.header.on') : t('shell.header.off')}
                 </button>
                 <div className="flex items-center gap-1">
                   {AUTOPLAY_SPEED_OPTIONS.map((speed) => {
@@ -4141,7 +4141,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 <button
                   type="button"
                   onClick={() => setOverflowMenuOpen(true)}
-                  aria-label="More options"
+                  aria-label={t('shell.quickActions.more_options')}
                   className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-700/70 text-slate-300 hover:text-white hover:bg-slate-800/60"
                 >
                   <MoreHorizontal size={18} />
@@ -4273,7 +4273,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           <Modal
             isOpen={overflowMenuOpen}
             onClose={() => setOverflowMenuOpen(false)}
-            ariaLabel="Quick actions"
+            ariaLabel={t('shell.quickActions.quick_actions')}
             contentClassName="bg-slate-900 border border-slate-800 rounded-3xl p-4 max-w-sm w-full"
           >
             <div className="space-y-2">
@@ -4285,7 +4285,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 }}
                 className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
               >
-                <SaveIcon size={18} className="text-cyan-300" /> Save / Load
+                <SaveIcon size={18} className="text-cyan-300" /> {t('shell.quickActions.save_load')}
               </button>
               {!gameState.challenge && (
                 <button
@@ -4296,7 +4296,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   }}
                   className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
                 >
-                  <LineChart size={18} className="text-violet-300" /> Run summary card
+                  <LineChart size={18} className="text-violet-300" /> {t('shell.quickActions.run_summary_card')}
                 </button>
               )}
               <button
@@ -4307,7 +4307,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 }}
                 className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
               >
-                <Trophy size={18} className="text-amber-300" /> Quests
+                <Trophy size={18} className="text-amber-300" /> {t('shell.quickActions.quests')}
               </button>
               <button
                 type="button"
@@ -4317,7 +4317,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 }}
                 className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
               >
-                <BookOpen size={18} className="text-emerald-300" /> Glossary
+                <BookOpen size={18} className="text-emerald-300" /> {t('shell.quickActions.glossary')}
               </button>
               <button
                 type="button"
@@ -4327,7 +4327,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 }}
                 className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
               >
-                <Play size={18} className="text-sky-300" /> Tutorial videos
+                <Play size={18} className="text-sky-300" /> {t('shell.quickActions.tutorial_videos')}
               </button>
               <button
                 type="button"
@@ -4337,7 +4337,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 }}
                 className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
               >
-                <Settings size={18} className="text-purple-300" /> Accessibility
+                <Settings size={18} className="text-purple-300" /> {t('shell.quickActions.accessibility')}
               </button>
               <button
                 type="button"
@@ -4347,7 +4347,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
               >
                 {soundEnabled ? <Volume2 size={18} className="text-emerald-300" /> : <VolumeX size={18} className="text-rose-300" />}
-                {soundEnabled ? 'Mute' : 'Unmute'}
+                {soundEnabled ? t('shell.quickActions.mute') : t('shell.quickActions.unmute')}
               </button>
               {onBackToMenu && !isMultiplayer && (
                 <button
@@ -4359,7 +4359,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   }}
                   className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
                 >
-                  <Home size={18} className="text-slate-300" /> Back to Menu
+                  <Home size={18} className="text-slate-300" /> {t('shell.quickActions.back_to_menu')}
                 </button>
               )}
             </div>

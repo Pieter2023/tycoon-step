@@ -1,3 +1,4 @@
+import { useI18n, type Translate } from '../../i18n';
 import React from 'react';
 import { BriefcaseBusiness, GraduationCap, HeartPulse, LayoutDashboard, WalletCards } from 'lucide-react';
 
@@ -14,19 +15,19 @@ type DesktopShellProps = {
   children: React.ReactNode;
 };
 
-const navMetaFor = (label: string) => {
-  switch (label) {
-    case 'Money':
-      return { icon: WalletCards, description: 'Invest, bank, portfolio' };
-    case 'Career':
-      return { icon: BriefcaseBusiness, description: 'Salary, promotion, risk' };
-    case 'Learn':
-      return { icon: GraduationCap, description: 'Courses and credentials' };
-    case 'Life':
-      return { icon: HeartPulse, description: 'Lifestyle and side income' };
-    case 'Play':
+const navMetaFor = (path: string, t: Translate) => {
+  switch (path) {
+    case '/money':
+      return { icon: WalletCards, description: t('shell.desktopShell.invest_bank_portfolio') };
+    case '/career':
+      return { icon: BriefcaseBusiness, description: t('shell.desktopShell.salary_promotion_risk') };
+    case '/learn':
+      return { icon: GraduationCap, description: t('shell.desktopShell.courses_and_credentials') };
+    case '/life':
+      return { icon: HeartPulse, description: t('shell.desktopShell.lifestyle_and_side_income') };
+    case '/play':
     default:
-      return { icon: LayoutDashboard, description: 'Command center' };
+      return { icon: LayoutDashboard, description: t('shell.desktopShell.command_center') };
   }
 };
 
@@ -42,6 +43,7 @@ const DesktopShell: React.FC<DesktopShellProps> = ({
   month,
   children
 }) => {
+  const { t } = useI18n();
   const activeItem = navItems.find((item) => item.path === activePath) || navItems[0];
 
   return (
@@ -58,11 +60,11 @@ const DesktopShell: React.FC<DesktopShellProps> = ({
         </div>
 
         <nav className="mt-6 space-y-2">
-          <p className="px-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">Workspace</p>
+          <p className="px-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">{t('shell.desktopShell.workspace')}</p>
           <div className="space-y-2">
             {navItems.map((item) => {
               const isActive = item.path === activePath;
-              const meta = navMetaFor(item.label);
+              const meta = navMetaFor(item.path, t);
               const Icon = meta.icon;
               return (
                 <button
@@ -88,9 +90,9 @@ const DesktopShell: React.FC<DesktopShellProps> = ({
         </nav>
 
         <div className="mt-auto rounded-lg border border-slate-800 bg-slate-900/50 p-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Loop</p>
-          <p className="mt-2 text-sm font-semibold text-white">Plan, act, advance.</p>
-          <p className="mt-1 text-xs leading-5 text-slate-400">Every month should either improve cash flow, reduce risk, or buy future freedom.</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">{t('shell.desktopShell.loop')}</p>
+          <p className="mt-2 text-sm font-semibold text-white">{t('shell.desktopShell.plan_act_advance')}</p>
+          <p className="mt-1 text-xs leading-5 text-slate-400">{t('shell.desktopShell.every_month_should_either_improve')}</p>
         </div>
       </aside>
 
@@ -98,10 +100,10 @@ const DesktopShell: React.FC<DesktopShellProps> = ({
         <header className="sticky top-0 z-40 border-b border-slate-800/70 bg-slate-950/80 backdrop-blur-xl">
           <div className="flex min-h-[76px] items-center justify-between gap-5 px-6">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Current View</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t('shell.desktopShell.current_view')}</p>
               <h2 className="mt-1 text-2xl font-semibold text-white">{activeItem?.label || title}</h2>
               {typeof year === 'number' && typeof month === 'number' && (
-                <p className="mt-0.5 text-xs text-slate-400">Year {year} • Month {month}</p>
+                <p className="mt-0.5 text-xs text-slate-400">{t('shell.desktopShell.year_month', { year, month })}</p>
               )}
             </div>
             {headerActions && <div className="flex items-center gap-3">{headerActions}</div>}

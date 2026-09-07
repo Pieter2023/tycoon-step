@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React from 'react';
 import { ArrowRight, BookOpen, Clock, HeartPulse, Users, Zap } from 'lucide-react';
 import { MonthlyActionId } from '../../types';
@@ -30,6 +31,7 @@ const ActionCard: React.FC<{
   action: MonthlyActionCard;
   onSelectAction: (id: MonthlyActionId) => void;
 }> = ({ action, onSelectAction }) => {
+  const { t } = useI18n();
   return (
     <button
       type="button"
@@ -61,17 +63,18 @@ const MonthlyActionsPreview: React.FC<MonthlyActionsPreviewProps> = ({
   onSelectAction,
   onOpenDrawer
 }) => {
+  const { t } = useI18n();
   const previewActions = summary.actions.slice(0, 4);
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h4 className="text-base font-semibold">Monthly Actions</h4>
-          <p className="text-xs text-slate-400">Spend actions to boost income, skills, or recovery.</p>
+          <h4 className="text-base font-semibold">{t('shell.monthlyActionsPreview.monthly_actions')}</h4>
+          <p className="text-xs text-slate-400">{t('shell.monthlyActionsPreview.spend_actions_to_boost_income')}</p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-slate-400">Actions Remaining</p>
+          <p className="text-xs text-slate-400">{t('shell.monthlyActionsPreview.actions_remaining')}</p>
           <p className="text-lg font-semibold text-white">
             {summary.remaining} / {summary.max}
           </p>
@@ -91,8 +94,7 @@ const MonthlyActionsPreview: React.FC<MonthlyActionsPreviewProps> = ({
           onClick={onOpenDrawer}
           title="Open actions (A)"
           className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
-        >
-          View All Actions
+        >{t('shell.monthlyActionsPreview.view_all_actions')}
           <ArrowRight size={14} />
         </button>
       </div>

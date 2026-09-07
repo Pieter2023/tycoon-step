@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React from 'react';
 import { Briefcase, GraduationCap, HeartPulse, Sparkles } from 'lucide-react';
 import { calculateEffectiveMonthlySalary } from '../../services/gameLogic';
@@ -21,6 +22,7 @@ type ProfileScreenProps = {
 };
 
 const StatRow: React.FC<{ label: string; value: number; tone?: string }> = ({ label, value, tone }) => {
+  const { t } = useI18n();
   const clamped = Math.max(0, Math.min(100, value));
   return (
     <div>
@@ -50,7 +52,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   formatMoney,
   onNavigate
 }) => {
-  const jobTitle = gameState.playerJob?.title || gameState.career?.title || 'Career path';
+  const { t } = useI18n();
+  const jobTitle = gameState.playerJob?.title || gameState.career?.title || t('shell.profileScreen.career_path');
   const salary = calculateEffectiveMonthlySalary(gameState);
   const stats = gameState.stats || {
     happiness: 0,
@@ -83,13 +86,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
       <section className="glass-panel px-4 py-4 space-y-3">
         <div className="text-sm font-semibold text-white flex items-center gap-2">
-          <HeartPulse size={16} className="text-rose-300" /> Core Stats
+          <HeartPulse size={16} className="text-rose-300" />{t('shell.profileScreen.core_stats')}
         </div>
         <div className="space-y-3">
-          <StatRow label="Energy" value={stats.energy ?? 0} tone="bg-cyan-400" />
-          <StatRow label="Stress" value={stats.stress ?? 0} tone="bg-rose-400" />
-          <StatRow label="Happiness" value={stats.happiness ?? 0} tone="bg-emerald-400" />
-          <StatRow label="Health" value={stats.health ?? 0} tone="bg-amber-400" />
+          <StatRow label={t('shell.profileScreen.energy')} value={stats.energy ?? 0} tone="bg-cyan-400" />
+          <StatRow label={t('shell.profileScreen.stress')} value={stats.stress ?? 0} tone="bg-rose-400" />
+          <StatRow label={t('shell.profileScreen.happiness')} value={stats.happiness ?? 0} tone="bg-emerald-400" />
+          <StatRow label={t('shell.profileScreen.health')} value={stats.health ?? 0} tone="bg-amber-400" />
         </div>
       </section>
 
@@ -112,8 +115,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           className="glass-tile flex items-center justify-between px-4 py-3"
         >
           <div>
-            <p className="text-sm font-semibold text-white">Career</p>
-            <p className="text-xs text-slate-400">Promotions & milestones</p>
+            <p className="text-sm font-semibold text-white">{t('shell.profileScreen.career')}</p>
+            <p className="text-xs text-slate-400">{t('shell.profileScreen.promotions_milestones')}</p>
           </div>
           <Briefcase size={18} className="text-emerald-300" />
         </button>
@@ -123,8 +126,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           className="glass-tile flex items-center justify-between px-4 py-3"
         >
           <div>
-            <p className="text-sm font-semibold text-white">Learning</p>
-            <p className="text-xs text-slate-400">Certifications & rewards</p>
+            <p className="text-sm font-semibold text-white">{t('shell.profileScreen.learning')}</p>
+            <p className="text-xs text-slate-400">{t('shell.profileScreen.certifications_rewards')}</p>
           </div>
           <GraduationCap size={18} className="text-amber-300" />
         </button>

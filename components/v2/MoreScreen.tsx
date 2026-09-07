@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React from 'react';
 import { BookOpen, Heart, LayoutGrid, LineChart, Play, Save, Settings, TrendingUp, Trophy, Volume2, VolumeX, Briefcase } from 'lucide-react';
 
@@ -42,67 +43,68 @@ const MoreScreen: React.FC<MoreScreenProps> = ({
   onToggleAutoplay,
   onSetAutoplaySpeed
 }) => {
+  const { t } = useI18n();
   return (
     <div className="space-y-5">
       <section className="glass-panel px-4 py-4 space-y-2">
-        <h2 className="text-lg font-semibold text-white">Explore</h2>
+        <h2 className="text-lg font-semibold text-white">{t('shell.moreScreen.explore')}</h2>
         <div className="grid gap-2">
           <button type="button" onClick={() => onNavigate('/money')} className="glass-tile flex items-center gap-3 px-4 py-3">
             <TrendingUp size={18} className="text-emerald-300" />
-            <span className="text-sm font-semibold text-white">Money</span>
+            <span className="text-sm font-semibold text-white">{t('shell.moreScreen.money')}</span>
           </button>
           <button type="button" onClick={() => onNavigate('/career')} className="glass-tile flex items-center gap-3 px-4 py-3">
             <Briefcase size={18} className="text-blue-300" />
-            <span className="text-sm font-semibold text-white">Career</span>
+            <span className="text-sm font-semibold text-white">{t('shell.moreScreen.career')}</span>
           </button>
           <button type="button" onClick={() => onNavigate('/learn')} className="glass-tile flex items-center gap-3 px-4 py-3">
             <BookOpen size={18} className="text-amber-300" />
-            <span className="text-sm font-semibold text-white">Learn</span>
+            <span className="text-sm font-semibold text-white">{t('shell.moreScreen.learn')}</span>
           </button>
           <button type="button" onClick={() => onNavigate('/life')} className="glass-tile flex items-center gap-3 px-4 py-3">
             <Heart size={18} className="text-rose-300" />
-            <span className="text-sm font-semibold text-white">Life</span>
+            <span className="text-sm font-semibold text-white">{t('shell.moreScreen.life')}</span>
           </button>
         </div>
       </section>
 
       <section className="glass-panel px-4 py-4 space-y-2">
-        <h3 className="text-sm font-semibold text-white">Utilities</h3>
+        <h3 className="text-sm font-semibold text-white">{t('shell.moreScreen.utilities')}</h3>
         <div className="grid gap-2">
           <button type="button" onClick={onOpenSaveManager} className="glass-tile flex items-center gap-3 px-4 py-3">
             <Save size={18} className="text-cyan-300" />
-            <span className="text-sm font-semibold text-white">Save / Load</span>
+            <span className="text-sm font-semibold text-white">{t('shell.moreScreen.save_load')}</span>
           </button>
           {onOpenRunCard && (
             <button type="button" onClick={onOpenRunCard} className="glass-tile flex items-center gap-3 px-4 py-3">
               <LineChart size={18} className="text-violet-300" />
-              <span className="text-sm font-semibold text-white">Run summary card</span>
+              <span className="text-sm font-semibold text-white">{t('shell.moreScreen.run_summary_card')}</span>
             </button>
           )}
           <button type="button" onClick={onOpenQuests} className="glass-tile flex items-center gap-3 px-4 py-3">
             <Trophy size={18} className="text-amber-300" />
-            <span className="text-sm font-semibold text-white">Quests</span>
+            <span className="text-sm font-semibold text-white">{t('shell.moreScreen.quests')}</span>
           </button>
           <button type="button" onClick={onOpenGlossary} className="glass-tile flex items-center gap-3 px-4 py-3">
             <LayoutGrid size={18} className="text-emerald-300" />
-            <span className="text-sm font-semibold text-white">Glossary</span>
+            <span className="text-sm font-semibold text-white">{t('shell.moreScreen.glossary')}</span>
           </button>
           {onOpenTutorials && (
             <button type="button" onClick={onOpenTutorials} className="glass-tile flex items-center gap-3 px-4 py-3">
               <Play size={18} className="text-sky-300" />
-              <span className="text-sm font-semibold text-white">Tutorial videos</span>
+              <span className="text-sm font-semibold text-white">{t('shell.moreScreen.tutorial_videos')}</span>
             </button>
           )}
           <button type="button" onClick={onOpenAccessibility} className="glass-tile flex items-center gap-3 px-4 py-3">
             <Settings size={18} className="text-purple-300" />
-            <span className="text-sm font-semibold text-white">Accessibility</span>
+            <span className="text-sm font-semibold text-white">{t('shell.moreScreen.accessibility')}</span>
           </button>
         </div>
       </section>
 
       <section className="glass-panel px-4 py-4 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-slate-300">Autoplay</span>
+          <span className="text-sm text-slate-300">{t('shell.moreScreen.autoplay')}</span>
           <button
             type="button"
             onClick={onToggleAutoplay}
@@ -139,18 +141,18 @@ const MoreScreen: React.FC<MoreScreenProps> = ({
           })}
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-slate-300">Sound</span>
+          <span className="text-sm text-slate-300">{t('shell.moreScreen.sound')}</span>
           <button
             type="button"
             onClick={onToggleSound}
             className="inline-flex items-center gap-2 rounded-full border border-slate-700/70 px-3 py-1 text-xs text-slate-200"
           >
             {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
-            {soundEnabled ? 'Mute' : 'Unmute'}
+            {soundEnabled ? t('shell.moreScreen.mute') : t('shell.moreScreen.unmute')}
           </button>
         </div>
         <label className="flex items-center justify-between text-sm text-slate-300">
-          <span>Show month preview</span>
+          <span>{t('shell.moreScreen.show_month_preview')}</span>
           <input
             type="checkbox"
             className="rounded border-slate-600 bg-slate-900"

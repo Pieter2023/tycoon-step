@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React, { useMemo, useState } from 'react';
 import { Award, Bot, Briefcase, ChevronRight, Sparkles } from 'lucide-react';
 import Modal from '../Modal';
@@ -33,6 +34,7 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
   onPromote,
   onNavigate
 }) => {
+  const { t } = useI18n();
   const [showDetails, setShowDetails] = useState(false);
   const career = gameState.career;
   const levels = CAREER_PATHS[careerPath]?.levels || [];
@@ -42,9 +44,9 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
   const skills = useMemo(() => {
     return [
       buildSkillCard('EQ', gameState.eqCourse),
-      buildSkillCard('Negotiation', gameState.negotiationsCourse),
+      buildSkillCard(t('shell.careerPage.negotiation'), gameState.negotiationsCourse),
       buildSkillCard('Sales', gameState.salesAcceleratorCourse),
-      buildSkillCard('Compound Interest', gameState.compoundInterestCourse)
+      buildSkillCard(t('shell.careerPage.compound_interest'), gameState.compoundInterestCourse)
     ];
   }, [gameState.eqCourse, gameState.negotiationsCourse, gameState.salesAcceleratorCourse, gameState.compoundInterestCourse]);
 
@@ -57,17 +59,16 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
               {CAREER_PATHS[careerPath]?.icon || '💼'}
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">{career?.title || 'Unemployed'}</h2>
-              <p className="text-sm text-emerald-300">{CAREER_PATHS[careerPath]?.name || 'Unknown Path'}</p>
-              <p className="text-xs text-slate-400 mt-1">Monthly salary: {formatMoney(cashFlow.salary)}</p>
+              <h2 className="text-2xl font-bold text-white">{career?.title || t('shell.careerPage.unemployed')}</h2>
+              <p className="text-sm text-emerald-300">{CAREER_PATHS[careerPath]?.name || t('shell.careerPage.unknown_path')}</p>
+              <p className="text-xs text-slate-400 mt-1">{t('shell.careerPage.monthly_salary', { amount: formatMoney(cashFlow.salary) })}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={() => setShowDetails(true)}
             className="inline-flex items-center gap-2 rounded-md border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-slate-500 hover:text-white"
-          >
-            View full career details
+          >{t('shell.careerPage.view_full_career_details')}
             <ChevronRight size={14} />
           </button>
         </div>
@@ -76,25 +77,25 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
       <section className="grid gap-6 lg:grid-cols-3">
         <div className="glass-panel p-6 lg:col-span-2">
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Briefcase size={18} className="text-emerald-300" /> Career Summary
+            <Briefcase size={18} className="text-emerald-300" />{t('shell.careerPage.career_summary')}
           </h3>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div className="glass-tile p-4">
-              <p className="text-xs text-slate-400">Current Level</p>
+              <p className="text-xs text-slate-400">{t('shell.careerPage.current_level')}</p>
               <p className="text-lg font-semibold text-white">{career?.level || 1}</p>
-              <p className="text-xs text-slate-500 mt-1">Experience: {career?.experience || 0} mo</p>
+              <p className="text-xs text-slate-500 mt-1">{t('shell.careerPage.experience_months', { months: career?.experience || 0 })}</p>
             </div>
             <div className="glass-tile p-4">
-              <p className="text-xs text-slate-400">Next Growth Option</p>
+              <p className="text-xs text-slate-400">{t('shell.careerPage.next_growth_option')}</p>
               {nextLevel ? (
                 <>
                   <p className="text-sm font-semibold text-white">{nextLevel.title}</p>
                   <p className="text-xs text-slate-500 mt-1">
-                    {formatMoney(nextLevel.baseSalary)}/mo • {nextLevel.experienceRequired} mo exp
+                    {t('shell.careerPage.salary_and_exp', { salary: formatMoney(nextLevel.baseSalary), months: nextLevel.experienceRequired })}
                   </p>
                 </>
               ) : (
-                <p className="text-sm text-slate-300">Max level reached.</p>
+                <p className="text-sm text-slate-300">{t('shell.careerPage.max_level_reached')}</p>
               )}
             </div>
             <button
@@ -102,26 +103,25 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
               onClick={() => onNavigate('/life', 'sidehustles')}
               className="glass-tile p-4 text-left transition-all hover:-translate-y-0.5 hover:border-purple-400/60 hover:shadow-[0_16px_40px_rgba(168,85,247,0.18)]"
             >
-              <p className="text-xs text-slate-400">Side Hustles</p>
-              <p className="text-sm font-semibold text-white mt-1">Add a hustle income stream</p>
-              <p className="text-[11px] text-purple-300 mt-2">Open side hustles →</p>
+              <p className="text-xs text-slate-400">{t('shell.careerPage.side_hustles')}</p>
+              <p className="text-sm font-semibold text-white mt-1">{t('shell.careerPage.add_a_hustle_income_stream')}</p>
+              <p className="text-[11px] text-purple-300 mt-2">{t('shell.careerPage.open_side_hustles')}</p>
             </button>
           </div>
           <div className="mt-6 glass-tile p-4">
             <div className="flex items-center gap-2">
               <Bot size={16} className="text-purple-300" />
-              <p className="text-sm font-semibold text-white">AI Disruption Impact</p>
+              <p className="text-sm font-semibold text-white">{t('shell.careerPage.ai_disruption_impact')}</p>
             </div>
             <p className="text-xs text-slate-400 mt-2">
-              Disruption level: {(gameState.aiDisruption?.disruptionLevel || 0).toFixed(0)}% • Risk:{' '}
-              {aiImpact?.automationRisk || 'LOW'}
+              {t('shell.careerPage.disruption_line', { level: (gameState.aiDisruption?.disruptionLevel || 0).toFixed(0), risk: aiImpact?.automationRisk || 'LOW' })}
             </p>
           </div>
         </div>
 
         <div className="glass-panel p-6">
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Sparkles size={18} className="text-amber-300" /> Skills
+            <Sparkles size={18} className="text-amber-300" />{t('shell.careerPage.skills')}
           </h3>
           <div className="mt-4 space-y-3">
             {skills.map((skill) => (
@@ -130,11 +130,11 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
                   <p className="text-sm font-semibold text-white">{skill.label}</p>
                   <div className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] ${skill.certified ? 'border-emerald-500/40 bg-emerald-600/20 text-emerald-200' : 'border-slate-700 text-slate-400'}`}>
                     <Award size={12} />
-                    {skill.certified ? 'Certified' : 'Not certified'}
+                    {skill.certified ? t('shell.careerPage.certified') : t('shell.careerPage.not_certified')}
                   </div>
                 </div>
-                <p className="text-xs text-slate-400 mt-2">Best score: {skill.score}</p>
-                {!skill.certified && <p className="text-[11px] text-slate-500 mt-1">Attempts: {skill.attempts}</p>}
+                <p className="text-xs text-slate-400 mt-2">{t('shell.careerPage.best_score', { score: skill.score })}</p>
+                {!skill.certified && <p className="text-[11px] text-slate-500 mt-1">{t('shell.careerPage.attempts', { count: skill.attempts })}</p>}
               </div>
             ))}
           </div>
@@ -142,7 +142,7 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
       </section>
 
       <section className="glass-panel p-6">
-        <h3 className="text-lg font-semibold">Progression</h3>
+        <h3 className="text-lg font-semibold">{t('shell.careerPage.progression')}</h3>
         <div className="mt-4 space-y-2">
           {levels.map((level, idx) => {
             const isCurrent = currentLevel === idx + 1;
@@ -161,7 +161,7 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
                 </div>
                 <div className="flex-1">
                   <p className={`text-sm ${isCurrent ? 'text-white font-semibold' : 'text-slate-300'}`}>{level.title}</p>
-                  <p className="text-xs text-slate-500">{formatMoney(level.baseSalary)}/mo • {level.experienceRequired} mo exp</p>
+                  <p className="text-xs text-slate-500">{t('shell.careerPage.salary_and_exp', { salary: formatMoney(level.baseSalary), months: level.experienceRequired })}</p>
                 </div>
               </div>
             );
@@ -172,7 +172,7 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
       <Modal
         isOpen={showDetails}
         onClose={() => setShowDetails(false)}
-        ariaLabel="Career details"
+        ariaLabel={t('shell.careerPage.career_details')}
         overlayClassName="items-stretch justify-end"
         contentClassName="h-full max-w-2xl rounded-none rounded-l-3xl p-6 overflow-y-auto"
       >
@@ -192,12 +192,12 @@ export const CareerPageLayout: React.FC<CareerPageLayoutProps> = ({
 };
 
 const CareerPage: React.FC = () => {
+  const { t } = useI18n();
   return (
     <div className="space-y-6">
       <section className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6">
-        <h2 className="text-2xl font-bold">Career</h2>
-        <p className="mt-2 text-sm text-slate-400">
-          Career progression, salary growth, and AI disruption insights will be organized here.
+        <h2 className="text-2xl font-bold">{t('shell.careerPage.career')}</h2>
+        <p className="mt-2 text-sm text-slate-400">{t('shell.careerPage.career_progression_salary_growth_and')}
         </p>
       </section>
     </div>

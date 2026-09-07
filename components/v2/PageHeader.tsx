@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import React from 'react';
 import { FastForward, Pause, Play } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -42,6 +43,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   onToggleAutoplay,
   onSetAutoplaySpeed
 }) => {
+  const { t } = useI18n();
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex items-center gap-4">
@@ -53,9 +55,9 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           )}
         </div>
         <div>
-          <p className="text-sm text-slate-400">Player</p>
+          <p className="text-sm text-slate-400">{t('shell.pageHeader.player')}</p>
           <h2 className="text-lg font-semibold text-white">{playerName}</h2>
-          <p className="text-xs text-slate-500">Year {year} • Month {month}</p>
+          <p className="text-xs text-slate-500">{t('shell.pageHeader.year_month', { year, month })}</p>
         </div>
       </div>
 
@@ -67,10 +69,10 @@ const PageHeader: React.FC<PageHeaderProps> = ({
             onClick={onNextMonth}
             disabled={nextMonthDisabled}
             className="px-6"
-            title="Next Month (N)"
+            title={t('shell.pageHeader.next_month_shortcut')}
           >
             {isProcessing ? <Pause size={18} className="animate-spin" /> : <Play size={18} />}
-            <span>Next Month</span>
+            <span>{t('shell.pageHeader.next_month')}</span>
           </Button>
         </motion.div>
       </div>
@@ -81,12 +83,12 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           size="sm"
           onClick={onToggleAutoplay}
           title={`${autoplayTooltip} • Shortcut: T`}
-          aria-label="Autoplay toggle"
+          aria-label={t('shell.pageHeader.autoplay_toggle')}
           aria-pressed={autoplayEnabled}
           className={autoplayEnabled ? 'border-amber-500/40 text-amber-200 bg-amber-600/20' : ''}
         >
           {autoplayEnabled ? <FastForward size={16} /> : <Pause size={16} />}
-          <span className="text-sm font-semibold">Autoplay</span>
+          <span className="text-sm font-semibold">{t('shell.pageHeader.autoplay')}</span>
           <span className={`text-xs font-semibold ${autoplayEnabled ? 'text-amber-200' : 'text-slate-400'}`}>
             {autoplayLabel}
           </span>

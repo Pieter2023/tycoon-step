@@ -29,6 +29,7 @@ type I18nContextValue = {
 };
 
 export const I18nContext = createContext<I18nContextValue | null>(null);
+export type Translate = I18nContextValue['t'];
 
 const interpolate = (template: string, params?: Record<string, string | number>) => {
   if (!params) return template;

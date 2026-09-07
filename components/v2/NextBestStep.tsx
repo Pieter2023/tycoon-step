@@ -118,7 +118,7 @@ const NextBestStep: React.FC<NextBestStepProps> = ({
 
       <div className="space-y-3">
         {recommended.length === 0 ? (
-          <p className="text-sm text-slate-400">No active goals yet. Advance time to unlock new quests.</p>
+          <p className="text-sm text-slate-400">{t('shell.nextBestStep.no_active_goals_yet_advance')}</p>
         ) : (
           recommended.map((qid) => {
             const info = getQuestProgress(gameState, qid);
