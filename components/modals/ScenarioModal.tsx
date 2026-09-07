@@ -49,6 +49,8 @@ interface ScenarioModalProps {
   onOpenImage: (src: string, alt: string) => void;
   onChoose: (optionIndex: number) => void;
   onExploreTown?: () => void;
+  /** Why an option is closed to this player (an insured option without the policy), or null when open. */
+  lockedOption?: (label: string) => string | null;
 }
 
 const ScenarioModal: React.FC<ScenarioModalProps> = ({
@@ -62,6 +64,7 @@ const ScenarioModal: React.FC<ScenarioModalProps> = ({
   onToggleAutoplay,
   onOpenImage,
   onChoose,
+  lockedOption,
   onExploreTown
 }) => {
   const { t } = useI18n();
@@ -153,17 +156,19 @@ const ScenarioModal: React.FC<ScenarioModalProps> = ({
         ref={optionsRef}
         className={`space-y-3 ${optionsHighlightClass}`}
       >
-        {scenario.options.map((opt, idx) => (
+        {scenario.options.map((opt, idx) => { const locked = lockedOption?.(opt.label) ?? null; return (
           <motion.div
             key={idx}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
+            whileHover={{ scale: locked ? 1 : 1.01 }}
+            whileTap={{ scale: locked ? 1 : 0.99 }}
           >
             <Button
               fullWidth
               variant="secondary"
-              onClick={() => onChoose(idx)}
-              className="justify-between text-left"
+              onClick={() => { if (!locked) onChoose(idx); }}
+              disabled={!!locked}
+              className={`justify-between text-left${locked ? ' opacity-60' : ''}`}
+              title={locked ?? undefined}
             >
               <span className="text-white font-medium">{t(opt.label)}</span>
               {opt.outcome.cashChange !== 0 && opt.outcome.cashChange !== undefined && (
@@ -172,8 +177,9 @@ const ScenarioModal: React.FC<ScenarioModalProps> = ({
                 </span>
               )}
             </Button>
+            {locked && <p className="mt-1 px-2 text-xs text-amber-300">🔒 {locked}</p>}
           </motion.div>
-        ))}
+        ); })}
       </div>
     </Modal>
   );

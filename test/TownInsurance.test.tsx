@@ -3,7 +3,7 @@ import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { INITIAL_GAME_STATE, CHARACTERS, LIFE_EVENTS } from '../constants';
 import { AssetType, GameState } from '../types';
-import { pricesCover, premiumFor, insurancePremiums, offers, buyPolicy, cancelPolicy, settleClaim, settleRepairs, applyClaim, ledger, COVERAGE, REPAIR_DEDUCTIBLE, LOADING_PER_CLAIM } from '../services/townInsurance';
+import { pricesCover, optionLocked, premiumFor, insurancePremiums, offers, buyPolicy, cancelPolicy, settleClaim, settleRepairs, applyClaim, ledger, COVERAGE, REPAIR_DEDUCTIBLE, LOADING_PER_CLAIM } from '../services/townInsurance';
 import { applyScenarioOutcome, calculateMonthlyCashFlow, calculateMonthlyCashFlowEstimate, processTurn, clearSimSeed } from '../services/gameLogic';
 import { adviseFrom } from '../services/townAdvisor';
 import InsurancePanel from '../components/town/InsurancePanel';
@@ -17,16 +17,17 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); clearSimSeed(); });
 describe('insurance at the bank', () => {
   it('prices premiums by deductible, by what you own, and by recent claims', () => {
     const s = base();
-    expect(COVERAGE.health.deductibles.map(d => premiumFor(s, 'health', d))).toEqual([380, 260, 170]);
-    expect(premiumFor(s, 'property')).toBe(110 + (s.vehicles?.length ?? 0) * 45);
+    expect(COVERAGE.health.deductibles.map(d => premiumFor(s, 'health', d))).toEqual(COVERAGE.health.base);
+    expect(premiumFor(s, 'property')).toBe(COVERAGE.property.base[0] + (s.vehicles?.length ?? 0) * 45);
     const withStuff = base({ vehicles: [{ id: 'v', name: 'Car', value: 9000, age: 3, monthlyMaintenance: 120, hasLoan: false }], assets: [cart, { ...cart, id: 'r', marketItemId: 'starter_home', name: 'Home', type: AssetType.REAL_ESTATE, value: 200000 }] });
-    expect(premiumFor(withStuff, 'property')).toBe(110 + 45 + 60);
+    expect(premiumFor(withStuff, 'property')).toBe(COVERAGE.property.base[0] + 45 + 60);
     expect(premiumFor(withStuff, 'business')).toBe(Math.round(80 + 1500 * .005 / 12));
     expect(offers(s).find(o => o.id === 'business')?.available).toBe(false); expect(offers(withStuff).find(o => o.id === 'business')?.available).toBe(true);
     const claimed = { ...s, insurance: { policies: { health: { since: 1, deductible: 2000 } }, claims: [{ month: 10, policy: 'health' as const, event: 'x', loss: 5000, paid: 2400 }, { month: 11, policy: 'health' as const, event: 'y', loss: 5000, paid: 2400 }], premiumsPaid: 0 } };
-    expect(premiumFor(claimed, 'health')).toBe(Math.round(260 * (1 + 2 * LOADING_PER_CLAIM)));
+    const mid = COVERAGE.health.base[1];
+    expect(premiumFor(claimed, 'health')).toBe(Math.round(mid * (1 + 2 * LOADING_PER_CLAIM)));
     expect(insurancePremiums(claimed)).toBe(premiumFor(claimed, 'health'));
-    const old = { ...claimed, month: 40 }; expect(premiumFor(old, 'health')).toBe(260);
+    const old = { ...claimed, month: 40 }; expect(premiumFor(old, 'health')).toBe(mid);
   });
   it('takes out and cancels cover, and lands the premium in the bills', () => {
     const s = base();
@@ -34,19 +35,23 @@ describe('insurance at the bank', () => {
     expect(covered.insurance?.policies.health).toEqual({ since: 12, deductible: 2000 }); expect(covered.events[0].title).toMatch(/Health cover taken out/);
     expect(buyPolicy(covered, 'health', 500)).toBe(covered); expect(buyPolicy(s, 'health', 999)).toBe(s); expect(buyPolicy(s, 'business', 500)).toBe(s);
     expect(buyPolicy({ ...s, pendingScenario: ev('appendicitis') }, 'health', 500).insurance).toBeUndefined();
-    expect(calculateMonthlyCashFlowEstimate(covered).expenses - calculateMonthlyCashFlowEstimate(s).expenses).toBe(260);
-    expect(calculateMonthlyCashFlow(covered).insurancePremiums).toBe(260);
+    const mid = COVERAGE.health.base[1];
+    expect(calculateMonthlyCashFlowEstimate(covered).expenses - calculateMonthlyCashFlowEstimate(s).expenses).toBe(mid);
+    expect(calculateMonthlyCashFlow(covered).insurancePremiums).toBe(mid);
     const cancelled = cancelPolicy(covered, 'health'); expect(cancelled.insurance?.policies.health).toBeUndefined(); expect(cancelPolicy(s, 'health')).toBe(s);
     vi.spyOn(Math, 'random').mockReturnValue(.5);
     const turn = processTurn(covered);
-    expect(turn.monthlyReport.insurancePremiums).toBe(260); expect(turn.newState.insurance?.premiumsPaid).toBe(260);
-    expect(ledger(turn.newState)).toMatchObject({ premiumsPaid: 260, claimsPaid: 0, monthly: 260 });
+    expect(turn.monthlyReport.insurancePremiums).toBe(mid); expect(turn.newState.insurance?.premiumsPaid).toBe(mid);
+    expect(ledger(turn.newState)).toMatchObject({ premiumsPaid: mid, claimsPaid: 0, monthly: mid });
   });
   it('pays its share of a covered shock above the deductible, and only when the event did not price cover itself', () => {
     const s = buyPolicy(base(), 'health', 2000);
     expect(settleClaim(s, 'appendicitis', 'No insurance - pay full ($25,000) 💀', 25000)).toMatchObject({ policy: 'health', loss: 25000, paid: 18400 });
     expect(settleClaim(s, 'appendicitis', 'Use insurance ($3,000 deductible) 🏥', 3000)).toBeNull();
     expect(settleClaim(s, 'car_accident', 'They were uninsured ($4,000) 😱', 4000)).toBeNull();
+    expect(optionLocked(base(), 'appendicitis', 'Use insurance ($3,000 deductible) 🏥')).toBe('health'); expect(optionLocked(s, 'appendicitis', 'Use insurance ($3,000 deductible) 🏥')).toBeUndefined();
+    expect(optionLocked(base(), 'appendicitis', 'No insurance - pay full ($25,000) 💀')).toBeUndefined(); expect(optionLocked(base(), 'car_accident', 'Their insurance covers it 📋')).toBeUndefined();
+    expect(optionLocked(base(), 'car_theft', 'File insurance claim 📝')).toBe('property'); expect(optionLocked(base(), 'identity_theft', 'Let insurance deal with it 📋')).toBeUndefined();
     expect(settleClaim(s, 'annual_checkup', 'Full checkup', 300)).toBeNull();
     expect(['Use insurance ($3,000 deductible) 🏥', 'File insurance claim 📝', 'Their insurance covers it 📋', 'Let insurance deal with it 📋'].map(pricesCover)).toEqual([true, true, true, true]);
     expect(['No insurance - pay full ($25,000) 💀', 'They were uninsured ($4,000) 😱', 'No insurance - total loss 😭', 'Pay full'].map(pricesCover)).toEqual([false, false, false, false]);
@@ -56,7 +61,7 @@ describe('insurance at the bank', () => {
     expect(after.cash).toBe(30000 - 25000 + 18400); expect(after.insurance?.claims).toHaveLength(1); expect(after.events.some(e => /Claim paid: /.test(e.title))).toBe(true);
     const bare = applyScenarioOutcome({ ...base(), pendingScenario: ev('appendicitis') }, { cashChange: -25000, message: 'ouch' }, 'No insurance - pay full ($25,000) 💀');
     expect(bare.cash).toBe(5000); expect(bare.insurance).toBeUndefined();
-    expect(premiumFor(after, 'health')).toBe(Math.round(260 * (1 + LOADING_PER_CLAIM)));
+    expect(premiumFor(after, 'health')).toBe(Math.round(COVERAGE.health.base[1] * (1 + LOADING_PER_CLAIM)));
   });
   it('business cover pays the repair bill above the deductible and the claim raises the premium', () => {
     const shop = buyPolicy(base({ assets: [cart] }), 'business', 500);
@@ -71,7 +76,7 @@ describe('insurance at the bank', () => {
     render(<InsurancePanel state={base()} disabled={false} onBuyPolicy={onBuyPolicy} onCancelPolicy={onCancelPolicy} />);
     const health = screen.getByLabelText('Health cover');
     expect(health.textContent).toMatch(/\$25,000\. With cover you pay \$5,400; without, \$25,000/);
-    fireEvent.click(screen.getByText('$2,000 deductible · $260/mo'));
+    fireEvent.click(screen.getByText(`$2,000 deductible · $${COVERAGE.health.base[1]}/mo`));
     fireEvent.click(health.querySelector('button.town-primary')!);
     expect(onBuyPolicy).toHaveBeenCalledWith('health', 2000);
     expect(screen.getByLabelText('Business cover').textContent).toMatch(/Needs a business/);
@@ -82,6 +87,6 @@ describe('insurance at the bank', () => {
     cleanup();
     render(<TellerPanel state={buyPolicy(base(), 'health', 500)} disabled={false} loans={[]} onLoans={() => {}} onReserve={() => {}} onBusiness={() => {}} />);
     fireEvent.click(screen.getByText(/^Insurance/));
-    expect(screen.getByLabelText('Health cover').textContent).toMatch(/\$380\/mo · since month 12/);
+    expect(screen.getByLabelText('Health cover').textContent).toMatch(new RegExp(`\\$${COVERAGE.health.base[0]}/mo · since month 12`));
   });
 });

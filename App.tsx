@@ -1,7 +1,7 @@
 import { resolveCafeService } from './services/cafeService';
 import { fileUnemploymentClaim, benefitEligibility, benefitStatus } from './services/townBenefits';
 import { contributeCollegeFund } from './services/townFamily';
-import { buyPolicy, cancelPolicy } from './services/townInsurance';
+import { buyPolicy, cancelPolicy, optionLocked, COVERAGE } from './services/townInsurance';
 import { buyVehicle, sellVehicle } from './services/townGarage';
 import { askForRaise, switchCareer, careerChangeEligibility, jobSearch, acceptRecoveryPlan } from './services/townCareer';
 import { tl } from './i18n/town';
@@ -1982,6 +1982,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
     const scenario = gameState.pendingScenario;
     const option = scenario.options[idx];
     const outcome: any = option.outcome;
+    // An insured option needs the policy from the city bank; the button is disabled, this is the belt to its braces.
+    if (optionLocked(gameState, scenario.id, option.label)) return;
 
     const labelLower = (option.label || '').toLowerCase();
 
@@ -3620,6 +3622,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
       {gameState.pendingScenario && !showTown && (
         <ScenarioModal
           scenario={gameState.pendingScenario}
+          lockedOption={label => { const p = optionLocked(gameState, gameState.pendingScenario!.id, label); return p ? `Needs ${COVERAGE[p].name()} from the Community Bank. Without it, the uninsured option is yours.` : null; }}
           optionsRef={coachAssetsSellRef}
           optionsHighlightClass={coachHighlight('assets-sell')}
           reduceMotion={reduceMotion}
