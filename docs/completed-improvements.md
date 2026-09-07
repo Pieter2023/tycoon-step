@@ -526,6 +526,12 @@ Pieter's pick after the balance pass: "Fix Marcus Johnson so he can survive a do
 
 Validation: 365 tests across 65 files, TypeScript, build and `git diff --check` clean.
 
+## Dead components removed — September 7, 2026 (build 36)
+
+Pieter's pick: "Remove the dead CharacterSelect component, keep going." `components/CharacterSelect.tsx` was imported by `App.tsx` but never rendered; the character cards are inline in App. Removing it prompted a scan for other source files with no importer outside tests. Six more were dead, all from the June UI overhaul and its aborted "new UI root": `components/NewUiRoot.tsx`, `components/FinancialFreedomBreakdown.tsx` (plus its snapshot test, which exercised nothing live), `components/ActionCard.tsx`, `components/v2/SidebarShell.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`. Their only remaining mentions were in the untracked graphify output. `components/INTEGRATION_GUIDE.md` (the overhaul's wiring notes) carries a historical banner now.
+
+Validation: 363 tests across 64 files (the removed snapshot test held two), TypeScript, build and `git diff --check` clean; the production bundle is unchanged in behaviour.
+
 ## Where the sessions stopped (September 6, 2026, morning)
 
 Overnight (23:00 to about 01:00 PDT) nine builds shipped: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. The morning session (about 06:00 to 07:30 PDT) added eight more, each verified in Chrome, receipted above and pushed to `origin/main`: the townhouse around the apartment door and the camera-canopy fix; adaptive graphics quality; petite women with A-line skirts; residents that make room; Freedom Day; the city accessibility pass; Main Street Offices (pay stub, promotion outlook, job security); the neighbourhood tour with download progress and the city open after winning; and Rosa's promotion nudge.

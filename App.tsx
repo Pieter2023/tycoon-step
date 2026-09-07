@@ -86,7 +86,6 @@ import { track } from './services/analytics';
 import CollapsibleSection from './components/ui/CollapsibleSection';
 import { ToastContainer, useToast } from './components/ui/Toast';
 import KeyboardShortcutsOverlay from './components/KeyboardShortcutsOverlay';
-import CharacterSelect from './components/CharacterSelect';
 import CommandDashboard from './components/v2/CommandDashboard';
 
 // Hooks

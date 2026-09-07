@@ -2,7 +2,7 @@
 
 ## Current handover — September 5, 2026
 
-Read [HANDOVER.md](HANDOVER.md) before acting. The whole 3D city (Freedom Square, bank with the insurance desk, cart, café, Exchange, property office, home with the family and the parking bay, Rosa, notice board with the quest log, workplace, community college, three guided arcs) is **committed and live**; only `graphify-out/` stays untracked. Latest validation: 365 tests / 65 files and production build passed (Marcus bootstraps, build 35, 2026-09-07; receipts in docs/completed-improvements.md). Pushed to `origin/main` and live on Netlify `tycoonjan22026` (deploy `6a9d135b…` of commit `35a074d`, verified 2026-09-06 00:20 PDT). The town scene is a code-split `TownModal-*.js` chunk, so verify town deploys by grepping that chunk, not the `index-*.js` hash. The user preview is `127.0.0.1:5187`; isolate QA on 5188. Preserve the existing save and all tracked/untracked work. Pieter authorised push + deploy on 2026-09-05 night and the branch is now live; treat further deploys as routine after green tests and a Chrome check.
+Read [HANDOVER.md](HANDOVER.md) before acting. The whole 3D city (Freedom Square, bank with the insurance desk, cart, café, Exchange, property office, home with the family and the parking bay, Rosa, notice board with the quest log, workplace, community college, three guided arcs) is **committed and live**; only `graphify-out/` stays untracked. Latest validation: 363 tests / 64 files and production build passed (dead components removed, build 36, 2026-09-07; receipts in docs/completed-improvements.md). Pushed to `origin/main` and live on Netlify `tycoonjan22026` (deploy `6a9d135b…` of commit `35a074d`, verified 2026-09-06 00:20 PDT). The town scene is a code-split `TownModal-*.js` chunk, so verify town deploys by grepping that chunk, not the `index-*.js` hash. The user preview is `127.0.0.1:5187`; isolate QA on 5188. Preserve the existing save and all tracked/untracked work. Pieter authorised push + deploy on 2026-09-05 night and the branch is now live; treat further deploys as routine after green tests and a Chrome check.
 
 Current feature/source map and run instructions are in the handover. Detailed evidence is in [docs/completed-improvements.md](docs/completed-improvements.md); remaining priorities are in [docs/roadmap.md](docs/roadmap.md). Physical-phone testing remains open. No new paid service is needed for the implemented prototype.
 
@@ -49,7 +49,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
   bankruptcy modal, the shared Quick-actions menu, MoreScreen)
 - `constants.ts` — careers, investments, events, education, difficulty settings
 - `data/events.json` — additional life events
-- `components/v2/` — THE shell UI (DesktopShell sidebar / MobileShell
+- `components/v2/` — THE shell UI (DesktopShell sidebar / MobileShell; the June SidebarShell/DashboardScreen/DashboardScreenEnhanced files were dead and were removed 2026-09-07
   bottom-nav; `isMobileViewport` via matchMedia picks one). Both share
   the "Quick actions" overflow Modal in App.tsx (`overflowMenuOpen`,
   aria "More options"/"Quick actions"): Save/Load, Run summary card,

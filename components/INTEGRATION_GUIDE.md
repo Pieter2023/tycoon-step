@@ -1,3 +1,5 @@
+> **Historical (June 2026 UI overhaul).** This guide described how the overhaul components were first wired into `App.tsx`. The wiring is long done; `components/CharacterSelect.tsx` was removed on 2026-09-07 because the character cards are rendered inline in `App.tsx`. Keep this file as a record only.
+
 # Integration Guide - New Components
 
 This guide shows how to integrate the new components (Collapsible Sections, Toast, Confetti, Keyboard Shortcuts, and improved Character Select) into the existing App.tsx.
