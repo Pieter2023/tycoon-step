@@ -10,18 +10,26 @@ import { TIERS } from './townHome';
 import { tl } from '../../i18n/town';
 
 const money = (n: number) => (n < 0 ? '-' : '') + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
-type Props = { state: GameState; disabled: boolean; onChangeLifestyle?: (lifestyle: Lifestyle) => void; onGo?: (place: NonNullable<ReturnType<typeof adviseFrom>[number]['place']>) => void; onStartHustle?: (hustle: SideHustle) => void; onStopHustle?: (id: string) => void; onChooseUpgrade?: () => void; workActions?: MonthlyActionsSummary; onMonthlyAction?: (id: MonthlyActionId) => void; onCollegeFund?: (childId: string, amount: number) => void };
+type Props = { state: GameState; disabled: boolean; onSleep?: () => void; onChangeLifestyle?: (lifestyle: Lifestyle) => void; onGo?: (place: NonNullable<ReturnType<typeof adviseFrom>[number]['place']>) => void; onStartHustle?: (hustle: SideHustle) => void; onStopHustle?: (id: string) => void; onChooseUpgrade?: () => void; workActions?: MonthlyActionsSummary; onMonthlyAction?: (id: MonthlyActionId) => void; onCollegeFund?: (childId: string, amount: number) => void };
 
 // The desk at home: what your place costs and gives, the bills pinned to the fridge, the mail
 // (this month's decisions and events), the bookshelf, and a sticky note from Rosa.
-export default function HomePanel({ state, disabled, onChangeLifestyle, onGo, onStartHustle, onStopHustle, onChooseUpgrade, workActions, onMonthlyAction, onCollegeFund }: Props) {
+export default function HomePanel({ state, disabled, onSleep, onChangeLifestyle, onGo, onStartHustle, onStopHustle, onChooseUpgrade, workActions, onMonthlyAction, onCollegeFund }: Props) {
   const home = household(state);
   const cards = hustleCards(state), desk = hustleDeskSummary(state), sprint = workActions?.actions.find(a => a.id === 'HUSTLE_SPRINT'), pending = state.pendingSideHustleUpgrade;
   const flow = calculateMonthlyCashFlowEstimate(state), current = LIFESTYLE_OPTS[state.lifestyle];
   const debtPayments = state.liabilities.reduce((s, l) => s + l.monthlyPayment, 0) + (state.mortgages ?? []).reduce((s, m) => s + m.monthlyPayment, 0);
   const share = Math.round(current.cost / Math.max(1, flow.income) * 100);
   const mail = state.events.slice(0, 4), advice = adviseFrom(state)[0];
+  // The report of the month just closed, delivered as mail on the desk (only once a month has closed).
+  const mailReport = state.lastMonthlyReport && state.lastMonthlyReport.month === state.month ? state.lastMonthlyReport : undefined;
   return <>
+    {onSleep && <div className="town-lesson town-sleep"><strong>🌙 {tl('Sleep until next month','Dormir hasta el próximo mes')}</strong>
+      <p>{tl('Ends the month here: pay arrives, bills and tax leave, investments move. The morning brings the mail.','Cierra el mes aquí: llega el sueldo, salen las facturas y los impuestos, las inversiones se mueven. La mañana trae el correo.')}</p>
+      <button className="town-primary" disabled={disabled} onClick={onSleep}>{tl('Go to bed','Irse a dormir')}</button></div>}
+    {mailReport && <div className="town-lesson town-mail" aria-label={tl("This morning's mail","El correo de esta mañana")}><strong>✉️ {tl("This morning's mail","El correo de esta mañana")} · {tl('month','mes')} {mailReport.month}</strong>
+      <dl className="town-bills"><div><dt>{tl('Money in','Entró')}</dt><dd>+{money(mailReport.income)}</dd></div><div><dt>{tl('Of that, from investments and businesses','De eso, de inversiones y negocios')}</dt><dd>{money(mailReport.investmentIncome)}</dd></div><div><dt>{tl('Money out, tax included','Salió, impuestos incluidos')}</dt><dd>−{money(mailReport.expenses)}</dd></div><div><dt>{tl('Cash now','Efectivo ahora')}</dt><dd className={mailReport.cashAfter < mailReport.cashBefore ? 'town-caution' : ''}>{money(mailReport.cashAfter)}</dd></div><div><dt>{tl('Investment prices moved','Precios de las inversiones')}</dt><dd>{mailReport.marketChange >= 0 ? '+' : '−'}{money(Math.abs(mailReport.marketChange))}</dd></div></dl>
+      <p className="town-small">{tl('Price moves change what you are worth, not the cash you have.','Los movimientos de precio cambian lo que vales, no el efectivo que tienes.')}</p></div>}
     <p className="town-eyebrow">{tl('YOUR PLACE','TU CASA')} · {state.lifestyle}</p><h3>{current.icon} {current.description}</h3>
     <div className="town-lesson"><strong>{money(current.cost)} {tl('a month','al mes')} · {share}% {tl('of your income','de tus ingresos')}</strong><p>{tl('Lifestyle is the one bill you choose. Happiness','El estilo de vida es la única factura que eliges. Felicidad')} {current.happiness >= 0 ? '+' : ''}{current.happiness}. {tl('The gap between income and this number is what buys freedom.','La brecha entre tus ingresos y este número es lo que compra la libertad.')}</p>
       <div className="town-tabs" aria-label={tl('Move to a different place','Mudarte a otro lugar')}>{TIERS.map(t => <button key={t} aria-pressed={state.lifestyle === t} disabled={disabled || !onChangeLifestyle} title={`${LIFESTYLE_OPTS[t].description} · ${money(LIFESTYLE_OPTS[t].cost)}/mo`} onClick={() => onChangeLifestyle?.(t)}>{LIFESTYLE_OPTS[t].icon} {money(LIFESTYLE_OPTS[t].cost)}</button>)}</div>

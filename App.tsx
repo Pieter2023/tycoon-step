@@ -19,6 +19,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { GameState, AssetType, MarketItem, Lifestyle, Character, Asset, SideHustle, EducationOption, Liability, PlayerConfig, MonthlyActionId, TABS, TabId, EducationLevel, PlayerStats } from './types';
 import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, AUTO_INVEST_PRESETS } from './constants';
 import { recordMilestones } from './services/townMilestones';
+import { eventPlace } from './services/townEvents';
 import { calculateMonthlyActionsMax, processTurn, calculateMonthlyCashFlowEstimate, financialFreedom, businessIncomeRange, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier, checkPromotion, MAX_SOLD_POSITIONS } from './services/gameLogic';
 import { playMoneyGain, playMoneyLoss, playClick, playPurchase, playSell, playAchievement, playLevelUp, playVictory, playWarning, playTick, playNotification, playError, setMuted } from './services/audioService';
 import { SaveSlotId } from './services/storageService';
@@ -1791,6 +1792,11 @@ const [gameState, setGameState] = useState<GameState>(() => {
     };
   }, []);
 
+  // Sleeping at home closes the month without leaving the city (Phase 1, slice 2).
+  const sleepInTown = useRef(false);
+  // The player chose "Explore now" from an event card: the card waits until they return from the city.
+  const [exploringEvent, setExploringEvent] = useState(false);
+  useEffect(() => { if (!gameState.pendingScenario) setExploringEvent(false); }, [gameState.pendingScenario]);
   const advanceMonth = useCallback((opts?: { showSummaryToast?: boolean }) => {
     if (isProcessing || gameState.pendingScenario || gameState.pendingSideHustleUpgrade) return;
     if (tier === 'demo' && !isMultiplayer && gameState.month > DEMO_MONTH_LIMIT) {
@@ -1810,6 +1816,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
     playTick();
 
     const backToTown = returnToTown.current; returnToTown.current = false;
+    const stayInTown = sleepInTown.current; sleepInTown.current = false;
     setTimeout(() => {
       const { newState, monthlyReport: report } = processTurn(gameState);
       const netIncome = report.income - report.expenses;
@@ -1868,7 +1875,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
       setMonthlyReport(report);
       setIsProcessing(false);
       // Back to the square after a month closed from the city, unless something in the 2D shell needs the player first.
-      if (backToTown && !isMultiplayer && !newState.pendingScenario && !newState.annualReport && !newState.isBankrupt && !(newState.hasWon && !gameState.hasWon)) setShowTown(true);
+      if (backToTown && !isMultiplayer && !newState.annualReport && !newState.isBankrupt && !(newState.hasWon && !gameState.hasWon)) setShowTown(true);
+      // Slept in the city: stay there, unless an event, the annual report, bankruptcy or a fresh win needs the 2D shell.
+      if (stayInTown && (newState.annualReport || newState.isBankrupt || newState.pendingSideHustleUpgrade || (newState.hasWon && !gameState.hasWon))) setShowTown(false);
 
       // Multiplayer: track turns and switch players after MULTIPLAYER_TURNS_PER_ROUND
       if (isMultiplayer && onTurnComplete) {
@@ -1901,6 +1910,15 @@ const [gameState, setGameState] = useState<GameState>(() => {
     returnToTown.current = backToTown;
     advanceMonth();
   }, [advanceMonth, closeTurnPreview]);
+
+  // The bed at home: no turn preview (going to bed is the decision). Walls that need the 2D shell close the city first.
+  const handleSleep = useCallback(() => {
+    if (isProcessing || gameState.pendingScenario || gameState.pendingSideHustleUpgrade) return;
+    const walled = (tier === 'demo' && !isMultiplayer && gameState.month > DEMO_MONTH_LIMIT) || (gameState.challenge && gameState.month > gameState.challenge.targetMonths);
+    if (walled) { setShowTown(false); advanceMonth(); return; }
+    sleepInTown.current = true;
+    advanceMonth();
+  }, [advanceMonth, gameState, isProcessing, isMultiplayer, tier]);
 
   // Next Month button handler (shows preview unless skipped)
   const handleNextTurn = useCallback(() => {
@@ -3411,7 +3429,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
           onRememberView={view=>setGameState(prev=>({...prev,townView:view}))}
           onOpenMoney={(tab,place) => { setShowTown(false); setTownOpenedMoney(true); setV2Path('/money'); setMoneyTab(tab); if(tab==='invest'){setInvestmentFilter(place==='property'?AssetType.REAL_ESTATE:place==='business'?AssetType.BUSINESS:'ALL');setInvestmentTierFilter('ALL');setInvestmentSearch('');} }}
           onNextMonth={() => { setShowTown(false); returnToTown.current = true; handleNextTurn(); }}
-                onMilestones={(ids) => setGameState(prev => recordMilestones(prev, ids))} />
+                onMilestones={(ids) => setGameState(prev => recordMilestones(prev, ids))}
+                onSleep={handleSleep} />
       </React.Suspense></TabErrorBoundary>}
       {/* Floating Numbers */}
       <AnimatePresence>
@@ -3615,7 +3634,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
       )}
 
       {/* Scenario Modal */}
-      {gameState.pendingScenario && !showTown && (
+      {/* Events happen in the world: a card that arrives while the player is in the city opens over it. */}
+      {gameState.pendingScenario && (!showTown || !exploringEvent) && (
         <ScenarioModal
           scenario={gameState.pendingScenario}
           lockedOption={label => { const p = optionLocked(gameState, gameState.pendingScenario!.id, label); return p ? `Needs ${COVERAGE[p].name()} from the Community Bank. Without it, the uninsured option is yours.` : null; }}
@@ -3626,7 +3646,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
           autoPlaySpeed={autoPlaySpeed}
           autoplaySpeedLabel={autoplaySpeedLabel}
           onToggleAutoplay={toggleAutoplay}
-          onExploreTown={!isMultiplayer && !gameState.challenge ? () => setShowTown(true) : undefined}
+          onExploreTown={!showTown && !isMultiplayer && !gameState.challenge ? () => { setExploringEvent(true); setShowTown(true); } : undefined}
+          cityPlace={showTown ? eventPlace(gameState.pendingScenario.category).label : undefined}
           onOpenImage={openImageLightbox}
           onChoose={handleScenarioChoice}
         />

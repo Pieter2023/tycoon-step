@@ -23,13 +23,17 @@ The city looks the same whether the player is broke or free. This slice ties the
   - a coin burst at the Exchange door for your first dividend or interest payment;
   - a caption and short fireworks the first time freedom passes 25%, 50% and 75%.
 
-## Slice 2: sleep to advance the month ⬜
+## Slice 2: sleep to advance the month ✅ (build 47)
+
+Done as planned; the time-lapse shows outside (rooms keep fixed light), so going to bed also plays a short good-night fade. Receipt: `docs/verification/phase1-slices2-3-2026-09-25/`.
 
 - **Sleep.** The home desk gets a bed action: "Sleep until next month" runs the same turn as the notice board's close-month button.
 - **Time-lapse.** The night passes as a sky time-lapse.
 - **Mail.** The month's report waits as mail on the home desk rather than as a pop-up (the 2D shell still shows it when the player isn't in the city).
 
-## Slice 3: events happen in the world ⬜
+## Slice 3: events happen in the world ✅ (build 47)
+
+Done: cards open over the city with a place line (`services/townEvents.ts`). Not yet: a world moment staged at the place (the car at the garage bay, a letter prop on the doormat); the card's place line is the first step.
 
 - Today a life event forces the player back to the 2D shell. Instead, the event card opens inside the city, framed by a world moment:
   - the car's breakdown at the garage bay;

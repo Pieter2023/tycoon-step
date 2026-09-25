@@ -154,3 +154,7 @@
 .town-freedom small{font-size:10px;color:#93a9a6}
 @media (max-width:700px){.town-freedom{min-width:84px}.town-freedom small{display:none}}
 .tycoon-high-contrast .town-freedom small,.tycoon-high-contrast .town-freedom span{color:#f3eddc}
+.town-sleep-overlay{position:absolute;inset:0;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:#0b1830;color:#f1e3b8;pointer-events:none;animation:town-sleep 2.6s ease-in-out forwards}
+.town-sleep-overlay span{font-size:40px}.town-sleep-overlay strong{font-size:22px}.town-sleep-overlay p{font-size:13px;color:#c8d3e6}
+.town-sleep-still{animation:none;opacity:.9}
+@keyframes town-sleep{0%{opacity:0}30%{opacity:.94}72%{opacity:.94}100%{opacity:0}}

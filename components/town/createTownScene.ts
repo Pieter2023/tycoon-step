@@ -48,7 +48,9 @@ export type TownController = {
   move: (x: number, z: number) => void; resetView: () => void;
   setOwned: (ids: TownPlaceId[]) => void; setBusiness: (owned:boolean, licensed:boolean, upgraded:boolean)=>void;
   /** Wealth you can see: the Main Street window displays, the Freedom Fountain (0–1) and a milestone moment. */
-  setWindows?: (rows: Record<TownPlaceId, WindowDisplay>) => void; setFountain?: (level: number) => void; moment?: (kind: 'ribbon' | 'coins' | 'fireworks') => void; setSound:(enabled:boolean)=>void; visitCart:()=>void; pause:(paused:boolean)=>void; dispose: () => void;
+  setWindows?: (rows: Record<TownPlaceId, WindowDisplay>) => void; setFountain?: (level: number) => void; moment?: (kind: 'ribbon' | 'coins' | 'fireworks') => void;
+  /** Sleep through the night: the sky runs to the next sunrise, and the day continues from there. */
+  timeLapse?: () => void; setSound:(enabled:boolean)=>void; visitCart:()=>void; pause:(paused:boolean)=>void; dispose: () => void;
 };
 type Actor = { root: THREE.Object3D; mixer: THREE.AnimationMixer; actions: Record<string, THREE.AnimationAction>; current: string };
 const disposeTree = (root: THREE.Object3D) => {
@@ -177,6 +179,17 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
    const roofBoard=new THREE.Mesh(new THREE.BoxGeometry(1.9,.08,.5),new THREE.MeshStandardMaterial({color:'#7a4a3c'}));roofBoard.position.set(BOARD.x,2.36,BOARD.z);outdoors.add(roofBoard);}
   let skyState:SkyColors|undefined;
   let glassMaterial:THREE.MeshStandardMaterial|undefined, townMonth=1, phaseOverride:number|undefined=options.review?.phase, timeLabel:Daylight['label']|undefined;
+  // Sleeping through to the next month plays the night as a time-lapse (timeLapse) and the day carries on from that morning (phaseShift).
+  const LAPSE_SECONDS=2.8, MORNING=.03;
+  let phaseShift=0, lapse:{start:number;from:number;to:number}|null=null;
+  const naturalPhase=()=>((dayPhase(townMonth,elapsed,reducedMotion)+phaseShift)%1+1)%1;
+  const currentPhase=()=>{
+    if(phaseOverride!==undefined)return phaseOverride;
+    if(lapse){const t=Math.min(1,(elapsed-lapse.start)/LAPSE_SECONDS),e=t*t*(3-2*t),p=lapse.from+(lapse.to-lapse.from)*e;
+      if(t>=1){const to=lapse.to%1;lapse=null;phaseShift+=to-naturalPhase();return to;}
+      return p%1;}
+    return naturalPhase();
+  };
   // Seasons recolour the merged city materials and drop snow or leaves.
   const seasonFall=createSeasonFall();outdoors.add(seasonFall.root);let palette:ReturnType<typeof createSeasonPalette>|undefined, season:Season='summer', seasonOverride:Season|undefined=options.review?.season;
   const life=createTownLife(reducedMotion);outdoors.add(life.root);
@@ -368,7 +381,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const lost = (event: Event) => { event.preventDefault(); ready=false; contextAvailable=false; clearMovement();serviceStage=null;serviceDone?.();serviceDone=undefined;onFailure(); };
   window.addEventListener('keydown',keyboard); window.addEventListener('keyup',keyup); window.addEventListener('blur',blur); document.addEventListener('visibilitychange',visibility);
   canvas.addEventListener('pointerdown',down); canvas.addEventListener('pointermove',pointerMove); canvas.addEventListener('pointerup',up); canvas.addEventListener('pointercancel',cancel); canvas.addEventListener('wheel',wheel,{passive:false}); canvas.addEventListener('contextmenu',contextMenu); canvas.addEventListener('webglcontextlost',lost);
-  const dayPhaseDark=()=>daylight(phaseOverride??dayPhase(townMonth,elapsed,reducedMotion),rainy).lamps>.4;
+  const dayPhaseDark=()=>daylight(currentPhase(),rainy).lamps>.4;
   let doorLockedUntil=0;
   const tick = (now:number) => {
     if (!alive) return; frame=requestAnimationFrame(tick); const frameMs=now-previousTime, dt=Math.min(frameMs/1000,.04); previousTime=now; if(document.hidden || !contextAvailable) return; step(now,frameMs,dt);
@@ -463,7 +476,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     if(yawGoal!==undefined){const delta=Math.atan2(Math.sin(yawGoal-yaw),Math.cos(yawGoal-yaw));yaw+=delta*Math.min(1,dt*2.5);if(Math.abs(delta)<.01){yaw=yawGoal;yawGoal=undefined;}}
     if(inside){yaw=THREE.MathUtils.clamp(yaw,-.65,.65);pitch=THREE.MathUtils.clamp(pitch,.5,.95);zoomDistance=THREE.MathUtils.clamp(zoomDistance,7,12);}
     weather.update(elapsed,rainy,reducedMotion);seasonFall.update(elapsed,seasonOverride??season,reducedMotion||inside);
-    const light=inside?daylight(.22,false):daylight(phaseOverride??dayPhase(townMonth,elapsed,reducedMotion),rainy);
+    const light=inside?daylight(.22,false):daylight(currentPhase(),rainy);
     if(!inside&&(seasonOverride??season)==='winter'){light.sunIntensity*=.8;light.sunColor='#e8f0ff';}
     sun.position.copy(light.sun);sun.color.set(light.sunColor);hemi.color.set(light.sky);hemi.groundColor.set(light.ground);
     if(inside){
@@ -632,6 +645,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     setWindows(rows){windows.draw(rows);},
     setFountain(level){fountainFill=Math.max(0,Math.min(1,level));shapeJet();},
     moment(kind){controllerMoment(kind);},
+    timeLapse(){if(reducedMotion||phaseOverride!==undefined)return;const from=currentPhase();lapse={start:elapsed,from,to:Math.floor(from)+1+MORNING};},
     setOwned(ids){for(const [id,object]of ownedMarkers)object.visible=ids.includes(id);},
     dispose(){options.onView?.(inside&&cityView?cityView:{x:player.position.x,z:player.position.z,yaw,pitch,distance:zoomDistance,mode:cameraMode});ambience?.dispose();void audioContext?.close();alive=false;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',keyboard);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('contextmenu',contextMenu);canvas.removeEventListener('webglcontextlost',lost);playerActor?.mixer.stopAllAction();teller?.mixer.stopAllAction();cafeActors.forEach(a=>a.mixer.stopAllAction());pedestrians.forEach(p=>p.mixer.stopAllAction());if(traffic)disposeTree(traffic.root);if(cyclist)disposeTree(cyclist.root);if(dogWalker){disposeTree(dogWalker.root);dogWalker.leash.geometry.dispose();}disposeTree(life.root);for(const root of loaded)if(!root.parent)disposeTree(root);disposeTree(scene);library?.dispose();draco.dispose();studio.dispose();skyEnvironment.dispose();sun.shadow.dispose();renderer.dispose();renderer.forceContextLoss();canvas.remove();}
   };

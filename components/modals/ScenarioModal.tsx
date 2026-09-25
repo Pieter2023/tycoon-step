@@ -51,6 +51,8 @@ interface ScenarioModalProps {
   onExploreTown?: () => void;
   /** Why an option is closed to this player (an insured option without the policy), or null when open. */
   lockedOption?: (label: string) => string | null;
+  /** Where in town this happens, when the event opens over the 3D city (Phase 1, slice 3). */
+  cityPlace?: string;
 }
 
 const ScenarioModal: React.FC<ScenarioModalProps> = ({
@@ -65,7 +67,8 @@ const ScenarioModal: React.FC<ScenarioModalProps> = ({
   onOpenImage,
   onChoose,
   lockedOption,
-  onExploreTown
+  onExploreTown,
+  cityPlace
 }) => {
   const { t } = useI18n();
   return (
@@ -73,7 +76,8 @@ const ScenarioModal: React.FC<ScenarioModalProps> = ({
       isOpen
       onClose={() => undefined}
       ariaLabel={t('events.modalTitle')}
-      overlayClassName="bg-black/80 backdrop-blur-sm"
+      overlayClassName={cityPlace ? 'bg-black/45' : 'bg-black/80 backdrop-blur-sm'}
+      zIndex={cityPlace ? 1100 : undefined}
       closeOnOverlayClick={false}
       closeOnEsc={false}
       showCloseButton={false}
@@ -149,6 +153,7 @@ const ScenarioModal: React.FC<ScenarioModalProps> = ({
         </div>
       )}
 
+      {cityPlace && <p className="mb-1 text-center text-xs font-semibold uppercase tracking-[0.14em] text-emerald-300">📍 {cityPlace}</p>}
       <h2 className="text-2xl font-bold text-white text-center mb-2">{t(scenario.title)}</h2>
       <p className="text-slate-400 text-center mb-6">{t(scenario.description)}</p>
       {onExploreTown && <button onClick={onExploreTown} className="mb-4 w-full rounded-xl border border-emerald-400/40 bg-emerald-950 px-4 py-3 text-left text-emerald-100"><strong className="block">Enter 3D city</strong><span className="mt-1 block text-xs">Explore now and return to this decision afterwards.</span></button>}
