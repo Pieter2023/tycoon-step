@@ -31,8 +31,10 @@ def cylinder(name,p,r,d,mat,r2=None):
     bpy.ops.mesh.primitive_cone_add(vertices=16,radius1=r,radius2=r if r2 is None else r2,depth=d,location=p); return finish(bpy.context.object,name,mat,.025)
 def tube(name,a,b,r,mat):
     mid=(Vector(a)+Vector(b))*.5; o=cylinder(name,mid,r,(Vector(b)-Vector(a)).length,mat); o.rotation_euler=(Vector(b)-Vector(a)).to_track_quat('Z','Y').to_euler(); return o
+# Lettering: a slight raised depth, no bevel, and outlines at resolution 3 (the font default of 12 plus a bevel made
+# the eight signs about half of the city's triangles; build 48 cut the city from 246k to 122k with no visible change).
 def text(words,p,size,mat='cream'):
-    curve=bpy.data.curves.new('Lettering','FONT'); curve.body=words; curve.align_x='CENTER'; curve.align_y='CENTER'; curve.size=size; curve.extrude=.012; curve.bevel_depth=.003
+    curve=bpy.data.curves.new('Lettering','FONT'); curve.body=words; curve.align_x='CENTER'; curve.align_y='CENTER'; curve.size=size; curve.extrude=.012; curve.bevel_depth=0; curve.resolution_u=3
     o=bpy.data.objects.new(words,curve); bpy.context.collection.objects.link(o); o.location=p; o.rotation_euler=(math.pi/2,0,0); o.data.materials.append(M[mat]); bpy.context.view_layer.objects.active=o; o.select_set(True); bpy.ops.object.convert(target='MESH'); o.select_set(False); return o
 def window(x,y,z,w=1.1,h=1.65):
     box('Window surround',(x,y,z),(w+.18,.18,h+.18),'cream',.07); box('Reflective glazing',(x,y-.12,z),(w,.04,h),'glass',.04)

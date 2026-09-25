@@ -4,7 +4,7 @@ import type { WindowDisplay } from '../../services/townWealth';
 
 // A lit display in the shop window beside each Main Street door, showing the player's own money there:
 // savings at the bank, the portfolio at the Exchange, businesses, properties. Facades sit at z -2.2.
-export const WINDOW_OFFSET = { x: 1.5, y: 1.55, z: -2.14 };
+export const WINDOW_OFFSET = { x: 1.85, y: 1.55, z: -2.14 };
 export function createWindowDisplays() {
   const root = new THREE.Group(); root.name = 'WindowDisplays';
   const panels = new Map<TownPlaceId, { canvas: HTMLCanvasElement; texture: THREE.CanvasTexture; material: THREE.MeshStandardMaterial; last: string }>();
@@ -12,7 +12,7 @@ export function createWindowDisplays() {
     const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 320;
     const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 4;
     const material = new THREE.MeshStandardMaterial({ map: texture, emissiveMap: texture, emissive: '#ffffff', emissiveIntensity: .2, roughness: .55 });
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.1, .69), material);
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.0, .63), material);
     mesh.position.set(place.x + WINDOW_OFFSET.x, WINDOW_OFFSET.y, WINDOW_OFFSET.z); mesh.name = `Window_${place.id}`; root.add(mesh);
     panels.set(place.id, { canvas, texture, material, last: '' });
   }
