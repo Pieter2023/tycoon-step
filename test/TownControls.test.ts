@@ -43,4 +43,17 @@ describe('third-person controls and Blender assets', () => {
     expect(read(city).extensionsUsed).toContain('KHR_draco_mesh_compression');
     expect(statSync(city).size).toBeLessThan(2_000_000);
   });
+  it('ships the AI-modelled Alex on the townspeople rig', () => {
+    // scripts/build-town-hero.py: same joint names, identity rest rotations and six clips, so the player's
+    // direct poses (cup carry, apron on the Torso joint) and CLIP_GROUND_SPEED hold for the hero too.
+    const path = 'public/models/town/town-hero-alex.glb';
+    const b = readFileSync(path), hero = JSON.parse(b.subarray(20, 20 + b.readUInt32LE(12)).toString());
+    expect(hero.animations.map((a:any)=>a.name).sort()).toEqual(['Celebrate','Idle','Run','Serve','Walk','Wave']);
+    expect(hero.skins).toHaveLength(1);
+    const joints = hero.skins[0].joints.map((i:number)=>hero.nodes[i]);
+    expect(joints.map((n:any)=>n.name).sort()).toEqual(['Ankle-1','Ankle1','Elbow-1','Elbow1','Grip-1','Grip1','Head','Hips','Knee-1','Knee1','Shoulder-1','Shoulder1','Thigh-1','Thigh1','Torso']);
+    for (const joint of joints) expect(joint.rotation ?? [0,0,0,1]).toEqual([0,0,0,1]);
+    expect(hero.extensionsUsed).toContain('KHR_draco_mesh_compression');
+    expect(statSync(path).size).toBeLessThan(700_000);
+  });
 });

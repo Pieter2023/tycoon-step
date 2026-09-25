@@ -63,10 +63,13 @@ export function dressTown(root: THREE.Object3D, library: AtelierMaterials) {
 }
 
 // Keep the established pivot/clip contract while improving the featured player's outfit.
-export function dressPlayer(root: THREE.Object3D, library: AtelierMaterials) {
+/** Apron fit for the AI-modelled hero Alex: his jacket stands about .17 in front of the torso joint, and his
+ *  torso joint sits .08 higher than a townsperson's (longer legs), so the bib is lowered to the same chest line. */
+export const HERO_APRON = { front: .185, half: .2, lift: -.11 };
+export function dressPlayer(root: THREE.Object3D, library: AtelierMaterials, fit?: { front: number; half: number; lift?: number }) {
   // The skinned townspeople already wear the concept outfit (teal jacket, cream tee) and have no UVs
   // for the grain map; they only get the apron, fitted to their slimmer chest.
-  const skinned = isSkinnedRig(root), front = skinned ? .135 : .23, half = skinned ? .16 : .195;
+  const skinned = isSkinnedRig(root), front = fit?.front ?? (skinned ? .135 : .23), half = fit?.half ?? (skinned ? .16 : .195), lift = fit?.lift ?? 0;
   if (!skinned) root.traverse(o => {
     if (!(o instanceof THREE.Mesh) || Array.isArray(o.material) || !(o.material instanceof THREE.MeshStandardMaterial)) return;
     const m = o.material.clone(); o.material = m;
@@ -78,7 +81,7 @@ export function dressPlayer(root: THREE.Object3D, library: AtelierMaterials) {
   const outfit=new THREE.Group();outfit.name='Atelier_work_apron';
   const torso = root.getObjectByName('Torso');
   if (torso) {
-    torso.add(outfit);
+    torso.add(outfit); outfit.position.y = lift;
     // glTF converts the existing character hierarchy to Y-up; forward is +Z.
     const positions: number[] = [], indices: number[] = [];
     for (const z of [-.025, .40]) for (let i=0;i<=8;i++) {

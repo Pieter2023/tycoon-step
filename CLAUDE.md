@@ -9,9 +9,9 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - the Sept-13 atelier work, committed as found;
   - the sky-lit lighting pass and a longer camera lens (build 40);
   - the skinned townspeople from `scripts/build-town-people.py` (build 41). Every joint must keep an identity rest rotation.
-- **Validation:** 400 tests / 71 files and the production build pass on the branch.
+  - the AI-modelled Alex (build 42): Meshy 7 from concept 2 (38 Higgsfield credits), rigged onto the town skeleton by `scripts/build-town-hero.py`, loaded only when the character is Alex. Clips for both come from `scripts/town_rig.py`.
+- **Validation:** 401 tests / 71 files and the production build pass on the branch.
 - **Waiting on Pieter:**
-  - the pick of an Alex concept (1–4) and about 40–50 Higgsfield credits for the AI-modelled Alex;
   - whether to ship the branch;
   - the direction of the economy fix (the game currently rewards coffee-cart stacking and savings over index investing).
 - **Visual QA:** the town scene is a code-split chunk, so verify town deploys by grepping `TownModal-*.js`/`createTownScene-*.js`, not `index-*.js`. When the browser pane is hidden, use the dev handle `__town.advance(frames)` with `scripts/qa/capture-receiver.py` (HANDOVER §5).
@@ -30,7 +30,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (71 files / 400 tests on `town-lighting-pass`, 2026-09-25; integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (71 files / 401 tests on `town-lighting-pass`, 2026-09-25; integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)

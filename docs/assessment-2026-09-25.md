@@ -67,7 +67,7 @@ Method: a cold first-time playthrough on the QA origin (5188) at desktop and pho
 - ✅ **Lighting pass (build 40):** Neutral tone mapping, a captured sky environment plus a visible sky dome, the sun offset south-east, a longer golden hour, a readable night, and contact shadows. Receipt: `docs/verification/lighting-2026-09-25/`.
 - ✅ **Camera (build 40):** pitch .45, 11.5 m, 40° field of view outdoors; rooms unchanged.
 - ✅ **Characters, free half (build 41):** one skinned body for the whole cast (`scripts/build-town-people.py`). Draw calls on the square went from 1,431 to 815. Receipt: `docs/verification/characters-2026-09-25/`.
-- ⏳ **AI-modelled Alex (hybrid route):** waiting for Pieter to pick concept 1–4 and approve credits. See section 6.
+- ✅ **AI-modelled Alex (hybrid route, build 42):** Pieter picked concept 2 and approved up to 50 credits; 38 spent. Rigged onto the town skeleton by `scripts/build-town-hero.py`. Receipt: `docs/verification/hero-alex-2026-09-25/`.
 - ⬜ **Remaining visual work, roughly by impact per effort:**
   - Replace the 3D sign lettering with textured decals (about −130k triangles; headless Blender edit of `scripts/build-town-assets.py`).
   - Bake ambient occlusion into a second UV set and lightmap atlas, and split the city into blocks for culling.
@@ -86,13 +86,13 @@ Method: a cold first-time playthrough on the QA origin (5188) at desktop and pho
 
 1. Phase 0 economy fix (days).
 2. Phase 1: city as the main screen, plus wealth visibly building the city (1–2 weeks).
-3. AI Alex once approved.
+3. ✅ AI Alex (build 42).
 4. Remaining visual items.
 5. Real-device test before any deploy of the branch.
 
 ## 6. Higgsfield (connected MCP, Plus plan)
 
-- **Balance:** 465.33 credits at the end of this session (467.83 at the start). The concept images cost 2.5: 0.5 each. A `get_cost` preflight with `count: 4` reported the price of one image, so always multiply by the count.
+- **Balance:** 427.33 credits after the AI Alex (38, job `c2c6a0f6-ffd9-4455-9da9-44fde5b14df4`); 465.33 before it and 467.83 at the start of the day. The concept images cost 2.5: 0.5 each. A `get_cost` preflight with `count: 4` reported the price of one image, so always multiply by the count.
 - **Preflighted prices:**
 
   | Item | Credits |
@@ -110,9 +110,10 @@ Method: a cold first-time playthrough on the QA origin (5188) at desktop and pho
   - Alex option 4: `bb10fc1a-1d21-442e-98aa-6c7e4c007fec`
   - Resident lineup: `5c6accd7-4bee-4f95-8a0f-caeaee668e27`
   - Images are copied in `docs/verification/characters-2026-09-25/`.
-- **Planned AI Alex pipeline.** The cheaper route: we retarget onto our own rig, so the Meshy animation library isn't needed.
+- **AI Alex pipeline (done in build 42; kept as the recipe for any future hero).** The cheaper route: we retarget onto our own rig, so the Meshy animation library isn't needed. What changed in practice: Alex kept his own proportions (joints placed on his body, clips scaled to his legs) instead of being squeezed onto the townspeople's joint positions; no Blink morph (painted eyes); the A-pose texture needed repair.
   1. `generate_3d` with `meshy_v7_image_to_3d`: the chosen job id as `image_references`, `should_texture: true`, `pose_mode: 'a-pose'`, `target_polycount` about 10k, rigging optional (+9.5 credits buys Meshy weights to transfer). Always preflight with `get_cost: true` and show the cost first. Expect about 40–50 credits (38 textured, or 47.5 with Meshy's rig), not the ~90 quoted before retargeting was planned.
   2. In Blender: import, scale so the in-game height matches the townspeople (crown about 1.97 at bind), and place the feet at z = 0. Build the same armature as `scripts/build-town-people.py` (same joint names and positions, hips .96, legs .43/.41) fitted to the mesh. Auto-weight, or transfer Meshy's weights. Pose the arms from Meshy's A-pose down to our 12° abduction and apply as rest. Then point every bone up with no roll, which is the identity-rest contract.
   3. Reuse the clip generator from `build-town-people.py` (factor it into a shared function) and export `public/models/town/town-hero-alex.glb`.
   4. Runtime: load it for `state.character.id === 'alex'` through the hero path in `createTownScene.ts` (`options.characterAtelier`, currently forced false in `TownModal.tsx`). Keep `CLIP_GROUND_SPEED`, since the clips are identical, and add the contact shadow. Blink only works if the mesh gets a Blink morph; AI textures have painted eyes.
   5. Licensing: check Meshy's current terms for commercial use of paid-tier outputs before shipping, and record the answer in this file.
+  - **Licensing answer (2026-09-25):** generated through Higgsfield's paid Plus plan. Higgsfield ToS §4.4: no ownership claim on outputs and no commercial restriction on any plan; Higgsfield may train on inputs and outputs; outputs may not train other AI models; IP indemnity is Enterprise-only. Meshy's own terms give paid-plan users ownership. Not legal advice.

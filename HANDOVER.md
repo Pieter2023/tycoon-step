@@ -1,6 +1,6 @@
 # Start here — Tycoon handover
 
-Updated **September 25, 2026 (evening PDT)**. That session produced three things: a full game assessment, a lighting pass, and new skinned characters. Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
+Updated **September 25, 2026 (evening PDT)**. That day produced four things: a full game assessment, a lighting pass, new skinned characters, and the AI-modelled Alex (build 42, after Pieter picked concept 2). Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
 
 ## 1. Where things stand
 
@@ -11,10 +11,11 @@ Updated **September 25, 2026 (evening PDT)**. That session produced three things
 | **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin/town-lighting-pass` as a **backup** (2026-09-25). **Not merged into `main` and not deployed.** Only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
-| Validation on the branch | 400 tests / 71 files, TypeScript and the production build. `dist/` currently holds the branch build. |
+| Validation on the branch | 401 tests / 71 files, TypeScript and the production build. `dist/` currently holds the branch build. |
 | Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
-| Higgsfield (connected MCP) | Plus plan, 465.33 credits left. 2.5 were spent on concept images. |
-| Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. |
+| Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
+| Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
+| QA servers | Another chat's Vite server held `127.0.0.1:5188`, so build 42 was checked on `localhost:5189` (`tycoon-qa-5189` in `.claude/launch.json`) with a fresh Alex save. |
 
 **Commits on `town-lighting-pass`, oldest first:**
 1. `263aeeb`: snapshot of the Sept-13 atelier work, which was uncommitted until then.
@@ -23,21 +24,20 @@ Updated **September 25, 2026 (evening PDT)**. That session produced three things
 4. `ff2dc6a`: docs.
 5. `9a26f4d`: skinned townspeople.
 6. `72ba80d`: docs.
-7. This handover commit.
+7. `22b08f9`, `5092665`: handover docs and the backup-push note.
+8. The AI-modelled Alex (build 42) and its docs.
 
 ## 2. Decisions waiting on Pieter
 
-1. **The AI-modelled Alex.**
-   - Pick concept 1–4 (`docs/verification/characters-2026-09-25/concept-alex-options.jpg`, numbered left to right) and approve about 40–50 credits.
-   - It uses Meshy 7 image-to-3D with textures, then gets retargeted onto our rig so it keeps the clips.
-   - Pipeline and job ids: `docs/assessment-2026-09-25.md` §6.
-   - Never spend credits without a fresh yes. Preflight with `get_cost` and multiply by `count`.
-2. **Ship the branch?**
-   - Review `docs/verification/lighting-2026-09-25/lighting-before-after.jpg` and `docs/verification/characters-2026-09-25/characters-before-after.jpg`, or play the branch.
+1. **Ship the branch?** It now holds the lighting pass, the skinned townspeople and the AI-modelled Alex.
+   - Review `docs/verification/lighting-2026-09-25/lighting-before-after.jpg`, `docs/verification/characters-2026-09-25/characters-before-after.jpg` and `docs/verification/hero-alex-2026-09-25/`, or play the branch as Alex.
    - Then merge into the release branch and push `main`, which auto-deploys.
-   - Do a real-phone check first: the skinned people and the sky recapture are the new GPU costs.
-3. **The economy fix** (assessment §1) changes balance and what the game teaches. Confirm the direction before changing formulas.
-4. **Still open from June:** whether the Daily Challenge should stay demo-gated (see the GTM section of CLAUDE.md).
+   - Do a real-phone check first. The new costs are the skinned people, the sky recapture and the 502 KB hero download.
+2. **The economy fix** (assessment §1) changes balance and what the game teaches. Confirm the direction before changing formulas.
+3. **Still open from June:** whether the Daily Challenge should stay demo-gated (see the GTM section of CLAUDE.md).
+4. **Walk bob (small):** the shared walk clip puts the hips lowest at mid-stance, the reverse of a natural gait, which makes every walker look slightly crouched. Fixing it in `scripts/town_rig.py` changes `town-people.glb` as well, so it needs Pieter's look first.
+
+Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the AI Alex cost 38 (receipt: `docs/verification/hero-alex-2026-09-25/`). Still: never spend credits without a fresh yes.
 
 ## 3. Next steps, in recommended order
 
@@ -49,20 +49,21 @@ Updated **September 25, 2026 (evening PDT)**. That session produced three things
    - the 4% rule counts toward freedom;
    - a strategy-ranking assertion in `test/BalancePass.test.ts`.
 2. **Traffic deadlock bug** (assessment §2). A fix-it task was offered in the app; check `git log` and the branch list first, since it may already have run in another session.
-3. **The AI Alex**, once approved (assessment §6).
-4. **The city as the game (Phase 1):**
+3. **The city as the game (Phase 1):**
    - the city becomes the main screen;
    - a month becomes a day;
    - events happen in the world;
    - wealth visibly builds the city;
    - milestone moments.
-5. **More visuals:**
+4. **More visuals:**
    - replace the 3D sign lettering with decals (−130k triangles);
    - AO bake and textures;
    - hair polish;
    - the armpit crease in Wave;
-   - a Sit clip.
-6. **A real phone and Chromebook test** before any deploy of the branch.
+   - a Sit clip;
+   - a blink for the hero Alex (his eyes are painted into the texture, so he needs a morph or an eyelid decal);
+   - an even skin tone on the hero's face texture (soft patches on one cheek and the chin up close).
+5. **A real phone and Chromebook test** before any deploy of the branch.
 
 ## 4. What Pieter wants (standing)
 
@@ -76,10 +77,11 @@ Updated **September 25, 2026 (evening PDT)**. That session produced three things
 ```sh
 cd '/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2'
 git status --short && git log --oneline -8
-npm run test:run          # 400 tests / 71 files on the branch
+npm run test:run          # 401 tests / 71 files on the branch
 npm run build
 npx vite --host 127.0.0.1 --port 5188 --strictPort   # or preview_start "tycoon-qa-5188" (.claude/launch.json)
 '/Applications/Blender.app/Contents/MacOS/Blender' --background --factory-startup --python scripts/build-town-people.py   # then bump PEOPLE_VERSION
+'/Applications/Blender.app/Contents/MacOS/Blender' --background --factory-startup --python scripts/build-town-hero.py     # then bump HERO_VERSION; TYCOON_PREVIEW=<dir> renders QA stills
 ```
 
 **QA save on `localhost:5188`:** Alex, month 2, $11,249 cash, cart bought and licensed, investor journey 2/4. To reach the city: Continue Adult → Enter 3D city.
@@ -152,8 +154,16 @@ To enter a room while the pane is hidden:
 - The glTF export needs `use_active_scene=True`, or it exports every scene in the file.
 - NLA solo does not isolate a clip for rendering; mute the other tracks instead.
 
+**AI hero (build 42)**
+- Meshy GLBs split vertices at every UV seam. Weld them (`remove_doubles`, 1e-4) before measuring or auto-weighting; UVs stay per face corner.
+- Meshy textures the A-pose from the camera side, so anything the arms hid comes out as white smudges. `build-town-hero.py` repaints them per part (bone plus the face's own median colour). Check any new AI model from the side and back in a walk frame.
+- The hero keeps his own proportions. `town_rig.add_clips(arm, names, legs)` scales the motion to his legs, and the stride and timing never change, so `CLIP_GROUND_SPEED` holds.
+- The hero GLB is Draco-compressed like the city. Draco does not carry morph targets: export without Draco if the hero ever gets a `Blink` morph.
+- The café apron hangs off the `Torso` joint; the hero's fit is `HERO_APRON` in `townAtelier.ts`. The café cameras only see his back, so check the fit in Blender.
+- Synthetic `KeyboardEvent`s don't move the player; use `__town.walk(x,z)` outdoors.
+
 **Tooling**
-- Higgsfield's `get_cost` with `count` > 1 returns one item's price.
+- Higgsfield's `get_cost` with `count` > 1 returns one item's price. For a single 3D job it was exact (38 quoted, 38 charged).
 - Vite re-optimises dependencies on the first load after a new `three/examples` import, which reloads the page once.
 
 ## Completed (chronological record)
@@ -166,7 +176,8 @@ To enter a room while the pane is hidden:
 5. **Living city and café:** rain/puddles, residents, optional ambience; walkable café, lease, furnishings, price/stock/staff plans, monthly reports and net-worth accounting.
 6. **Hands-on café shift:** walk to take orders, brew, carry and serve coffee; arriving/queued/seated guests, patience, reactions, optional helper, waste and profit/loss receipt. Free practice requires no ownership and changes no money. Paid owner shifts persist and resume paused.
 46. **Lighting pass (branch `town-lighting-pass`, 2026-09-25, NOT merged or deployed):** commit `263aeeb` snapshots the previously uncommitted Sept-13 atelier work as found; `98ce027` adds the sky-lit outdoor rig (`components/town/townLighting.ts`: Neutral tone mapping, captured sky environment + visible dome, sun path offset south-east so midday shadows show, longer golden hour, readable moonlit night, contact shadows under figures and vehicles); `e1ab846` gives the square a longer lens (pitch .45, 11.5 m, 40°; rooms unchanged), revertable on its own. Dev handle `__town.advance(frames)` renders while the tab is hidden, so visual QA no longer needs a visible browser. Receipt and before/after grid: `docs/verification/lighting-2026-09-25/`. 395 tests / 70 files + build pass. To ship: Pieter reviews the grid or plays the branch, then merge into the release branch and deploy as usual.
-47. **Skinned townspeople (same branch, 2026-09-25, NOT merged or deployed):** every person in the city is now one skinned body from `scripts/build-town-people.py` (`public/models/town/town-people.glb`), replacing the 45-part rigid mannequin; joints keep the old names and identity rest rotation, so all direct poses still work. New helpers: `sitHips`/`SIT_DROP` and the skinned branch of `styleCharacter` (`townResidents.ts`), `CLIP_GROUND_SPEED` (`townLocomotion.ts`), `createBlink` (`townCharacterExpression.ts`). Draw calls on the square 1,431 → 815. The Sept-13 rigid Alex is switched off (`characterAtelier: false`). Receipt: `docs/verification/characters-2026-09-25/`. **Next step waiting on Pieter:** pick an Alex concept (1–4 in `concept-alex-options.jpg`) and approve about 40–50 Higgsfield credits for the AI-modelled Alex (Meshy image-to-3D, then retargeted onto this rig in Blender so it keeps the clips and joint names).
+47. **Skinned townspeople (same branch, 2026-09-25, NOT merged or deployed):** every person in the city is now one skinned body from `scripts/build-town-people.py` (`public/models/town/town-people.glb`), replacing the 45-part rigid mannequin; joints keep the old names and identity rest rotation, so all direct poses still work. New helpers: `sitHips`/`SIT_DROP` and the skinned branch of `styleCharacter` (`townResidents.ts`), `CLIP_GROUND_SPEED` (`townLocomotion.ts`), `createBlink` (`townCharacterExpression.ts`). Draw calls on the square 1,431 → 815. The Sept-13 rigid Alex is switched off (`characterAtelier: false`). Receipt: `docs/verification/characters-2026-09-25/`. The AI-modelled Alex followed on this rig (item 48).
+48. **AI-modelled Alex (same branch, 2026-09-25, build 42, NOT merged or deployed):** Pieter picked concept 2 and approved up to 50 Higgsfield credits; 38 were spent (Meshy 7 image-to-3D, textured, A-pose, 10k triangles, no Meshy rig). `scripts/build-town-hero.py` welds the source (`assets/town/alex-meshy-source.glb`), rigs it onto the town skeleton at Alex's own joints, swings the arms to the 12° rest pose, repairs the A-pose texture smudges and exports `public/models/town/town-hero-alex.glb` (502 KB, Draco). The clip generator moved to `scripts/town_rig.py` (shared with the townspeople; their animation is unchanged, max difference 0). Runtime: `hero?: 'alex'` in `createTownScene` (TownModal passes it for Alex only), `HERO_APRON` for the café apron. Licensing: Higgsfield ToS §4.4, no ownership claim and no commercial restriction. Receipt: `docs/verification/hero-alex-2026-09-25/`. 401 tests / 71 files + build pass.
 45. **Dashboard shell translated (committed, build 39):** the v2 shell (`components/v2/*`, the App.tsx header and quick-actions menu) reads every visible string through `useI18n().t` under `shell.<component>.<slug>` keys (342, both languages). `scripts/i18n-shell-transform.py` did the mechanical pass; interpolated sentences were keyed by hand; module-level copy helpers take a `Translate` parameter. Tab bodies (`components/tabs/*`) and the monthly-action cards are still English by choice: next slice if the whole adult game should speak Spanish.
 44. **Dashboard Spanish rewritten (committed, build 38):** `i18n/translations/es.json` regenerated from the English structure with full Spanish (accents/ñ, ¿?, tú, city vocabulary; 323 previously-English strings translated: `events.*` used by `data/events.json`, character questlines, `salesQuiz.*`, `quiz.sales_q*`). Recipe in the receipt: flatten en.json, translate into a flat dict, refill the English structure, assert placeholders match. The dashboard's translation and the city's now share one vocabulary.
 43. **Spanish read (committed, build 37):** every city `tl` pair (1,474) read in full; 21 strings fixed (neutral gender, LatAm terms, phrasing; list in the receipt). Recipe: extract pairs with a regex over `components/town`, `services/town*`, `i18n/town.ts` into one file and read it; heuristics catch untranslated/Spain-only/¿¡ slips. A true native-speaker pass by a person remains worthwhile; the dashboard's `es.json` was not part of this read.
@@ -266,14 +277,15 @@ These are last-observed snapshots, not values to restore over newer play:
 | Finance and activities | `services/townProgress.ts`, `townJourney.ts`, `townActivities.ts`, `townCafe.ts`, `cafeService.ts`, `gameLogic.ts` |
 | Foundations and persistence | `services/firstSteps.ts`, `investmentModel.ts`, `storageService.ts`, `hooks/useSaveLoad.ts`, `types.ts` |
 | Lighting (2026-09-25) | `components/town/townLighting.ts` (sky dome, captured sky environment, outdoor balance `LIGHT_BALANCE`, contact shadows), `townDaylight.ts` (sun path, golden hour, zenith/bounce colours), camera lens in `townControls.ts` (`cameraPreset`, `cameraFov`) |
-| People (2026-09-25) | `scripts/build-town-people.py` → `public/models/town/town-people.glb` (+ `assets/town/town-people.blend`); `townResidents.ts` (`styleCharacter` skinned branch, `sitHips`/`SIT_DROP`), `townLocomotion.ts` (`CLIP_GROUND_SPEED`), `townCharacterExpression.ts` (`createBlink`), clones via `SkeletonUtils.clone` in `createTownScene.ts` |
+| Hero Alex (2026-09-25) | `assets/town/alex-meshy-source.glb` → `scripts/build-town-hero.py` → `public/models/town/town-hero-alex.glb`; clips from `scripts/town_rig.py`; `hero` option and `HERO_VERSION` in `createTownScene.ts`, `HERO_APRON` in `townAtelier.ts` |
+| People (2026-09-25) | `scripts/build-town-people.py` (clips in `scripts/town_rig.py`) → `public/models/town/town-people.glb` (+ `assets/town/town-people.blend`); `townResidents.ts` (`styleCharacter` skinned branch, `sitHips`/`SIT_DROP`), `townLocomotion.ts` (`CLIP_GROUND_SPEED`), `townCharacterExpression.ts` (`createBlink`), clones via `SkeletonUtils.clone` in `createTownScene.ts` |
 | QA tools | `scripts/qa/capture-receiver.py`, `scripts/qa/blender-preview-rig.py`; dev handle `window.__town` in `createTownScene.ts` |
 | Editable art and rebuild | City: `assets/town/`, `scripts/build-town-assets.py` → `build-town-extras.py` (city, vehicles; the old character parts are no longer used). People: `scripts/build-town-people.py`. See `assets/town/README.md` |
 | Runtime models/decoder | `public/models/town/`, `public/decoders/draco/` |
 
 ## Validation and evidence
 
-Latest validation (2026-09-25, branch `town-lighting-pass`): **400 tests / 71 files**, TypeScript and production build; receipts in `docs/verification/lighting-2026-09-25/` and `docs/verification/characters-2026-09-25/`; assessment in `docs/assessment-2026-09-25.md`.
+Latest validation (2026-09-25, branch `town-lighting-pass`): **401 tests / 71 files**, TypeScript and production build; receipts in `docs/verification/lighting-2026-09-25/`, `docs/verification/characters-2026-09-25/` and `docs/verification/hero-alex-2026-09-25/`; assessment in `docs/assessment-2026-09-25.md`.
 
 Earlier validation (live playthrough fixes): **333 tests / 59 files passed**, TypeScript + production build passed; `git diff --check` passed. Existing chunk-size warnings remain. `dist/` was rebuilt at the end of that pass, so an already-open 5187 page needs a full refresh before opening the city. Commit `35a074d` (townhouse facade) is deployed: Netlify deploy `6a9d135b` published 2026-09-06 07:17 UTC and the live `TownModal-*.js` chunk contains the facade code. Note: the 3D city is a code-split chunk, so the `index-*.js` hash does not change for town-only work; grep the `TownModal` chunk instead. This handover does not repeat financial/cloud testing.
 

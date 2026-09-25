@@ -19,16 +19,17 @@ Run from the project directory:
 Writes assets/town/town-people.blend and public/models/town/town-people.glb. No external assets.
 In a live Blender session it builds into a separate 'TownPeople' scene and only writes the GLB.
 """
-import bpy, bmesh, math, os
+import bpy, bmesh, math, os, sys
 from mathutils import Vector, Euler, Matrix
 from mathutils.bvhtree import BVHTree
+sys.dont_write_bytecode = True; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import town_rig   # the six clips and the bones-up step, shared with scripts/build-town-hero.py
 
 ROOT = os.environ.get('TYCOON_ROOT') or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_GLB = os.path.join(ROOT, 'public/models/town/town-people.glb')
 OUT_BLEND = os.path.join(ROOT, 'assets/town/town-people.blend')
 FALLOFF = .575            # metaball surface radius / nominal size at stiffness 2, threshold .6
 ABDUCT = math.radians(12) # arms hang slightly away from the body in the rest pose
-CLIPS = [('Idle', 90), ('Walk', 32), ('Run', 32), ('Serve', 120), ('Wave', 72), ('Celebrate', 90)]
 
 # ---------------------------------------------------------------- scene
 if bpy.app.background:                       # headless: build into the startup scene, emptied
@@ -41,7 +42,7 @@ else:                                        # live session: a separate scene; t
 for o in [o for o in bpy.data.objects if not o.users_scene]: bpy.data.objects.remove(o)
 for store in (bpy.data.meshes, bpy.data.armatures, bpy.data.metaballs):
     for block in [b for b in store if b.users == 0]: store.remove(block)
-for a in [a for a in bpy.data.actions if a.name.split('.')[0] in dict(CLIPS)]: bpy.data.actions.remove(a)
+town_rig.clear_clips()
 col = scene.collection
 
 def link(o): col.objects.link(o); return o
@@ -333,59 +334,10 @@ for i, v in enumerate(body.data.vertices):
         if (p - c).length < .05 and p.y < -.09: blink.data[i].co = Vector((p.x, p.y, EYE_Z + .012 + (p.z - EYE_Z - .012) * .12))
 
 # ---------------------------------------------------------------- bones up, no roll: identity rest rotation per joint
-activate(arm); bpy.ops.object.mode_set(mode='EDIT')
-for eb in arm_data.edit_bones:
-    length = max(.06, (eb.tail - eb.head).length); eb.tail = eb.head + Vector((0, 0, length)); eb.roll = 0
-bpy.ops.object.mode_set(mode='OBJECT')
+town_rig.bones_up(arm, activate)
 
 # ---------------------------------------------------------------- clips (same motion as scripts/refine-town-character.py)
-pose = arm.pose.bones
-def set_joint(name, rx=0., ry=0., rz=0.):
-    pb = pose[name]; B = pb.bone.matrix_local.to_3x3(); R = Euler((rx, ry, rz), 'XYZ').to_matrix()
-    pb.rotation_mode = 'QUATERNION'; pb.rotation_quaternion = (B.inverted() @ R @ B).to_quaternion()
-def set_offset(name, v):
-    pb = pose[name]; pb.location = pb.bone.matrix_local.to_3x3().inverted() @ Vector(v)
-arm.animation_data_create()
-for clip, length in CLIPS:
-    action = bpy.data.actions.new(clip); arm.animation_data.action = action
-    for frame in range(1, length + 2):
-        t = (frame - 1) / length; phase = t * math.tau; moving = clip in ('Walk', 'Run')
-        rot = {n: [0., 0., 0.] for n in JOINTS}
-        # Standing hips at .945 keep the knees nearly straight; walking and running drop the hips just enough for the
-        # stride to stay within the leg's reach (thigh .43 + shin .41). Ground speed = travel / stance time:
-        # Walk .66 m / .64 s = 1.03125 m/s, Run .80 m / .5333 s = 1.5 m/s (CLIP_GROUND_SPEED in townLocomotion.ts).
-        hips_z = (.89 + .015 * math.cos(phase * 2)) if clip == 'Walk' else (.86 + .02 * math.cos(phase * 2)) if clip == 'Run' else .945 + .006 * math.sin(phase)
-        rot['Torso'][0] = -.07 if clip == 'Run' else -.015
-        rot['Torso'][2] = .025 * math.sin(phase) if moving else .008 * math.sin(phase)
-        for i, side in enumerate((-1, 1)):
-            k = str(side); cycle = (t + i * .5) % 1; stance = .6 if clip == 'Walk' else .5; travel = .66 if clip == 'Walk' else .80
-            y = 0.; lift = 0.
-            if moving:
-                if cycle < stance: y = -travel / 2 + travel * cycle / stance
-                else:
-                    swing = (cycle - stance) / (1 - stance); y = travel / 2 - travel * (.5 - .5 * math.cos(math.pi * swing))
-                    lift = (.08 if clip == 'Walk' else .16) * math.sin(math.pi * swing)
-            target_z = .09 + lift - (hips_z - .03); dist = min(.838, math.hypot(y, target_z)); a, b = .43, .41
-            bend = math.acos(max(-1, min(1, (dist * dist - a * a - b * b) / (2 * a * b))))
-            thigh = math.atan2(y, -target_z) - math.atan2(b * math.sin(bend), a + b * math.cos(bend))
-            rot['Thigh' + k][0] = thigh; rot['Knee' + k][0] = bend; rot['Ankle' + k][0] = -thigh - bend
-            rot['Shoulder' + k][0] = (-.36 if clip == 'Walk' else -.5) * math.sin(phase + i * math.pi) if moving else -.04
-            rot['Elbow' + k][0] = -.9 if clip == 'Run' else -.22
-        if clip == 'Serve':
-            reach = math.sin(math.pi * min(1, max(0, (t - .05) / .85))) ** .7
-            rot['Shoulder1'][0] = -.1 - reach * 1.0; rot['Elbow1'][0] = -.22 - reach * .45; rot['Torso'][0] = -.035 * reach; rot['Head'][0] = .08 * reach
-        elif clip == 'Wave':
-            env = math.sin(math.pi * t) ** .6
-            rot['Shoulder1'][1] = -1.1 * env; rot['Shoulder1'][0] = -.45 * env; rot['Elbow1'][0] = -.25 - 1.45 * env; rot['Elbow1'][1] = .22 * math.sin(phase * 3) * env
-        elif clip == 'Celebrate':
-            env = math.sin(math.pi * t) ** .6
-            for side in (-1, 1): rot['Shoulder' + str(side)][1] = -side * 2.15 * env; rot['Elbow' + str(side)][0] = -.3 - .4 * env
-            rot['Head'][0] = -.12 * env
-        for n in JOINTS:
-            set_joint(n, *rot[n]); pose[n].keyframe_insert('rotation_quaternion', frame=frame)
-        set_offset('Hips', (0, 0, hips_z - .96)); pose['Hips'].keyframe_insert('location', frame=frame)
-    track = arm.animation_data.nla_tracks.new(); track.name = clip; track.strips.new(clip, 1, action); arm.animation_data.action = None
-for pb in pose: pb.rotation_quaternion = (1, 0, 0, 0); pb.location = (0, 0, 0)
+town_rig.add_clips(arm, list(JOINTS))
 scene.render.fps = 30; scene.frame_set(1)
 
 # ---------------------------------------------------------------- export

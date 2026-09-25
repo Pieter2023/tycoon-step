@@ -1,7 +1,7 @@
 import { characterExpression, createBlink } from './townCharacterExpression';
 import { doorwayEntry } from './townDoors';
 import { followRoute, locomotionClip, turnSpeedFactor, CLIP_GROUND_SPEED } from './townLocomotion';
-import { createAtelierMaterials, dressTown, dressPlayer } from './townAtelier';
+import { createAtelierMaterials, dressTown, dressPlayer, HERO_APRON } from './townAtelier';
 import { createSkyDome, createSkyEnvironment, createContactShadow, outdoorLighting, skyColors, LIGHT_BALANCE, CONTACT_SHADOW_NAME, SkyColors } from './townLighting';
 import { CafeService, ServiceStation, SERVICE_STATIONS } from '../../services/cafeService';
 import { tl } from '../../i18n/town';
@@ -30,7 +30,7 @@ import { residentStyle, seatActor, sitHips, styleCharacter, yieldTo, Sex, YieldS
 import { createQualityGovernor, initialQuality, QUALITY_SETTINGS, QualityLevel, QualityMode } from './townQuality';
 export type TownView = { x:number; z:number; yaw:number; pitch:number; distance:number; mode?:CameraPreset };
 export type TownSpot = 'teller' | 'exit' | 'cart' | 'cafe-counter' | 'broker' | 'agent' | 'board' | 'home' | 'desk' | 'rosa' | 'work' | 'manager' | 'college' | 'registrar' | 'garage' | null;
-export type TownSceneOptions = { autoDoors?:boolean; characterAtelier?:boolean; art?:'original'|'atelier'; review?:{phase:number;season:Season;room?:'cafe'}; onStats?:(stats:{fps:number;calls:number;triangles:number})=>void; view?:TownView; onView?:(view:TownView)=>void; onRoom?:(room:'city'|'bank'|'cafe'|'exchange'|'property'|'home'|'work'|'college')=>void; onPlayerPoint?:(point:TownPoint)=>void; onSpot?:(spot:TownSpot)=>void; onManual?:()=>void; playerSex?:Sex; playerScale?:number; quality?:QualityMode; onQuality?:(level:QualityLevel, automatic:boolean)=>void; onProgress?:(fraction:number)=>void; onTimeOfDay?:(label:Daylight['label'])=>void };
+export type TownSceneOptions = { autoDoors?:boolean; characterAtelier?:boolean; hero?:'alex'; art?:'original'|'atelier'; review?:{phase:number;season:Season;room?:'cafe'}; onStats?:(stats:{fps:number;calls:number;triangles:number})=>void; view?:TownView; onView?:(view:TownView)=>void; onRoom?:(room:'city'|'bank'|'cafe'|'exchange'|'property'|'home'|'work'|'college')=>void; onPlayerPoint?:(point:TownPoint)=>void; onSpot?:(spot:TownSpot)=>void; onManual?:()=>void; playerSex?:Sex; playerScale?:number; quality?:QualityMode; onQuality?:(level:QualityLevel, automatic:boolean)=>void; onProgress?:(fraction:number)=>void; onTimeOfDay?:(label:Daylight['label'])=>void };
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
@@ -211,7 +211,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   // Each successful load is released even if the other request fails or the view closes.
   const loaded: THREE.Object3D[] = [];
   // Download progress across the three model files (the city is by far the largest), reported as one fraction.
-  const progress = new Map<string, number>(), weights: Record<string, number> = { 'freedom-square': .72, 'town-people': .2, 'town-vehicles': .08 };
+  const progress = new Map<string, number>(), weights: Record<string, number> = options.hero ? { 'freedom-square': .5, 'town-people': .22, 'town-vehicles': .06, 'town-hero': .22 } : { 'freedom-square': .72, 'town-people': .2, 'town-vehicles': .08 };
   const report = () => { let sum = 0; for (const [key, weight] of Object.entries(weights)) sum += weight * (progress.get(key) ?? 0); options.onProgress?.(Math.min(1, sum)); };
   const load = async (url: string) => { const key = Object.keys(weights).find(k => url.includes(k)) ?? url; const gltf = await loader.loadAsync(url, e => { progress.set(key, e.total ? e.loaded / e.total : .5); report(); }); progress.set(key, 1); report(); if (!alive) disposeTree(gltf.scene); else loaded.push(gltf.scene); return gltf; };
   if(library){
@@ -220,8 +220,10 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   }
   // Vehicles are optional: the square still opens if only their file fails.
   // Bump when any model in public/models/town changes: the files keep their names, so browsers would otherwise reuse a cached copy.
-  const MODEL_VERSION = '20260906a', PEOPLE_VERSION = '20260925b';
-  Promise.all([load(`/models/town/freedom-square.glb?v=${MODEL_VERSION}`), load(`/models/town/town-people.glb?v=${PEOPLE_VERSION}`), load(`/models/town/town-vehicles.glb?v=${MODEL_VERSION}`).catch(() => null),options.characterAtelier?load('/models/town/alex-atelier.glb?v=alex1').catch(()=>null):Promise.resolve(null)]).then(([town, character, vehicles, hero]) => {
+  const MODEL_VERSION = '20260906a', PEOPLE_VERSION = '20260925b', HERO_VERSION = '20260925c';
+  // The player's own model: the AI-modelled hero (scripts/build-town-hero.py) or the retired Sept-13 atelier Alex.
+  const heroFile = options.hero ? `/models/town/town-hero-${options.hero}.glb?v=${HERO_VERSION}` : options.characterAtelier ? '/models/town/alex-atelier.glb?v=alex1' : null;
+  Promise.all([load(`/models/town/freedom-square.glb?v=${MODEL_VERSION}`), load(`/models/town/town-people.glb?v=${PEOPLE_VERSION}`), load(`/models/town/town-vehicles.glb?v=${MODEL_VERSION}`).catch(() => null),heroFile?load(heroFile).catch(()=>null):Promise.resolve(null)]).then(([town, character, vehicles, hero]) => {
     if (!alive) return;
     for (const root of [town.scene, character.scene]) root.traverse(o => { if (o instanceof THREE.Mesh) { o.castShadow = true; o.receiveShadow = true; } });
     // A soft contact shadow under every figure; clones below inherit it.
@@ -296,7 +298,9 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,depthTest:false}));sprite.scale.set(1.8,.35,1);sprite.visible=false;cafeRoom.root.add(sprite);guestLabels.push({sprite,canvas:label,texture,text:''});
     }
     if(hero){
-      player.remove(character.scene);player.add(hero.scene);playerActor=addActor(hero.scene,hero.animations);playerAtelier=true;updateExpression=characterExpression(hero.scene);
+      player.remove(character.scene);player.add(hero.scene);playerActor=addActor(hero.scene,hero.animations);
+      // The hero shares the townspeople's joint names and clips, so every direct pose, the cup carry and the apron work as they are.
+      if(options.hero){if(library)workApron=dressPlayer(hero.scene,library,HERO_APRON);}else{playerAtelier=true;updateExpression=characterExpression(hero.scene);}
       hero.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.castShadow=true;o.receiveShadow=true;}});hero.scene.add(createContactShadow(1.1,1.1,.55));
     }else if (library) workApron=dressPlayer(character.scene,library);
     ready = true;if(options.review?.room==='cafe')transition(true,'cafe'); onReady?.();
