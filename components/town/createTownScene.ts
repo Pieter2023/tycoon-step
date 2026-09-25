@@ -2,6 +2,7 @@ import { characterExpression } from './townCharacterExpression';
 import { doorwayEntry } from './townDoors';
 import { followRoute, locomotionClip, turnSpeedFactor } from './townLocomotion';
 import { createAtelierMaterials, dressTown, dressPlayer } from './townAtelier';
+import { createSkyDome, createSkyEnvironment, createContactShadow, outdoorLighting, skyColors, LIGHT_BALANCE, CONTACT_SHADOW_NAME, SkyColors } from './townLighting';
 import { CafeService, ServiceStation, SERVICE_STATIONS } from '../../services/cafeService';
 import { tl } from '../../i18n/town';
 import { createCafeRoom, clampCafePoint, cafeSpot } from './townCafeRoom';
@@ -58,12 +59,14 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const scene = new THREE.Scene(); scene.background = new THREE.Color('#bdd7e4'); scene.fog = new THREE.Fog('#bdd7e4', 34, 90);
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.6)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
-  renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08;
+  renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping; renderer.toneMappingExposure = 1;
   const canvas = renderer.domElement; canvas.tabIndex = 0; canvas.style.cssText = 'display:block;width:100%;height:100%;touch-action:none;outline:none';
   canvas.setAttribute('aria-label', '3D city. Click pavement to walk, drag to look around, scroll to zoom. W A S D or arrows move relative to the camera; walk into a building doorway to enter, or use E or Enter; R resets the camera.'); canvas.setAttribute('role', 'application'); host.appendChild(canvas);
   const camera = new THREE.PerspectiveCamera(48, 1, .15, 160);
-  const pmrem = new THREE.PMREMGenerator(renderer), room = new RoomEnvironment(), environment = pmrem.fromScene(room, .04); room.dispose(); pmrem.dispose();
-  scene.environment = environment.texture; scene.environmentIntensity = .32;
+  // Interiors keep the soft studio environment; outdoors the square is lit by a captured sky (townLighting).
+  const pmrem = new THREE.PMREMGenerator(renderer), room = new RoomEnvironment(), studio = pmrem.fromScene(room, .04); room.dispose(); pmrem.dispose();
+  scene.environment = studio.texture; scene.environmentIntensity = .32;
+  const skyEnvironment = createSkyEnvironment(renderer), skyDome = createSkyDome();
   const hemi = new THREE.HemisphereLight('#fff4df', '#687b85', 1.7); scene.add(hemi);
   const sun = new THREE.DirectionalLight('#fff0d4', 3.3); sun.position.set(-16, 25, 15); sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -27, right: 27, top: 25, bottom: -25, far: 75 }); sun.shadow.normalBias = .025; sun.shadow.bias = -.0002; sun.shadow.radius = 3; scene.add(sun);
@@ -79,7 +82,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     renderer.shadowMap.needsUpdate = true;
   };
   applyQuality(quality);
-  const outdoors = new THREE.Group(); scene.add(outdoors);
+  const outdoors = new THREE.Group(); scene.add(outdoors); outdoors.add(skyDome.root);
   const bank = createTownBank(library); scene.add(bank.root);
   const cafeRoom = createCafeRoom(library); scene.add(cafeRoom.root);
   const exchange = createTownExchange(); scene.add(exchange.root);
@@ -123,7 +126,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const HOME={x:-15.7,z:7.4};
   // The parking bay at the kerb by the townhouse: the player's first car stands here (setGarage); the panel lists any second one.
   const GARAGE={x:-14.2,z:8.0}; const parking=new THREE.Group(); outdoors.add(parking); let carPrototype:THREE.Object3D|undefined, garageCars:{paint:string}[]=[];
-  const applyGarage=()=>{parking.clear();if(!carPrototype)return;garageCars.slice(0,1).forEach((car,i)=>{const clone=carPrototype!.clone(true);clone.traverse(o=>{if(!(o instanceof THREE.Mesh)||Array.isArray(o.material))return;o.castShadow=true;o.receiveShadow=true;const m=(o.material as THREE.MeshStandardMaterial).clone();o.material=m;if(m.name==='carPaint')m.color.set(car.paint);if(m.name==='lamp'){m.emissiveIntensity=0;}});clone.position.set(-14.7,.22,9.5);clone.rotation.y=Math.PI;parking.add(clone);});};
+  const applyGarage=()=>{parking.clear();if(!carPrototype)return;garageCars.slice(0,1).forEach((car,i)=>{const clone=carPrototype!.clone(true);clone.traverse(o=>{if(!(o instanceof THREE.Mesh)||Array.isArray(o.material))return;o.castShadow=true;o.receiveShadow=true;const m=(o.material as THREE.MeshStandardMaterial).clone();o.material=m;if(m.name==='carPaint')m.color.set(car.paint);if(m.name==='lamp'){m.emissiveIntensity=0;}});clone.add(createContactShadow(4.7,2.4,.5,-.16));clone.position.set(-14.7,.22,9.5);clone.rotation.y=Math.PI;parking.add(clone);});};
   const facade=createHomeFacade(HOME);outdoors.add(facade.root);
   // Main Street Offices mirror the townhouse at the east end of the promenade (negative x scale flips the facade).
   const WORK={x:15.7,z:7.4};
@@ -158,6 +161,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
    drawNotices({title:tl('NOTICE BOARD','TABLÓN DE ANUNCIOS'),subtitle:tl("This month's challenges",'Los retos de este mes'),lines:[]});
    const sheet=new THREE.Mesh(new THREE.PlaneGeometry(1.55,.97),new THREE.MeshBasicMaterial({map:paperTexture}));sheet.position.set(BOARD.x,1.75,BOARD.z+.05);outdoors.add(sheet);
    const roofBoard=new THREE.Mesh(new THREE.BoxGeometry(1.9,.08,.5),new THREE.MeshStandardMaterial({color:'#7a4a3c'}));roofBoard.position.set(BOARD.x,2.36,BOARD.z);outdoors.add(roofBoard);}
+  let skyState:SkyColors|undefined;
   let glassMaterial:THREE.MeshStandardMaterial|undefined, townMonth=1, phaseOverride:number|undefined=options.review?.phase, timeLabel:Daylight['label']|undefined;
   // Seasons recolour the merged city materials and drop snow or leaves.
   const seasonFall=createSeasonFall();outdoors.add(seasonFall.root);let palette:ReturnType<typeof createSeasonPalette>|undefined, season:Season='summer', seasonOverride:Season|undefined=options.review?.season;
@@ -216,6 +220,8 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   Promise.all([load(`/models/town/freedom-square.glb?v=${MODEL_VERSION}`), load(`/models/town/town-character.glb?v=${MODEL_VERSION}`), load(`/models/town/town-vehicles.glb?v=${MODEL_VERSION}`).catch(() => null),options.characterAtelier?load('/models/town/alex-atelier.glb?v=alex1').catch(()=>null):Promise.resolve(null)]).then(([town, character, vehicles, hero]) => {
     if (!alive) return;
     for (const root of [town.scene, character.scene]) root.traverse(o => { if (o instanceof THREE.Mesh) { o.castShadow = true; o.receiveShadow = true; } });
+    // A soft contact shadow under every figure; clones below inherit it.
+    character.scene.add(createContactShadow(1.1, 1.1, .55));
     outdoors.add(town.scene);if(library)dressTown(town.scene,library); player.add(character.scene); playerActor = addActor(character.scene, character.animations);
     palette = createSeasonPalette(town.scene); palette.apply(seasonOverride ?? season);
     town.scene.traverse(o => { if (o instanceof THREE.Mesh && !Array.isArray(o.material) && o.material.name === 'glass' && o.material instanceof THREE.MeshStandardMaterial) { glassMaterial = o.material; glassMaterial.emissive.set('#ffc985'); glassMaterial.emissiveIntensity = 0; } });
@@ -224,13 +230,14 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     if (options.playerScale) character.scene.scale.setScalar(options.playerScale);   // kids mode: a smaller figure
     if (vehicles) {
       traffic = createTownTraffic(vehicles.scene, reducedMotion); outdoors.add(traffic.root);
+      for (const vehicle of traffic.fleet) vehicle.root.add(createContactShadow(vehicle.length + .5, 2.4, .5, -.16));
       carPrototype = vehicles.scene.getObjectByName('Car') ?? undefined; applyGarage();
       const bike = vehicles.scene.getObjectByName('Bike'), dog = vehicles.scene.getObjectByName('Dog');
-      if (bike) { const rider = character.scene.clone(true); styleCharacter(rider, residentStyle(12)); cyclist = createCyclist(bike, rider, reducedMotion); outdoors.add(cyclist.root); }
+      if (bike) { const rider = character.scene.clone(true); styleCharacter(rider, residentStyle(12)); const riderShadow = rider.getObjectByName(CONTACT_SHADOW_NAME); if (riderShadow) riderShadow.visible = false; cyclist = createCyclist(bike, rider, reducedMotion); outdoors.add(cyclist.root); }
       if (dog) { dogWalker = createDogWalker(dog, reducedMotion); outdoors.add(dogWalker.root, dogWalker.leash); }
     }
     // Dev-only QA handle for inspecting traffic and pigeons from the console; stripped from production builds.
-    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { traffic, life, cyclist, dogWalker, player: () => ({ x: player.position.x, z: player.position.z }), view: () => ({ yaw, pitch, distance, goal: yawGoal, camera: { x: camera.position.x, y: camera.position.y, z: camera.position.z } }), setPhase: (p?: number) => { phaseOverride = p; }, celebrate: (won: boolean) => { celebrating = won; }, fireworks, walk: (x: number, z: number) => { if (!inside) { clearMovement(); path = findTownPath(player.position, { x, z }); } }, residents: () => pedestrians.map(p => ({ x: p.root.position.x, z: p.root.position.z, visible: p.root.visible, seated: p.seat !== undefined })), quality: () => quality, setQuality: (mode: QualityMode) => { governor.set(initialQuality(mode, deviceHints()), mode === 'auto'); applyQuality(governor.level); }, governor, setSeason: (s?: Season) => { seasonOverride = s; palette?.apply(s ?? season); } };
+    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { traffic, life, cyclist, dogWalker, player: () => ({ x: player.position.x, z: player.position.z }), view: () => ({ yaw, pitch, distance, goal: yawGoal, camera: { x: camera.position.x, y: camera.position.y, z: camera.position.z } }), setPhase: (p?: number) => { phaseOverride = p; }, celebrate: (won: boolean) => { celebrating = won; }, fireworks, walk: (x: number, z: number) => { if (!inside) { clearMovement(); path = findTownPath(player.position, { x, z }); } }, setView: (v: { x?: number; z?: number; yaw?: number; pitch?: number; distance?: number }) => { clearMovement(); stopPath(); if (!inside && v.x !== undefined && v.z !== undefined && isWalkable({ x: v.x, z: v.z })) { player.position.x = v.x; player.position.z = v.z; cameraTarget.set(v.x, 1.65, v.z); } if (v.yaw !== undefined) { yaw = v.yaw; yawGoal = undefined; } if (v.pitch !== undefined) pitch = v.pitch; if (v.distance !== undefined) zoomDistance = distance = v.distance; }, residents: () => pedestrians.map(p => ({ x: p.root.position.x, z: p.root.position.z, visible: p.root.visible, seated: p.seat !== undefined })), quality: () => quality, setQuality: (mode: QualityMode) => { governor.set(initialQuality(mode, deviceHints()), mode === 'auto'); applyQuality(governor.level); }, governor, setSeason: (s?: Season) => { seasonOverride = s; palette?.apply(s ?? season); }, lighting: LIGHT_BALANCE, toneMapping: (curve: 'aces' | 'neutral') => { renderer.toneMapping = curve === 'aces' ? THREE.ACESFilmicToneMapping : THREE.NeutralToneMapping; }, advance: (frames = 1) => { if (!contextAvailable) return; for (let i = 0; i < frames; i++) step(performance.now(), 1000 / 60, 1 / 60); } };
     if(library)void load('/models/town/bistro-furniture.glb?v=atelier1').then(asset=>{if(alive)cafeRoom.installFurniture(asset.scene);}).catch(()=>{});
     if(library)void load('/models/town/cafe-espresso.glb?v=atelier1').then(asset=>{if(alive){cart.installMachine(asset.scene);cafeRoom.installMachine(asset.scene.clone(true));}}).catch(()=>{});
     // Twelve neighbours: walkers on both pavements plus two resting on the promenade benches.
@@ -286,7 +293,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     }
     if(hero){
       player.remove(character.scene);player.add(hero.scene);playerActor=addActor(hero.scene,hero.animations);playerAtelier=true;updateExpression=characterExpression(hero.scene);
-      hero.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.castShadow=true;o.receiveShadow=true;}});
+      hero.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.castShadow=true;o.receiveShadow=true;}});hero.scene.add(createContactShadow(1.1,1.1,.55));
     }else if (library) workApron=dressPlayer(character.scene,library);
     ready = true;if(options.review?.room==='cafe')transition(true,'cafe'); onReady?.();
   }).catch(() => { if (alive) onFailure(); });
@@ -336,7 +343,12 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const dayPhaseDark=()=>daylight(phaseOverride??dayPhase(townMonth,elapsed,reducedMotion),rainy).lamps>.4;
   let doorLockedUntil=0;
   const tick = (now:number) => {
-    if (!alive) return; frame=requestAnimationFrame(tick); const frameMs=now-previousTime, dt=Math.min(frameMs/1000,.04); previousTime=now; if(document.hidden || !contextAvailable) return; elapsed+=dt;
+    if (!alive) return; frame=requestAnimationFrame(tick); const frameMs=now-previousTime, dt=Math.min(frameMs/1000,.04); previousTime=now; if(document.hidden || !contextAvailable) return; step(now,frameMs,dt);
+  };
+  // One simulated and rendered frame. The dev QA handle calls it directly (advance) so visual checks
+  // also work while the browser tab is hidden and the animation loop is idle.
+  const step = (now:number, frameMs:number, dt:number) => {
+    elapsed+=dt;
     if(ready){const tier=governor.sample(frameMs);if(tier){applyQuality(tier);options.onQuality?.(tier,true);}}
     updateExpression?.(elapsed,reducedMotion);
     if(workApron)workApron.visible=cafeInside||!!serviceStage||!!options.review;
@@ -421,8 +433,17 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     weather.update(elapsed,rainy,reducedMotion);seasonFall.update(elapsed,seasonOverride??season,reducedMotion||inside);
     const light=inside?daylight(.22,false):daylight(phaseOverride??dayPhase(townMonth,elapsed,reducedMotion),rainy);
     if(!inside&&(seasonOverride??season)==='winter'){light.sunIntensity*=.8;light.sunColor='#e8f0ff';}
-    sun.position.copy(light.sun);sun.intensity=light.sunIntensity;sun.color.set(light.sunColor);hemi.color.set(light.sky);hemi.groundColor.set(light.ground);hemi.intensity=light.skyIntensity;scene.environmentIntensity=light.ambient*(atelier?.65:1);if(atelier){sun.intensity*=.84;hemi.intensity*=light.night?1:.72;scene.environmentIntensity=Math.max(.12,scene.environmentIntensity);cart.setLight(light.lamps);}
-    renderer.toneMappingExposure=Number(light.exposure)*(atelier?.94:1);lamps.set(inside?0:light.lamps);if(glassMaterial)glassMaterial.emissiveIntensity=light.windows*.9;facade.glass.emissiveIntensity=light.windows*.9;officeFacade.glass.emissiveIntensity=light.windows*.9;
+    sun.position.copy(light.sun);sun.color.set(light.sunColor);hemi.color.set(light.sky);hemi.groundColor.set(light.ground);
+    if(inside){
+      // Rooms keep their established balance under the studio environment.
+      scene.environment=studio.texture;sun.intensity=light.sunIntensity;hemi.intensity=light.skyIntensity;scene.environmentIntensity=light.ambient*(atelier?.65:1);if(atelier){sun.intensity*=.84;hemi.intensity*=.72;scene.environmentIntensity=Math.max(.12,scene.environmentIntensity);}
+      renderer.toneMappingExposure=Number(light.exposure)*(atelier?.94:1)*LIGHT_BALANCE.interiorExposure;skyState=undefined;
+    }else{
+      // Outdoors: the sun is the key, the captured sky the fill (townLighting).
+      const mix=outdoorLighting(light);skyState=skyColors(light);
+      sun.intensity=mix.sun;hemi.intensity=mix.hemi;scene.environment=skyEnvironment.update(skyState,light.sun,elapsed);scene.environmentIntensity=mix.environment;renderer.toneMappingExposure=mix.exposure;
+    }
+    if(atelier)cart.setLight(light.lamps);lamps.set(inside?0:light.lamps);if(glassMaterial)glassMaterial.emissiveIntensity=light.windows*.9;facade.glass.emissiveIntensity=light.windows*.9;officeFacade.glass.emissiveIntensity=light.windows*.9;
     if(!inside){(scene.background as THREE.Color).set(light.background);if(scene.fog instanceof THREE.Fog)scene.fog.color.set(light.background);ambience?.night(light.night?1:light.lamps*.6);}
     if(!inside&&light.label!==timeLabel){timeLabel=light.label;options.onTimeOfDay?.(light.label);}
     const playing=cafeInside&&cafeService?.status==='active';
@@ -504,6 +525,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       if(giver&&receiver&&t>.12&&t<.87){scene.updateMatrixWorld(true);cupPosition=giver.getWorldPosition(new THREE.Vector3());const target=receiver.getWorldPosition(new THREE.Vector3());const f=THREE.MathUtils.smoothstep(t,.42,.65);cupPosition.lerp(target,f);cupPosition.y+=.04;}
     }
     cart.presentCup(cupPosition);
+    if(skyState)skyDome.update(skyState,sun.position,camera);
     renderer.render(scene,camera);
     if(options.onStats){statsElapsed+=frameMs/1000;statsFrames++;if(statsElapsed>=1){options.onStats({fps:Math.round(statsFrames/statsElapsed),calls:renderer.info.render.calls,triangles:renderer.info.render.triangles});statsElapsed=statsFrames=0;}}
   };
@@ -575,6 +597,6 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     move(x,z){if(serviceStage)return;stick={x,z};if(Math.hypot(x,z)>.12){stopPath();options.onManual?.();}},
     resetView(){yaw=atelier&&!inside?-.55:.12;const preset=cameraPreset(cameraMode,inside);pitch=preset.pitch;zoomDistance=preset.distance;},
     setOwned(ids){for(const [id,object]of ownedMarkers)object.visible=ids.includes(id);},
-    dispose(){options.onView?.(inside&&cityView?cityView:{x:player.position.x,z:player.position.z,yaw,pitch,distance:zoomDistance,mode:cameraMode});ambience?.dispose();void audioContext?.close();alive=false;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',keyboard);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('contextmenu',contextMenu);canvas.removeEventListener('webglcontextlost',lost);playerActor?.mixer.stopAllAction();teller?.mixer.stopAllAction();cafeActors.forEach(a=>a.mixer.stopAllAction());pedestrians.forEach(p=>p.mixer.stopAllAction());if(traffic)disposeTree(traffic.root);if(cyclist)disposeTree(cyclist.root);if(dogWalker){disposeTree(dogWalker.root);dogWalker.leash.geometry.dispose();}disposeTree(life.root);for(const root of loaded)if(!root.parent)disposeTree(root);disposeTree(scene);library?.dispose();draco.dispose();environment.dispose();sun.shadow.dispose();renderer.dispose();renderer.forceContextLoss();canvas.remove();}
+    dispose(){options.onView?.(inside&&cityView?cityView:{x:player.position.x,z:player.position.z,yaw,pitch,distance:zoomDistance,mode:cameraMode});ambience?.dispose();void audioContext?.close();alive=false;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',keyboard);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('contextmenu',contextMenu);canvas.removeEventListener('webglcontextlost',lost);playerActor?.mixer.stopAllAction();teller?.mixer.stopAllAction();cafeActors.forEach(a=>a.mixer.stopAllAction());pedestrians.forEach(p=>p.mixer.stopAllAction());if(traffic)disposeTree(traffic.root);if(cyclist)disposeTree(cyclist.root);if(dogWalker){disposeTree(dogWalker.root);dogWalker.leash.geometry.dispose();}disposeTree(life.root);for(const root of loaded)if(!root.parent)disposeTree(root);disposeTree(scene);library?.dispose();draco.dispose();studio.dispose();skyEnvironment.dispose();sun.shadow.dispose();renderer.dispose();renderer.forceContextLoss();canvas.remove();}
   };
 }
