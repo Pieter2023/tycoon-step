@@ -8,7 +8,7 @@ Updated **September 25, 2026 (evening PDT)**. That session produced three things
 |---|---|
 | Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | `origin/main` = `073f397` (build 39, Sept 7). The live site was not re-checked on 2026-09-25. |
 | Branch `codex/game-overhaul-20260503-223748` | The same commit as `origin/main`. |
-| **Work branch `town-lighting-pass`** (checked out) | Ahead of `origin/main`, **not pushed and not deployed**. See the commit list below. |
+| **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin/town-lighting-pass` as a **backup** (2026-09-25). **Not merged into `main` and not deployed.** Only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
 | Validation on the branch | 400 tests / 71 files, TypeScript and the production build. `dist/` currently holds the branch build. |

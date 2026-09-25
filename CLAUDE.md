@@ -5,7 +5,7 @@
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
 - **Production:** `origin/main` = `073f397` (build 39), auto-deployed to Netlify `tycoonjan22026`. The whole 3D city is live there.
-- **Work branch `town-lighting-pass`:** checked out, **not pushed or deployed**. It holds:
+- **Work branch `town-lighting-pass`:** checked out and pushed to `origin` as a backup, but **not merged into `main` and not deployed**. It holds:
   - the Sept-13 atelier work, committed as found;
   - the sky-lit lighting pass and a longer camera lens (build 40);
   - the skinned townspeople from `scripts/build-town-people.py` (build 41). Every joint must keep an identity rest rotation.
@@ -16,7 +16,7 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - the direction of the economy fix (the game currently rewards coffee-cart stacking and savings over index investing).
 - **Visual QA:** the town scene is a code-split chunk, so verify town deploys by grepping `TownModal-*.js`/`createTownScene-*.js`, not `index-*.js`. When the browser pane is hidden, use the dev handle `__town.advance(frames)` with `scripts/qa/capture-receiver.py` (HANDOVER §5).
 - **Ports and saves:** the user preview is `127.0.0.1:5187`; isolate QA on 5188. Preserve the user's save and all tracked and untracked work.
-- **Pushing:** don't push or deploy the branch without Pieter's go-ahead. Earlier deploys to `main` were authorised case by case.
+- **Pushing:** pushing the backup branch is fine. Merging to `main`, which deploys, needs Pieter's go-ahead; earlier deploys were authorised case by case.
 
 Current feature/source map and run instructions are in the handover. Detailed evidence is in [docs/completed-improvements.md](docs/completed-improvements.md); remaining priorities are in [docs/roadmap.md](docs/roadmap.md). Physical-phone testing remains open. No new paid service is needed for the implemented prototype.
 
