@@ -146,3 +146,4 @@
 @media(max-height:540px) and (orientation:landscape){.town-focus-toggle{display:block}}
 
 .town-cinematic{border:1px solid #d2c8b6;border-radius:12px;margin:0 0 16px;padding:12px;background:#f5f0e6;color:#283f38}.town-cinematic summary{cursor:pointer;font-weight:650;min-height:24px}.town-cinematic video{display:block;width:100%;max-height:45vh;margin-top:12px;border-radius:8px;background:#182921;object-fit:contain}.town-cinematic p{font-size:12px;line-height:1.5;margin:8px 0 0}
+.town-stats{position:absolute;left:50%;top:6px;transform:translateX(-50%);padding:4px 8px;border-radius:6px;background:#0d1f1bd9;color:#d8f5d0;font:600 10px/1.4 ui-monospace,Menlo,monospace;z-index:8;pointer-events:none}
