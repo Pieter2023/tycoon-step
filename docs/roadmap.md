@@ -2,10 +2,10 @@
 
 ## Current priorities — September 25, 2026
 
-Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). Production is `origin/main` = `073f397` (build 39). Branch `town-lighting-pass` holds the lighting pass, the camera, the skinned townspeople and the AI-modelled Alex (builds 40–42), with 417 tests / 73 files passing; it is pushed to `origin` as a backup, not merged or deployed.
+Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). Production is `origin/main` = `073f397` (build 39). Branch `town-lighting-pass` holds the lighting pass, the camera, the skinned townspeople and the AI-modelled Alex (builds 40–42), with 422 tests / 74 files passing; it is pushed to `origin` as a backup, not merged or deployed.
 
 1. ✅ **Economy fix (Phase 0)** (build 44): prices drift with expected returns, businesses saturate and can lose money, shortfalls go on a credit card, tax is withheld monthly, and the 4% rule counts toward freedom. `docs/verification/economy-2026-09-25/`.
-2. **Traffic deadlock** on guided walks across the crosswalk (a task was offered).
+2. ✅ **Traffic deadlock** fixed (build 45).
 3. ✅ **AI-modelled Alex** (build 42, concept 2, 38 credits; `docs/verification/hero-alex-2026-09-25/`). On the branch; not merged or deployed.
 4. **The city as the game (Phase 1):** a main screen, a month as a day, events in the world, and wealth that builds the city.
 5. **Visual follow-ups:** sign lettering replaced by decals, an AO bake, textures, hair polish, and a Sit clip.

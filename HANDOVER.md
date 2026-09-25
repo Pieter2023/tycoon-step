@@ -1,6 +1,6 @@
 # Start here — Tycoon handover
 
-Updated **September 25, 2026 (evening PDT)**. That day produced four things: a full game assessment, a lighting pass, new skinned characters, and the AI-modelled Alex (build 42, after Pieter picked concept 2). Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
+Updated **September 25, 2026 (late evening PDT)**. That day produced: a full game assessment, a lighting pass, new skinned characters, the AI-modelled Alex (build 42), the walk-bob fix (43), the first real-phone check, the economy fix Phase 0 (44) and the traffic-deadlock fix (45). Pieter said "do next as suggested", so §3 is being worked in order; Phase 1 (the city as the game) is next. Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
 
 ## 1. Where things stand
 
@@ -11,11 +11,12 @@ Updated **September 25, 2026 (evening PDT)**. That day produced four things: a f
 | **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin/town-lighting-pass` as a **backup** (2026-09-25). **Not merged into `main` and not deployed.** Only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
-| Validation on the branch | 401 tests / 71 files, TypeScript and the production build. `dist/` currently holds the branch build. |
+| Validation on the branch | 422 tests / 74 files, TypeScript and the production build. `dist/` currently holds the branch build. |
 | Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
-| QA servers | Another chat's Vite server held `127.0.0.1:5188`, so build 42 was checked on `localhost:5189` (`tycoon-qa-5189` in `.claude/launch.json`) with a fresh Alex save. |
+| QA servers | Another chat's Vite server held `127.0.0.1:5188`, so builds 42–45 were checked on `localhost:5189` (`tycoon-qa-5189` in `.claude/launch.json`) with a fresh Alex save. `tycoon-lan-preview` serves `dist/` on `0.0.0.0:5190` for the phone (`http://192.168.1.80:5190/?stats`). |
+| Phone | Pieter's iPhone is reachable through macOS iPhone Mirroring (computer-use app `iPhone Mirroring`; clicks need full-screen control, background clicks do nothing). First check passed: 60 fps (`docs/verification/phone-2026-09-25/`). |
 
 **Commits on `town-lighting-pass`, oldest first:**
 1. `263aeeb`: snapshot of the Sept-13 atelier work, which was uncommitted until then.
@@ -25,7 +26,11 @@ Updated **September 25, 2026 (evening PDT)**. That day produced four things: a f
 5. `9a26f4d`: skinned townspeople.
 6. `72ba80d`: docs.
 7. `22b08f9`, `5092665`: handover docs and the backup-push note.
-8. The AI-modelled Alex (build 42) and its docs.
+8. `14f93ed`: the AI-modelled Alex (build 42).
+9. `0dc81d2`: walk bob in phase with the gait (build 43).
+10. `08d6e74`: `?stats` readout and the first phone check.
+11. `8fc78bf`: economy fix, Phase 0 (build 44).
+12. `c627dc9`: traffic deadlock fixed (build 45).
 
 ## 2. Decisions waiting on Pieter
 
@@ -42,7 +47,7 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
 ## 3. Next steps, in recommended order
 
 1. ✅ **Economy fix (Phase 0)**, build 44: price drift from expected returns, saturating businesses that can lose money, shortfalls on a credit card, monthly tax withholding, the 4% rule toward freedom, and `test/StrategyRanking.test.ts`. The smaller §1 issues remain.
-2. **Traffic deadlock bug** (assessment §2). A fix-it task was offered in the app; check `git log` and the branch list first, since it may already have run in another session.
+2. ✅ **Traffic deadlock** fixed in build 45 (`docs/verification/traffic-2026-09-25/`).
 3. **The city as the game (Phase 1):**
    - the city becomes the main screen;
    - a month becomes a day;
@@ -57,7 +62,7 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
    - a Sit clip;
    - a blink for the hero Alex (his eyes are painted into the texture, so he needs a morph or an eyelid decal);
    - an even skin tone on the hero's face texture (soft patches on one cheek and the chin up close).
-5. **A real phone and Chromebook test** before any deploy of the branch.
+5. **Phone**: first iPhone check passed at build 43 (60 fps). Repeat after Phase 1 layout changes; a Chromebook is still untested.
 
 ## 4. What Pieter wants (standing)
 
@@ -71,7 +76,7 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
 ```sh
 cd '/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2'
 git status --short && git log --oneline -8
-npm run test:run          # 401 tests / 71 files on the branch
+npm run test:run          # 422 tests / 74 files on the branch
 npm run build
 npx vite --host 127.0.0.1 --port 5188 --strictPort   # or preview_start "tycoon-qa-5188" (.claude/launch.json)
 '/Applications/Blender.app/Contents/MacOS/Blender' --background --factory-startup --python scripts/build-town-people.py   # then bump PEOPLE_VERSION
@@ -279,7 +284,7 @@ These are last-observed snapshots, not values to restore over newer play:
 
 ## Validation and evidence
 
-Latest validation (2026-09-25, branch `town-lighting-pass`): **401 tests / 71 files**, TypeScript and production build; receipts in `docs/verification/lighting-2026-09-25/`, `docs/verification/characters-2026-09-25/` and `docs/verification/hero-alex-2026-09-25/`; assessment in `docs/assessment-2026-09-25.md`.
+Latest validation (2026-09-25, branch `town-lighting-pass`): **422 tests / 74 files**, TypeScript and production build; receipts in `docs/verification/lighting-2026-09-25/`, `docs/verification/characters-2026-09-25/` and `docs/verification/hero-alex-2026-09-25/`; assessment in `docs/assessment-2026-09-25.md`.
 
 Earlier validation (live playthrough fixes): **333 tests / 59 files passed**, TypeScript + production build passed; `git diff --check` passed. Existing chunk-size warnings remain. `dist/` was rebuilt at the end of that pass, so an already-open 5187 page needs a full refresh before opening the city. Commit `35a074d` (townhouse facade) is deployed: Netlify deploy `6a9d135b` published 2026-09-06 07:17 UTC and the live `TownModal-*.js` chunk contains the facade code. Note: the 3D city is a code-split chunk, so the `index-*.js` hash does not change for town-only work; grep the `TownModal` chunk instead. This handover does not repeat financial/cloud testing.
 

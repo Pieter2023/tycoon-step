@@ -12,7 +12,8 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - the AI-modelled Alex (build 42): Meshy 7 from concept 2 (38 Higgsfield credits), rigged onto the town skeleton by `scripts/build-town-hero.py`, loaded only when the character is Alex. Clips for both come from `scripts/town_rig.py`.
   - the walk-bob fix (build 43), an opt-in `?stats` readout and the first real-phone check (60 fps on Pieter's iPhone);
   - the economy fix, Phase 0 (build 44): prices earn expected returns, saturating businesses that can lose money, shortfalls on a credit card, monthly tax withholding, freedom at the 4% rule (`financialFreedom` in `services/gameLogic.ts` drives the win check and every progress bar). Ranking test: `test/StrategyRanking.test.ts`.
-- **Validation:** 417 tests / 73 files and the production build pass on the branch.
+  - the traffic-deadlock fix (build 45).
+- **Validation:** 422 tests / 74 files and the production build pass on the branch.
 - **Waiting on Pieter:**
   - whether to ship the branch;
   - pacing after the economy fix (about 14–20 game years to freedom for a careful index investor).
@@ -32,7 +33,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (73 files / 417 tests on `town-lighting-pass`, 2026-09-25; integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (74 files / 422 tests on `town-lighting-pass`, 2026-09-25; integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)
