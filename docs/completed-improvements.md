@@ -576,6 +576,20 @@ Pieter's pick after a full assessment of the game: "do the lighting pass on a br
 
 Evidence: `docs/verification/lighting-2026-09-25/` (before/after grid, tuning notes, logs). Validation: 395 tests / 70 files, TypeScript and production build. Not tested: physical phones and Chromebooks (watch the sky recapture on low-end GPUs).
 
+## Skinned townspeople — September 25, 2026 (build 41)
+
+Pieter's pick after the lighting pass: "start on the characters next", route **hybrid** (free Blender body for the whole cast now; an AI-modelled Alex only after he approves a concept). Same branch, not merged or deployed.
+
+**Style target.** Four Alex concepts and a six-neighbour lineup from Higgsfield (GPT Image 2.5, medium, 0.75 credits): stylised, about six and a half heads tall, soft features, big eyes, simple clothing. Kept in `docs/verification/characters-2026-09-25/`.
+
+**The body** (`scripts/build-town-people.py` → `public/models/town/town-people.glb`, source `assets/town/town-people.blend`): blended metaballs give one seamless body, decimated with clothing borders protected; automatic weights while bones run along the limbs, then every bone is turned to point up with no roll so each joint has an identity rest rotation exactly like the old empties (pinned by a test). A modelled head with ray-cast placement of eyes, lashes, brows, nose and smile; a separate tee panel with lapels because painted borders on decimated triangles came out jagged; hem, collar, cuffs and trouser rolls hide the other borders. Optional parts and `Fem`/`Blink` shape keys. About 8k visible triangles per person, 511 KB file.
+
+**Game wiring.** `SkeletonUtils.clone` per person; `styleCharacter` skinned branch (parts by name, `Fem` morph, colours by material); `sitHips()` lowers seated hips by 0.125 because the new stance is upright (.945 instead of a 67° knee bend at .82) and every seat was fitted to .82; the cyclist's hips are set to .82; `CLIP_GROUND_SPEED` (Walk 1.03, Run 1.5 m/s) replaces the old clip-speed literals; `createBlink` gives everyone a blink; the apron is refitted to the slimmer chest; the Sept-13 rigid Alex model is switched off so the cast shares one style.
+
+**Measured** on the square view: draw calls 1,431 → 815 (High) and 658 → 374 (Smooth); triangles 709k → 791k including the shadow pass. Seated poses checked on the bench (Rosa), at the office desks and the cyclist; the café chairs use the same helper.
+
+Evidence: `docs/verification/characters-2026-09-25/`. Validation: 400 tests / 71 files, TypeScript and production build. Not tested: physical phones and Chromebooks; the café practice shift's seated guests were not walked through by hand.
+
 ## Where the sessions stopped (September 6, 2026, morning)
 
 Overnight (23:00 to about 01:00 PDT) nine builds shipped: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. The morning session (about 06:00 to 07:30 PDT) added eight more, each verified in Chrome, receipted above and pushed to `origin/main`: the townhouse around the apartment door and the camera-canopy fix; adaptive graphics quality; petite women with A-line skirts; residents that make room; Freedom Day; the city accessibility pass; Main Street Offices (pay stub, promotion outlook, job security); the neighbourhood tour with download progress and the city open after winning; and Rosa's promotion nudge.

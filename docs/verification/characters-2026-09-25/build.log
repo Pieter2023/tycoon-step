@@ -1,0 +1,42 @@
+
+> tycoon-financial-freedom@3.4.3 build
+> tsc && vite build
+
+vite v6.4.3 building for production...
+transforming...
+✓ 2790 modules transformed.
+Generated an empty chunk: "react".
+rendering chunks...
+computing gzip size...
+dist/assets/manifest-BIj79Elz.json                  0.51 kB │ gzip:   0.35 kB
+dist/cafe-preview.html                              0.96 kB │ gzip:   0.44 kB
+dist/character-preview.html                         2.78 kB │ gzip:   1.34 kB
+dist/index.html                                     3.40 kB │ gzip:   1.30 kB
+dist/assets/draco_wasm_wrapper-fZCQGLGb.js         58.46 kB
+dist/assets/draco_wasm_wrapper-DxJM36Ib.js         58.76 kB
+dist/assets/draco_decoder-Z1_iN-Ht.wasm           192.42 kB │ gzip:  63.46 kB
+dist/assets/draco_decoder-C32yEggz.wasm           285.75 kB │ gzip:  88.64 kB
+dist/assets/draco_decoder-fzg4nYZr.js             719.41 kB
+dist/assets/cafe-BhdvyTQo.css                       7.21 kB │ gzip:   2.28 kB
+dist/assets/town-C3XM5RTN.css                      30.86 kB │ gzip:   6.94 kB
+dist/assets/main-BL_zJ5x1.css                     152.56 kB │ gzip:  20.43 kB
+dist/assets/react-l0sNRNKZ.js                       0.00 kB │ gzip:   0.02 kB
+dist/assets/modulepreload-polyfill-B5Qt9EMX.js      0.71 kB │ gzip:   0.40 kB
+dist/assets/cafe-CNT6f7sF.js                        7.54 kB │ gzip:   2.90 kB
+dist/assets/confetti-oQXWb4Lk.js                   10.67 kB │ gzip:   4.28 kB
+dist/assets/KidsSquareModal-DbYZOlwB.js            13.34 kB │ gzip:   4.97 kB
+dist/assets/character-DqIyUPRA.js                  22.67 kB │ gzip:   5.92 kB
+dist/assets/icons-B2bmDb5p.js                      28.44 kB │ gzip:   5.83 kB
+dist/assets/createTownScene-BS99TQ2L.js           118.49 kB │ gzip:  44.74 kB
+dist/assets/motion-D1ID2AvJ.js                    122.84 kB │ gzip:  40.77 kB
+dist/assets/investmentModel-CoqKv2u5.js           153.41 kB │ gzip:  47.31 kB
+dist/assets/TownModal-B-cBqIqj.js                 188.27 kB │ gzip:  57.72 kB
+dist/assets/charts-DTKjwsF8.js                    559.85 kB │ gzip: 165.88 kB
+dist/assets/GLTFLoader-BeBW-flB.js                641.45 kB │ gzip: 165.48 kB
+dist/assets/main-CVGxW3IJ.js                    1,101.11 kB │ gzip: 301.99 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 4.16s
