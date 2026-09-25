@@ -564,6 +564,18 @@ Pieter's pick: "Wire the dashboard shell through the translator, keep going." Un
 
 Validation: 363 tests across 64 files (one test now wraps `MonthlyActionsPreview` in `I18nProvider`), TypeScript, build and `git diff --check` clean.
 
+## Lighting pass on a branch — September 25, 2026 (build 40)
+
+Pieter's pick after a full assessment of the game: "do the lighting pass on a branch first." Branch `town-lighting-pass`, not merged or deployed. Its first commit (`263aeeb`) is the Sept-13 atelier art pass and the rest of the uncommitted town work exactly as found (387 tests passed on it; it type-checks alone in a clean worktree), so the lighting can be reviewed on its own. Left out of that snapshot: `graphify-out/`, the loose `espresso-machine.png` and the seven dead files from `3d55d82` that had reappeared on disk.
+
+**Why the square looked flat.** At midday the sun sat almost behind the default camera, so every shadow fell behind its caster; a grey indoor studio map (`RoomEnvironment`) lit the outdoors; the hemisphere fill ran at about half the sun; ACES desaturated the pastel palette; figures on the Smooth tier had no grounding at all.
+
+**What changed** (`components/town/townLighting.ts`, `townDaylight.ts`, `createTownScene.ts`): Neutral tone mapping; a gradient sky captured into the environment map (128 px PMREM, recaptured only when the sky visibly changes, at most twice a second) plus a visible sky dome whose horizon is the fog colour; sun as key and sky as fill (hemisphere .28); the sun's path offset to the south-east, peaking near 52°, so midday shadows fall diagonally across the square; golden hour from mid-afternoon; a moonlit night with its own fill and exposure lift (Neutral has none of ACES's hidden ~1.7× boost); soft contact shadows under every figure and vehicle. Rooms keep the studio map and their balance; only the tone curve changes there. A separate commit gives the square a longer lens: follow camera pitch .45 at 11.5 m with a 40° field of view (phones 52°), rooms unchanged; a steeper .6 pitch cropped the storefront signs and was dropped.
+
+**Dev-only QA handles** (stripped from production): `__town.setView`, `__town.advance(frames)` (renders while the tab is hidden, which lifts the "QA browser must be visible" constraint), a live `__town.lighting` balance and `__town.toneMapping('aces'|'neutral')`.
+
+Evidence: `docs/verification/lighting-2026-09-25/` (before/after grid, tuning notes, logs). Validation: 395 tests / 70 files, TypeScript and production build. Not tested: physical phones and Chromebooks (watch the sky recapture on low-end GPUs).
+
 ## Where the sessions stopped (September 6, 2026, morning)
 
 Overnight (23:00 to about 01:00 PDT) nine builds shipped: café reputation, the Exchange and investor journey, the property office, the day-night cycle, the notice board, the home and Rosa, seasons, café incidents and the year-in-review city section. The morning session (about 06:00 to 07:30 PDT) added eight more, each verified in Chrome, receipted above and pushed to `origin/main`: the townhouse around the apartment door and the camera-canopy fix; adaptive graphics quality; petite women with A-line skirts; residents that make room; Freedom Day; the city accessibility pass; Main Street Offices (pay stub, promotion outlook, job security); the neighbourhood tour with download progress and the city open after winning; and Rosa's promotion nudge.
