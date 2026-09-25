@@ -1,21 +1,163 @@
 # Start here — Tycoon handover
 
-Updated September 6, 2026, 23:20 PDT, after the overnight autonomous build and deployment. This is the current session handover. Older dated deployment claims in other documents describe earlier versions, not the new city work.
+Updated **September 25, 2026 (evening PDT)**. That session produced three things: a full game assessment, a lighting pass, and new skinned characters. Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
 
-## Status and exact project
+## 1. Where things stand
 
-- **DEPLOYED.** Pieter authorised push and deploy on the night of September 5. Branch `codex/game-overhaul-20260503-223748` was pushed and fast-forwarded to `origin/main` at `7b6a8ff` (plus a docs commit after). Netlify site `tycoonjan22026` auto-built it: live at https://tycoonjan22026.netlify.app, deploy `6a9d03ef42698a00086954ab`, verified in Chrome (city loads in ~8 s on first visit, guide chain works, models served with the version query, console clean). Working tree clean apart from the untracked `graphify-out/`.
-- Active folder: `/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2`.
-- Branch: `codex/game-overhaul-20260503-223748` == `origin/main` == production. `origin/main` was a clean ancestor with no tracked node_modules, so the push was a fast-forward; the old warning about main's history tracking node_modules no longer applies to the remote (local `git checkout main` still not needed).
-- Configured remote: `https://github.com/Pieter2023/tycoon-step.git`. Remote branch/deployment state was not fetched or verified for this handover.
-- As of the morning of September 6 every tracked and previously untracked file of the city work is committed on the branch and pushed to `origin/main`; `git status` shows only `graphify-out/` (an analysis artefact, deliberately untracked). A fresh clone of `origin/main` contains the whole game, models and Blender sources.
-- Do not reset, clean or discard the folder; the user's preview save lives in the browser profile for `127.0.0.1:5187`, not in the repo.
+| What | State |
+|---|---|
+| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | `origin/main` = `073f397` (build 39, Sept 7). The live site was not re-checked on 2026-09-25. |
+| Branch `codex/game-overhaul-20260503-223748` | The same commit as `origin/main`. |
+| **Work branch `town-lighting-pass`** (checked out) | Ahead of `origin/main`, **not pushed and not deployed**. See the commit list below. |
+| Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
+| Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
+| Validation on the branch | 400 tests / 71 files, TypeScript and the production build. `dist/` currently holds the branch build. |
+| Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
+| Higgsfield (connected MCP) | Plus plan, 465.33 credits left. 2.5 were spent on concept images. |
+| Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. |
 
-## What Pieter wants
+**Commits on `town-lighting-pass`, oldest first:**
+1. `263aeeb`: snapshot of the Sept-13 atelier work, which was uncommitted until then.
+2. `98ce027`: lighting.
+3. `e1ab846`: camera.
+4. `ff2dc6a`: docs.
+5. `9a26f4d`: skinned townspeople.
+6. `72ba80d`: docs.
+7. This handover commit.
 
-A polished, stylised city inspired by The Sims, with a character-following camera and financial learning through doing. Keep controls simple and explanations short. Build and playtest a connected city activity before expanding the world. Explain the minimum account tiers and monthly costs before introducing paid tools. The latest work needs no new subscription ($0/month additional); existing hosting/cloud/AI bills are separate and were not audited.
+## 2. Decisions waiting on Pieter
 
-## Completed locally
+1. **The AI-modelled Alex.**
+   - Pick concept 1–4 (`docs/verification/characters-2026-09-25/concept-alex-options.jpg`, numbered left to right) and approve about 40–50 credits.
+   - It uses Meshy 7 image-to-3D with textures, then gets retargeted onto our rig so it keeps the clips.
+   - Pipeline and job ids: `docs/assessment-2026-09-25.md` §6.
+   - Never spend credits without a fresh yes. Preflight with `get_cost` and multiply by `count`.
+2. **Ship the branch?**
+   - Review `docs/verification/lighting-2026-09-25/lighting-before-after.jpg` and `docs/verification/characters-2026-09-25/characters-before-after.jpg`, or play the branch.
+   - Then merge into the release branch and push `main`, which auto-deploys.
+   - Do a real-phone check first: the skinned people and the sky recapture are the new GPU costs.
+3. **The economy fix** (assessment §1) changes balance and what the game teaches. Confirm the direction before changing formulas.
+4. **Still open from June:** whether the Daily Challenge should stay demo-gated (see the GTM section of CLAUDE.md).
+
+## 3. Next steps, in recommended order
+
+1. **Economy fix (Phase 0)**, from assessment §1:
+   - price drift from each asset's expected return;
+   - diminishing returns per business unit, and businesses that can lose money;
+   - shortfalls become debt;
+   - monthly tax withholding;
+   - the 4% rule counts toward freedom;
+   - a strategy-ranking assertion in `test/BalancePass.test.ts`.
+2. **Traffic deadlock bug** (assessment §2). A fix-it task was offered in the app; check `git log` and the branch list first, since it may already have run in another session.
+3. **The AI Alex**, once approved (assessment §6).
+4. **The city as the game (Phase 1):**
+   - the city becomes the main screen;
+   - a month becomes a day;
+   - events happen in the world;
+   - wealth visibly builds the city;
+   - milestone moments.
+5. **More visuals:**
+   - replace the 3D sign lettering with decals (−130k triangles);
+   - AO bake and textures;
+   - hair polish;
+   - the armpit crease in Wave;
+   - a Sit clip.
+6. **A real phone and Chromebook test** before any deploy of the branch.
+
+## 4. What Pieter wants (standing)
+
+- A polished, stylised city inspired by The Sims, with a character-following camera and financial learning through doing.
+- Simple controls and short explanations.
+- On 2026-09-25 he asked for the lighting pass on a branch first, then chose the **hybrid** character route: a free Blender-built cast now, and an AI hero only after he approves a concept.
+- Explain paid tiers and costs before introducing a paid tool, and get a yes before spending Higgsfield credits.
+
+## 5. How to run and verify
+
+```sh
+cd '/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2'
+git status --short && git log --oneline -8
+npm run test:run          # 400 tests / 71 files on the branch
+npm run build
+npx vite --host 127.0.0.1 --port 5188 --strictPort   # or preview_start "tycoon-qa-5188" (.claude/launch.json)
+'/Applications/Blender.app/Contents/MacOS/Blender' --background --factory-startup --python scripts/build-town-people.py   # then bump PEOPLE_VERSION
+```
+
+**QA save on `localhost:5188`:** Alex, month 2, $11,249 cash, cart bought and licensed, investor journey 2/4. To reach the city: Continue Adult → Enter 3D city.
+
+### Visual QA with a hidden browser (added 2026-09-25)
+
+The in-app browser pane is often hidden (`document.hidden` is true), which pauses the city's animation loop. Dev builds expose these handles; production builds strip them.
+
+| Handle | What it does |
+|---|---|
+| `__town.advance(frames)` | Steps the simulation and renders the frames directly, even while hidden |
+| `__town.setView({x,z,yaw,pitch,distance})` | Puts the player and camera at an exact view |
+| `setPhase(p)` | Time of day: 0 sunrise, .25 noon, .5 sunset, .75 midnight |
+| `setSeason(s)`, `setQuality(mode)` | Season and graphics tier |
+| `__town.info()` | Draw calls and triangles for the last frame, shadow pass included |
+| `__town.lighting` | The live light balance, editable |
+| `__town.toneMapping('aces'\|'neutral')` | Switches the tone curve for comparisons |
+
+Capture recipe:
+
+1. Run `python3 scripts/qa/capture-receiver.py <scratch-dir>` in the background. It listens on port 5199.
+2. In the page:
+   ```js
+   window.__snap = async (name, frames = 100) => { __town.advance(frames); const c = document.querySelector('canvas[role=application]'); await fetch('http://127.0.0.1:5199/' + name, { method: 'POST', body: c.toDataURL('image/jpeg', .9) }); };
+   __town.setSeason('summer'); __town.setPhase(.25); __town.setView({x:.6,z:7.5,yaw:-.55,pitch:.45,distance:11.5}); await __snap('square.jpg');
+   ```
+3. Compose the images with ffmpeg `hstack`/`vstack`. This ffmpeg has no `drawtext`, so draw labels on a page canvas, POST them as PNGs, and `overlay` them.
+
+Standard views:
+
+| View | Settings |
+|---|---|
+| Square | `{x:.6,z:7.5,yaw:-.55,pitch:.45,distance:11.5}` |
+| Street | `{x:-3,z:6.2,yaw:.05,pitch:.26,distance:8}` |
+| Cart close-up | `{x:1.4,z:10.6,yaw:-.25,pitch:.2,distance:4.2}` |
+| Bench | `{x:-5,z:8.2,yaw:.3,pitch:.18,distance:3.2}` |
+
+To enter a room while the pane is hidden:
+1. Click the destination (for example `[aria-label="Walk to work"]`).
+2. Loop `advance(30)`.
+3. Click the door button (for example "Go to work →" or "Enter bank →").
+
+### Blender
+
+- **Headless** is the source of truth: the `--background --factory-startup` command above writes the GLB and `assets/town/town-people.blend`.
+- **Live** through the Blender MCP:
+  1. Exec `scripts/build-town-people.py` with `__file__` set. It builds into a separate `TownPeople` scene and only writes the GLB.
+  2. Exec `scripts/qa/blender-preview-rig.py` for the camera and lights, plus the `place()`, `style()` and `only(clip)` helpers.
+  3. Render with `bpy.ops.render.render(write_still=True)`.
+  4. Switch the window back to Pieter's `Scene` when done.
+
+## 6. Gotchas learned on 2026-09-25
+
+**Lighting**
+- Neutral tone mapping has none of ACES's hidden ~1.7× exposure boost, so night has its own lift (`LIGHT_BALANCE.nightExposure`).
+- The sun path is offset on purpose (+12 on x) so midday shadows face the default camera. Don't move it back overhead.
+
+**Skinned people**
+- Never change bone orientation in `build-town-people.py`: every joint's identity rest rotation is the contract with the direct `rotation.x` poses. `test/TownControls.test.ts` pins it.
+- Clones must use `SkeletonUtils.clone`.
+- Seated poses must call `sitHips` (`SIT_DROP` .125).
+- Clip speeds live in `CLIP_GROUND_SPEED`.
+- The old `town-character.glb` and Sept-13 `alex-atelier.glb` stay on disk for rollback but are not loaded.
+
+**Blender**
+- `shape_key_add` can leave the last key at value 1, which renders every eye shut; the keys are zeroed explicitly.
+- Metaball surface radius is 0.575 × the nominal size.
+- The Decimate modifier's ratio counts triangles, not quads.
+- In a Decimate vertex group, weight 1 decimates *more*.
+- The glTF export needs `use_active_scene=True`, or it exports every scene in the file.
+- NLA solo does not isolate a clip for rendering; mute the other tracks instead.
+
+**Tooling**
+- Higgsfield's `get_cost` with `count` > 1 returns one item's price.
+- Vite re-optimises dependencies on the first load after a new `three/examples` import, which reloads the page once.
+
+## Completed (chronological record)
+
 
 1. **Five financial/gameplay foundations:** decision autosaves with failure recovery; investment distributions separate from price growth; more honest risk/loss teaching; simpler opening repair/investment flow; reserve goals that cannot be earned by new borrowing.
 2. **Freedom Square:** original Blender buildings and animated character, bank/stocks/business/property destinations, camera-relative movement, tap-to-walk, joystick, collision-aware city routes, follow/overview camera, saved city viewpoint and portfolio return routes.
@@ -24,7 +166,7 @@ A polished, stylised city inspired by The Sims, with a character-following camer
 5. **Living city and café:** rain/puddles, residents, optional ambience; walkable café, lease, furnishings, price/stock/staff plans, monthly reports and net-worth accounting.
 6. **Hands-on café shift:** walk to take orders, brew, carry and serve coffee; arriving/queued/seated guests, patience, reactions, optional helper, waste and profit/loss receipt. Free practice requires no ownership and changes no money. Paid owner shifts persist and resume paused.
 46. **Lighting pass (branch `town-lighting-pass`, 2026-09-25, NOT merged or deployed):** commit `263aeeb` snapshots the previously uncommitted Sept-13 atelier work as found; `98ce027` adds the sky-lit outdoor rig (`components/town/townLighting.ts`: Neutral tone mapping, captured sky environment + visible dome, sun path offset south-east so midday shadows show, longer golden hour, readable moonlit night, contact shadows under figures and vehicles); `e1ab846` gives the square a longer lens (pitch .45, 11.5 m, 40°; rooms unchanged), revertable on its own. Dev handle `__town.advance(frames)` renders while the tab is hidden, so visual QA no longer needs a visible browser. Receipt and before/after grid: `docs/verification/lighting-2026-09-25/`. 395 tests / 70 files + build pass. To ship: Pieter reviews the grid or plays the branch, then merge into the release branch and deploy as usual.
-47. **Skinned townspeople (same branch, 2026-09-25, NOT merged or deployed):** every person in the city is now one skinned body from `scripts/build-town-people.py` (`public/models/town/town-people.glb`), replacing the 45-part rigid mannequin; joints keep the old names and identity rest rotation, so all direct poses still work. New helpers: `sitHips`/`SIT_DROP` and the skinned branch of `styleCharacter` (`townResidents.ts`), `CLIP_GROUND_SPEED` (`townLocomotion.ts`), `createBlink` (`townCharacterExpression.ts`). Draw calls on the square 1,431 → 815. The Sept-13 rigid Alex is switched off (`characterAtelier: false`). Receipt: `docs/verification/characters-2026-09-25/`. **Next step waiting on Pieter:** pick an Alex concept (1–4 in `concept-alex-options.jpg`) and approve ~90 Higgsfield credits for the AI-modelled Alex (Meshy image-to-3D, then retargeted onto this rig in Blender so it keeps the clips and joint names).
+47. **Skinned townspeople (same branch, 2026-09-25, NOT merged or deployed):** every person in the city is now one skinned body from `scripts/build-town-people.py` (`public/models/town/town-people.glb`), replacing the 45-part rigid mannequin; joints keep the old names and identity rest rotation, so all direct poses still work. New helpers: `sitHips`/`SIT_DROP` and the skinned branch of `styleCharacter` (`townResidents.ts`), `CLIP_GROUND_SPEED` (`townLocomotion.ts`), `createBlink` (`townCharacterExpression.ts`). Draw calls on the square 1,431 → 815. The Sept-13 rigid Alex is switched off (`characterAtelier: false`). Receipt: `docs/verification/characters-2026-09-25/`. **Next step waiting on Pieter:** pick an Alex concept (1–4 in `concept-alex-options.jpg`) and approve about 40–50 Higgsfield credits for the AI-modelled Alex (Meshy image-to-3D, then retargeted onto this rig in Blender so it keeps the clips and joint names).
 45. **Dashboard shell translated (committed, build 39):** the v2 shell (`components/v2/*`, the App.tsx header and quick-actions menu) reads every visible string through `useI18n().t` under `shell.<component>.<slug>` keys (342, both languages). `scripts/i18n-shell-transform.py` did the mechanical pass; interpolated sentences were keyed by hand; module-level copy helpers take a `Translate` parameter. Tab bodies (`components/tabs/*`) and the monthly-action cards are still English by choice: next slice if the whole adult game should speak Spanish.
 44. **Dashboard Spanish rewritten (committed, build 38):** `i18n/translations/es.json` regenerated from the English structure with full Spanish (accents/ñ, ¿?, tú, city vocabulary; 323 previously-English strings translated: `events.*` used by `data/events.json`, character questlines, `salesQuiz.*`, `quiz.sales_q*`). Recipe in the receipt: flatten en.json, translate into a flat dict, refill the English structure, assert placeholders match. The dashboard's translation and the city's now share one vocabulary.
 43. **Spanish read (committed, build 37):** every city `tl` pair (1,474) read in full; 21 strings fixed (neutral gender, LatAm terms, phrasing; list in the receipt). Recipe: extract pairs with a regex over `components/town`, `services/town*`, `i18n/town.ts` into one file and read it; heuristics catch untranslated/Spain-only/¿¡ slips. A true native-speaker pass by a person remains worthwhile; the dashboard's `es.json` was not part of this read.
@@ -67,7 +209,7 @@ A polished, stylised city inspired by The Sims, with a character-following camer
 
 The current scene is a small playable preview. Detailed crowd collision, full conversations, free furniture placement and a complete restaurant/open-world simulation are not implemented.
 
-## Start or resume the preview
+## Start or resume the preview (September 6 notes; the current recipe is §5 above)
 
 The production preview was listening on `http://127.0.0.1:5187/` at handover (pid 67841, serving the rebuilt `dist/`). Port 5188 was stopped after the pacing pass. Check ports before starting another server; runtime processes may not survive a new session.
 
@@ -90,6 +232,7 @@ These are last-observed snapshots, not values to restore over newer play:
 
 - User origin 5187: Alex, month 3, **$16,180 cash / $24,100 net worth**. The user had progressed beyond an older $16,330 checkpoint; that newer progress was preserved. Last view was a free café practice shift paused with **Resume** visible. Practice vanishes on reload; start it again if needed. No ownership purchase was made on the user's save by QA.
 - Isolated QA origins (throwaway): `127.0.0.1:5188` earlier: Alex, month 4, **$12,234 cash**. `localhost:5188` (evening pacing pass, Chrome): Alex, month 2, $12,245 cash, badge earned, no café lease. Earlier 5188 detail: Café with seating and machine, recorded owner shift of two happy guests and one impatient departure, $8 sales, $9 costs, $1 loss. Last normal monthly café receipt was $580 profit; saved monthly plan was $6, 700 stock, helper on, open. Verify in the UI before relying on these snapshots.
+- 2026-09-25 QA origin `localhost:5188`: Alex, month 2, $11,249 cash, cart bought and licensed, investor journey 2/4 (used for every before/after capture; throwaway).
 - Latest QA tab/server closed; only the user's preview was left open. Temporary viewport override was reset. Final original and QA browser consoles were clear.
 
 ## Financial rules to preserve
@@ -122,12 +265,17 @@ These are last-observed snapshots, not values to restore over newer play:
 | UI orchestration | `components/town/TownModal.tsx`, `townGuide.ts` (guide labels + one-tap chaining), `TellerPanel.tsx`, `CartShiftPanel.tsx`, `CafePanel.tsx`, `CafeServicePanel.tsx`, `CafeServiceHUD.tsx` |
 | Finance and activities | `services/townProgress.ts`, `townJourney.ts`, `townActivities.ts`, `townCafe.ts`, `cafeService.ts`, `gameLogic.ts` |
 | Foundations and persistence | `services/firstSteps.ts`, `investmentModel.ts`, `storageService.ts`, `hooks/useSaveLoad.ts`, `types.ts` |
-| Editable art and rebuild | `assets/town/`, `scripts/build-town-assets.py` → `build-town-extras.py` → `refine-town-character.py` in that order; see `assets/town/README.md` |
+| Lighting (2026-09-25) | `components/town/townLighting.ts` (sky dome, captured sky environment, outdoor balance `LIGHT_BALANCE`, contact shadows), `townDaylight.ts` (sun path, golden hour, zenith/bounce colours), camera lens in `townControls.ts` (`cameraPreset`, `cameraFov`) |
+| People (2026-09-25) | `scripts/build-town-people.py` → `public/models/town/town-people.glb` (+ `assets/town/town-people.blend`); `townResidents.ts` (`styleCharacter` skinned branch, `sitHips`/`SIT_DROP`), `townLocomotion.ts` (`CLIP_GROUND_SPEED`), `townCharacterExpression.ts` (`createBlink`), clones via `SkeletonUtils.clone` in `createTownScene.ts` |
+| QA tools | `scripts/qa/capture-receiver.py`, `scripts/qa/blender-preview-rig.py`; dev handle `window.__town` in `createTownScene.ts` |
+| Editable art and rebuild | City: `assets/town/`, `scripts/build-town-assets.py` → `build-town-extras.py` (city, vehicles; the old character parts are no longer used). People: `scripts/build-town-people.py`. See `assets/town/README.md` |
 | Runtime models/decoder | `public/models/town/`, `public/decoders/draco/` |
 
 ## Validation and evidence
 
-Latest validation (live playthrough fixes): **333 tests / 59 files passed**, TypeScript + production build passed; `git diff --check` passed. Existing chunk-size warnings remain. `dist/` was rebuilt at the end of that pass, so an already-open 5187 page needs a full refresh before opening the city. Commit `35a074d` (townhouse facade) is deployed: Netlify deploy `6a9d135b` published 2026-09-06 07:17 UTC and the live `TownModal-*.js` chunk contains the facade code. Note: the 3D city is a code-split chunk, so the `index-*.js` hash does not change for town-only work; grep the `TownModal` chunk instead. This handover does not repeat financial/cloud testing.
+Latest validation (2026-09-25, branch `town-lighting-pass`): **400 tests / 71 files**, TypeScript and production build; receipts in `docs/verification/lighting-2026-09-25/` and `docs/verification/characters-2026-09-25/`; assessment in `docs/assessment-2026-09-25.md`.
+
+Earlier validation (live playthrough fixes): **333 tests / 59 files passed**, TypeScript + production build passed; `git diff --check` passed. Existing chunk-size warnings remain. `dist/` was rebuilt at the end of that pass, so an already-open 5187 page needs a full refresh before opening the city. Commit `35a074d` (townhouse facade) is deployed: Netlify deploy `6a9d135b` published 2026-09-06 07:17 UTC and the live `TownModal-*.js` chunk contains the facade code. Note: the 3D city is a code-split chunk, so the `index-*.js` hash does not change for town-only work; grep the `TownModal` chunk instead. This handover does not repeat financial/cloud testing.
 
 - Portable logs: [tests](docs/verification/live-play-2026-09-06/tests.log), [build](docs/verification/live-play-2026-09-06/build.log); earlier in `kids-square-2026-09-06/`, `benefits-2026-09-06/`, `hustle-2026-09-06/`, `mentor-2026-09-06/`, `reviews-2026-09-06/`, `career-2026-09-06/`, `playtest-2026-09-06/`, `spanish-2026-09-06/`, `tour-2026-09-06/`, `workplace-2026-09-06/`, `a11y-2026-09-06/`, `freedom-2026-09-06/`, `petite-2026-09-06/`, `quality-2026-09-06/`, `home-facade-2026-09-06/`, `annual-city-2026-09-06/`, `cafe-incidents-2026-09-06/`, `seasons-2026-09-06/`, `home-rosa-2026-09-06/`, `daylight-board-2026-09-06/`, `property-2026-09-06/`, `exchange-2026-09-05/`, `cafe-cyclist-2026-09-05/`, `street-life-2026-09-05/`, earlier logs in `docs/verification/pacing-2026-09-05/` and `gameplay-2026-09-05/`.
 - Full chronological implementation/playtest receipt: [docs/completed-improvements.md](docs/completed-improvements.md). Earlier test counts and balances in that file are historical checkpoints.
@@ -137,11 +285,10 @@ Latest validation (live playthrough fixes): **333 tests / 59 files passed**, Typ
 
 ## Next session priorities
 
-1. Read this file and check `git status` / `git log`. Production matches the branch (last push the morning of September 6, builds 10–17 plus Rosa's promotion nudge). Start with Pieter playing the live site and listing what feels off; the QA rhythm that worked is build → tests → Chrome verification → receipt in docs/completed-improvements.md → commit → push main.
-2. **Physical-phone check remains outstanding:** actual touch/multitouch, camera feel, frame rate (now with twelve residents, six vehicles and pigeons), thermal behaviour, orientation, suspend/resume, and listening to the new soundscape on a real speaker. A desktop browser viewport is not a physical-device test.
-3. Pacing was tuned September 5; crowd contact, the keyboard/screen-reader pass, large-text/high-contrast support and Spanish for the city all landed September 6. The city's Spanish had an editorial read on 2026-09-07 (build 37); the dashboard's es.json was rewritten in full on the same day (build 38); a pass by a Latin American Spanish speaker is still worth an afternoon, the quiz especially.
-4. If publication is requested, preserve a complete recoverable copy of tracked and untracked work, review unrelated changes, recheck tests/build, inspect the real hosting target and remote branches, create/verify a staging deployment, then publish within the authorized scope. The historical Netlify site name is `tycoonjan22026`; reverify it. Do not blindly run an old branch-to-main push recipe.
-5. **Open findings from the 2026-09-25 assessment (not yet fixed):** (a) the economy rewards the wrong strategy: stock/index prices move only with the market cycle (`updateAssetPrices`, `services/gameLogic.ts`), so the 4.5% savings account beats the S&P 500, while unlimited $1,500 coffee carts at 24% cash yield (`constants.ts`) win fastest in a headless 8-character × 3-seed sim; (b) tax is an April lump sum from month 12 but the office pay stub says it is withheld (`WorkPanel.tsx`); (c) a guided walk to the Exchange can deadlock the player and all six cars on the crosswalk (cars stop for the player in `townTraffic.ts`, the player is blocked by the stopped car in `createTownScene.ts`, the re-route does nothing when no path is found). A fix-it task was offered for (c).
-6. More interiors, missions, voice or external art services are possible later choices, not a committed queue. Blender is already available; Higgsfield/Mixamo were not used for this stage. Quote current paid tiers only when a concrete need arises.
+The current ordered list is §3 above. Standing items from earlier sessions:
+
+- **Physical-phone and Chromebook check** (never done): touch and multitouch, camera feel, frame rate with the skinned cast and sky recapture, thermals, orientation, suspend/resume, and the soundscape on a real speaker.
+- **Spanish:** a Latin American Spanish speaker's read is still worth an afternoon, the quiz especially. The tab bodies and the monthly-action cards are still English.
+- **Publishing discipline:** preserve all work, review unrelated changes, recheck tests and build, and inspect the real hosting target. For town-only changes, verify the `TownModal-*.js`/`createTownScene-*.js` chunks, not `index-*.js`.
 
 No secret values are included here. Do not copy `.env` contents, private access codes or account credentials into future handovers.

@@ -2,13 +2,13 @@
 
 Branch `town-lighting-pass`, on top of the lighting pass. Not merged, not deployed.
 
-Route chosen by Pieter: **hybrid** — a free Blender-built skinned body for everyone now; an AI-modelled Alex (Higgsfield / Meshy, about 90 credits) only after he approves a concept.
+Route chosen by Pieter: **hybrid** — a free Blender-built skinned body for everyone now; an AI-modelled Alex (Higgsfield / Meshy, about 40–50 credits after retargeting onto our rig) only after he approves a concept.
 
 ## Files here
 
 - `characters-before-after.jpg`: top left is the old rigid mannequin cast under the new lighting; the other three are the new cast (square, close-up at the cart, Rosa on the bench in autumn evening light). Same save, positions set with `__town.setView`.
 - `characters-turnaround.jpg`: Blender EEVEE renders of the new body: idle, female build with long hair, walk, wave with ponytail, run.
-- `concept-alex-options.jpg`, `concept-residents.jpg`: the Higgsfield concept images (GPT Image 2.5, medium quality, 0.75 credits in total) used as the style target. Alex options are numbered 1–4 left to right.
+- `concept-alex-options.jpg`, `concept-residents.jpg`: the Higgsfield concept images (GPT Image 2.5, medium quality; 2.5 credits in total, 0.5 per image — the preflight with count 4 had reported the price of one image) used as the style target. Alex options are numbered 1–4 left to right.
 
 ## What was measured
 

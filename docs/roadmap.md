@@ -1,19 +1,17 @@
 # Roadmap
 
-## Current priorities — September 5, 2026
+## Current priorities — September 25, 2026
 
-Start with [HANDOVER.md](../HANDOVER.md). **All September 5–6 work is on `origin/main` and live on Netlify (`tycoonjan22026`).** Latest code validation: 363 tests / 64 files plus a successful production build (kids-square build, 2026-09-06). The earlier “clean tree”, “deployed” and “no queued build work” statements below apply only to the archived June version.
+Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). Production is `origin/main` = `073f397` (build 39). Branch `town-lighting-pass` holds the lighting pass, the camera and the skinned townspeople (builds 40–41), with 400 tests / 71 files passing; it is not pushed.
 
-Completed locally: five financial-learning foundations; 3D Freedom Square and movement/camera polish; connected opening journey; bank/teller and coffee-cart activity; living neighbourhood and café management; hands-on coffee preparation/service with free practice, saved owner shifts and financial receipts.
+1. **Economy fix (Phase 0).** Prices should drift with expected returns; carts should have diminishing returns and be able to lose money; shortfalls should become debt; tax should be withheld monthly; and the 4% rule should count toward freedom. Pieter confirms the direction first.
+2. **Traffic deadlock** on guided walks across the crosswalk (a task was offered).
+3. **AI-modelled Alex,** after Pieter picks a concept and approves about 40–50 credits (assessment §6).
+4. **The city as the game (Phase 1):** a main screen, a month as a day, events in the world, and wealth that builds the city.
+5. **Visual follow-ups:** sign lettering replaced by decals, an AO bake, textures, hair polish, and a Sit clip.
+6. **Real phone and Chromebook test,** then ship the branch with Pieter's go-ahead.
 
-Next priorities, subject to Pieter's next request:
-
-1. Real-phone playtest on the live site: touch, multitouch, performance with twelve residents, six vehicles, cyclist, dog and pigeons, orientation, suspend/resume, and how the synthesized audio sounds on a speaker. Browser phone-sized layout checks already passed but do not replace this.
-1b. Spanish for the city landed on September 6 (`i18n/town.ts`, inline `tl` pairs) and had a full editorial read on September 7 (build 37: 1,474 pairs, 21 fixes). The dashboard's es.json was rewritten the same day (build 38). Still worth an afternoon from a Latin American Spanish speaker, the sales quiz especially. Build 39 wired the dashboard shell (sidebar, headers, page chrome, quick-actions menu) through the translator; the tab bodies and monthly-action cards remain English.
-2. Pacing of the connected bank/cart/café loop was tuned on September 5 (one-tap guided walks through doors, jogging on long routes, panels that scroll to the new step, honest guide labels; see the receipt). Character contact and crowd movement landed on September 6 (residents step aside and wait); still open: a second opinion from Pieter playing it by hand. Preserve accurate finance and save behaviour.
-3. Localization and accessibility both landed September 6; the city now shows download progress, and the bundle facts are recorded in docs/completed-improvements.md (main 1.12 MB / 307 KB gz; city chunk 823 KB / 227 KB gz, loaded on demand). Further code-splitting of the 2D main chunk is possible but not required.
-4. If asked to publish, preserve all untracked work, review unrelated changes, verify hosting/remote state and validate staging before production. No publication has been requested in this handover task.
-5. Street life landed on September 5 (sex-distinct residents, traffic that yields, pigeons, bunting, synthesized soundscape). Natural next steps: listen-test the audio on a device, a bicycle/dog walker, evening lighting, and more varied clips via the refine script. Consider more interiors/dialogue/asset services only after choosing the next scope. No new paid account is currently required.
+The September 5 list (real-phone test, Spanish native read, pacing second opinion, publication discipline, street-life follow-ups) is carried in HANDOVER's "Next session priorities".
 
 ## Archived roadmap — June 2026
 

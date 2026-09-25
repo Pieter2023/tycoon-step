@@ -1,10 +1,22 @@
 # Tycoon: Financial Freedom Simulator
 
-## Current handover — September 5, 2026
+## Current handover — September 25, 2026
 
-Read [HANDOVER.md](HANDOVER.md) before acting. The whole 3D city (Freedom Square, bank with the insurance desk, cart, café, Exchange, property office, home with the family and the parking bay, Rosa, notice board with the quest log, workplace, community college, three guided arcs) is **committed and live**; only `graphify-out/` stays untracked. Latest validation: 363 tests / 64 files and production build passed (dashboard shell wired through the translator, build 39, 2026-09-07; receipts in docs/completed-improvements.md). Pushed to `origin/main` and live on Netlify `tycoonjan22026` (deploy `6a9d135b…` of commit `35a074d`, verified 2026-09-06 00:20 PDT). The town scene is a code-split `TownModal-*.js` chunk, so verify town deploys by grepping that chunk, not the `index-*.js` hash. The user preview is `127.0.0.1:5187`; isolate QA on 5188. Preserve the existing save and all tracked/untracked work. Pieter authorised push + deploy on 2026-09-05 night and the branch is now live; treat further deploys as routine after green tests and a Chrome check.
+Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
-**2026-09-25:** the city lighting pass and the skinned townspeople (HANDOVER items 46–47; people built by `scripts/build-town-people.py`, joints must keep identity rest rotation) live on branch `town-lighting-pass` (not merged or deployed; HANDOVER item 46, receipt in `docs/verification/lighting-2026-09-25/`). Its first commit snapshots the formerly uncommitted Sept-13 atelier work, so the "only graphify-out stays untracked" note above no longer describes `main`'s working tree. Open assessment findings (economy ranking, tax copy, traffic deadlock) are in HANDOVER's next priorities. Dev handle `__town.advance(frames)` renders the city while the tab is hidden.
+- **Production:** `origin/main` = `073f397` (build 39), auto-deployed to Netlify `tycoonjan22026`. The whole 3D city is live there.
+- **Work branch `town-lighting-pass`:** checked out, **not pushed or deployed**. It holds:
+  - the Sept-13 atelier work, committed as found;
+  - the sky-lit lighting pass and a longer camera lens (build 40);
+  - the skinned townspeople from `scripts/build-town-people.py` (build 41). Every joint must keep an identity rest rotation.
+- **Validation:** 400 tests / 71 files and the production build pass on the branch.
+- **Waiting on Pieter:**
+  - the pick of an Alex concept (1–4) and about 40–50 Higgsfield credits for the AI-modelled Alex;
+  - whether to ship the branch;
+  - the direction of the economy fix (the game currently rewards coffee-cart stacking and savings over index investing).
+- **Visual QA:** the town scene is a code-split chunk, so verify town deploys by grepping `TownModal-*.js`/`createTownScene-*.js`, not `index-*.js`. When the browser pane is hidden, use the dev handle `__town.advance(frames)` with `scripts/qa/capture-receiver.py` (HANDOVER §5).
+- **Ports and saves:** the user preview is `127.0.0.1:5187`; isolate QA on 5188. Preserve the user's save and all tracked and untracked work.
+- **Pushing:** don't push or deploy the branch without Pieter's go-ahead. Earlier deploys to `main` were authorised case by case.
 
 Current feature/source map and run instructions are in the handover. Detailed evidence is in [docs/completed-improvements.md](docs/completed-improvements.md); remaining priorities are in [docs/roadmap.md](docs/roadmap.md). Physical-phone testing remains open. No new paid service is needed for the implemented prototype.
 
@@ -18,7 +30,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (59 files / 333 tests passed at the kids-square build; integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (71 files / 400 tests on `town-lighting-pass`, 2026-09-25; integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)

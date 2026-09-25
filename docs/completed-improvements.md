@@ -580,7 +580,7 @@ Evidence: `docs/verification/lighting-2026-09-25/` (before/after grid, tuning no
 
 Pieter's pick after the lighting pass: "start on the characters next", route **hybrid** (free Blender body for the whole cast now; an AI-modelled Alex only after he approves a concept). Same branch, not merged or deployed.
 
-**Style target.** Four Alex concepts and a six-neighbour lineup from Higgsfield (GPT Image 2.5, medium, 0.75 credits): stylised, about six and a half heads tall, soft features, big eyes, simple clothing. Kept in `docs/verification/characters-2026-09-25/`.
+**Style target.** Four Alex concepts and a six-neighbour lineup from Higgsfield (GPT Image 2.5, medium, 2.5 credits: 0.5 per image; a count-4 preflight had shown the price of one image): stylised, about six and a half heads tall, soft features, big eyes, simple clothing. Kept in `docs/verification/characters-2026-09-25/`.
 
 **The body** (`scripts/build-town-people.py` → `public/models/town/town-people.glb`, source `assets/town/town-people.blend`): blended metaballs give one seamless body, decimated with clothing borders protected; automatic weights while bones run along the limbs, then every bone is turned to point up with no roll so each joint has an identity rest rotation exactly like the old empties (pinned by a test). A modelled head with ray-cast placement of eyes, lashes, brows, nose and smile; a separate tee panel with lapels because painted borders on decimated triangles came out jagged; hem, collar, cuffs and trouser rolls hide the other borders. Optional parts and `Fem`/`Blink` shape keys. About 8k visible triangles per person, 511 KB file.
 
