@@ -14,8 +14,10 @@ afterEach(cleanup);
 describe('property office arithmetic', () => {
   it('quotes a mortgage from the base rate plus the option spread and checks eligibility', () => {
     const q = mortgageQuote(180000, 'fha', .06)!;
-    expect(q).toMatchObject({ down: 6300, loan: 173700, rate: .065, termYears: 30, eligible: true });
-    expect(q.payment).toBe(calculateMortgagePayment(173700, .065, 30));
+    expect(q).toMatchObject({ down: 6300, loan: 173700, rate: .065, termYears: 30, eligible: true, pmi: 72, closing: 5400 });
+    // 3.5% down carries mortgage insurance (0.5% of the loan a year) inside the payment; closing costs are 3%.
+    expect(q.payment).toBe(calculateMortgagePayment(173700, .065, 30) + 72);
+    expect(mortgageQuote(180000, 'conventional_20', .06)!.pmi).toBe(0);
     const conv = mortgageQuote(180000, 'conventional_20', .06, 10000, 5000)!;
     expect(conv.eligible).toBe(false); expect(conv.reason).toMatch(/net worth/);
     expect(mortgageQuote(1, 'nope', .06)).toBeNull();
@@ -23,13 +25,15 @@ describe('property office arithmetic', () => {
   it('shows what a rental leaves after upkeep and vacancies, and compares owning with renting', () => {
     const home = MARKET_ITEMS.find(i => i.id === 'starter_home')!;
     const month = landlordMonth(home, 180000);
-    expect(month.grossRent).toBe(900); expect(month.upkeep).toBe(150); expect(month.vacancy).toBe(72); expect(month.net).toBe(678);
+    // Upkeep 1% + property tax 1.1% + insurance 0.35% of the price a year = $368 a month on $180k.
+    expect(month.grossRent).toBe(900); expect(month.upkeep).toBe(368); expect(month.vacancy).toBe(72); expect(month.net).toBe(460);
     const q = mortgageQuote(180000, 'fha', .06)!;
     const c = rentVsBuy(180000, 900, q);
-    expect(c.ownerMonthly).toBe(q.payment + 150); expect(c.interestYear1 + c.principalYear1).toBe(q.payment * 12);
+    expect(c.ownerMonthly).toBe(q.payment + 368); expect(c.interestYear1 + c.principalYear1 + q.pmi * 12).toBe(q.payment * 12);
     expect(c.appreciationYear1).toBe(5400); expect(c.aheadBy).toBe(c.rentYear - (c.ownerMonthly * 12 - c.equityYear1));
     expect(rentEstimate(2600)).toBe(910);
-    expect(canAffordDown({ ...base(), cash: 8000 }, q, 2600)).toBe(false); expect(canAffordDown({ ...base(), cash: 9000 }, q, 2600)).toBe(true);
+    // Down payment $6,300 + closing $5,400 + a month of expenses.
+    expect(canAffordDown({ ...base(), cash: 14000 }, q, 2600)).toBe(false); expect(canAffordDown({ ...base(), cash: 14400 }, q, 2600)).toBe(true);
   });
   it('keeps the office aisle clear and recognises the agent and exit spots', () => {
     expect(clampPropertyPoint({ x: -9, z: 12 })).toEqual({ x: -2.5, z: 6.4 });

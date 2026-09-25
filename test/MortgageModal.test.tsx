@@ -51,7 +51,7 @@ describe('mortgage modal', () => {
     expect(screen.getAllByText(/Rate:/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Payment:/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Cashflow:/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Est\. maint:/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Upkeep, tax & ins\.:/i).length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole('button', { name: /review purchase/i }));
     expect(await screen.findByRole('heading', { name: /confirm mortgage/i })).toBeInTheDocument();

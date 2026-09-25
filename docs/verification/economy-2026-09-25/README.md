@@ -84,3 +84,16 @@ Full tables: `strategy-before.json` and `strategy-after.json`. The test asserts 
   - the mortgage re-roll;
   - property tax, PMI and closing costs;
   - repeatable FHA loans.
+
+## Build 49: the smaller §1 issues
+
+- **Owning property costs what it costs** (`services/propertyCosts.ts`, shared by the game, the property office and the mortgage preview):
+  - upkeep 1%, property tax 1.1% and homeowner's insurance 0.35% of the value a year, which is $368 a month on a $180k home (it was $150, upkeep only);
+  - closing costs of 3% at purchase, cash or mortgage;
+  - mortgage insurance of 0.5% of the loan a year under 20% down. It is inside the payment and pays down nothing. Conventional PMI ends at 78% of the price, with an event and a lower payment; FHA's stays for the life of the loan.
+- **FHA once.** FHA is for the home you live in: a second FHA loan is refused, and the preview marks it unavailable.
+- **No re-rolling a lender.** The approval is one draw per property per month (`approvalDraw`), so asking again the same month gets the same answer.
+- **Credit climbs slowly near the top.** Good months add their full amount at 650, half at 750 and little above 800; losses land in full. A debt-free player reaches 750 in under 18 months, 800 after 2 years or more, and 850 only after 5 years or more (it was 850 in 20 months).
+- **UI.** The mortgage modal shows "down + closing", "incl. $N PMI", "Upkeep, tax & ins." and "Pay Full Cash (incl. closing)". The property office's rent line names tax and insurance. `rentVsBuy` no longer counts PMI as principal.
+- **Tests.** `test/PropertyCosts.test.ts` (4) and the credit test in `test/EconomyPhase0.test.ts`; the property office and modal tests were updated to the new costs. 437 tests / 78 files and the build pass.
+- **Browser (localhost:5189).** Financing the starter home ($181,782): 20% down "$40K down + $5.5K closing", payment $896, upkeep, tax & ins. $371; 10% down "$1.1K/mo incl. $67 PMI"; FHA "$10K down + $5.5K closing, incl. $72 PMI".

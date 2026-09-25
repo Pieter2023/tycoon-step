@@ -210,6 +210,9 @@ export interface Liability {
   monthlyPayment: number;
   type: 'MORTGAGE' | 'STUDENT_LOAN' | 'CAR_LOAN' | 'PERSONAL_LOAN' | 'BUSINESS_LOAN' | 'CREDIT_CARD' | 'MEDICAL_DEBT' | 'LEGAL_DEBT';
   assetId?: string;
+  /** Mortgage insurance included in monthlyPayment (not principal), and the balance at which it stops. */
+  pmi?: number;
+  pmiUntil?: number;
 }
 
 export interface CreditHistoryEntry {

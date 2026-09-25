@@ -19,6 +19,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { GameState, AssetType, MarketItem, Lifestyle, Character, Asset, SideHustle, EducationOption, Liability, PlayerConfig, MonthlyActionId, TABS, TabId, EducationLevel, PlayerStats } from './types';
 import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, AUTO_INVEST_PRESETS } from './constants';
 import { recordMilestones } from './services/townMilestones';
+import { approvalDraw, closingCosts, ownershipCostMonthly, pmiMonthly } from './services/propertyCosts';
 import { eventPlace } from './services/townEvents';
 import { calculateMonthlyActionsMax, processTurn, calculateMonthlyCashFlowEstimate, financialFreedom, businessIncomeRange, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier, checkPromotion, MAX_SOLD_POSITIONS } from './services/gameLogic';
 import { playMoneyGain, playMoneyLoss, playClick, playPurchase, playSell, playAchievement, playLevelUp, playVictory, playWarning, playTick, playNotification, playError, setMuted } from './services/audioService';
@@ -267,8 +268,8 @@ const getMortgageCreditAdjustments = (creditScore: number, optionId: string, dti
 
 // MortgagePreview type now lives in components/modals/MortgageModal.
 
-const estimatePropertyMaintenance = (price: number) =>
-  Math.max(0, Math.round(price * 0.01 / 12));
+// Upkeep, property tax and insurance (services/propertyCosts.ts).
+const estimatePropertyMaintenance = (price: number) => ownershipCostMonthly(price);
 
 const buildMortgagePreview = ({
   item,
@@ -279,7 +280,8 @@ const buildMortgagePreview = ({
   cashFlow,
   netWorth,
   baseRate,
-  cash
+  cash,
+  hasFha = false
 }: {
   item: MarketItem;
   optId: string;
@@ -290,6 +292,7 @@ const buildMortgagePreview = ({
   netWorth: number;
   baseRate: number;
   cash: number;
+  hasFha?: boolean;
 }): MortgagePreview | null => {
   const opt = MORTGAGE_OPTIONS.find(o => o.id === optId);
   if (!opt) return null;
@@ -298,14 +301,18 @@ const buildMortgagePreview = ({
   const down = Math.round(price * adjustedDownPercent / 100);
   const loanAmount = Math.max(0, price - down);
   const rate = baseRate + opt.interestRateSpread + creditAdjust.rateAdjustment;
-  const payment = calculateLoanPayment(loanAmount, rate, opt.termYears * 12);
+  const pmi = pmiMonthly(loanAmount, adjustedDownPercent);
+  const payment = calculateLoanPayment(loanAmount, rate, opt.termYears * 12) + pmi;
+  const closing = closingCosts(price);
+  // FHA loans are for the home you live in: one at a time.
+  const blockedReason = optId === 'fha' && hasFha ? 'FHA loans are for the home you live in, and you already have one.' : undefined;
   const rentIncome = Math.round((incomeYield(item) * price) / 12);
   const maintenance = estimatePropertyMaintenance(price);
   const cashflowImpact = Math.round(rentIncome - payment - maintenance);
   const meetsIncomeReq = !opt.requirements?.income || cashFlow.income >= opt.requirements.income;
   const meetsNetWorthReq = !opt.requirements?.netWorth || netWorth >= opt.requirements.netWorth;
   const meetsCreditReq = creditScore >= creditAdjust.minScore;
-  const canAfford = cash >= down && meetsIncomeReq && meetsNetWorthReq && meetsCreditReq;
+  const canAfford = cash >= down + closing && meetsIncomeReq && meetsNetWorthReq && meetsCreditReq && !blockedReason;
 
   return {
     id: optId,
@@ -318,6 +325,9 @@ const buildMortgagePreview = ({
     loanAmount,
     rate,
     payment,
+    pmi,
+    closingCosts: closing,
+    blockedReason,
     rentIncome,
     maintenance,
     cashflowImpact,
@@ -2432,7 +2442,13 @@ const [gameState, setGameState] = useState<GameState>(() => {
         showNotif('Credit Too Low', `Need credit score ${creditAdjust.minScore}+ for this mortgage.`, 'error');
         return;
       }
-      if (Math.random() > creditAdjust.approvalChance) {
+      if (mortgageOptionId === 'fha' && gameState.mortgages.some(m => m.type === 'FHA')) {
+        playError();
+        showNotif('FHA Not Available', 'FHA loans are for the home you live in, and you already have one.', 'error');
+        return;
+      }
+      // One lender decision per property per month: asking again the same month gets the same answer.
+      if (approvalDraw(gameState.month, `${item.id}:${mortgageOptionId}`) > creditAdjust.approvalChance) {
         playError();
         showNotif('Mortgage Denied', 'The lender declined your application based on credit and debt load.', 'error');
         return;
@@ -2444,9 +2460,10 @@ const [gameState, setGameState] = useState<GameState>(() => {
       });
       if (!result) { playError(); return; }
       
-      if (gameState.cash < result.downPayment) {
+      const closing = closingCosts(price);
+      if (gameState.cash < result.downPayment + closing) {
         playError();
-        showNotif('Insufficient Funds', `Need ${formatMoneyFull(result.downPayment)} for down payment`, 'error');
+        showNotif('Insufficient Funds', `Need ${formatMoneyFull(result.downPayment)} down plus ${formatMoneyFull(closing)} closing costs`, 'error');
         return;
       }
       
@@ -2475,7 +2492,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
         };
         return {
           ...prev,
-          cash: prev.cash - result.downPayment,
+          cash: prev.cash - result.downPayment - closing,
           assets: [...prev.assets, asset],
           liabilities: [...prev.liabilities, result.liability],
           mortgages: [...prev.mortgages, result.mortgage],
@@ -2483,7 +2500,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
             id: Date.now().toString(),
             month: prev.month,
             title: `🏠 Purchased ${item.name}`,
-            description: `${formatMoneyFull(result.downPayment)} down, ${formatMoneyFull(result.mortgage.monthlyPayment)}/mo mortgage`,
+            description: `${formatMoneyFull(result.downPayment)} down + ${formatMoneyFull(closing)} closing costs, ${formatMoneyFull(result.mortgage.monthlyPayment)}/mo mortgage${result.liability.pmi ? ` (incl. ${formatMoneyFull(result.liability.pmi)} mortgage insurance)` : ''}`,
             type: 'DECISION'
           }, ...prev.events]
         };
@@ -2492,8 +2509,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
       maybeConfetti({ particleCount: 40, spread: 50 });
       showNotif('Property Purchased!', `Mortgage: ${formatMoneyFull(result.mortgage.monthlyPayment)}/mo`, 'success');
     } else {
-      // Cash purchase
-      const total = price * units;
+      // Cash purchase (property also carries closing costs)
+      const total = price * units + (item.type === AssetType.REAL_ESTATE ? closingCosts(price) * units : 0);
       if (gameState.cash < total) {
         playError();
         showNotif('Insufficient Funds', `Need ${formatMoneyFull(total)}`, 'error');
@@ -3690,12 +3707,13 @@ const [gameState, setGameState] = useState<GameState>(() => {
               cashFlow,
               netWorth,
               baseRate: gameState.economy.interestRate,
-              cash: gameState.cash
+              cash: gameState.cash,
+              hasFha: gameState.mortgages.some(m => m.type === 'FHA')
             })
           )
           .filter((preview): preview is MortgagePreview => !!preview);
         const selectedPreview = previews.find((preview) => preview.id === selectedMortgage) || null;
-        const cashAfterDown = selectedPreview ? gameState.cash - selectedPreview.down : null;
+        const cashAfterDown = selectedPreview ? gameState.cash - selectedPreview.down - selectedPreview.closingCosts : null;
         const cashflowDelta = selectedPreview ? selectedPreview.cashflowImpact : null;
 
         const reviewMortgage = () => {

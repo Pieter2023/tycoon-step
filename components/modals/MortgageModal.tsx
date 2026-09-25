@@ -4,6 +4,7 @@ import Modal from '../Modal';
 import { Tooltip } from '../ui';
 import { MarketItem } from '../../types';
 import { formatCurrencyCompactValue, formatCurrencyValue, formatPercentValue } from '../../i18n';
+import { closingCosts } from '../../services/propertyCosts';
 
 const formatMoney = (val: number): string => formatCurrencyCompactValue(val);
 const formatMoneyFull = (val: number): string =>
@@ -23,6 +24,11 @@ export type MortgagePreview = {
   loanAmount: number;
   rate: number;
   payment: number;
+  /** Mortgage insurance included in payment (less than 20% down). */
+  pmi: number;
+  closingCosts: number;
+  /** Why this option cannot be used at all (e.g. a second FHA loan). */
+  blockedReason?: string;
   rentIncome: number;
   maintenance: number;
   cashflowImpact: number;
@@ -109,23 +115,24 @@ const MortgageModal: React.FC<MortgageModalProps> = ({
             >
               <div className="flex justify-between mb-1">
                 <span className="text-white font-medium">{name}</span>
-                <span className="text-emerald-400">{formatMoney(down)} down</span>
+                <span className="text-emerald-400">{formatMoney(down)} down + {formatMoney(preview.closingCosts)} closing</span>
               </div>
               <p className="text-slate-400 text-xs">{description}</p>
+              {preview.blockedReason && <p className="text-amber-400 text-xs mt-1">{preview.blockedReason}</p>}
               {!meetsCreditReq && (
                 <p className="text-amber-400 text-xs mt-1">Requires credit score {preview.minScore}+</p>
               )}
               <div className="flex justify-between text-xs mt-2">
                 <span className="text-slate-500">Rate: {formatPercent(rate)}</span>
-                <span className="text-slate-500">Payment: {formatMoney(payment)}/mo</span>
+                <span className="text-slate-500">Payment: {formatMoney(payment)}/mo{preview.pmi ? ` incl. ${formatMoney(preview.pmi)} PMI` : ''}</span>
               </div>
               <div className="flex justify-between text-xs mt-1">
                 <span className={`font-medium ${cashflowImpact >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
                   Cashflow: {cashflowImpact >= 0 ? '+' : '-'}{formatMoney(Math.abs(cashflowImpact))}/mo
                 </span>
                 <span className="text-slate-500 inline-flex items-center gap-1">
-                  Est. maint
-                  <Tooltip content="Estimated maintenance is 1% of purchase price per year.">
+                  Upkeep, tax &amp; ins.
+                  <Tooltip content="Upkeep (1%), property tax (1.1%) and homeowner's insurance (0.35%) of the price, per year.">
                     <Info size={12} className="text-slate-400" />
                   </Tooltip>
                   : {formatMoney(preview.maintenance)}/mo
@@ -156,7 +163,7 @@ const MortgageModal: React.FC<MortgageModalProps> = ({
           <div className="mt-2 text-sm text-slate-300 flex flex-wrap gap-3">
             <span>Rent: {formatMoney(selectedPreview.rentIncome)}/mo</span>
             <span>Mortgage: -{formatMoney(selectedPreview.payment)}/mo</span>
-            <span>Maint: -{formatMoney(selectedPreview.maintenance)}/mo</span>
+            <span>Upkeep, tax &amp; ins.: -{formatMoney(selectedPreview.maintenance)}/mo</span>
           </div>
           <p className={`mt-2 text-sm font-semibold ${selectedPreview.cashflowImpact >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
             This deal is cashflow {selectedPreview.cashflowImpact >= 0 ? 'positive' : 'negative'} by ~{formatMoney(Math.abs(selectedPreview.cashflowImpact))}/mo.
@@ -188,10 +195,10 @@ const MortgageModal: React.FC<MortgageModalProps> = ({
 
       <button
         onClick={onBuyCash}
-        disabled={cash < price}
+        disabled={cash < price + closingCosts(price)}
         className="w-full mt-3 py-3 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-600/50 text-amber-400 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all touch-target"
       >
-        Pay Full Cash ({formatMoney(price)})
+        Pay Full Cash ({formatMoney(price + closingCosts(price))} incl. closing)
       </button>
     </Modal>
   );

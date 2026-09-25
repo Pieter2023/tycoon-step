@@ -5,6 +5,7 @@ import { applyPerformanceReview, applyLayoff, judgeRecoveryPlan } from './townCa
 import { cafeValue, driftReputation, quoteCafe, settleCafeMonth } from './townCafe';
 import { closeChallengeMonth, snapshotFor } from './townChallenges';
 import { incomeYield, nominalPrice } from './investmentModel';
+import { ownershipCostMonthly, pmiMonthly, PMI_ENDS_AT } from './propertyCosts';
 // Tycoon: Financial Freedom - Game Logic v3.4.3
 // Complete with Life Events, Marriage, Children, Taxes, Recessions
 
@@ -896,7 +897,10 @@ export const createMortgage = (
   const downPayment = Math.round(price * (downPaymentPercent / 100));
   const loanAmount = price - downPayment;
   const interestRate = baseRate + option.interestRateSpread + (overrides?.rateAdjustment || 0);
-  const monthlyPayment = calculateMortgagePayment(loanAmount, interestRate, option.termYears);
+  // Mortgage insurance on less than 20% down: part of the monthly bill, never principal. Conventional PMI
+  // stops at 78% of the price; FHA's insurance stays for the life of the loan.
+  const pmi = pmiMonthly(loanAmount, downPaymentPercent);
+  const monthlyPayment = calculateMortgagePayment(loanAmount, interestRate, option.termYears) + pmi;
   
   const mortgageId = 'mtg-' + Date.now();
   
@@ -922,7 +926,8 @@ export const createMortgage = (
     interestRate,
     monthlyPayment,
     type: 'MORTGAGE',
-    assetId
+    assetId,
+    ...(pmi ? { pmi, pmiUntil: optionId.includes('fha') ? undefined : Math.round(price * PMI_ENDS_AT) } : {})
   };
   
   return { mortgage, downPayment, liability };
@@ -1202,7 +1207,8 @@ export function calculateAssetCashPayment(state:GameState,asset:Asset,estimate=f
   const base=!estimate&&asset.type===AssetType.BUSINESS&&typeof asset.currentMonthIncome==='number'?asset.currentMonthIncome:asset.cashFlow*qty;
   const adjusted=base+asset.value*bonus/12*qty;
   const income=(asset.type===AssetType.BUSINESS?adjusted:Math.max(0,adjusted))*sector*getAssetIncomeMultiplier(state,asset.id);
-  return income-(asset.type===AssetType.REAL_ESTATE?Math.round(asset.value*qty*.01/12):0);
+  // Property pays upkeep, property tax and insurance out of its rent (services/propertyCosts.ts).
+  return income-(asset.type===AssetType.REAL_ESTATE?ownershipCostMonthly(asset.value*qty):0);
 }
 
 export const calculateMonthlyCashFlow = (state: GameState): {
@@ -3307,6 +3313,9 @@ export const calculateCreditScoreUpdate = (
     reasons.push('Total debt increased');
   }
 
+  // Gains slow near the top: the last points need years of history, not a debt-free year and a half.
+  // A good month adds its full amount at 650, half at 750 and little above 800; losses land in full.
+  if (delta > 0) delta = Math.max(1, Math.round(delta * Math.min(1, (850 - prevScore) / 200)));
   const score = clampCredit(prevScore + delta);
   return { score, delta, reasons };
 };
@@ -3560,6 +3569,7 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
   newState.tempSideHustleMultiplier = 1;
 
   // 8. Process liabilities
+  const pmiEnded: string[] = [];
   newState.liabilities = newState.liabilities
     .map(liability => {
       const interestAccrued = (liability.interestRate / 12) * liability.balance;
@@ -3572,7 +3582,12 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
         return { ...liability, balance: newBalance };
       }
 
-      const newBalance = Math.max(0, liability.balance + interestAccrued - liability.monthlyPayment);
+      // Mortgage insurance is part of the bill but pays down nothing.
+      const newBalance = Math.max(0, liability.balance + interestAccrued - (liability.monthlyPayment - (liability.pmi ?? 0)));
+      if (liability.pmi && liability.pmiUntil !== undefined && newBalance <= liability.pmiUntil) {
+        pmiEnded.push(liability.name);
+        return { ...liability, balance: newBalance, monthlyPayment: liability.monthlyPayment - liability.pmi, pmi: undefined, pmiUntil: undefined };
+      }
       return { ...liability, balance: newBalance };
     })
     .filter(l => l.balance > 0)
@@ -3580,6 +3595,8 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
     .map(l => l.id === CARD_ID ? { ...l, monthlyPayment: cardMinimumPayment(l.balance) } : l);
   // This month's shortfall joins the card after the month's interest and payments ran on older debt.
   if (cardDraw > 0) newState.liabilities = drawOnCard(newState.liabilities, cardDraw);
+
+  if (pmiEnded.length) newState.events = [...pmiEnded.map(name => ({ id: `pmi-${name}-${newState.month}`, month: newState.month, title: '🏠 Mortgage insurance ended', description: `${name}: you now owe less than 78% of the price, so the lender dropped the mortgage insurance and your payment went down.`, type: 'NEWS' as const })), ...newState.events];
 
   // 8.5 Update credit score from payment behavior, utilization, and DTI
   const creditUpdate = calculateCreditScoreUpdate(state, newState, cashFlow, wasDelinquentThisMonth);
@@ -3600,7 +3617,8 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
         ...m,
         // If you missed payments, the mortgage doesn't progress this month.
         monthsRemaining: wasDelinquentThisMonth ? m.monthsRemaining : Math.max(0, m.monthsRemaining - 1),
-        balance: liability?.balance || 0
+        balance: liability?.balance || 0,
+        monthlyPayment: liability?.monthlyPayment ?? m.monthlyPayment
       };
     })
     .filter(m => m.balance > 0);

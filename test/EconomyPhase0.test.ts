@@ -4,7 +4,7 @@ import { AssetType, GameState } from '../types';
 import {
   processTurn, calculateMonthlyCashFlowEstimate, calculateAssetCashPayment, incomeTaxFor, STANDARD_DEDUCTION,
   businessUnits, nextBusinessUnitShare, businessIncomeRange, financialFreedom, updateAssetPrices, expectedPriceReturn,
-  generateLifeEvent, CARD_ID, creditLimit, clearSimSeed, __testOnly_setBusinessSeed,
+  generateLifeEvent, CARD_ID, creditLimit, clearSimSeed, __testOnly_setBusinessSeed, calculateCreditScoreUpdate,
 } from '../services/gameLogic';
 import { mulberry32 } from '../services/dailyChallenge';
 import { startState, buy } from './strategyHarness';
@@ -131,5 +131,17 @@ describe('financial freedom', () => {
     s = buy(s, item('sp500'), 5000);
     vi.spyOn(Math, 'random').mockReturnValue(.5);
     expect(processTurn(s).newState.hasWon).toBe(true);
+  });
+});
+
+describe('credit score', () => {
+  it('climbs slowly near the top instead of reaching 850 in a debt-free year and a half', () => {
+    let s = { ...alex(), creditRating: 650, liabilities: [] } as GameState; const flow = { income: 5775, debtPayments: 0 };
+    const monthsTo = (target: number) => { let m = 0, st = s; while ((st.creditRating ?? 650) < target && m < 400) { const u = calculateCreditScoreUpdate(st, st, flow, false); st = { ...st, creditRating: u.score }; m++; } return m; };
+    expect(monthsTo(750)).toBeLessThan(18);              // good habits still show quickly
+    expect(monthsTo(800)).toBeGreaterThan(24);
+    expect(monthsTo(850)).toBeGreaterThan(60);
+    // A missed payment still costs the full amount.
+    expect(calculateCreditScoreUpdate({ ...s, creditRating: 800 }, { ...s, creditRating: 800 }, flow, true).delta).toBeLessThan(-25);
   });
 });
