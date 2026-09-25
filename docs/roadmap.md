@@ -2,12 +2,12 @@
 
 ## Current priorities — September 25, 2026
 
-Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). Production is `origin/main` = `073f397` (build 39). Branch `town-lighting-pass` holds the lighting pass, the camera, the skinned townspeople and the AI-modelled Alex (builds 40–42), with 422 tests / 74 files passing; it is pushed to `origin` as a backup, not merged or deployed.
+Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). Production is `origin/main` = `073f397` (build 39). Branch `town-lighting-pass` holds the lighting pass, the camera, the skinned townspeople and the AI-modelled Alex (builds 40–42), with 432 tests / 77 files passing; it is pushed to `origin` as a backup, not merged or deployed.
 
 1. ✅ **Economy fix (Phase 0)** (build 44): prices drift with expected returns, businesses saturate and can lose money, shortfalls go on a credit card, tax is withheld monthly, and the 4% rule counts toward freedom. `docs/verification/economy-2026-09-25/`.
 2. ✅ **Traffic deadlock** fixed (build 45).
 3. ✅ **AI-modelled Alex** (build 42, concept 2, 38 credits; `docs/verification/hero-alex-2026-09-25/`). On the branch; not merged or deployed.
-4. **The city as the game (Phase 1):** a main screen, a month as a day, events in the world, and wealth that builds the city.
+4. **The city as the game (Phase 1):** slices 1–3 done (builds 46–47: wealth you can see, sleep to end the month, events in the world); slices 4–5 wait for Pieter. `docs/phase1-plan.md`.
 5. **Visual follow-ups:** sign lettering replaced by decals, an AO bake, textures, hair polish, and a Sit clip.
 6. **Real phone and Chromebook test,** then ship the branch with Pieter's go-ahead.
 
