@@ -26,3 +26,10 @@
 - The destination row needs a horizontal swipe to reach Café and the pills after it.
 
 **Left behind:** the test switched graphics from Auto to Detailed and did not switch it back, because Safari on the Mac came to the front and the check stopped. The setting is stored only for the LAN origin (`192.168.1.80:5190`), not the production site.
+
+## Second check: build 47 (Phase 1 slices 1–3), 16:25 PDT
+
+- Fresh game as Alex, then the city. The header fits a portrait iPhone: "Freedom 0%" and its bar sit beside the cash. The title wraps to two lines, which is acceptable.
+- 53 fps while loading, then 55 fps on the square. The phone was still on the Detailed tier from the first check, which measured 56–59 then. The new pieces (four window panels, the fountain jet, more drops) cost next to nothing.
+- The window displays are too small to read from the default camera on a phone. They read when walking up to a door, as intended.
+- Sleep and in-city events were verified on desktop, not on the phone (the Home pill is off the right edge of the destination row).
