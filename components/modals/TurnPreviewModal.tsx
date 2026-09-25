@@ -158,7 +158,7 @@ const TurnPreviewModal: React.FC<TurnPreviewModalProps> = ({
           <div>
             <div className="font-semibold">Projected shortfall: {formatMoneyFull(preview.shortfall)}</div>
             <div className="text-xs text-red-200/90 mt-1">
-              You may miss payments and take a credit hit. Consider lowering lifestyle, selling an asset, or using a Monthly Action (Overtime / Hustle Sprint).
+              The gap goes on your credit card at 24% a year (past its limit it becomes a missed payment and a credit hit). Consider lowering lifestyle, selling an asset, or using a Monthly Action (Overtime / Hustle Sprint).
             </div>
           </div>
         </div>
@@ -326,7 +326,7 @@ const TurnPreviewModal: React.FC<TurnPreviewModalProps> = ({
     )}
 
     <div className="mt-3 text-xs text-slate-500">
-      Estimates exclude random events, taxes, and side-hustle variance. Use this as a planning snapshot.
+      Estimates include income tax but exclude random events and side-hustle variance. Use this as a planning snapshot.
     </div>
 
     <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

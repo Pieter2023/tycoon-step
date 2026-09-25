@@ -15,7 +15,7 @@ import { Activity, ArrowRight, Banknote, LineChart, PieChart as PieChartIcon, Sh
 import InvestTab from '../tabs/InvestTab';
 import PortfolioTab from '../tabs/PortfolioTab';
 import BankTab from '../tabs/BankTab';
-import { FINANCIAL_FREEDOM_TARGET_MULTIPLIER } from '../../constants';
+import { financialFreedom } from '../../services/gameLogic';
 import { AssetType, GameState, TABS, TabId } from '../../types';
 
 type MoneyPageLayoutProps = {
@@ -102,8 +102,10 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
 
   const netMonthlyCashFlow = cashFlow.income - cashFlow.expenses;
   const runwayMonths = cashFlow.expenses > 0 ? gameState.cash / cashFlow.expenses : 12;
-  const passiveTarget = Math.max(1, cashFlow.expenses * FINANCIAL_FREEDOM_TARGET_MULTIPLIER);
-  const passiveCoverage = Math.min(1, Math.max(0, cashFlow.passive / passiveTarget));
+  // The same freedom figure the win check uses: investments at the 4% rule, savings above inflation.
+  const freedom = useMemo(() => financialFreedom(gameState, cashFlow), [gameState, cashFlow]);
+  const passiveTarget = Math.max(1, freedom.target);
+  const passiveCoverage = Math.min(1, Math.max(0, freedom.coverage));
   const savingsRate = cashFlow.income > 0 ? netMonthlyCashFlow / cashFlow.income : 0;
 
   const reportRows = [

@@ -1,3 +1,4 @@
+import { businessUnits } from '../../services/gameLogic';
 import { cafeValue, quoteCafe } from '../../services/townCafe';
 import React, { useMemo } from 'react';
 import { Wallet } from 'lucide-react';
@@ -201,7 +202,7 @@ const PortfolioTab: React.FC<PortfolioTabProps> = (props) => {
             const unlicensedCart=asset.marketItemId==='coffee_cart'&&gameState.townProgress?.permitMonth===undefined;
             const displayedIncome = unlicensedCart ? 0 : isBusiness && typeof asset.currentMonthIncome === 'number'
               ? asset.currentMonthIncome
-              : asset.cashFlow * asset.quantity;
+              : asset.cashFlow * (isBusiness ? businessUnits(asset.quantity) : asset.quantity);
             const lastBusinessIncome = isBusiness
               ? (typeof asset.lastMonthIncome === 'number' ? asset.lastMonthIncome : Math.round(displayedIncome))
               : null;

@@ -1,7 +1,7 @@
 import { AssetType, type GameState } from '../types';
 import { tl } from '../i18n/town';
 import { LIFESTYLE_OPTS } from '../constants';
-import { calculateMonthlyCashFlowEstimate } from './gameLogic';
+import { calculateMonthlyCashFlowEstimate, financialFreedom } from './gameLogic';
 import { savingsBalance } from './townActivities';
 import { reputationOf } from './townCafe';
 import { promotionOutlook } from './townWork';
@@ -23,7 +23,8 @@ export function adviseFrom(state: GameState): Advice[] {
   const savings = savingsBalance(state), buffer = state.cash + savings;
   const expensiveDebt = state.liabilities.filter(l => l.interestRate >= .12 && l.balance > 0), expensiveBalance = expensiveDebt.reduce((s, l) => s + l.balance, 0);
   const lifestyleCost = LIFESTYLE_OPTS[state.lifestyle]?.cost ?? 0;
-  const passiveShare = flow.passive / expenses;
+  // Progress to freedom as the win check counts it (investments at the 4% rule, savings above inflation).
+  const freedom = financialFreedom(state, flow), passiveShare = freedom.coverage;
   const out: Advice[] = [];
   if (state.hasWon) out.push({ id: 'won', tone: 'good', title: tl('You did it. Your money works so you do not have to.','Lo lograste. Tu dinero trabaja para que tú no tengas que hacerlo.'), text: `${tl('Passive income of','Los ingresos pasivos de')} ${money(flow.passive)} ${tl('a month covers','al mes cubren')} ${money(expenses)} ${tl('of bills with room to spare. The trap now is lifestyle creep: every upgrade raises the bar your investments have to clear. Keep the reserve, keep investing, and enjoy the square.','de facturas con margen. La trampa ahora es inflar el estilo de vida: cada mejora sube la vara que tus inversiones deben superar. Conserva la reserva, sigue invirtiendo y disfruta la plaza.')}` });
   if (state.cash < expenses) out.push({ id: 'thin', tone: 'warn', title: tl('Your cash is thinner than one month of bills.','Tu efectivo no cubre ni un mes de facturas.'), text: `${tl('You have','Tienes')} ${money(state.cash)} ${tl('against','frente a')} ${money(expenses)} ${tl('of monthly costs. One surprise and you are borrowing. Park the next paycheque before anything else.','de gastos mensuales. Una sorpresa y estarás pidiendo prestado. Guarda el próximo sueldo antes que nada.')}`, place: 'bank' });
@@ -49,8 +50,8 @@ export function adviseFrom(state: GameState): Advice[] {
   // Rosa leaves insurance alone during the opening months (the reserve comes first), then names the bill the player could not pay.
   if (health && !health.held && state.month >= 6 && state.cash < health.example.loss) out.push({ id: 'uninsured', tone: 'warn', title: tl('One surgery would empty your account.','Una cirugía vaciaría tu cuenta.'), text: `${tl('The biggest medical bill in this game is','La factura médica más grande de este juego es de')} ${money(health.example.loss)}; ${tl('your cash is','tu efectivo es')} ${money(state.cash)}. ${tl('Health cover at the bank turns it into','El seguro de salud del banco la convierte en')} ${money(health.example.withCover)} ${tl('for','por')} ${money(health.premium)} ${tl('a month.','al mes.')}`, place: 'bank' });
   if (state.cafe && !state.cafe.plan.open) out.push({ id: 'cafe-closed', tone: 'warn', title: tl('Closed shops still pay rent.','Las tiendas cerradas también pagan renta.'), text: tl('$720 a month leaves while the doors are shut. Reopen with a lean plan or end the lease; limbo is the expensive choice.','$720 al mes se van mientras las puertas están cerradas. Reabre con un plan austero o termina el contrato; el limbo es la opción cara.'), place: 'cafe' });
-  if (passiveShare >= 1.1) out.push({ id: 'free', tone: 'good', title: tl('Your investments cover your life.','Tus inversiones cubren tu vida.'), text: `${tl('Passive income of','Los ingresos pasivos de')} ${money(flow.passive)} ${tl('a month clears','al mes cubren')} ${money(expenses)} ${tl('of bills with room to spare. Everything from here is choice.','de facturas con margen. Todo lo que sigue es elección.')}` });
-  else if (passiveShare >= .25) out.push({ id: 'progress', tone: 'good', title: `${Math.round(passiveShare * 100)}% ${tl('of your bills are paid by money you do not work for.','de tus facturas las paga dinero por el que no trabajas.')}`, text: `${money(flow.passive)} a month arrives whether you show up or not. Keep the gap wide and that number grows on its own.` });
+  if (passiveShare >= 1) out.push({ id: 'free', tone: 'good', title: tl('Your investments cover your life.','Tus inversiones cubren tu vida.'), text: `${tl('Freedom income of','Unos ingresos de libertad de')} ${money(freedom.income)} ${tl('a month clears your','al mes superan tu meta de')} ${money(freedom.target)} ${tl('target with room to spare. Everything from here is choice.','con margen. Todo lo que sigue es elección.')}` });
+  else if (passiveShare >= .25) out.push({ id: 'progress', tone: 'good', title: `${Math.round(passiveShare * 100)}% ${tl('of the way to freedom.','del camino hacia la libertad.')}`, text: `${money(freedom.income)} ${tl('a month you could draw for good: investments count at 4% of their value a year, businesses and rentals at what they pay. Keep the gap wide and that number grows on its own.','al mes que podrías retirar para siempre: las inversiones cuentan al 4% de su valor al año; los negocios y las rentas, por lo que pagan. Mantén la brecha amplia y ese número crece solo.')}` });
   if (!out.length) out.push({ id: 'steady', tone: 'good', title: tl('Nothing on fire.','Nada se está incendiando.'), text: 'Reserve intact, no expensive debt, a plan in motion. Boring months are where wealth is actually built. The notice board has three small things to do.', place: 'board' });
   return out.slice(0, 3);
 }

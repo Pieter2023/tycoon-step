@@ -1,3 +1,4 @@
+import { nextBusinessUnitShare } from '../../services/gameLogic';
 import { incomeYield, incomeLabel, nominalPrice } from '../../services/investmentModel';
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -146,6 +147,11 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
 
   const getPassiveIncome = (item: MarketItem, price: number) => {
     const monthly = Math.round((price * incomeYield(item)) / 12);
+    // Another unit of a business you already run shares the same customers, so it adds less.
+    if (item.type === AssetType.BUSINESS) {
+      const owned = (gameState.assets || []).filter((a: any) => a.marketItemId === item.id || a.name === item.name).reduce((n: number, a: any) => n + (a.quantity || 0), 0);
+      if (owned > 0) return `${formatMoneyFull(Math.round(monthly * nextBusinessUnitShare(owned)))}/mo for unit ${owned + 1} (shares your customers)`;
+    }
     return `${formatMoneyFull(monthly)}/mo`;
   };
 

@@ -659,6 +659,8 @@ export interface SoldPosition {
   /** Expected market value of the position today, had they held. */
   heldValue: number;
   industry?: string;
+  /** Catalogue id, so the hindsight follows this holding's own expected return. */
+  marketItemId?: string;
   marketPhaseAtSale: string;
 }
 

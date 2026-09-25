@@ -33,21 +33,15 @@ Updated **September 25, 2026 (evening PDT)**. That day produced four things: a f
    - Review `docs/verification/lighting-2026-09-25/lighting-before-after.jpg`, `docs/verification/characters-2026-09-25/characters-before-after.jpg` and `docs/verification/hero-alex-2026-09-25/`, or play the branch as Alex.
    - Then merge into the release branch and push `main`, which auto-deploys.
    - Do a real-phone check first. The new costs are the skinned people, the sky recapture and the 502 KB hero download.
-2. **The economy fix** (assessment §1) changes balance and what the game teaches. Confirm the direction before changing formulas.
+2. **The economy fix is done** (build 44, approved 2026-09-25): see `docs/verification/economy-2026-09-25/`. Pacing to decide: a careful index investor now needs about 14–20 game years, realistic but slower than the old cart rush.
 3. **Still open from June:** whether the Daily Challenge should stay demo-gated (see the GTM section of CLAUDE.md).
-4. **Walk bob (small):** the shared walk clip puts the hips lowest at mid-stance, the reverse of a natural gait, which makes every walker look slightly crouched. Fixing it in `scripts/town_rig.py` changes `town-people.glb` as well, so it needs Pieter's look first.
+4. **Walk bob:** fixed in build 43 (approved).
 
 Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the AI Alex cost 38 (receipt: `docs/verification/hero-alex-2026-09-25/`). Still: never spend credits without a fresh yes.
 
 ## 3. Next steps, in recommended order
 
-1. **Economy fix (Phase 0)**, from assessment §1:
-   - price drift from each asset's expected return;
-   - diminishing returns per business unit, and businesses that can lose money;
-   - shortfalls become debt;
-   - monthly tax withholding;
-   - the 4% rule counts toward freedom;
-   - a strategy-ranking assertion in `test/BalancePass.test.ts`.
+1. ✅ **Economy fix (Phase 0)**, build 44: price drift from expected returns, saturating businesses that can lose money, shortfalls on a credit card, monthly tax withholding, the 4% rule toward freedom, and `test/StrategyRanking.test.ts`. The smaller §1 issues remain.
 2. **Traffic deadlock bug** (assessment §2). A fix-it task was offered in the app; check `git log` and the branch list first, since it may already have run in another session.
 3. **The city as the game (Phase 1):**
    - the city becomes the main screen;

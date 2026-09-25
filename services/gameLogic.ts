@@ -710,33 +710,30 @@ export const calculateNetWorth = (state: GameState): number => {
 // ============================================
 // TAX CALCULATION
 // ============================================
-export const calculateAnnualTaxes = (state: GameState): number => {
-  const cashFlow = calculateMonthlyCashFlow(state);
-  const annualIncome = (cashFlow.salary + cashFlow.sideHustleIncome + cashFlow.passive + cashFlow.spouseIncome) * 12;
-  
-  // Progressive tax brackets (simplified)
+/** The standard deduction (single filer, 2023, in month-1 dollars); income below it is untaxed. */
+export const STANDARD_DEDUCTION = 13850;
+/**
+ * Federal income tax on a year's income (simplified 2023 single-filer brackets after the standard
+ * deduction, less $2,000 per child). Brackets and the deduction rise with inflation, as the real ones
+ * do, so a raise that only keeps up with prices does not push anyone into a higher bracket.
+ */
+export const incomeTaxFor = (annualIncome: number, children = 0, inflationMult = 1): number => {
+  const taxable = Math.max(0, annualIncome / inflationMult - STANDARD_DEDUCTION);
   let tax = 0;
-  if (annualIncome > 578125) {
-    tax = 174238 + (annualIncome - 578125) * 0.37;
-  } else if (annualIncome > 231250) {
-    tax = 52832 + (annualIncome - 231250) * 0.35;
-  } else if (annualIncome > 182100) {
-    tax = 37104 + (annualIncome - 182100) * 0.32;
-  } else if (annualIncome > 95375) {
-    tax = 16290 + (annualIncome - 95375) * 0.24;
-  } else if (annualIncome > 44725) {
-    tax = 5147 + (annualIncome - 44725) * 0.22;
-  } else if (annualIncome > 11000) {
-    tax = 1100 + (annualIncome - 11000) * 0.12;
-  } else {
-    tax = annualIncome * 0.10;
-  }
-  
-  // Deductions for children
-  const childDeduction = (state.family?.children?.length || 0) * 2000;
-  
-  return Math.max(0, Math.round(tax - childDeduction));
+  if (taxable > 578125) tax = 174238 + (taxable - 578125) * 0.37;
+  else if (taxable > 231250) tax = 52832 + (taxable - 231250) * 0.35;
+  else if (taxable > 182100) tax = 37104 + (taxable - 182100) * 0.32;
+  else if (taxable > 95375) tax = 16290 + (taxable - 95375) * 0.24;
+  else if (taxable > 44725) tax = 5147 + (taxable - 44725) * 0.22;
+  else if (taxable > 11000) tax = 1100 + (taxable - 11000) * 0.12;
+  else tax = taxable * 0.10;
+  return Math.max(0, Math.round((tax - children * 2000) * inflationMult));
 };
+/** Income tax withheld each month from pay and investment income, at this month's rate. */
+const monthlyTaxWithholding = (state: GameState, monthlyIncome: number): number =>
+  Math.round(incomeTaxFor(Math.max(0, monthlyIncome) * 12, state.family?.children?.length || 0, Math.pow(1 + (state.economy?.inflationRate || 0.03), state.month / 12)) / 12);
+
+export const calculateAnnualTaxes = (state: GameState): number => calculateMonthlyCashFlow(state).taxes * 12;
 
 // ============================================
 // EDUCATION RELEVANCE CHECK
@@ -1087,6 +1084,26 @@ const hasEducationCategory = (state: GameState, categories: EducationCategory[])
   });
 };
 
+// ============================================
+// BUSINESS INCOME
+// ============================================
+/** Each extra unit of the same business earns this share of the one before: a town has only so many customers. */
+export const BUSINESS_SATURATION = .75;
+/** Income-earning units for a stack of the same business (1, 1.75, 2.31, 2.73, … approaching 4). */
+export const businessUnits = (qty: number): number => qty <= 1 ? Math.max(0, qty) : (1 - Math.pow(BUSINESS_SATURATION, qty)) / (1 - BUSINESS_SATURATION);
+/** What one more unit would add, as a share of a single unit's income. */
+export const nextBusinessUnitShare = (owned: number): number => Math.pow(BUSINESS_SATURATION, Math.max(0, owned));
+// Costs are about two-thirds of sales, so profit swings about three times as hard as sales do, and a slow
+// month can run at a loss. Sales follow the business cycle; the cycle averages out over time.
+const OPERATING_LEVERAGE = 3;
+const SALES_CYCLE: Record<MarketCyclePhase, number> = { EXPANSION: 1.02, PEAK: 1.01, CONTRACTION: .97, TROUGH: 1.0 };
+/** A typical month's profit range (about 19 months in 20); a volatile business can dip below zero. */
+export const businessIncomeRange = (asset: Asset): { min: number; max: number } => {
+  const base = Math.max(0, asset.cashFlow || 0) * businessUnits(asset.quantity || 1);
+  const swing = 2 * OPERATING_LEVERAGE * (asset.volatility ?? 0) * .5 * (asset.opsUpgrade ? .6 : 1);
+  return { min: Math.round(base * (1 - swing)), max: Math.round(base * (1 + swing)) };
+};
+
 const applyBusinessIncomeVariance = (state: GameState): { state: GameState; maintenanceCost: number } => {
   let maintenanceCost = 0;
   const maintenanceEvents: any[] = [];
@@ -1100,7 +1117,7 @@ const applyBusinessIncomeVariance = (state: GameState): { state: GameState; main
     if (asset.marketItemId === 'coffee_cart' && state.townProgress?.permitMonth === undefined) return { ...asset, currentMonthIncome: 0 };
 
     const qty = asset.quantity ?? 1;
-    const baseIncome = Math.max(0, asset.cashFlow || 0) * qty;
+    const baseIncome = Math.max(0, asset.cashFlow || 0) * businessUnits(qty);
     const prevIncome = typeof asset.currentMonthIncome === 'number' ? asset.currentMonthIncome : Math.round(baseIncome);
 
     let maintenanceStatus = asset.maintenanceStatus;
@@ -1111,14 +1128,15 @@ const applyBusinessIncomeVariance = (state: GameState): { state: GameState; main
     const opsFactor = asset.opsUpgrade ? 0.6 : 1;
     const educationVolatilityFactor = hasEducationCategory(state, ['BUSINESS']) ? 0.9 : hasEducationCategory(state, ['STEM']) ? 0.95 : 1;
     const educationMaintenanceFactor = hasEducationCategory(state, ['BUSINESS']) ? 0.8 : hasEducationCategory(state, ['STEM']) ? 0.9 : 1;
-    const variance = (businessRandom() * 2 - 1) * asset.volatility * volatilityMultiplier * 0.6 * opsFactor * educationVolatilityFactor;
-    let incomeMultiplier = clamp(1 + variance, 0.55, 1.45);
+    const salesSpread = asset.volatility * volatilityMultiplier * 0.5 * opsFactor * educationVolatilityFactor;
+    const sales = (1 + salesSpread * standardNormal(businessRandom)) * (SALES_CYCLE[state.marketCycle?.phase ?? 'EXPANSION'] ?? 1) * (state.economy?.recession ? .97 : 1);
+    let incomeMultiplier = clamp(1 + OPERATING_LEVERAGE * (sales - 1), -2, 2.5);
 
     const maintenanceChance = (0.05 + asset.volatility * 0.12) * maintenanceChanceMultiplier * (asset.opsUpgrade ? 0.6 : 1) * educationMaintenanceFactor;
     if (!maintenanceStatus && businessRandom() < maintenanceChance) {
       const event = BUSINESS_MAINTENANCE_EVENTS[Math.floor(businessRandom() * BUSINESS_MAINTENANCE_EVENTS.length)];
 
-      if (typeof event.incomeMultiplier === 'number') {
+      if (typeof event.incomeMultiplier === 'number' && incomeMultiplier > 0) {
         incomeMultiplier *= event.incomeMultiplier;
       }
 
@@ -1153,7 +1171,8 @@ const applyBusinessIncomeVariance = (state: GameState): { state: GameState; main
       }
     }
 
-    const currentIncome = Math.max(0, Math.round(baseIncome * incomeMultiplier));
+    // No floor: a business can lose money in a bad month.
+    const currentIncome = Math.round(baseIncome * incomeMultiplier);
 
     return {
       ...asset,
@@ -1177,7 +1196,7 @@ const applyBusinessIncomeVariance = (state: GameState): { state: GameState; main
 export function calculateAssetCashPayment(state:GameState,asset:Asset,estimate=false):number {
   if(asset.marketItemId==='coffee_cart'&&state.townProgress?.permitMonth===undefined)return 0;
   const diff=DIFFICULTY_SETTINGS[state.difficulty as keyof typeof DIFFICULTY_SETTINGS]||DIFFICULTY_SETTINGS.NORMAL;
-  const qty=asset.quantity??1;
+  const qty=asset.type===AssetType.BUSINESS?businessUnits(asset.quantity??1):asset.quantity??1;
   const sector=asset.type===AssetType.SAVINGS?1:(state.economy?.sectorPerformance?.[asset.industry||'diversified']||1);
   const bonus=asset.cashFlow>0&&asset.type!==AssetType.SAVINGS?(diff.assetYieldBonus||0):0;
   const base=!estimate&&asset.type===AssetType.BUSINESS&&typeof asset.currentMonthIncome==='number'?asset.currentMonthIncome:asset.cashFlow*qty;
@@ -1198,6 +1217,7 @@ export const calculateMonthlyCashFlow = (state: GameState): {
   childrenExpenses: number;
   vehicleCosts: number;
   insurancePremiums: number;
+  taxes: number;
   expenses: number;
 } => {
   const diffSettings = DIFFICULTY_SETTINGS[state.difficulty as keyof typeof DIFFICULTY_SETTINGS] || DIFFICULTY_SETTINGS.NORMAL;
@@ -1243,7 +1263,9 @@ export const calculateMonthlyCashFlow = (state: GameState): {
   const vehicleCosts = state.vehicles?.reduce((sum, v) => sum + v.monthlyMaintenance, 0) || 0;
   const insurancePremiumsDue = insurancePremiums(state);
   
-  const totalExpenses = lifestyleCost + debtPayments + educationPayment + childrenExpenses + vehicleCosts + insurancePremiumsDue;
+  // Income tax comes off every month, as an employer's withholding does.
+  const taxes = monthlyTaxWithholding(state, totalIncome);
+  const totalExpenses = lifestyleCost + debtPayments + educationPayment + childrenExpenses + vehicleCosts + insurancePremiumsDue + taxes;
   
   return {
     salary: baseSalary,
@@ -1257,8 +1279,41 @@ export const calculateMonthlyCashFlow = (state: GameState): {
     childrenExpenses,
     vehicleCosts,
     insurancePremiums: insurancePremiumsDue,
+    taxes,
     expenses: totalExpenses
   };
+};
+
+// ============================================
+// FINANCIAL FREEDOM
+// ============================================
+/** Market holdings that count at a safe withdrawal rate instead of their cash payments. */
+export const PORTFOLIO_TYPES: AssetType[] = [AssetType.INDEX_FUND, AssetType.STOCK, AssetType.BOND];
+/** The 4% rule: a diversified portfolio can fund about 4% of its value a year for decades. */
+export const SAFE_WITHDRAWAL_RATE = .04;
+/**
+ * Progress to financial freedom: income you could keep spending for good. Market holdings count at the
+ * safe withdrawal rate (or their cash payments, if higher), so an index investor who never sees large
+ * dividends still gets there. Savings deposits count only their interest above inflation, because a
+ * balance that never grows loses buying power every year. Businesses and rentals count what they pay.
+ * The target is 110% of living costs, excluding income tax on a salary that stops once work is optional.
+ */
+export const financialFreedom = (state: GameState, flow: { passive: number; expenses: number; taxes?: number } = calculateMonthlyCashFlowEstimate(state)) => {
+  const inflation = state.economy?.inflationRate ?? .03;
+  let portfolioDraw = 0, adjustment = 0, inflationLoss = 0;
+  for (const asset of state.assets || []) {
+    const held = asset.value * (asset.quantity ?? 1);
+    if (PORTFOLIO_TYPES.includes(asset.type)) {
+      const cash = calculateAssetCashPayment(state, asset, true), draw = Math.max(cash, held * SAFE_WITHDRAWAL_RATE / 12);
+      portfolioDraw += draw; adjustment += draw - cash;
+    } else if (asset.type === AssetType.SAVINGS) {
+      const cash = calculateAssetCashPayment(state, asset, true), real = Math.max(0, cash - held * inflation / 12);
+      inflationLoss += cash - real; adjustment -= cash - real;
+    }
+  }
+  const income = Math.round(flow.passive + adjustment);
+  const target = getFinancialFreedomTarget(Math.max(0, flow.expenses - (flow.taxes ?? 0)));
+  return { income, target, coverage: target > 0 ? income / target : 0, portfolioDraw: Math.round(portfolioDraw), savingsInflation: Math.round(inflationLoss), cashPassive: flow.passive };
 };
 
 // Deterministic cash flow estimate used for UI previews, quest calculations, and save summaries.
@@ -1275,6 +1330,7 @@ export const calculateMonthlyCashFlowEstimate = (state: GameState): {
   childrenExpenses: number;
   vehicleCosts: number;
   insurancePremiums: number;
+  taxes: number;
   expenses: number;
 } => {
   const diffSettings = DIFFICULTY_SETTINGS[state.difficulty as keyof typeof DIFFICULTY_SETTINGS] || DIFFICULTY_SETTINGS.NORMAL;
@@ -1322,7 +1378,8 @@ export const calculateMonthlyCashFlowEstimate = (state: GameState): {
   const vehicleCosts = state.vehicles?.reduce((sum, v) => sum + (v.monthlyMaintenance || 0), 0) || 0;
   const insurancePremiumsDue = insurancePremiums(state);
 
-  const expenses = lifestyleCost + debtPayments + educationPayment + childrenExpenses + vehicleCosts + insurancePremiumsDue;
+  const taxes = monthlyTaxWithholding(state, income);
+  const expenses = lifestyleCost + debtPayments + educationPayment + childrenExpenses + vehicleCosts + insurancePremiumsDue + taxes;
 
   return {
     salary,
@@ -1336,6 +1393,7 @@ export const calculateMonthlyCashFlowEstimate = (state: GameState): {
     childrenExpenses,
     vehicleCosts,
     insurancePremiums: insurancePremiumsDue,
+    taxes,
     expenses,
   };
 };
@@ -1400,62 +1458,67 @@ export const marketIndexStep = (state: GameState): { month: number; value: numbe
   const value = last * (MARKET_INDEX_MULTIPLIERS[state.marketCycle?.phase ?? 'EXPANSION'] ?? 1) * (state.economy?.recession ? .995 : 1) * (1 + wobble);
   return [...history, { month: state.month, value: Math.round(value * 100) / 100 }].slice(-36);
 };
+// Prices drift at each holding's expected price return (its expected total return minus what it pays out in
+// cash) with normally distributed noise at its own volatility. One market-wide shock a month moves correlated
+// holdings together, and the business cycle tilts returns above or below the long-run path; the tilts average
+// out over a full cycle, so patience earns the expected return. Rentals and businesses are appraised, not
+// traded, so their values move more slowly.
+const CYCLE_TILT: Record<MarketCyclePhase, number> = { EXPANSION: .005, PEAK: 0, CONTRACTION: -.01, TROUGH: .005 };
+const MARKET_BETA: Partial<Record<AssetType, number>> = { STOCK: 1, INDEX_FUND: 1, CRYPTO: 1.5, REAL_ESTATE: .3, BUSINESS: .5, COMMODITY: -.2, BOND: 0 };
+const MARKET_CORRELATION: Partial<Record<AssetType, number>> = { INDEX_FUND: .95, STOCK: .7, CRYPTO: .5, REAL_ESTATE: .3, BUSINESS: .3, COMMODITY: .1, BOND: 0 };
+const VALUE_SMOOTHING: Partial<Record<AssetType, number>> = { REAL_ESTATE: .5, BUSINESS: .5, BOND: .25 };
+const catalogueItem = (asset: { marketItemId?: string; name?: string }) => MARKET_ITEMS.find(i => i.id === asset.marketItemId) ?? MARKET_ITEMS.find(i => i.name === asset.name);
+/** Expected yearly price return: the catalogue's expected total return minus the cash it pays out. */
+export const expectedPriceReturn = (asset: { type: AssetType; marketItemId?: string; name?: string }): number => {
+  if (asset.type === AssetType.SAVINGS) return 0;
+  if (asset.type === AssetType.REAL_ESTATE) return .037;   // homes keep up with inflation and a little more; rent is the cash return
+  if (asset.type === AssetType.BUSINESS) return .024;       // a going concern grows slowly; profit is the cash return
+  const item = catalogueItem(asset);
+  if (!item) return asset.type === AssetType.BOND ? 0 : .06;
+  return Math.max(0, item.expectedYield - incomeYield(item));
+};
+/** This month's cycle tilt on a log return: the phase, how strong it is, and any recession. */
+const cycleTilt = (state: GameState): number =>
+  (CYCLE_TILT[state.marketCycle?.phase ?? 'EXPANSION'] ?? 0) * (.6 + (state.marketCycle?.intensity ?? .5)) + (state.economy?.recession ? -.003 : 0);
+/**
+ * A standard normal draw from one uniform draw, by the inverse of the normal CDF (Acklam's rational
+ * approximation, accurate to about 1e-9). Monotonic: a low draw is always a bad month, a high one a good month.
+ */
+const standardNormal = (next: () => number): number => {
+  const p = Math.min(1 - 1e-9, Math.max(1e-9, next()));
+  const a = [-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.3577518672690, -30.66479806614716, 2.506628277459239];
+  const b = [-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771972, -13.28068155288572];
+  const c = [-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783];
+  const d = [0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416];
+  if (p < .02425) { const q = Math.sqrt(-2 * Math.log(p)); return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); }
+  if (p > 1 - .02425) { const q = Math.sqrt(-2 * Math.log(1 - p)); return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); }
+  const q = p - .5, r = q * q;
+  return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+};
+
 export const updateAssetPrices = (state: GameState): GameState => {
   const newState = { ...state };
   const diffSettings = DIFFICULTY_SETTINGS[state.difficulty as keyof typeof DIFFICULTY_SETTINGS] || DIFFICULTY_SETTINGS.NORMAL;
-  
-  const cycleMultipliers: { [key in MarketCyclePhase]: number } = {
-    'EXPANSION': 1.005,  // +0.5% per month in expansion
-    'PEAK': 1.002,       // +0.2% at peak
-    'CONTRACTION': 0.997, // -0.3% in contraction
-    'TROUGH': 0.999      // -0.1% at trough
-  };
-  
-  const baseMult = cycleMultipliers[state.marketCycle.phase] || 1;
-  
-  // Recession impact is mild
-  const recessionMult = state.economy?.recession ? 0.998 : 1.0;
+  const volatilityMult = diffSettings.volatilityMultiplier || 1;
+  const tilt = cycleTilt(state);
+  // Drawn first, so every holding sees the same market this month.
+  const marketShock = standardNormal(rand);
 
   let marketGainsThisMonth = 0;
   newState.assets = state.assets.map(asset => {
     const newAsset = { ...asset };
-    
-    // Base growth/decline from market cycle
-    let priceChange = (baseMult * recessionMult - 1);
-    
-    // Annual volatility scaled to a monthly teaching model. Beginner mode
-    // dampens swings; normal play permits substantial losses.
-    const volatilityMult = (diffSettings.volatilityMultiplier || 1) / Math.sqrt(12);
-    priceChange += (rand() - 0.5) * 2 * asset.volatility * volatilityMult;
-    const speculative = [AssetType.STOCK, AssetType.CRYPTO, AssetType.BUSINESS].includes(asset.type);
-    if (speculative && rand() < 0.01) priceChange -= 0.25 + rand() * 0.5;
-
-    // Sector performance adjustment
-    const sectorMult = asset.type === AssetType.SAVINGS ? 1 : (state.economy?.sectorPerformance?.[asset.industry || 'diversified'] || 1);
-    priceChange *= sectorMult;
-    
-    // Real estate is very stable - even further reduced volatility
-    if (asset.type === 'REAL_ESTATE') {
-      priceChange *= 0.3;
-      // Real estate tends to appreciate over time (0.3% monthly = ~3.7% annually)
-      priceChange += 0.003;
-    }
-    
-    // Businesses are more stable than stocks
-    if (asset.type === 'BUSINESS') {
-      priceChange *= 0.5;
-      // Businesses should generate value (0.2% monthly growth)
-      priceChange += 0.002;
-    }
-    
     // Deposits retain nominal principal. Only Easy mode has a loss floor,
     // disclosed in the UI; it is a game aid, not investment protection.
-    if (asset.type === AssetType.SAVINGS) priceChange = 0;
-    if (asset.type === AssetType.BOND) priceChange *= 0.25;
-    priceChange = Math.max(-1, Math.min(1, priceChange));
-    const floor = state.difficulty === 'EASY' ? asset.costBasis * 0.5 : 0;
-    newAsset.value = asset.type === AssetType.SAVINGS ? asset.value
-      : Math.max(Math.round(floor), Math.round(asset.value * (1 + priceChange)));
+    if (asset.type !== AssetType.SAVINGS) {
+      const sigma = asset.volatility * (VALUE_SMOOTHING[asset.type] ?? 1) * volatilityMult / Math.sqrt(12);
+      const rho = MARKET_CORRELATION[asset.type] ?? .5;
+      const shock = rho * marketShock + Math.sqrt(1 - rho * rho) * standardNormal(rand);
+      const sector = state.economy?.sectorPerformance?.[asset.industry || 'diversified'] || 1;
+      // Lognormal: the expected (average) return is the catalogue's; the typical one is lower for volatile holdings.
+      const logReturn = expectedPriceReturn(asset) * sector / 12 - sigma * sigma / 2 + (MARKET_BETA[asset.type] ?? 1) * tilt + sigma * shock;
+      const floor = state.difficulty === 'EASY' ? asset.costBasis * 0.5 : 0;
+      newAsset.value = Math.max(Math.round(floor), Math.round(asset.value * Math.exp(logReturn)));
+    }
     newAsset.priceHistory = [...asset.priceHistory, { month: state.month, value: newAsset.value }].slice(-24);
 
     const qty = typeof asset.quantity === 'number' ? asset.quantity : 1;
@@ -1510,30 +1573,13 @@ export { MAX_SOLD_POSITIONS };
  */
 export const expectedHeldGrowth = (
   state: GameState,
-  position: Pick<SoldPosition, 'assetType' | 'industry'>
+  position: Pick<SoldPosition, 'assetType' | 'industry'> & { marketItemId?: string; name?: string }
 ): number => {
-  const cycleMultipliers: { [key in MarketCyclePhase]: number } = {
-    'EXPANSION': 1.005,
-    'PEAK': 1.002,
-    'CONTRACTION': 0.997,
-    'TROUGH': 0.999
-  };
   if (position.assetType === AssetType.SAVINGS) return 0;
-  const baseMult = cycleMultipliers[state.marketCycle.phase] || 1;
-  const recessionMult = state.economy?.recession ? 0.998 : 1.0;
-  let priceChange = baseMult * recessionMult - 1;
-  const sectorMult = state.economy?.sectorPerformance?.[position.industry || 'diversified'] || 1;
-  priceChange *= sectorMult;
-  if (position.assetType === 'REAL_ESTATE') {
-    priceChange *= 0.3;
-    priceChange += 0.003;
-  }
-  if (position.assetType === 'BUSINESS') {
-    priceChange *= 0.5;
-    priceChange += 0.002;
-  }
-  if (position.assetType === AssetType.BOND) priceChange *= 0.25;
-  return Math.max(-1, Math.min(1, priceChange));
+  const sector = state.economy?.sectorPerformance?.[position.industry || 'diversified'] || 1;
+  const change = expectedPriceReturn({ type: position.assetType, marketItemId: position.marketItemId, name: position.name }) * sector / 12
+    + (MARKET_BETA[position.assetType] ?? 1) * cycleTilt(state);
+  return Math.max(-1, Math.min(1, change));
 };
 
 /** One-line lesson for a resolved sell, phrased for the event feed. */
@@ -2308,48 +2354,14 @@ export const generateLifeEvent = (state: GameState): Scenario | null => {
     VEHICLE: 6
   };
   
-  // GUARANTEED check for annual taxes (April = month 4, 16, 28, etc.)
-  // Only trigger AFTER 12 months of play (first April after year 1)
-  const monthOfYear = ((state.month - 1) % 12) + 1;
-  if (monthOfYear === 4 && state.month >= 12 && !state.eventTracker?.taxesPaidThisYear) {
-    const taxEvent = ALL_LIFE_EVENTS.find(e => e.id === 'annual_taxes');
-    if (taxEvent) {
-      const taxes = calculateAnnualTaxes(state);
-      if (taxes > 0) {
-        const totalWithPenalty = Math.round(taxes * 1.1);
-        const monthlyPayment = Math.round(totalWithPenalty / 10);
-        return {
-          ...taxEvent,
-          description: `April 15th - time to file your taxes. Based on your income, you owe ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(taxes)} to the IRS.`,
-          options: [
-            { label: 'Pay taxes in full', outcome: { cashChange: -taxes, message: 'Taxes paid. Good citizen!', statChanges: { stress: -5 } } },
-            { 
-              label: `Set up payment plan (+10% penalty, ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(monthlyPayment)}/mo)`, 
-              outcome: { 
-                cashChange: 0, 
-                message: `Payment plan: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(monthlyPayment)}/mo for 10 months.`, 
-                statChanges: { stress: 5 },
-                addLiability: {
-                  name: 'IRS Payment Plan',
-                  balance: totalWithPenalty,
-                  originalBalance: totalWithPenalty,
-                  interestRate: 0,
-                  monthlyPayment: monthlyPayment,
-                  type: 'PERSONAL_LOAN'
-                }
-              } 
-            }
-          ]
-        };
-      }
-    }
-  }
+  // Income tax is withheld monthly in the cash flow (monthlyTaxWithholding); there is no April lump sum.
+  // The 'annual_taxes' event stays in the catalogue for old saves that still hold one pending.
 
   const hasBusiness = (state.assets || []).some(a => a.type === AssetType.BUSINESS && (a.quantity || 1) > 0);
   const hasRealEstate = (state.assets || []).some(a => a.type === AssetType.REAL_ESTATE && (a.quantity || 1) > 0);
 
   const isEligible = (event: Scenario) => {
-    // Skip annual_taxes - it's handled specially above with calculated amounts
+    // Skip annual_taxes: income tax is withheld monthly now
     if (event.id === 'annual_taxes') return false;
 
     if (event.characterIds && (!state.character || !event.characterIds.includes(state.character.id))) {
@@ -3298,6 +3310,26 @@ export const calculateCreditScoreUpdate = (
   const score = clampCredit(prevScore + delta);
   return { score, delta, reasons };
 };
+// ============================================
+// SHORTFALLS
+// ============================================
+/** Bills the month's money could not cover go on this card, so they are never simply forgiven. */
+export const CARD_ID = 'credit-card';
+export const CARD_APR = .24;
+/** Minimum payment: about 3% of the balance (roughly the interest plus 1%), at least $35. */
+export const cardMinimumPayment = (balance: number): number => Math.min(Math.round(balance), Math.max(35, Math.round(balance * .03)));
+/** Credit limit: a multiple of monthly pay that grows with the credit score. */
+export const creditLimit = (state: GameState): number => {
+  const score = state.creditRating ?? 650, pay = Math.max(state.career?.salary ?? 0, state.playerJob?.salary ?? 0, 2000);
+  const multiple = score >= 740 ? 3 : score >= 670 ? 2 : score >= 580 ? 1.2 : .6;
+  return Math.max(1000, Math.round(pay * multiple / 100) * 100);
+};
+const drawOnCard = (liabilities: Liability[], amount: number): Liability[] => {
+  const card = liabilities.find(l => l.id === CARD_ID);
+  if (!card) return [...liabilities, { id: CARD_ID, name: 'Credit card', balance: amount, originalBalance: amount, interestRate: CARD_APR, monthlyPayment: cardMinimumPayment(amount), type: 'CREDIT_CARD' }];
+  return liabilities.map(l => l.id === CARD_ID ? { ...l, balance: l.balance + amount, originalBalance: Math.max(l.originalBalance, l.balance + amount), monthlyPayment: cardMinimumPayment(l.balance + amount) } : l);
+};
+
 export const processTurn = (state: GameState): { newState: GameState; monthlyReport: MonthlyReport } => {
   let newState = { ...state };
 
@@ -3425,40 +3457,46 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
   
   let wasDelinquentThisMonth = false;
 
-  // 7a. Handle negative cash - missed payments impact credit rating
+  // 7a. A shortfall goes on the credit card: the bills are paid, the debt stays and costs 24% a year.
+  // Only a shortfall beyond the card's limit is a missed payment (credit hit, late fees, bankruptcy risk).
+  let cardDraw = 0;
   if (projectedCash < 0) {
-    wasDelinquentThisMonth = true;
-    // Missed payment - reduce credit rating
-    newState.creditRating = Math.max(300, (newState.creditRating || 650) - 25);
-    newState.missedPayments = (newState.missedPayments || 0) + 1;
-    
-    // Add event about missed payment
-    newState.events = [{
-      id: Date.now().toString(),
-      month: newState.month,
-      title: '⚠️ Missed Payment',
-      description: `You couldn't cover your expenses. Credit rating dropped to ${newState.creditRating}. Unpaid debts accrued interest + late fees. Consider selling assets or lowering lifestyle.`,
-      type: 'WARNING'
-    }, ...newState.events];
-    
-    // If they have assets, they get a lifeline
-    const totalAssetValue = (newState.assets || []).reduce((sum, a) => sum + (a.costBasis * 0.5 * (a.quantity ?? 1)), 0);
-    
-    if (totalAssetValue > 0) {
-      // They can sell assets at 50% value - don't go bankrupt yet
-      newState.cash = 0;
-    } else if (newState.missedPayments >= 3) {
-      // No assets and 3+ missed payments = bankruptcy
-      newState.isBankrupt = true;
+    const shortfall = Math.round(-projectedCash);
+    const cardBalance = newState.liabilities.find(l => l.id === CARD_ID)?.balance ?? 0;
+    const room = Math.max(0, creditLimit(newState) - cardBalance);
+    const unpaid = Math.max(0, shortfall - room);
+    cardDraw = shortfall;   // over-limit bills still land on the card; they are never forgiven
+    newState.cash = 0;
+    if (unpaid === 0) {
+      newState.events = [{
+        id: `card-${newState.month}`,
+        month: newState.month,
+        title: '💳 Bills went on the credit card',
+        description: `This month cost ${formatMoneyFull(shortfall)} more than you had. It went on your card at ${Math.round(CARD_APR * 100)}% a year; the minimum payment is ${formatMoneyFull(cardMinimumPayment(cardBalance + shortfall))} a month. Pay it down before investing: nothing you can buy reliably earns ${Math.round(CARD_APR * 100)}%.`,
+        type: 'WARNING'
+      }, ...newState.events];
+    } else {
+      wasDelinquentThisMonth = true;
+      newState.creditRating = Math.max(300, (newState.creditRating || 650) - 25);
+      newState.missedPayments = (newState.missedPayments || 0) + 1;
       newState.events = [{
         id: Date.now().toString(),
         month: newState.month,
-        title: '💀 BANKRUPTCY',
-        description: 'You have run out of money and assets. Game Over.',
-        type: 'BANKRUPTCY'
+        title: '⚠️ Missed Payment',
+        description: `Your card is maxed out: ${formatMoneyFull(unpaid)} went past its limit. Credit rating dropped to ${newState.creditRating}, and unpaid debts accrued interest + late fees. Sell assets or lower your lifestyle.`,
+        type: 'WARNING'
       }, ...newState.events];
-    } else {
-      newState.cash = 0;
+      const hasAssets = (newState.assets || []).some(a => a.value * (a.quantity ?? 1) > 0);
+      if (!hasAssets && newState.missedPayments >= 3) {
+        newState.isBankrupt = true;
+        newState.events = [{
+          id: Date.now().toString(),
+          month: newState.month,
+          title: '💀 BANKRUPTCY',
+          description: 'You have run out of money and assets. Game Over.',
+          type: 'BANKRUPTCY'
+        }, ...newState.events];
+      }
     }
   } else {
     // Apply net cash flow normally
@@ -3537,7 +3575,11 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
       const newBalance = Math.max(0, liability.balance + interestAccrued - liability.monthlyPayment);
       return { ...liability, balance: newBalance };
     })
-    .filter(l => l.balance > 0);
+    .filter(l => l.balance > 0)
+    // The card's minimum payment follows its balance.
+    .map(l => l.id === CARD_ID ? { ...l, monthlyPayment: cardMinimumPayment(l.balance) } : l);
+  // This month's shortfall joins the card after the month's interest and payments ran on older debt.
+  if (cardDraw > 0) newState.liabilities = drawOnCard(newState.liabilities, cardDraw);
 
   // 8.5 Update credit score from payment behavior, utilization, and DTI
   const creditUpdate = calculateCreditScoreUpdate(state, newState, cashFlow, wasDelinquentThisMonth);
@@ -3649,12 +3691,11 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
   
   // 14. Check win condition
   const newNetWorth = calculateNetWorth(newState);
-  // Win condition: passive income covers ALL expenses with a small safety buffer.
-  // This aligns with the UI (goal: 110% of monthly expenses).
-  const targetExpenses = cashFlow.expenses;
-  const targetPassive = getFinancialFreedomTarget(targetExpenses);
+  // Win condition: freedom income (market holdings at the 4% rule, everything else at what it pays)
+  // covers 110% of living costs. Same function as every progress bar in the UI.
+  const freedom = financialFreedom(newState, cashFlow);
   
-  if (cashFlow.passive >= targetPassive && targetPassive > 0 && !newState.hasWon && !newState.isBankrupt) {
+  if (freedom.coverage >= 1 && freedom.target > 0 && !newState.hasWon && !newState.isBankrupt) {
     newState.hasWon = true;
     newState.prestige = {
       ...newState.prestige,

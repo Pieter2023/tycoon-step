@@ -34,7 +34,6 @@ import {
   XAxis,
   YAxis
 } from 'recharts';
-import { FINANCIAL_FREEDOM_TARGET_MULTIPLIER } from '../../constants';
 import { AssetType, GameState, LifeEvent, MonthlyActionId } from '../../types';
 import { MonthlyActionsSummary } from '../../services/monthlyActions';
 import EventFeed from './EventFeed';
@@ -47,6 +46,9 @@ type CommandDashboardProps = {
   cashValue: number;
   netWorthValue: number;
   passiveValue: number;
+  /** Freedom income (investments at the 4% rule) and its target: the same figures the win check uses. */
+  freedomIncome?: number;
+  freedomTarget?: number;
   expenseValue: number;
   formatMoney: (value: number) => string;
   freedomPercent: number;
@@ -292,10 +294,11 @@ const getActionTone = (actionId: MonthlyActionId) => {
 };
 
 const getAdvisorRecommendation = (
-  props: Pick<CommandDashboardProps, 'cashValue' | 'expenseValue' | 'passiveValue' | 'monthlyActions' | 'gameState' | 'isProcessing'>,
+  props: Pick<CommandDashboardProps, 'cashValue' | 'expenseValue' | 'passiveValue' | 'freedomIncome' | 'freedomTarget' | 'monthlyActions' | 'gameState' | 'isProcessing'>,
   t: Translate
 ): AdvisorRecommendation => {
   const { cashValue, expenseValue, passiveValue, monthlyActions, gameState, isProcessing } = props;
+  const freedomIncome = props.freedomIncome ?? passiveValue;
   const safetyMonths = expenseValue > 0 ? cashValue / expenseValue : 12;
   const readyQuestCount = gameState.quests?.readyToClaim?.length ?? 0;
   const enabledActions = monthlyActions.actions.filter((action) => !action.disabled);
@@ -307,8 +310,8 @@ const getAdvisorRecommendation = (
   const energy = gameState.stats?.energy ?? 60;
   const stress = gameState.stats?.stress ?? 35;
   const health = gameState.stats?.health ?? 70;
-  const freedomTarget = Math.max(1, expenseValue * FINANCIAL_FREEDOM_TARGET_MULTIPLIER);
-  const passiveCoverage = passiveValue / freedomTarget;
+  const freedomTarget = Math.max(1, props.freedomTarget ?? expenseValue * 1.1);
+  const passiveCoverage = freedomIncome / freedomTarget;
 
   if (gameState.pendingScenario) {
     return {
@@ -488,8 +491,9 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
   const stress = gameState.stats?.stress ?? 35;
   const energy = gameState.stats?.energy ?? 60;
   const health = gameState.stats?.health ?? 70;
-  const targetPassive = Math.max(1, expenseValue * FINANCIAL_FREEDOM_TARGET_MULTIPLIER);
-  const freedomCoverage = passiveValue / targetPassive;
+  const targetPassive = Math.max(1, props.freedomTarget ?? expenseValue * 1.1);
+  const freedomIncome = props.freedomIncome ?? passiveValue;
+  const freedomCoverage = freedomIncome / targetPassive;
   const assetTypeCount = new Set((gameState.assets || []).map((asset) => asset.type)).size;
   const assetCount = (gameState.assets || []).reduce((sum, asset) => sum + (asset.quantity || 1), 0);
 
@@ -515,8 +519,8 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
   }, [gameState.assets]);
 
   const advisor = useMemo(
-    () => getAdvisorRecommendation({ cashValue, expenseValue, passiveValue, monthlyActions, gameState, isProcessing }, t),
-    [cashValue, expenseValue, passiveValue, monthlyActions, gameState, isProcessing]
+    () => getAdvisorRecommendation({ cashValue, expenseValue, passiveValue, freedomIncome: props.freedomIncome, freedomTarget: props.freedomTarget, monthlyActions, gameState, isProcessing }, t),
+    [cashValue, expenseValue, passiveValue, props.freedomIncome, props.freedomTarget, monthlyActions, gameState, isProcessing]
   );
 
   const handleAdvisorAction = () => {
@@ -802,7 +806,7 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
                 />
                 <ProgressRow
                   label={t('shell.commandDashboard.passive_coverage')}
-                  valueLabel={`${formatMoney(passiveValue)} / ${formatMoney(targetPassive)}`}
+                  valueLabel={`${formatMoney(freedomIncome)} / ${formatMoney(targetPassive)}`}
                   progress={freedomPercent * 100}
                   icon={<Coins size={15} />}
                   tone={freedomPercent >= 0.7 ? 'emerald' : 'cyan'}

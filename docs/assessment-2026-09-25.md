@@ -4,7 +4,9 @@ Pieter asked for a full assessment ("evaluate everything that you think is impor
 
 Method: a cold first-time playthrough on the QA origin (5188) at desktop and phone width (opening journey, bank, cart, café shift, Exchange, a month advance), two code audits (game design + finance; 3D rendering + art pipeline), and spot checks of the key claims in the code. The economy simulation below was a headless script in a session scratchpad (8 characters × 3 seeds × 6 strategies, 30-year cap, 3-month cash reserve, cheapest event option); it is not in the repo. Re-derive it with `test/BalancePass.test.ts` as a starting point if the numbers need refreshing.
 
-## 1. The economy rewards the wrong strategy (highest priority for a teaching product) ⬜
+## 1. The economy rewards the wrong strategy (highest priority for a teaching product) ✅ Phase 0 done (build 44)
+
+**Done 2026-09-25 (build 44, branch only):** every item on the Phase 0 fix list below. Index 8/8 careers reach freedom (median month 217) against carts 0/8 and savings 3/8; receipt `docs/verification/economy-2026-09-25/`. Savings count only interest above inflation (a decision made while fixing: HYSA interest otherwise beat the 4% rule for frugal players). The smaller issues (credit-score climb, mortgage re-roll, property tax/PMI/closing costs, repeatable FHA) are still open.
 
 - **Stocks and index funds barely grow.** `updateAssetPrices` in `services/gameLogic.ts` moves prices only with the market-cycle multipliers (+0.5%/month in expansion, −0.3% in contraction, and so on) plus uniform noise. `expectedYield` (10% for the S&P 500 in `constants.ts`) is never used for price. The 4.5% savings account beats the stock market.
 - **Coffee carts are the dominant strategy.** `coffee_cart` pays a 24% cash yield on $1,500 (`constants.ts`), and `handleBuyAsset` in `App.tsx` just stacks quantity with no limit or saturation.

@@ -8,7 +8,7 @@ export const TUTORIAL_TIPS = [
   {
     id: 'welcome',
     title: '👋 Welcome to Tycoon!',
-    message: `Your goal: Build enough passive income to cover ${Math.round(FINANCIAL_FREEDOM_TARGET_MULTIPLIER * 100)}% of your expenses. Click "Next Month" to advance time and watch your finances grow!`,
+    message: `Your goal: build income you could live on for good until it covers ${Math.round(FINANCIAL_FREEDOM_TARGET_MULTIPLIER * 100)}% of your living costs. Investments count at a safe 4% of their value a year; businesses and rentals count what they pay. Click "Next Month" to advance time and watch your finances grow!`,
     highlight: 'next-month'
   },
   {

@@ -36,31 +36,37 @@ const ghost = (overrides: Partial<SoldPosition> = {}): SoldPosition => ({
 });
 
 describe('expectedHeldGrowth', () => {
+  // The ghost follows the same expected path as updateAssetPrices: the holding's expected price return
+  // plus the cycle tilt, with no random draw (daily-challenge worlds must stay in sync).
   it('follows the market cycle phase with no randomness', () => {
     const s = baseState();
-    const expansion = { ...s, marketCycle: { ...s.marketCycle, phase: 'EXPANSION' as const } };
-    const contraction = { ...s, marketCycle: { ...s.marketCycle, phase: 'CONTRACTION' as const } };
-    expect(expectedHeldGrowth(expansion, ghost())).toBeCloseTo(0.005, 6);
-    expect(expectedHeldGrowth(contraction, ghost())).toBeCloseTo(-0.003, 6);
+    const expansion = { ...s, marketCycle: { ...s.marketCycle, phase: 'EXPANSION' as const, intensity: .5 } };
+    const contraction = { ...s, marketCycle: { ...s.marketCycle, phase: 'CONTRACTION' as const, intensity: .5 } };
+    const sp = ghost({ marketItemId: 'sp500' });
+    // S&P 500: 10% expected total return less its 1.5% dividend = 8.5% a year in price; expansion tilts +0.55%.
+    expect(expectedHeldGrowth(expansion, sp)).toBeCloseTo(.085 / 12 + .005 * 1.1, 6);
+    expect(expectedHeldGrowth(contraction, sp)).toBeCloseTo(.085 / 12 - .01 * 1.1, 6);
+    expect(expectedHeldGrowth(expansion, sp)).toBeGreaterThan(expectedHeldGrowth(contraction, sp));
     // Deterministic: same inputs, same output
-    expect(expectedHeldGrowth(expansion, ghost())).toBe(expectedHeldGrowth(expansion, ghost()));
+    expect(expectedHeldGrowth(expansion, sp)).toBe(expectedHeldGrowth(expansion, sp));
   });
 
-  it('applies real-estate damping and drift', () => {
+  it('gives real estate its slow appreciation and a small share of the cycle', () => {
     const s = baseState();
-    const expansion = { ...s, marketCycle: { ...s.marketCycle, phase: 'EXPANSION' as const } };
+    const expansion = { ...s, marketCycle: { ...s.marketCycle, phase: 'EXPANSION' as const, intensity: .5 } };
     const re = ghost({ assetType: 'REAL_ESTATE' as AssetType });
-    expect(expectedHeldGrowth(expansion, re)).toBeCloseTo(0.005 * 0.3 + 0.003, 6);
+    expect(expectedHeldGrowth(expansion, re)).toBeCloseTo(.037 / 12 + .3 * .005 * 1.1, 6);
   });
 });
 
 describe('updateSoldPositions', () => {
   it('grows ghost holdings monthly and keeps them before the horizon', () => {
-    const s = { ...baseState(), month: 5, soldPositions: [ghost({ saleMonth: 1 })] };
+    const s = { ...baseState(), month: 5, soldPositions: [ghost({ saleMonth: 1, marketItemId: 'sp500' })] };
     s.marketCycle = { ...s.marketCycle, phase: 'EXPANSION' };
     const next = updateSoldPositions(s);
     expect(next.soldPositions).toHaveLength(1);
-    expect(next.soldPositions![0].heldValue).toBe(Math.round(10000 * 1.005));
+    expect(next.soldPositions![0].heldValue).toBe(Math.round(10000 * (1 + expectedHeldGrowth(s, s.soldPositions[0]))));
+    expect(next.soldPositions![0].heldValue).toBeGreaterThan(10000);
   });
 
   it('resolves at 12 months: hindsight event lands, position drops', () => {

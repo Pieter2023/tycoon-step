@@ -45,7 +45,7 @@ const VictoryModal: React.FC<VictoryModalProps> = ({
       <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 1, repeat: Infinity }}
         className="text-7xl mb-4">👑</motion.div>
       <h2 className="text-4xl font-bold text-amber-400 mb-2">Financial Freedom!</h2>
-      <p className="text-white mb-2">Your passive income covers {Math.round(FINANCIAL_FREEDOM_TARGET_MULTIPLIER * 100)}% of your expenses!</p>
+      <p className="text-white mb-2">Your freedom income covers {Math.round(FINANCIAL_FREEDOM_TARGET_MULTIPLIER * 100)}% of your living costs, with investments counted at a safe 4% a year!</p>
       <p className="text-amber-300/80 text-sm mb-6 italic">
         {Math.floor(gameState.month / 12) < 5
           ? "🚀 Speed run champion! Did you even sleep?"

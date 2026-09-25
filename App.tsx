@@ -18,7 +18,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { GameState, AssetType, MarketItem, Lifestyle, Character, Asset, SideHustle, EducationOption, Liability, PlayerConfig, MonthlyActionId, TABS, TabId, EducationLevel, PlayerStats } from './types';
 import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, AUTO_INVEST_PRESETS } from './constants';
-import { calculateMonthlyActionsMax, processTurn, calculateMonthlyCashFlowEstimate, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier, checkPromotion, MAX_SOLD_POSITIONS } from './services/gameLogic';
+import { calculateMonthlyActionsMax, processTurn, calculateMonthlyCashFlowEstimate, financialFreedom, businessIncomeRange, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier, checkPromotion, MAX_SOLD_POSITIONS } from './services/gameLogic';
 import { playMoneyGain, playMoneyLoss, playClick, playPurchase, playSell, playAchievement, playLevelUp, playVictory, playWarning, playTick, playNotification, playError, setMuted } from './services/audioService';
 import { SaveSlotId } from './services/storageService';
 import confetti from 'canvas-confetti';
@@ -137,19 +137,8 @@ type AiDisruptionHistoryEntry = {
   level: number;
 };
 
-const getBusinessIncomeRange = (asset: Asset) => {
-  const qty = asset.quantity || 1;
-  const baseIncome = Math.max(0, asset.cashFlow || 0) * qty;
-  const volatility = asset.volatility ?? 0;
-  const opsFactor = asset.opsUpgrade ? 0.6 : 1;
-  const swing = volatility * 0.6 * opsFactor;
-  const minMult = clamp(1 - swing, 0.55, 1.45);
-  const maxMult = clamp(1 + swing, 0.55, 1.45);
-  return {
-    min: Math.round(baseIncome * minMult),
-    max: Math.round(baseIncome * maxMult)
-  };
-};
+// Same model as the monthly turn: saturating units, sales swings amplified by fixed costs.
+const getBusinessIncomeRange = (asset: Asset) => businessIncomeRange(asset);
 
 const getNextHustleMilestone = (hustle: SideHustle) => {
   const milestones = hustle.milestones || [];
@@ -1237,9 +1226,10 @@ const [gameState, setGameState] = useState<GameState>(() => {
     }));
   }, [cashFlowTrendData]);
 
-  const passiveCoverage = cashFlow.expenses > 0 ? cashFlow.passive / cashFlow.expenses : 0;
-  const freedomPercent = Math.min(1, passiveCoverage / FINANCIAL_FREEDOM_TARGET_MULTIPLIER);
-  const ratioValue = Math.min(100, Math.max(0, Math.round(passiveCoverage * 100)));
+  // One freedom figure for every progress bar, the same one the win check uses (investments at the 4% rule).
+  const freedom = useMemo(() => financialFreedom(gameState, cashFlow), [gameState, cashFlow]);
+  const freedomPercent = Math.min(1, Math.max(0, freedom.coverage));
+  const ratioValue = Math.min(100, Math.max(0, Math.round(freedom.coverage * 100)));
 
   const creditTrendData = useMemo(() => {
     const history = gameState.creditHistory?.length
@@ -1778,6 +1768,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
       { label: 'Children', value: cf.childrenExpenses },
       { label: 'Vehicles', value: cf.vehicleCosts },
       { label: 'Insurance', value: cf.insurancePremiums },
+      { label: 'Income tax (withheld)', value: cf.taxes },
     ].filter(l => l.value > 0).sort((a, b) => b.value - a.value);
 
     const lowBufferThreshold = Math.max(500, Math.round(cf.expenses * 0.10));
@@ -1842,7 +1833,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           const remaining = Math.max(0, newState.challenge.targetMonths - newState.month + 1);
           showSuccess('🎉 Financially free!', `Locked in for the score card — keep building for ${remaining} more months.`, { duration: 8000 });
         } else {
-          showSuccess('🎉 Financial Freedom Achieved!', 'You\'ve reached your goal! Passive income covers 110% of expenses.', { duration: 8000 });
+          showSuccess('🎉 Financial Freedom Achieved!', 'You\'ve reached your goal! Your freedom income covers 110% of your living costs.', { duration: 8000 });
         }
       }
 
@@ -2609,6 +2600,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
         saleValue,
         heldValue: baseSaleValue,
         industry: asset.industry,
+        marketItemId: asset.marketItemId,
         marketPhaseAtSale: prev.marketCycle.phase
       };
 
@@ -3913,6 +3905,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 cashValue={gameState.cash}
                 netWorthValue={netWorth}
                 passiveValue={cashFlow.passive}
+                freedomIncome={freedom.income}
+                freedomTarget={freedom.target}
                 expenseValue={cashFlow.expenses}
                 formatMoney={formatMoney}
                 freedomPercent={freedomPercent}
@@ -4162,6 +4156,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 cashValue={gameState.cash}
                 netWorthValue={netWorth}
                 passiveValue={cashFlow.passive}
+                freedomIncome={freedom.income}
+                freedomTarget={freedom.target}
                 expenseValue={cashFlow.expenses}
                 formatMoney={formatMoney}
                 freedomPercent={freedomPercent}

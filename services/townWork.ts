@@ -2,7 +2,7 @@ import type { GameState } from '../types';
 import { jobBoard, reviewPromotionBonus } from './townCareer';
 import { tl, isSpanish } from '../i18n/town';
 import { CAREER_PATHS, EDUCATION_OPTIONS, DIFFICULTY_SETTINGS } from '../constants';
-import { calculateEffectiveMonthlySalary, calculateAnnualTaxes, calculateMonthlyCashFlow, calculateMonthlyCashFlowEstimate, getEducationSalaryMultiplier, getNegotiationRaiseBonus } from './gameLogic';
+import { calculateEffectiveMonthlySalary, calculateAnnualTaxes, calculateMonthlyCashFlow, calculateMonthlyCashFlowEstimate, financialFreedom, getEducationSalaryMultiplier, getNegotiationRaiseBonus } from './gameLogic';
 
 // Main Street Offices: the player's employer in the city. Everything here reads the real career,
 // education, stats and economy fields and explains them; nothing moves money. The pay stub
@@ -64,7 +64,7 @@ export function jobSecurity(state: GameState): Security {
   const info = state.career ? CAREER_PATHS[state.career.path] : undefined;
   const score = info?.futureProofScore ?? 50, vulnerability = info?.aiVulnerability ?? .5;
   const est = calculateMonthlyCashFlowEstimate(state), flow = calculateMonthlyCashFlow(state), shields: string[] = [];
-  shields.push(est.passive > 0 ? `${tl('Passive income already covers','Los ingresos pasivos ya cubren el')} ${Math.round(est.passive / Math.max(1, est.expenses) * 100)}% ${tl('of your bills','de tus facturas')}` : tl('No passive income yet: this job is your only engine','Aún sin ingresos pasivos: este empleo es tu único motor'));
+  shields.push(est.passive > 0 ? `${tl('Your investments already cover','Tus inversiones ya cubren el')} ${Math.round(financialFreedom(state, est).coverage * 100)}% ${tl('of your freedom target','de tu meta de libertad')}` : tl('No passive income yet: this job is your only engine','Aún sin ingresos pasivos: este empleo es tu único motor'));
   if (flow.sideHustleIncome > 0) shields.push(tl('A side hustle gives you a second engine','Un ingreso extra te da un segundo motor'));
   shields.push(state.education.degrees.length ? `${state.education.degrees.length} ${tl(state.education.degrees.length === 1 ? 'qualification on file' : 'qualifications on file', state.education.degrees.length === 1 ? 'título registrado' : 'títulos registrados')}` : tl('No qualifications on file yet','Aún sin títulos registrados'));
   return { score, vulnerability, label: score >= 80 ? 'Resilient' : score >= 50 ? 'Exposed' : 'At risk', text: isSpanish() ? tl('', 'Cada campo está cambiando; quien sigue aprendiendo conserva sus opciones.') : (info?.specialMechanic ?? 'Every field is changing; people who keep learning keep their options.'), shields };
