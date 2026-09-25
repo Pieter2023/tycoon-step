@@ -966,5 +966,8 @@
   "shell.header.next_month_shortcut": "Siguiente mes (N)",
   "shell.header.autoplay": "Avance automático",
   "shell.header.on": "ACTIVADO",
-  "shell.header.off": "APAGADO"
+  "shell.header.off": "APAGADO",
+  "shell.quickActions.start_in_city": "Empezar en la ciudad 3D",
+  "shell.quickActions.setting_on": "Sí",
+  "shell.quickActions.setting_off": "No"
 }

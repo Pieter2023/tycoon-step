@@ -36,6 +36,29 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 15. `c354281`: lighter sign lettering (build 48).
 16. `6514911`: property costs, PMI, one FHA loan, no lender re-roll, slower credit (build 49).
 
+## 1b. In progress when the last session ended (2026-09-25, ~16:45 PDT)
+
+**Phase 1 slice 4, as an opt-in setting: "Start in the 3D city".** Committed as work in progress in the last commit on the branch.
+- **What exists:**
+  - App.tsx has `startInCity` (localStorage `tycoon_start_in_city`), `toggleStartInCity` and `autoOpenedCity`.
+  - A toggle tile in the Quick actions menu, with i18n keys `shell.quickActions.start_in_city`, `setting_on` and `setting_off` in en and es.
+  - An effect below the `showCharacterSelect` state opens the city once per load when the setting is on. It is skipped for multiplayer, a challenge, a waiting event, bankruptcy or no character.
+- **Known bug to fix first.** Switching the setting on mid-game opens the city at once, underneath the open menu. Fix: in `toggleStartInCity`, set `autoOpenedCity.current = true` before `setStartInCity(...)`, so the setting applies from the next load. Move `autoOpenedCity`'s declaration above `toggleStartInCity`.
+- **Then:**
+  1. Verify on localhost:5189: turn it on, reload, Continue, and the city opens by itself; turn it off, reload, and the dashboard shows.
+  2. Add a small test.
+  3. Write a receipt in `docs/verification/`, mark slice 4 🔨 opt-in in `docs/phase1-plan.md`, and commit as build 50.
+- **QA harness state.** The capture receiver may still be running on port 5199; restart it with `python3 scripts/qa/capture-receiver.py <dir>`. The dev server is `tycoon-qa-5189` and the LAN preview is `tycoon-lan-preview` (0.0.0.0:5190, serves `dist/`, so run `npm run build` first). On localhost:5189 the Alex save is at month 4 or 5, with a coffee cart and `tycoon_start_in_city=1` set in localStorage.
+
+**Next after that, in order:**
+1. Pieter's calls:
+   - ship the branch (merging to `main` deploys; ask);
+   - pacing after the economy fix;
+   - Phase 1 slices 4 (make the city the default?) and 5 (one milestone track).
+2. Phase 1 polish: stage events at their place in 3D (the car at the garage bay, a letter on the doormat).
+3. More visuals (§3.4): hero blink (Alex's eyes are painted, so he needs a morph or an eyelid decal), hero face skin evenness, the Wave armpit crease, a Sit clip, hair polish, AO bake.
+4. A Chromebook check; repeat the phone check after any layout change (iPhone Mirroring works; clicks need full-screen control).
+
 ## 2. Decisions waiting on Pieter
 
 1. **Ship the branch?** It now holds the lighting pass, the skinned townspeople and the AI-modelled Alex.

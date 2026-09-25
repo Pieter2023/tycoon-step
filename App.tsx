@@ -99,7 +99,8 @@ import {
   GraduationCap, PiggyBank, LineChart, AlertTriangle, CheckCircle,
   X, Wallet, Sparkles, Volume2, VolumeX,
   Bot, Coffee, Plus, Save as SaveIcon,
-  Users, BookOpen, Trophy, Info, Settings, Home, MoreHorizontal
+  Users, BookOpen, Trophy, Info, Settings, Home, MoreHorizontal,
+  Building2 as CityIcon,
 } from 'lucide-react';
 
 
@@ -594,6 +595,11 @@ const App: React.FC<AppProps> = ({ onBackToMenu, initialGameState, playerConfig,
   const [tier, setTier] = useState<AccessTier>(accessTier ?? getAccessTier());
   const [showDemoLimitModal, setShowDemoLimitModal] = useState(false);
   const [showTown, setShowTown] = useState(false);
+  // Phase 1, slice 4 (opt-in): open the 3D city whenever a game loads; the dashboard stays one tap away.
+  const [startInCity, setStartInCity] = useState(() => { try { return localStorage.getItem('tycoon_start_in_city') === '1'; } catch { return false; } });
+  const autoOpenedCity = useRef(false);
+  // Takes effect from the next load: switching it on mid-game must not throw the player into the city.
+  const toggleStartInCity = () => { autoOpenedCity.current = true; setStartInCity(on => { const next = !on; try { localStorage.setItem('tycoon_start_in_city', next ? '1' : '0'); } catch { /* private mode */ } return next; }); };
   const [townOpenedMoney,setTownOpenedMoney]=useState(false);
   // Set when the month is closed from inside the city so the player lands back on the square once the turn settles.
   const returnToTown=useRef(false);
@@ -687,6 +693,12 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const [monthlyReport, setMonthlyReport] = useState<any>(null);
   const [dashboardModal, setDashboardModal] = useState<null | 'netWorth' | 'cashFlow' | 'credit' | 'ai'>(null);
   const [showCharacterSelect, setShowCharacterSelect] = useState(!isMultiplayer && !isResumingFromSave);
+  // Start in the city (opt-in): once per load, as soon as a game is running with nothing waiting in the 2D shell.
+  useEffect(() => {
+    if (!startInCity || autoOpenedCity.current) return;
+    if (!gameStarted || showCharacterSelect || isMultiplayer || gameState.challenge || gameState.pendingScenario || gameState.isBankrupt || !gameState.character) return;
+    autoOpenedCity.current = true; setShowTown(true);
+  }, [startInCity, gameStarted, showCharacterSelect, isMultiplayer, gameState.challenge, gameState.pendingScenario, gameState.isBankrupt, gameState.character]);
   const [showCustomAvatarBuilder, setShowCustomAvatarBuilder] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<keyof typeof DIFFICULTY_SETTINGS>('NORMAL');
   const [soundEnabled, setSoundEnabled] = useState(initialGameState?.soundEnabled ?? true);
@@ -4347,6 +4359,17 @@ const [gameState, setGameState] = useState<GameState>(() => {
               >
                 <Trophy size={18} className="text-amber-300" /> {t('shell.quickActions.quests')}
               </button>
+              {!isMultiplayer && !gameState.challenge && (
+                <button
+                  type="button"
+                  aria-pressed={startInCity}
+                  onClick={toggleStartInCity}
+                  className="glass-tile flex items-center justify-between gap-3 px-4 py-3 w-full"
+                >
+                  <span className="flex items-center gap-3"><CityIcon size={18} className="text-emerald-300" /> {t('shell.quickActions.start_in_city')}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${startInCity ? 'bg-emerald-400 text-slate-950' : 'bg-slate-700 text-slate-300'}`}>{startInCity ? t('shell.quickActions.setting_on') : t('shell.quickActions.setting_off')}</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {
