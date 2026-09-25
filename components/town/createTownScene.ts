@@ -25,6 +25,8 @@ import { createSeasonPalette, createSeasonFall, seasonFor, Season } from './town
 import type { Lifestyle } from '../../types';
 import { createCoffeeCart } from './townBusiness';
 import { createTownTraffic, stepPastVehicles, pavementEscape } from './townTraffic';
+import { createWindowDisplays } from './townWindows';
+import type { WindowDisplay } from '../../services/townWealth';
 import { createTownLife, createCyclist, createDogWalker, createFireworks } from './townLife';
 import { residentStyle, seatActor, sitHips, styleCharacter, yieldTo, Sex, YieldState, WALK_KEEP_RIGHT, steerAround } from './townResidents';
 import { createQualityGovernor, initialQuality, QUALITY_SETTINGS, QualityLevel, QualityMode } from './townQuality';
@@ -44,7 +46,9 @@ export type TownController = {
   enterBank:()=>void; leaveBank:()=>void; walkToTeller:()=>void; walkToExit:()=>void; enterExchange:()=>void; leaveExchange:()=>void; walkToBroker:()=>void; setBoard:(board:ExchangeBoard)=>void; enterProperty:()=>void; leaveProperty:()=>void; walkToAgent:()=>void; setListings:(board:PropertyBoard)=>void; enterHome:()=>void; leaveHome:()=>void; enterWork:()=>void; leaveWork:()=>void; walkToManager:()=>void; walkToWork:()=>void; setPayroll:(board:WorkBoard)=>void; enterCollege:()=>void; leaveCollege:()=>void; walkToRegistrar:()=>void; walkToCollege:()=>void; setSyllabus:(board:CollegeBoard)=>void; setFamily:(figures:Figures)=>void; setNotices:(notice:NoticeSheet)=>void; setGarage:(cars:{paint:string}[])=>void; walkToGarage:()=>void; walkToDesk:()=>void; walkHome:()=>void; walkToRosa:()=>void; setLifestyle:(lifestyle:Lifestyle)=>void; setHustles:(count:number)=>void; setAdvice:(headline:string)=>void; serveCustomer:(onDone?:()=>void)=>void; celebrate:()=>void; setCamera:(mode:CameraPreset)=>void; orbit:(delta:number)=>void; zoom:(delta:number)=>void; setQuality:(mode:QualityMode)=>void; getQuality:()=>QualityLevel;
   walkTo: (id: TownPlaceId) => void; walkToBoard: () => void; direction: (key: string, down: boolean) => void;
   move: (x: number, z: number) => void; resetView: () => void;
-  setOwned: (ids: TownPlaceId[]) => void; setBusiness: (owned:boolean, licensed:boolean, upgraded:boolean)=>void; setSound:(enabled:boolean)=>void; visitCart:()=>void; pause:(paused:boolean)=>void; dispose: () => void;
+  setOwned: (ids: TownPlaceId[]) => void; setBusiness: (owned:boolean, licensed:boolean, upgraded:boolean)=>void;
+  /** Wealth you can see: the Main Street window displays, the Freedom Fountain (0–1) and a milestone moment. */
+  setWindows?: (rows: Record<TownPlaceId, WindowDisplay>) => void; setFountain?: (level: number) => void; moment?: (kind: 'ribbon' | 'coins' | 'fireworks') => void; setSound:(enabled:boolean)=>void; visitCart:()=>void; pause:(paused:boolean)=>void; dispose: () => void;
 };
 type Actor = { root: THREE.Object3D; mixer: THREE.AnimationMixer; actions: Record<string, THREE.AnimationAction>; current: string };
 const disposeTree = (root: THREE.Object3D) => {
@@ -110,8 +114,16 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     const owned = new THREE.Mesh(new THREE.TorusGeometry(.38, .065, 6, 28), new THREE.MeshStandardMaterial({ color: '#f7cd6f', metalness: .55, roughness: .32 })); owned.position.set(place.x, .85, -1.1); owned.visible = false; outdoors.add(owned); ownedMarkers.set(place.id, owned);
   }
   const water = new THREE.Mesh(new THREE.CircleGeometry(1.6, 48), new THREE.MeshStandardMaterial({ color: '#61bfd0', metalness: .3, roughness: .17, transparent: true, opacity: .8 })); water.rotation.x = -Math.PI / 2; water.position.set(0,.79,12); outdoors.add(water);
-  const droplets = new THREE.BufferGeometry(), dropPositions = new Float32Array(150 * 3); droplets.setAttribute('position', new THREE.BufferAttribute(dropPositions, 3));
-  const fountain = new THREE.Points(droplets, new THREE.PointsMaterial({ color: '#c3f1ed', size: .047, transparent: true, opacity: .8 })); fountain.position.set(0,1.55,12); fountain.visible = !reducedMotion; outdoors.add(fountain);
+  // The Freedom Fountain runs fuller as the player nears financial freedom (setFountain): more drops, higher jets.
+  const MAX_DROPS = 420; let fountainFill = 0;
+  const droplets = new THREE.BufferGeometry(), dropPositions = new Float32Array(MAX_DROPS * 3); droplets.setAttribute('position', new THREE.BufferAttribute(dropPositions, 3));
+  const dropMaterial = new THREE.PointsMaterial({ color: '#c3f1ed', size: .05, transparent: true, opacity: .85 });
+  const fountain = new THREE.Points(droplets, dropMaterial); fountain.position.set(0,1.55,12); fountain.visible = !reducedMotion; outdoors.add(fountain);
+  // The central jet: a bubbler with nothing invested, a tall column on Freedom Day.
+  const jet = new THREE.Mesh(new THREE.CylinderGeometry(.045, .085, 1, 14, 1, true), new THREE.MeshStandardMaterial({ color: '#c9f3f1', emissive: '#9fe6e2', emissiveIntensity: .18, transparent: true, opacity: .55, roughness: .1, depthWrite: false }));
+  jet.position.set(0, 1.55, 12); outdoors.add(jet);
+  const shapeJet = () => { const h = .12 + 1.5 * fountainFill; jet.scale.set(1 + fountainFill * .4, h, 1 + fountainFill * .4); jet.position.y = 1.5 + h / 2; dropMaterial.size = .05 + .045 * fountainFill; };
+  shapeJet();
   let statsElapsed=0,statsFrames=0;
   let alive = true, ready = false, contextAvailable = true, frame = 0, previousTime = performance.now(), elapsed = 0;
   const opening = cameraPreset('follow', false);
@@ -168,7 +180,15 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   // Seasons recolour the merged city materials and drop snow or leaves.
   const seasonFall=createSeasonFall();outdoors.add(seasonFall.root);let palette:ReturnType<typeof createSeasonPalette>|undefined, season:Season='summer', seasonOverride:Season|undefined=options.review?.season;
   const life=createTownLife(reducedMotion);outdoors.add(life.root);
-  const fireworks=createFireworks(reducedMotion);outdoors.add(fireworks.root);let celebrating=false;
+  const fireworks=createFireworks(reducedMotion);outdoors.add(fireworks.root);let celebrating=false,momentUntil=-1;
+  const windows=createWindowDisplays();outdoors.add(windows.root);
+  // A milestone moment in the world: a short fireworks show, a ribbon-cutting burst at the business row, or a coin burst at the Exchange door.
+  const controllerMoment=(kind:'ribbon'|'coins'|'fireworks')=>{
+    if(reducedMotion)return;ambience?.chime('celebrate');
+    if(kind==='fireworks'){momentUntil=elapsed+2.2*3;return;}
+    const at=kind==='ribbon'?{x:TOWN_PLACES.find(p=>p.id==='business')!.x,y:3.4,z:-.2}:{x:TOWN_PLACES.find(p=>p.id==='exchange')!.x,y:3.2,z:-.2};
+    fireworks.burst(elapsed,at,kind==='ribbon'?'#ef476f':'#ffd166');window.setTimeout(()=>{if(alive)fireworks.burst(elapsed,{...at,x:at.x+.8,y:at.y+.5},'#ffd166');},450);
+  };
   let traffic:ReturnType<typeof createTownTraffic>|undefined, cyclist:ReturnType<typeof createCyclist>|undefined, dogWalker:ReturnType<typeof createDogWalker>|undefined;
   let ambience:ReturnType<typeof createTownAmbience>|undefined;
   let audioContext:AudioContext|undefined, soundEnabled=false,lastStep=0;
@@ -243,7 +263,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       if (dog) { dogWalker = createDogWalker(dog, reducedMotion); outdoors.add(dogWalker.root, dogWalker.leash); }
     }
     // Dev-only QA handle for inspecting traffic and pigeons from the console; stripped from production builds.
-    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { traffic, life, cyclist, dogWalker, player: () => ({ x: player.position.x, z: player.position.z }), view: () => ({ yaw, pitch, distance, goal: yawGoal, camera: { x: camera.position.x, y: camera.position.y, z: camera.position.z } }), setPhase: (p?: number) => { phaseOverride = p; }, celebrate: (won: boolean) => { celebrating = won; }, fireworks, walk: (x: number, z: number) => { if (!inside) { clearMovement(); path = findTownPath(player.position, { x, z }); } }, setView: (v: { x?: number; z?: number; yaw?: number; pitch?: number; distance?: number }) => { clearMovement(); stopPath(); if (!inside && v.x !== undefined && v.z !== undefined && isWalkable({ x: v.x, z: v.z })) { player.position.x = v.x; player.position.z = v.z; cameraTarget.set(v.x, 1.65, v.z); } if (v.yaw !== undefined) { yaw = v.yaw; yawGoal = undefined; } if (v.pitch !== undefined) pitch = v.pitch; if (v.distance !== undefined) zoomDistance = distance = v.distance; }, residents: () => pedestrians.map(p => ({ x: p.root.position.x, z: p.root.position.z, visible: p.root.visible, seated: p.seat !== undefined })), quality: () => quality, setQuality: (mode: QualityMode) => { governor.set(initialQuality(mode, deviceHints()), mode === 'auto'); applyQuality(governor.level); }, governor, setSeason: (s?: Season) => { seasonOverride = s; palette?.apply(s ?? season); }, lighting: LIGHT_BALANCE, info: () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }), toneMapping: (curve: 'aces' | 'neutral') => { renderer.toneMapping = curve === 'aces' ? THREE.ACESFilmicToneMapping : THREE.NeutralToneMapping; }, advance: (frames = 1) => { if (!contextAvailable) return; for (let i = 0; i < frames; i++) step(performance.now(), 1000 / 60, 1 / 60); } };
+    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { fountain: (level: number) => { fountainFill = Math.max(0, Math.min(1, level)); shapeJet(); }, moment: (kind: 'ribbon' | 'coins' | 'fireworks') => controllerMoment(kind), traffic, life, cyclist, dogWalker, player: () => ({ x: player.position.x, z: player.position.z }), view: () => ({ yaw, pitch, distance, goal: yawGoal, camera: { x: camera.position.x, y: camera.position.y, z: camera.position.z } }), setPhase: (p?: number) => { phaseOverride = p; }, celebrate: (won: boolean) => { celebrating = won; }, fireworks, walk: (x: number, z: number) => { if (!inside) { clearMovement(); path = findTownPath(player.position, { x, z }); } }, setView: (v: { x?: number; z?: number; yaw?: number; pitch?: number; distance?: number }) => { clearMovement(); stopPath(); if (!inside && v.x !== undefined && v.z !== undefined && isWalkable({ x: v.x, z: v.z })) { player.position.x = v.x; player.position.z = v.z; cameraTarget.set(v.x, 1.65, v.z); } if (v.yaw !== undefined) { yaw = v.yaw; yawGoal = undefined; } if (v.pitch !== undefined) pitch = v.pitch; if (v.distance !== undefined) zoomDistance = distance = v.distance; }, residents: () => pedestrians.map(p => ({ x: p.root.position.x, z: p.root.position.z, visible: p.root.visible, seated: p.seat !== undefined })), quality: () => quality, setQuality: (mode: QualityMode) => { governor.set(initialQuality(mode, deviceHints()), mode === 'auto'); applyQuality(governor.level); }, governor, setSeason: (s?: Season) => { seasonOverride = s; palette?.apply(s ?? season); }, lighting: LIGHT_BALANCE, info: () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }), toneMapping: (curve: 'aces' | 'neutral') => { renderer.toneMapping = curve === 'aces' ? THREE.ACESFilmicToneMapping : THREE.NeutralToneMapping; }, advance: (frames = 1) => { if (!contextAvailable) return; for (let i = 0; i < frames; i++) step(performance.now(), 1000 / 60, 1 / 60); } };
     if(library)void load('/models/town/bistro-furniture.glb?v=atelier1').then(asset=>{if(alive)cafeRoom.installFurniture(asset.scene);}).catch(()=>{});
     if(library)void load('/models/town/cafe-espresso.glb?v=atelier1').then(asset=>{if(alive){cart.installMachine(asset.scene);cafeRoom.installMachine(asset.scene.clone(true));}}).catch(()=>{});
     // Twelve neighbours: walkers on both pavements plus two resting on the promenade benches.
@@ -426,7 +446,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       if(!inside){
         const here={x:player.position.x,z:player.position.z};
         for(const pass of traffic?.update(dt,here,rainy||dayPhaseDark(),true)??[])ambience?.carPass(pass.pan,pass.closeness);
-        life.update(dt,elapsed,here,true);cyclist?.update(dt,elapsed);if(fireworks.update(dt,elapsed,celebrating)&&fireworks.launched%3===1)ambience?.chime('celebrate');
+        life.update(dt,elapsed,here,true);cyclist?.update(dt,elapsed);if(fireworks.update(dt,elapsed,celebrating||elapsed<momentUntil)&&fireworks.launched%3===1)ambience?.chime('celebrate');
         if(dogWalker&&pedestrians[10])dogWalker.update(dt,elapsed,pedestrians[10].root,pedestrians[10].root.visible);
         ambience?.tick(Math.hypot(here.x,here.z-12));
       }
@@ -528,7 +548,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       for(const crown of crowns)if(crown.containsPoint(desiredCamera)&&cameraRay.intersectBox(crown,hitPoint)){const length=cameraTarget.distanceTo(hitPoint)-.45;obstructed=true;desiredCamera.copy(cameraTarget).addScaledVector(cameraDirection,Math.max(.7,length));}
     }
     camera.position.lerp(desiredCamera,(reducedMotion||obstructed)?1:1-Math.exp(-dt*12));camera.lookAt(cameraTarget);
-    if(!reducedMotion){for(let i=0;i<150;i++){const t=(elapsed*.65+i/150)%1,a=i*2.399;dropPositions[i*3]=Math.sin(a)*t*.8;dropPositions[i*3+1]=Math.sin(t*Math.PI)*1.2;dropPositions[i*3+2]=Math.cos(a)*t*.8;}droplets.attributes.position.needsUpdate=true;water.rotation.z=elapsed*.04;}
+    if(!reducedMotion){const drops=Math.round(90+(MAX_DROPS-90)*fountainFill),rise=.55+1.05*fountainFill,reach=.5+.45*fountainFill;for(let i=0;i<drops;i++){const t=(elapsed*.65+i/drops)%1,a=i*2.399;dropPositions[i*3]=Math.sin(a)*t*reach;dropPositions[i*3+1]=Math.sin(t*Math.PI)*rise;dropPositions[i*3+2]=Math.cos(a)*t*reach;}droplets.setDrawRange(0,drops);droplets.attributes.position.needsUpdate=true;water.rotation.z=elapsed*.04;}
     let cupPosition:THREE.Vector3|null=null;
     if(serviceStage==='serve'&&!reducedMotion&&playerActor&&pedestrians[0]){
       const t=(4-(serviceUntil-elapsed))/4;
@@ -609,6 +629,9 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     direction,
     move(x,z){if(serviceStage)return;stick={x,z};if(Math.hypot(x,z)>.12){stopPath();options.onManual?.();}},
     resetView(){yaw=atelier&&!inside?-.55:.12;const preset=cameraPreset(cameraMode,inside);pitch=preset.pitch;zoomDistance=preset.distance;},
+    setWindows(rows){windows.draw(rows);},
+    setFountain(level){fountainFill=Math.max(0,Math.min(1,level));shapeJet();},
+    moment(kind){controllerMoment(kind);},
     setOwned(ids){for(const [id,object]of ownedMarkers)object.visible=ids.includes(id);},
     dispose(){options.onView?.(inside&&cityView?cityView:{x:player.position.x,z:player.position.z,yaw,pitch,distance:zoomDistance,mode:cameraMode});ambience?.dispose();void audioContext?.close();alive=false;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',keyboard);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('contextmenu',contextMenu);canvas.removeEventListener('webglcontextlost',lost);playerActor?.mixer.stopAllAction();teller?.mixer.stopAllAction();cafeActors.forEach(a=>a.mixer.stopAllAction());pedestrians.forEach(p=>p.mixer.stopAllAction());if(traffic)disposeTree(traffic.root);if(cyclist)disposeTree(cyclist.root);if(dogWalker){disposeTree(dogWalker.root);dogWalker.leash.geometry.dispose();}disposeTree(life.root);for(const root of loaded)if(!root.parent)disposeTree(root);disposeTree(scene);library?.dispose();draco.dispose();studio.dispose();skyEnvironment.dispose();sun.shadow.dispose();renderer.dispose();renderer.forceContextLoss();canvas.remove();}
   };

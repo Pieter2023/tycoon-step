@@ -73,26 +73,37 @@ export function createTownLife(reducedMotion: boolean) {
 // each a shell of particles thrown outward and pulled down by gravity, fading as it falls. Burst
 // positions and colours are deterministic so the show looks the same on every device.
 export const BURST_EVERY = 2.2, BURST_LIFE = 1.9, BURST_PARTICLES = 72;
-export const burstOrigin = (index: number) => ({ x: ((index * 7.3) % 14) - 7, y: 6.2 + ((index * 3.1) % 2.4), z: 9.5 + ((index * 2.7) % 4) });
+// Over the street in front of the shopfronts, where the square's camera looks (the longer lens of build 40
+// left shells launched over the fountain above the top of the frame).
+export const burstOrigin = (index: number) => ({ x: ((index * 7.3) % 14) - 7, y: 4.3 + ((index * 3.1) % 1.8), z: .3 + ((index * 2.7) % 2.6) });
 export function createFireworks(reducedMotion: boolean) {
   const root = new THREE.Group(); root.visible = false;
-  const colours = ['#ffd166', '#ef476f', '#7ad7f0', '#9be27a', '#ffffff', '#f5a3ff'];
+  const colours = ['#ffc300', '#ef476f', '#3fa7d6', '#5bd13a', '#ff7b2e', '#c77dff'];
   const shells = Array.from({ length: 4 }, (_, i) => {
     const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(BURST_PARTICLES * 3), 3));
-    const points = new THREE.Points(geometry, new THREE.PointsMaterial({ color: colours[i % colours.length], size: .34, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })); points.frustumCulled = false; points.visible = false; root.add(points);
+    // Solid colour, not additive: additive sparks wash out to white against sunlit facades.
+    const points = new THREE.Points(geometry, new THREE.PointsMaterial({ color: colours[i % colours.length], size: .9, transparent: true, opacity: 0, depthWrite: false, toneMapped: false })); points.frustumCulled = false; points.visible = false; root.add(points);
     const directions = new Float32Array(BURST_PARTICLES * 3);
     for (let p = 0; p < BURST_PARTICLES; p++) { const u = ((p * 0.618034) % 1) * Math.PI * 2, v = Math.acos(1 - 2 * (((p + .5) / BURST_PARTICLES))); directions.set([Math.sin(v) * Math.cos(u), Math.cos(v), Math.sin(v) * Math.sin(u)], p * 3); }
     return { points, directions, born: -1, origin: { x: 0, y: 0, z: 0 } };
   });
-  let launched = 0, next = 0;
+  let launched = 0, next = 0, manualUntil = -1;
   return {
     root, shells,
     get launched() { return launched; },
+    /** One shell right now at a chosen spot and colour (milestone moments), even before Freedom Day. */
+    burst(elapsed: number, origin: { x: number; y: number; z: number }, colour: string) {
+      if (reducedMotion) return;
+      const shell = shells[launched % shells.length]; launched++; shell.born = elapsed; shell.origin = origin;
+      (shell.points.material as THREE.PointsMaterial).color.set(colour); shell.points.visible = true; manualUntil = Math.max(manualUntil, elapsed + BURST_LIFE);
+    },
     // Returns true on the frame a new shell bursts (the caller can play a sound).
     update(dt: number, elapsed: number, active: boolean): boolean {
-      const show = active && !reducedMotion; root.visible = show; if (!show) { next = elapsed + .8; return false; }
+      const manual = elapsed < manualUntil;
+      const show = (active || manual) && !reducedMotion; root.visible = show; if (!show) { next = elapsed + .8; return false; }
+      if (!active) next = Math.max(next, elapsed + .8);
       let burst = false;
-      if (elapsed >= next) { const shell = shells[launched % shells.length]; shell.born = elapsed; shell.origin = burstOrigin(launched); (shell.points.material as THREE.PointsMaterial).color.set(colours[launched % colours.length]); shell.points.visible = true; launched++; next = elapsed + BURST_EVERY; burst = true; }
+      if (active && elapsed >= next) { const shell = shells[launched % shells.length]; shell.born = elapsed; shell.origin = burstOrigin(launched); (shell.points.material as THREE.PointsMaterial).color.set(colours[launched % colours.length]); shell.points.visible = true; launched++; next = elapsed + BURST_EVERY; burst = true; }
       for (const shell of shells) {
         if (shell.born < 0) continue;
         const age = elapsed - shell.born; if (age > BURST_LIFE) { shell.points.visible = false; shell.born = -1; continue; }

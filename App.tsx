@@ -18,6 +18,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { GameState, AssetType, MarketItem, Lifestyle, Character, Asset, SideHustle, EducationOption, Liability, PlayerConfig, MonthlyActionId, TABS, TabId, EducationLevel, PlayerStats } from './types';
 import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, AUTO_INVEST_PRESETS } from './constants';
+import { recordMilestones } from './services/townMilestones';
 import { calculateMonthlyActionsMax, processTurn, calculateMonthlyCashFlowEstimate, financialFreedom, businessIncomeRange, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier, checkPromotion, MAX_SOLD_POSITIONS } from './services/gameLogic';
 import { playMoneyGain, playMoneyLoss, playClick, playPurchase, playSell, playAchievement, playLevelUp, playVictory, playWarning, playTick, playNotification, playError, setMuted } from './services/audioService';
 import { SaveSlotId } from './services/storageService';
@@ -3409,7 +3410,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
           onAction={action=>setGameState(prev=>isProcessing?prev:resolveTownAction(prev,action))}
           onRememberView={view=>setGameState(prev=>({...prev,townView:view}))}
           onOpenMoney={(tab,place) => { setShowTown(false); setTownOpenedMoney(true); setV2Path('/money'); setMoneyTab(tab); if(tab==='invest'){setInvestmentFilter(place==='property'?AssetType.REAL_ESTATE:place==='business'?AssetType.BUSINESS:'ALL');setInvestmentTierFilter('ALL');setInvestmentSearch('');} }}
-          onNextMonth={() => { setShowTown(false); returnToTown.current = true; handleNextTurn(); }} />
+          onNextMonth={() => { setShowTown(false); returnToTown.current = true; handleNextTurn(); }}
+                onMilestones={(ids) => setGameState(prev => recordMilestones(prev, ids))} />
       </React.Suspense></TabErrorBoundary>}
       {/* Floating Numbers */}
       <AnimatePresence>
