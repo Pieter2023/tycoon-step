@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { AtelierMaterials } from './townAtelier';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import type { TownPoint } from './townWorld';
 
@@ -11,7 +12,7 @@ export const propertySpot = (p: TownPoint): 'agent' | 'exit' | null =>
 export type ListingCard = { name: string; price: string; rent: string; tag: string; colour: string };
 export type PropertyBoard = { listings: ListingCard[]; rateLine: string; headline: string };
 
-export function createTownProperty() {
+export function createTownProperty(library?:AtelierMaterials) {
   const root = new THREE.Group();
   const box = (w: number, h: number, d: number, x: number, y: number, z: number, color: string, radius = .05) => {
     const mesh = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 2, radius), new THREE.MeshStandardMaterial({ color, roughness: .65 }));
@@ -24,17 +25,20 @@ export function createTownProperty() {
     const frame = box(w + .14, h + .14, .05, x, y, z - .03 * Math.cos(rotationY), '#e9dcc4', .02); frame.rotation.y = rotationY;
     return { canvas, texture };
   };
-  box(10, .3, 10, 0, .05, 2.4, '#e4dccb');                                  // floor
+  const floor=box(10, .3, 10, 0, .05, 2.4, '#e4dccb');
+  if(library){floor.material.dispose();floor.material=new THREE.MeshStandardMaterial({map:library.wood,color:'#cbb18d',roughness:.85});}                                  // floor
   box(10, 4.8, .25, 0, 2.5, -2.5, '#f2ece0');                               // back wall
   for (const x of [-5, 5]) box(.25, 1.4, 10, x, .85, 2.4, '#b9a98c');       // side walls
   box(4.4, .025, 3.6, 0, .22, 2.5, '#9c7c8c', .015);                         // rug
   const title = canvasPlane(4.6, .7, 0, 4.1, -2.36);
   const cards = [-2.55, -.85, .85, 2.55].map(x => canvasPlane(1.5, 1.7, x, 2.75, -2.36));
   const rates = canvasPlane(2.6, 1.4, -4.86, 2.1, 2.2, Math.PI / 2, 768);
+  const deskStart=root.children.length;
   box(4.6, 1, 1.1, 0, .74, -.65, '#7a5c8a'); box(4.85, .16, 1.3, 0, 1.3, -.65, '#f1e4c8');   // agent desk
   box(.5, .035, .32, -1.1, 1.41, -.5, '#fff4dc');                                             // brochures
   const houseBody = box(.6, .38, .45, 1.1, 1.57, -.65, '#f4e6c9', .02);                       // model house
   const roof = new THREE.Mesh(new THREE.ConeGeometry(.5, .3, 4), new THREE.MeshStandardMaterial({ color: '#b35a4a', roughness: .8 })); roof.rotation.y = Math.PI / 4; roof.position.set(1.1, 1.91, -.65); roof.castShadow = true; root.add(roof); houseBody.castShadow = true;
+  const deskParts=root.children.slice(deskStart);
   for (const [x, z] of [[-3.7, 2.4], [3.7, 2.4]]) { box(1.4, .45, 2.4, x, .65, z, '#c7a78a'); box(.3, .9, 2.5, x + Math.sign(x) * .62, 1, z, '#b9987a'); for (const dz of [-.8, 0, .8]) box(1.1, .16, .7, x, .96, z + dz, '#e6c9a8'); } // waiting sofas
   for (const x of [-4.2, 4.2]) { box(.6, .65, .6, x, .55, 5.6, '#a8865d'); const leaves = new THREE.Mesh(new THREE.IcosahedronGeometry(.55, 2), new THREE.MeshStandardMaterial({ color: '#5f9464', roughness: .8 })); leaves.scale.set(.8, 1.3, .8); leaves.position.set(x, 1.55, 5.6); leaves.castShadow = true; root.add(leaves); }
   box(2, .028, .85, 0, .23, 6.1, '#b7a58c');
@@ -58,5 +62,5 @@ export function createTownProperty() {
     target.texture.needsUpdate = true;
   };
   const drawRates = (board: PropertyBoard) => { const c = rates.canvas, ctx = c.getContext('2d')!; ctx.fillStyle = '#2f3a44'; ctx.fillRect(0, 0, c.width, c.height); ctx.fillStyle = '#f2d99a'; ctx.font = '600 44px sans-serif'; ctx.textAlign = 'left'; ctx.fillText("TODAY'S MORTGAGE RATES", 30, 70); ctx.fillStyle = '#e8eef1'; ctx.font = '36px sans-serif'; board.rateLine.split('\n').forEach((line, i) => ctx.fillText(line, 30, 140 + i * 56)); rates.texture.needsUpdate = true; };
-  return { root, setBoard(board: PropertyBoard) { drawTitle(board); cards.forEach((card, i) => drawCard(card, board.listings[i])); drawRates(board); } };
+  return { root, installDesk(model:THREE.Object3D){deskParts.forEach(o=>o.visible=false);model.position.set(0,.22,-.65);model.traverse(o=>{if(o instanceof THREE.Mesh){o.castShadow=true;o.receiveShadow=true;}});root.add(model);},  setBoard(board: PropertyBoard) { drawTitle(board); cards.forEach((card, i) => drawCard(card, board.listings[i])); drawRates(board); } };
 }

@@ -1,8 +1,8 @@
 export const normalizeStick = (x: number, z: number) => {
   const length = Math.hypot(x, z);
   if (length < .12) return { x: 0, z: 0 };
-  const divisor = Math.max(1, length);
-  return { x: x / divisor, z: z / divisor };
+  const magnitude = Math.min(1, (length - .12) / .88);
+  return { x: x / length * magnitude, z: z / length * magnitude };
 };
 export const cameraRelativeMovement = (x: number, z: number, yaw: number) => ({
   x: x * Math.cos(yaw) + z * Math.sin(yaw),
@@ -21,4 +21,4 @@ export const isWalkTap = (distance:number,hadPinch:boolean,cancelled:boolean) =>
 export const WALK_SPEED = 2.1, JOG_SPEED = 3.7;
 // Tap-to-walk and guided routes jog while the destination is far, then settle into a walk for the last stretch.
 // Scripted service trips (cart shift) always hurry so the customer moment arrives quickly.
-export const routeSpeed = (remaining:number, hurry:boolean) => hurry || remaining > 4 ? JOG_SPEED : WALK_SPEED;
+export const routeSpeed = (remaining:number, hurry:boolean) => hurry ? JOG_SPEED : WALK_SPEED + (JOG_SPEED-WALK_SPEED)*Math.max(0,Math.min(1,(remaining-3)/3));

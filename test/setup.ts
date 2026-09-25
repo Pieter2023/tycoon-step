@@ -47,11 +47,15 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
 });
 
-// Mock matchMedia
+// Match the default JSDOM desktop width, including complementary breakpoints.
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
-    matches: false,
+    matches: /\(min-width:\s*(\d+(?:\.\d+)?)px\)/.test(query)
+      ? window.innerWidth >= Number(query.match(/min-width:\s*([\d.]+)/)?.[1])
+      : /\(max-width:\s*(\d+(?:\.\d+)?)px\)/.test(query)
+        ? window.innerWidth <= Number(query.match(/max-width:\s*([\d.]+)/)?.[1])
+        : false,
     media: query,
     onchange: null,
     addListener: vi.fn(),

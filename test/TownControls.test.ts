@@ -12,7 +12,8 @@ describe('third-person controls and Blender assets', () => {
     const stick = normalizeStick(1, 1);
     expect(Math.hypot(stick.x, stick.z)).toBeCloseTo(1);
     expect(normalizeStick(.04, -.03)).toEqual({x:0,z:0});
-    expect(normalizeStick(.5,0)).toEqual({x:.5,z:0});
+    expect(normalizeStick(.5,0).x).toBeCloseTo(.38/.88);
+    expect(normalizeStick(.121,0).x).toBeLessThan(.002);
   });
   it('ships separate playable animation clips and a compressed town under 2MB', () => {
     const read = (path:string) => { const b=readFileSync(path); return JSON.parse(b.subarray(20,20+b.readUInt32LE(12)).toString()); };

@@ -27,6 +27,7 @@ export default defineConfig({
     // Code-splitting to keep initial bundle size reasonable.
     // (Helps performance on mobile/tablet and avoids giant single-chunk output.)
     rollupOptions: {
+      input: {main: 'index.html', cafe: 'cafe-preview.html', character: 'character-preview.html'},
       output: {
         manualChunks: {
           react: ['react', 'react-dom'],

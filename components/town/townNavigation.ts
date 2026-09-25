@@ -30,24 +30,34 @@ export function segmentClear(a:TownPoint,b:TownPoint) {
   for(let i=1;i<=steps;i++)if(!isWalkable({x:a.x+(b.x-a.x)*i/steps,z:a.z+(b.z-a.z)*i/steps},.42))return false;
   return true;
 }
-export function findTownPath(from:TownPoint,target:TownPoint):TownPoint[] {
+export type MovingObstacle = TownPoint & {halfLength:number;halfWidth:number};
+export function findTownPath(from:TownPoint,target:TownPoint,vehicles:MovingObstacle[]=[]):TownPoint[] {
+  const outsideVehicles=(p:TownPoint)=>!vehicles.some(v=>Math.abs(p.x-v.x)<v.halfLength+.35&&Math.abs(p.z-v.z)<v.halfWidth+.35);
+  const clear=(a:TownPoint,b:TownPoint)=>{
+    if(!segmentClear(a,b))return false;
+    const steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.z-a.z)/.12));
+    for(let i=1;i<=steps;i++)if(!outsideVehicles({x:a.x+(b.x-a.x)*i/steps,z:a.z+(b.z-a.z)*i/steps}))return false;
+    return true;
+  };
+
   const end=isWalkable(clampTownPoint(target),.42)?clampTownPoint(target):nearest(target);
-  if(segmentClear(from,end))return [end];
-  const start=nearest(from),goal=nearest(end),open=[start],cost=new Map([[key(start),0]]),parent=new Map<string,TownPoint>();
+  if(clear(from,end))return [end];
+  const starts=vehicles.length?grid.filter(p=>outsideVehicles(p)&&clear(from,p)):[];
+  const start=starts.length?starts.reduce((a,b)=>Math.hypot(a.x-from.x,a.z-from.z)<Math.hypot(b.x-from.x,b.z-from.z)?a:b):nearest(from),goal=nearest(end),open=[start],cost=new Map([[key(start),0]]),parent=new Map<string,TownPoint>();
   const score=(p:TownPoint)=>(cost.get(key(p))??Infinity)+Math.hypot(p.x-goal.x,p.z-goal.z);
   const closed=new Set<string>();
   while(open.length){open.sort((a,b)=>score(a)-score(b));const p=open.shift()!;
     if(key(p)===key(goal)){
       const path:TownPoint[]=[p];let n=p;while(parent.has(key(n))){n=parent.get(key(n))!;path.unshift(n);}
-      if(segmentClear(path[path.length-1],end))path.push(end);
+      if(clear(path[path.length-1],end))path.push(end);
       // Keep only bends, preserving obstacle clearance.
       const smooth:TownPoint[]=[];let anchor=from;
-      for(let i=0;i<path.length;){let j=i;while(j+1<path.length&&segmentClear(anchor,path[j+1]))j++;smooth.push(path[j]);anchor=path[j];i=j+1;}
+      for(let i=0;i<path.length;){let j=i;while(j+1<path.length&&clear(anchor,path[j+1]))j++;smooth.push(path[j]);anchor=path[j];i=j+1;}
       return smooth;
     }
     closed.add(key(p));
     for(const [dx,dz]of [[.5,0],[-.5,0],[0,.5],[0,-.5],[.5,.5],[.5,-.5],[-.5,.5],[-.5,-.5]]){
-      const next=nodes.get(key({x:p.x+dx,z:p.z+dz}));if(!next||closed.has(key(next))||!segmentClear(p,next))continue;
+      const next=nodes.get(key({x:p.x+dx,z:p.z+dz}));if(!next||closed.has(key(next))||!outsideVehicles(next)||!clear(p,next))continue;
       const c=cost.get(key(p))!+Math.hypot(dx,dz);if(c<(cost.get(key(next))??Infinity)){cost.set(key(next),c);parent.set(key(next),p);if(!open.includes(next))open.push(next);}
     }
   }

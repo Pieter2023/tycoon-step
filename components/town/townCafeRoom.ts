@@ -1,10 +1,11 @@
 import * as THREE from 'three';
+import type { AtelierMaterials } from './townAtelier';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import type { CafeState } from '../../services/townCafe';
 import type { TownPoint } from './townWorld';
 export const clampCafePoint = (p: TownPoint): TownPoint => ({ x: Math.max(-2.35, Math.min(1.65, p.x)), z: Math.max(.5, Math.min(6.4, p.z)) });
 export const cafeSpot = (p: TownPoint): 'cafe-counter' | 'exit' | null => Math.hypot(p.x, p.z - .8) < 1.1 ? 'cafe-counter' : Math.hypot(p.x, p.z - 6.1) < .85 ? 'exit' : null;
-export function createCafeRoom() {
+export function createCafeRoom(library?:AtelierMaterials) {
   const root = new THREE.Group(), furniture = new THREE.Group(), equipment = new THREE.Group(), upgraded = new THREE.Group(); root.add(furniture, equipment, upgraded);
   const materials = new Map<string, THREE.MeshStandardMaterial>();
   const box = (w: number, h: number, d: number, x: number, y: number, z: number, color: string, group: THREE.Group = root) => {
@@ -52,6 +53,21 @@ export function createCafeRoom() {
   for(const x of [.2,.5,.8]) {
     const cup=new THREE.Mesh(new THREE.CylinderGeometry(.09,.07,.2,16),new THREE.MeshStandardMaterial({color:'#fff3d8'}));cup.position.set(x,1.49,-.45);root.add(cup);
   }
+  if(library){
+    for(const [color,material] of materials){
+      if(['#e5c7a4','#e8d9bd','#f4e3c1'].includes(color)){material.map=library.grain;material.roughness=.9;}
+      if(['#a97752','#9b7757','#c69a77'].includes(color)){material.map=library.wood;material.roughness=.65;}
+      if(color==='#547e6b')material.color.set('#285347');
+      if(color==='#a7b99a')material.color.set('#b28a5d');
+    }
+    const floor=materials.get('#e8d9bd');if(floor){floor.map=library.stone.clone();floor.map.repeat.set(3,3);floor.map.needsUpdate=true;floor.color.set('#e6dcc5');}
+  }
   root.visible = false;
-  return { root, setState(cafe?: Pick<CafeState,'seats'|'machine'>) { furniture.visible = !!cafe?.seats; upgraded.visible = !!cafe?.machine; equipment.visible = !cafe?.machine; } };
+  return { root, installFurniture(model:THREE.Object3D){
+    for(const child of [...furniture.children]){furniture.remove(child);if(child instanceof THREE.Mesh)child.geometry.dispose();}
+    for(const z of [1.4,4.3]){const set=model.clone(true);set.position.set(-3.5,.21,z);set.traverse(o=>{if(o instanceof THREE.Mesh){o.castShadow=true;o.receiveShadow=true;}});furniture.add(set);}
+  }, installMachine(machine:THREE.Object3D){
+    for(const child of [...upgraded.children]){upgraded.remove(child);if(child instanceof THREE.Mesh)child.geometry.dispose();}
+    machine.position.set(-.6,1.385,-.7);machine.scale.setScalar(1.65);upgraded.add(machine);
+  }, setState(cafe?: Pick<CafeState,'seats'|'machine'>) { furniture.visible = !!cafe?.seats; upgraded.visible = !!cafe?.machine; equipment.visible = !cafe?.machine; } };
 }

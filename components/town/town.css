@@ -118,3 +118,31 @@
 /* Money Quest square: brighter, rounder, bigger */
 .town-kids .town-header{background:#1f6f8b}.town-kids .town-destinations{background:#2a86a5}.town-kids .town-destinations button{font-size:13px;min-height:44px;border-radius:14px}.town-kids .town-guide-next{background:#ffd166;color:#2b3d2c}.town-kids .town-details{background:#1f4d5c}.town-kids .town-job strong{font-size:14px}.town-kids .town-primary{font-size:14px;min-height:46px}.town-kids h3{font-size:22px}
 .town-quest-ready{border-color:#e6c57b!important;background:#2c4238}
+
+.town-purpose p{font-size:13px;line-height:1.65;color:#d8e5de;margin:14px 0}.town-purpose p strong{display:block;color:#efd59b;margin-bottom:3px}.town-purpose .town-primary{margin-top:20px}.town-purpose-compact h3{font-size:18px;margin-bottom:12px}.town-purpose-disclosure{border-bottom:1px solid #49645d;margin:10px 0 22px;padding-bottom:12px;font-size:12px;color:#e9d49e}.town-purpose-disclosure summary{cursor:pointer;min-height:32px;padding:5px 25px 5px 0}.town-location-help{align-self:flex-start;font-size:11px;text-decoration:underline;text-underline-offset:3px;color:#d7e6da;padding:8px 24px;min-height:36px;flex-shrink:0}.town-purpose .town-small{font-size:11px}
+@media(max-width:767px){.town-location-help{padding:6px 14px;font-size:10px;min-height:32px}.town-purpose p{font-size:12px}.town-purpose h3{font-size:21px}}
+
+/* Keep a useful view of the city above a phone's movement controls. */
+@media(max-width:767px){
+ .town-header{padding:9px 12px}.town-header .town-eyebrow{display:none}.town-header h2{font-size:18px}
+ .town-destinations{padding:6px 10px}.town-destinations button{min-height:44px}
+ .town-interior-nav{flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;padding:6px 10px;flex-shrink:0}.town-interior-nav button{min-height:44px;flex-shrink:0}
+ .town-journey-strip{display:grid;grid-template-columns:1fr auto;gap:6px;padding:8px 12px}
+ .town-journey-summary{min-width:0}.town-journey-summary small{display:none}.town-journey-strip .town-sound{grid-column:2;grid-row:1}
+ .town-guide-next{grid-column:1/-1;order:0;min-height:44px}.town-location-help{min-height:44px;padding:8px 12px}
+ .town-close-details{width:44px;height:44px}.town-details{overscroll-behavior:contain}
+ .town-joystick{bottom:max(32px,env(safe-area-inset-bottom));touch-action:none}
+ .town-camera-help{display:none}
+}
+@media(max-height:540px) and (orientation:landscape){
+ .town-modal{height:100dvh}.town-header{padding:5px 12px}.town-header .town-eyebrow{display:none}.town-header h2{font-size:17px}
+ .town-destinations{padding:3px 10px}.town-destinations button{min-height:40px;padding:7px 10px}
+ .town-journey-strip{display:none}.town-location-help{min-height:40px}.town-interior-nav{padding:3px 10px}
+ .town-world-caption,.town-camera-help{display:none}.town-joystick{width:80px;height:80px;left:16px;bottom:26px}
+}
+.town-focus-toggle{display:none;min-height:44px;padding:8px 12px;border:1px solid #718f77;border-radius:10px;font-size:11px;white-space:nowrap}
+.town-focused .town-focus-toggle{display:block;background:#e6ca88;color:#203b31}
+.town-focused .town-destinations,.town-focused .town-interior-nav,.town-focused .town-journey-strip,.town-focused .town-location-help{display:none}
+@media(max-height:540px) and (orientation:landscape){.town-focus-toggle{display:block}}
+
+.town-cinematic{border:1px solid #d2c8b6;border-radius:12px;margin:0 0 16px;padding:12px;background:#f5f0e6;color:#283f38}.town-cinematic summary{cursor:pointer;font-weight:650;min-height:24px}.town-cinematic video{display:block;width:100%;max-height:45vh;margin-top:12px;border-radius:8px;background:#182921;object-fit:contain}.town-cinematic p{font-size:12px;line-height:1.5;margin:8px 0 0}

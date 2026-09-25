@@ -58,3 +58,15 @@ it('follows the cafe-to-cart route without cutting into furniture at the bends',
  }
  expect(path).toHaveLength(0);expect(Math.hypot(position.x-2.2,position.z-9.8)).toBeLessThan(.05);
 });
+
+it('finds a clear detour around a stopped vehicle instead of pushing into it',()=>{
+ const start={x:5.8,z:1.6},target={x:-3.5,z:-1.1},car={x:3,z:1.95,halfLength:2.1,halfWidth:1};
+ const path=findTownPath(start,target,[car]);expect(path.length).toBeGreaterThan(0);
+ let a=start;
+ for(const b of path){
+  expect(segmentClear(a,b)).toBe(true);
+  for(let t=.01;t<=1;t+=.01){const p={x:a.x+(b.x-a.x)*t,z:a.z+(b.z-a.z)*t};expect(Math.abs(p.x-car.x)>=car.halfLength+.35||Math.abs(p.z-car.z)>=car.halfWidth+.35).toBe(true);}
+  a=b;
+ }
+ expect(Math.hypot(a.x-target.x,a.z-target.z)).toBeLessThan(.05);
+});

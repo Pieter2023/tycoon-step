@@ -1,0 +1,23 @@
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
+import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
+import {styleCharacter} from '../components/town/townResidents';
+import {characterExpression} from '../components/town/townCharacterExpression';
+const host=document.querySelector<HTMLDivElement>('#stage')!,status=document.querySelector<HTMLDivElement>('#status')!;
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;host.appendChild(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#d8ddd4');scene.fog=new THREE.Fog('#d8ddd4',12,25);
+const camera=new THREE.PerspectiveCamera(36,1,.1,50);camera.position.set(2.2,1.8,4.3);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,.97,0);controls.enableDamping=true;controls.minDistance=2.4;controls.maxDistance=7;controls.maxPolarAngle=Math.PI*.49;controls.enablePan=false;
+scene.add(new THREE.HemisphereLight('#fff4de','#64776b',2.3));const key=new THREE.DirectionalLight('#fff0d8',3.2);key.position.set(-3,5,4);key.castShadow=true;key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-3,right:3,top:4,bottom:-3,near:.1,far:15});key.shadow.normalBias=.018;scene.add(key);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),new THREE.MeshStandardMaterial({color:'#d8ddd4',roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.003;floor.receiveShadow=true;scene.add(floor);
+const models:{root:THREE.Object3D;mixer:THREE.AnimationMixer;actions:Record<string,THREE.AnimationAction>}[]=[];let selected=0,current='Idle',time=0,expression:ReturnType<typeof characterExpression>|undefined;
+const selectClip=(name:string)=>{current=name;for(const m of models){for(const a of Object.values(m.actions))a.fadeOut(.2);m.actions[name]?.reset().fadeIn(.2).play();}document.querySelectorAll<HTMLButtonElement>('[data-clip]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.clip===name)));};
+const loader=new GLTFLoader();
+Promise.all(['/models/town/alex-atelier.glb?v=alex1','/models/town/town-character.glb'].map(url=>loader.loadAsync(url))).then(results=>{
+ results.forEach((g,i)=>{if(i)styleCharacter(g.scene,{sex:'m',hair:'short'});else expression=characterExpression(g.scene);g.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.castShadow=true;o.receiveShadow=true;}});const mixer=new THREE.AnimationMixer(g.scene),actions:Record<string,THREE.AnimationAction>={};for(const c of g.animations){const a=mixer.clipAction(c);if(['Serve','Wave'].includes(c.name)){a.setLoop(THREE.LoopOnce,1);a.clampWhenFinished=true;}actions[c.name]=a;}models.push({root:g.scene,mixer,actions});g.scene.visible=i===0;scene.add(g.scene);});selectClip('Idle');status.textContent='Alex · New character';
+}).catch(()=>{status.textContent='Character could not load. Please reload.';});
+document.querySelectorAll<HTMLButtonElement>('[data-clip]').forEach(b=>b.addEventListener('click',()=>selectClip(b.dataset.clip!)));
+document.querySelector<HTMLButtonElement>('#compare')!.addEventListener('click',e=>{if(models.length!==2)return;selected=1-selected;models.forEach((m,i)=>m.root.visible=i===selected);const b=e.currentTarget as HTMLButtonElement;b.setAttribute('aria-pressed',String(selected===1));b.textContent=selected?'Show new Alex':'Original character';status.textContent=selected?'Original character':'Alex · New character';selectClip(current);});
+const resize=()=>{camera.aspect=host.clientWidth/host.clientHeight;camera.updateProjectionMatrix();renderer.setSize(host.clientWidth,host.clientHeight);};new ResizeObserver(resize).observe(host);resize();
+let then=performance.now();const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(now:number){requestAnimationFrame(frame);const dt=Math.min(.04,(now-then)/1000);then=now;if(document.hidden)return;time+=dt;models.forEach(m=>m.mixer.update(reduced&&current==='Idle'?0:dt));expression?.(time,reduced);controls.update();renderer.render(scene,camera);}requestAnimationFrame(frame);

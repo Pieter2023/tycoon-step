@@ -1187,8 +1187,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const mq = window.matchMedia('(max-width: 767px)');
-    const update = () => setIsMobileViewport(mq.matches);
+    // Use the exact complement of the CSS desktop breakpoint, including fractional zoom widths.
+    const mq = window.matchMedia('(min-width: 768px)');
+    const update = () => setIsMobileViewport(!mq.matches);
     update();
     mq.addEventListener?.('change', update);
     return () => mq.removeEventListener?.('change', update);

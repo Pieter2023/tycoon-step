@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { AtelierMaterials } from './townAtelier';
 import { tl } from '../../i18n/town';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { TownPoint } from './townWorld';
@@ -9,7 +10,7 @@ export const clampBankPoint = (p: TownPoint): TownPoint => ({ x: Math.max(-2.65,
 export const bankSpot = (p: TownPoint): 'teller' | 'exit' | null =>
   Math.hypot(p.x, p.z - .75) < 1.1 ? 'teller' : Math.hypot(p.x, p.z - 6.1) < .85 ? 'exit' : null;
 
-export function createTownBank() {
+export function createTownBank(library?:AtelierMaterials) {
   const root = new THREE.Group();
   const box = (w: number, h: number, d: number, x: number, y: number, z: number, color: string, radius = .06) => {
     const mesh = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 2, radius), new THREE.MeshStandardMaterial({ color, roughness: .65 }));
@@ -23,19 +24,22 @@ export function createTownBank() {
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, width * 180 / 1024), new THREE.MeshBasicMaterial({ map: texture }));
     mesh.position.set(x, y, z); root.add(mesh); return mesh;
   };
-  box(10, .3, 10, 0, .05, 2.4, '#dfd5bf');
+  const floor=box(10, .3, 10, 0, .05, 2.4, '#dfd5bf');
+  if(library){floor.material.dispose();floor.material=new THREE.MeshStandardMaterial({map:library.stone,roughness:.88});}
   box(10, 4.7, .25, 0, 2.45, -2.5, '#ebe6d8');
   box(.25, 1.3, 10, -5, .8, 2.4, '#497a70'); box(.25, 1.3, 10, 5, .8, 2.4, '#497a70');
   box(9.8, 1.1, .12, 0, .78, -2.32, '#477a6b');
   for (let x = -4.5; x <= 4.5; x += .5) box(.035, 1.1, .06, x, .78, -2.22, '#aabd9c', .01);
   sign('COMMUNITY BANK', 0, 3.8, -2.32, 5.2);
   sign(tl('Small steps. Stronger futures.','Pasos pequeños. Futuros más sólidos.'), 0, 3.1, -2.31, 3.7, '#688679');
+  const deskStart=root.children.length;
   box(4.6, 1, 1.1, 0, .74, -.65, '#447b70');
   box(4.85, .16, 1.3, 0, 1.3, -.65, '#e9caa0');
   for (const x of [-1.9, -1.5, -1.1, 1.1, 1.5, 1.9]) box(.04, .9, .06, x, .75, -.06, '#92b4a0', .01);
   box(.58, .4, .08, .95, 1.59, -.65, '#283e44'); box(.1, .18, .1, .95, 1.39, -.65, '#283e44');
   box(.48, .035, .32, -.85, 1.41, -.37, '#ffedc5');
   sign('HELLO, NEIGHBOUR', 0, .83, -.08, 1.75);
+  const deskParts=root.children.slice(deskStart);
   const rug = box(4.4, .025, 3.6, 0, .22, 2.5, '#6e9a87', .015);
   box(4.1, .028, .045, 0, .237, .83, '#ebd6a7', .01); box(4.1, .028, .045, 0, .237, 4.17, '#ebd6a7', .01);
   for (const x of [-3.8, 3.8]) {
@@ -54,5 +58,5 @@ export function createTownBank() {
   const halo = new THREE.Mesh(new THREE.RingGeometry(.35, .4, 40), new THREE.MeshBasicMaterial({ color: '#f3d491', side: THREE.DoubleSide }));
   halo.rotation.x = -Math.PI / 2; halo.position.set(0, .253, .75); root.add(halo);
   root.visible = false;
-  return { root, rug };
+  return { root, installDesk(model:THREE.Object3D){deskParts.forEach(o=>o.visible=false);model.position.set(0,.22,-.65);model.traverse(o=>{if(o instanceof THREE.Mesh){o.castShadow=true;o.receiveShadow=true;}});root.add(model);},  rug };
 }

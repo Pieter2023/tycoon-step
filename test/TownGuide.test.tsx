@@ -77,3 +77,11 @@ it('shows the reserve step before the transfer tools until it is confirmed', () 
   const after = screen.getAllByRole('button').map(b => b.textContent);
   expect(after.indexOf('Next: visit your business →')).toBeGreaterThan(after.indexOf('Deposit to savings'));
 });
+
+it('routes to the property agent and only opens the board after physical arrival', () => {
+  expect(guideNextHop('agent', {room:'city',near:'property',spot:null})).toBe('enterProperty');
+  expect(guideNextHop('agent', {room:'property',near:null,spot:null})).toBe('walkToAgent');
+  expect(guideNextHop('agent', {room:'property',near:null,spot:'agent'})).toBe('arrived');
+  expect(guideNextHop('board', {room:'city',near:null,spot:null})).toBeNull();
+  expect(guideNextHop('board', {room:'city',near:null,spot:'board'})).toBe('arrived');
+});
