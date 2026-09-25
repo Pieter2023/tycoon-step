@@ -42,7 +42,9 @@ Done: cards open over the city with a place line (`services/townEvents.ts`). Not
   - a letter from the bank.
 - The choice and its outcome stay exactly as they are; only where they appear changes.
 
-## Slice 4: the city as the main screen 🗳
+## Slice 4: the city as the main screen 🔨 opt-in (build 50) · 🗳 default
+
+Done as a setting: Quick actions → "Start in the 3D city" (off by default) opens the city once per load, after the first-steps mission, with anything waiting in the 2D shell (an event, the year in review) shown first. Switching it on mid-game applies from the next load. Receipt: `docs/verification/phase1-slice4-2026-09-25/`. Still Pieter's call: making it the default, and the ledger drawer.
 
 - The game opens in the city after the first-steps journey.
 - The dashboard becomes a "ledger" drawer (a half-height sheet on phones).

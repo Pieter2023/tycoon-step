@@ -696,9 +696,13 @@ const [gameState, setGameState] = useState<GameState>(() => {
   // Start in the city (opt-in): once per load, as soon as a game is running with nothing waiting in the 2D shell.
   useEffect(() => {
     if (!startInCity || autoOpenedCity.current) return;
-    if (!gameStarted || showCharacterSelect || isMultiplayer || gameState.challenge || gameState.pendingScenario || gameState.isBankrupt || !gameState.character) return;
-    autoOpenedCity.current = true; setShowTown(true);
-  }, [startInCity, gameStarted, showCharacterSelect, isMultiplayer, gameState.challenge, gameState.pendingScenario, gameState.isBankrupt, gameState.character]);
+    if (!gameStarted || showCharacterSelect || isMultiplayer || gameState.challenge || !gameState.character) return;
+    // The 2D shell shows these first (the city would cover them); the city follows once they are dealt with.
+    if (gameState.pendingScenario || gameState.isBankrupt || gameState.annualReport || gameState.pendingSideHustleUpgrade) return;
+    autoOpenedCity.current = true;
+    // A new player's first-steps mission is on the dashboard, so that load stays there; the city opens from the next one.
+    if (!gameState.firstSteps || gameState.firstSteps.reviewed) setShowTown(true);
+  }, [startInCity, gameStarted, showCharacterSelect, isMultiplayer, gameState.challenge, gameState.character, gameState.pendingScenario, gameState.isBankrupt, gameState.annualReport, gameState.pendingSideHustleUpgrade, gameState.firstSteps]);
   const [showCustomAvatarBuilder, setShowCustomAvatarBuilder] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<keyof typeof DIFFICULTY_SETTINGS>('NORMAL');
   const [soundEnabled, setSoundEnabled] = useState(initialGameState?.soundEnabled ?? true);

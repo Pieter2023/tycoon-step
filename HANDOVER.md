@@ -1,6 +1,6 @@
 # Start here — Tycoon handover
 
-Updated **September 25, 2026 (late evening PDT)**. That day produced: a full game assessment, a lighting pass, new skinned characters, the AI-modelled Alex (build 42), the walk-bob fix (43), the first real-phone check, the economy fix Phase 0 (44), the traffic-deadlock fix (45), Phase 1 slices 1–3 (46–47: wealth you can see, sleep to end the month, events in the world), lighter sign lettering (48: the city drops from 246k to 122k triangles) and the smaller economy issues (49: property tax, insurance, closing costs, PMI, one FHA loan, no lender re-roll, a slower credit climb). Pieter said "do next as suggested", so §3 is being worked in order. Phase 1's slices 4–5 change the core flow and wait for Pieter (`docs/phase1-plan.md`). Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
+Updated **September 25, 2026 (late evening PDT)**. That day produced: a full game assessment, a lighting pass, new skinned characters, the AI-modelled Alex (build 42), the walk-bob fix (43), the first real-phone check, the economy fix Phase 0 (44), the traffic-deadlock fix (45), Phase 1 slices 1–3 (46–47: wealth you can see, sleep to end the month, events in the world), lighter sign lettering (48: the city drops from 246k to 122k triangles), the smaller economy issues (49: property tax, insurance, closing costs, PMI, one FHA loan, no lender re-roll, a slower credit climb) and Phase 1 slice 4 as an opt-in setting (50: "Start in the 3D city"). Pieter said "do next as suggested", so §3 is being worked in order. Making the city the default screen (slice 4) and one milestone track (slice 5) change the core flow and wait for Pieter (`docs/phase1-plan.md`). Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
 
 ## 1. Where things stand
 
@@ -11,11 +11,11 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 | **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin/town-lighting-pass` as a **backup** (2026-09-25). **Not merged into `main` and not deployed.** Only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
-| Validation on the branch | 437 tests / 78 files, TypeScript and the production build. `dist/` currently holds the branch build. |
+| Validation on the branch | 443 tests / 79 files, TypeScript and the production build. `dist/` currently holds the branch build (build 50). |
 | Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
-| QA servers | Another chat's Vite server held `127.0.0.1:5188`, so builds 42–45 were checked on `localhost:5189` (`tycoon-qa-5189` in `.claude/launch.json`) with a fresh Alex save. `tycoon-lan-preview` serves `dist/` on `0.0.0.0:5190` for the phone (`http://192.168.1.80:5190/?stats`). |
+| QA servers | Another chat's Vite server held `127.0.0.1:5188`, so builds 42–45 were checked on `localhost:5189` (`tycoon-qa-5189` in `.claude/launch.json`) with a fresh Alex save. `tycoon-lan-preview` serves `dist/` on `0.0.0.0:5190` for the phone (`http://192.168.1.80:5190/?stats`). Build 50 was checked on `localhost:5191` (`tycoon-qa-5191`, a fresh Alex save), because 5189 was still held by the previous chat's server. |
 | Phone | Pieter's iPhone is reachable through macOS iPhone Mirroring (computer-use app `iPhone Mirroring`; clicks need full-screen control, background clicks do nothing). First check passed: 60 fps (`docs/verification/phone-2026-09-25/`). |
 
 **Commits on `town-lighting-pass`, oldest first:**
@@ -35,39 +35,44 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 14. `0000bd1`: Phase 1 slices 2–3, sleep and events in the world (build 47).
 15. `c354281`: lighter sign lettering (build 48).
 16. `6514911`: property costs, PMI, one FHA loan, no lender re-roll, slower credit (build 49).
+17. `4d3c30b`, `fee4f2a`: handover docs, then the "Start in the 3D city" setting as work in progress.
+18. `feat(town): "Start in the 3D city" setting, Phase 1 slice 4 opt-in (build 50)`: the setting finished, tested and checked in the browser.
 
-## 1b. In progress when the last session ended (2026-09-25, ~16:45 PDT)
+## 1b. Where the last session stopped (2026-09-25, ~17:00 PDT)
 
-**Phase 1 slice 4, as an opt-in setting: "Start in the 3D city".** Committed as work in progress in the last commit on the branch.
-- **What exists:**
-  - App.tsx has `startInCity` (localStorage `tycoon_start_in_city`), `toggleStartInCity` and `autoOpenedCity`.
-  - A toggle tile in the Quick actions menu, with i18n keys `shell.quickActions.start_in_city`, `setting_on` and `setting_off` in en and es.
-  - An effect below the `showCharacterSelect` state opens the city once per load when the setting is on. It is skipped for multiplayer, a challenge, a waiting event, bankruptcy or no character.
-- **Known bug to fix first.** Switching the setting on mid-game opens the city at once, underneath the open menu. Fix: in `toggleStartInCity`, set `autoOpenedCity.current = true` before `setStartInCity(...)`, so the setting applies from the next load. Move `autoOpenedCity`'s declaration above `toggleStartInCity`.
-- **Then:**
-  1. Verify on localhost:5189: turn it on, reload, Continue, and the city opens by itself; turn it off, reload, and the dashboard shows.
-  2. Add a small test.
-  3. Write a receipt in `docs/verification/`, mark slice 4 🔨 opt-in in `docs/phase1-plan.md`, and commit as build 50.
-- **QA harness state.** The capture receiver may still be running on port 5199; restart it with `python3 scripts/qa/capture-receiver.py <dir>`. The dev server is `tycoon-qa-5189` and the LAN preview is `tycoon-lan-preview` (0.0.0.0:5190, serves `dist/`, so run `npm run build` first). On localhost:5189 the Alex save is at month 4 or 5, with a coffee cart and `tycoon_start_in_city=1` set in localStorage.
+**Phase 1 slice 4 as an opt-in setting is done (build 50):** Quick actions → "Start in the 3D city". Receipt: `docs/verification/phase1-slice4-2026-09-25/`.
+- **The setting.** It lives in App.tsx (`startInCity`, `autoOpenedCity`, `toggleStartInCity`, and the effect below the `showCharacterSelect` state) and is saved in localStorage `tycoon_start_in_city`. It is off by default.
+- **When the city opens.** Once per load (a reload, or Back to Menu → Continue).
+  - Switching it on mid-game applies from the next load. That was the old §1b bug; its fix was already in `fee4f2a`, and build 50 verified it and pinned it with a test.
+  - An event, bankruptcy, the year in review or a side-hustle upgrade choice shows in the 2D shell first, and the city follows.
+  - A load that starts with a new player's first-steps mission unfinished stays on the dashboard for that whole load. The city opens from the next load.
+- **Tests:** `test/StartInCity.test.tsx` (6 tests). 443 tests / 79 files and the build pass.
+- **QA state:**
+  - `localhost:5191` (`tycoon-qa-5191` in `.claude/launch.json`) has a fresh Alex save at month 2, with first steps done and `tycoon_start_in_city=1`.
+  - Port 5189 (`tycoon-qa-5189`) and the capture receiver on 5199 still belong to the previous chat's processes. Its Alex save (month 4 or 5, with a coffee cart) is on `localhost:5189`, and `tycoon_start_in_city=1` is set there too.
 
-**Next after that, in order:**
+**Next, in order:**
 1. Pieter's calls:
    - ship the branch (merging to `main` deploys; ask);
    - pacing after the economy fix;
-   - Phase 1 slices 4 (make the city the default?) and 5 (one milestone track).
+   - slice 4: try "Start in the 3D city" and decide whether the city becomes the default screen, and whether the dashboard becomes a "ledger" drawer;
+   - slice 5: one milestone track.
 2. Phase 1 polish: stage events at their place in 3D (the car at the garage bay, a letter on the doormat).
 3. More visuals (§3.4): hero blink (Alex's eyes are painted, so he needs a morph or an eyelid decal), hero face skin evenness, the Wave armpit crease, a Sit clip, hair polish, AO bake.
 4. A Chromebook check; repeat the phone check after any layout change (iPhone Mirroring works; clicks need full-screen control).
 
 ## 2. Decisions waiting on Pieter
 
-1. **Ship the branch?** It now holds the lighting pass, the skinned townspeople and the AI-modelled Alex.
+1. **Ship the branch?** It now holds builds 40–50: the lighting pass, the skinned townspeople, the AI-modelled Alex, the economy fixes, the traffic fix, Phase 1 slices 1–3 and the slice-4 setting.
    - Review `docs/verification/lighting-2026-09-25/lighting-before-after.jpg`, `docs/verification/characters-2026-09-25/characters-before-after.jpg` and `docs/verification/hero-alex-2026-09-25/`, or play the branch as Alex.
    - Then merge into the release branch and push `main`, which auto-deploys.
    - Do a real-phone check first. The new costs are the skinned people, the sky recapture and the 502 KB hero download.
 2. **The economy fix is done** (build 44, approved 2026-09-25): see `docs/verification/economy-2026-09-25/`. Pacing to decide: a careful index investor now needs about 14–20 game years, realistic but slower than the old cart rush.
 3. **Still open from June:** whether the Daily Challenge should stay demo-gated (see the GTM section of CLAUDE.md).
 4. **Walk bob:** fixed in build 43 (approved).
+5. **Phase 1, slices 4–5** (`docs/phase1-plan.md`):
+   - Slice 4: try the "Start in the 3D city" setting (Quick actions, build 50), then decide whether the city becomes the default screen for everyone and whether the dashboard becomes a "ledger" drawer.
+   - Slice 5: decide what to keep when quests, notice-board challenges and journeys merge into one milestone track.
 
 Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the AI Alex cost 38 (receipt: `docs/verification/hero-alex-2026-09-25/`). Still: never spend credits without a fresh yes.
 
@@ -78,7 +83,8 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
 3. **The city as the game (Phase 1)**, plan in `docs/phase1-plan.md`:
    - ✅ slice 1, wealth you can see: freedom meter in the city header, window displays, the Freedom Fountain, milestone moments (build 46);
    - ✅ slices 2–3: sleep at home to end the month with morning mail; events open over the city with a place line (build 47);
-   - 🗳 slice 4, the city as the main screen, and slice 5, one milestone track: need Pieter's call;
+   - 🔨 slice 4 as an opt-in setting, "Start in the 3D city" (build 50, `docs/verification/phase1-slice4-2026-09-25/`). Making it the default and the ledger drawer need Pieter's call;
+   - 🗳 slice 5, one milestone track: needs Pieter's call;
    - not yet: staging events at their place in 3D (the car at the garage bay, a letter prop).
 4. **More visuals:**
    - ✅ lighter sign lettering (build 48: −125k triangles; kept 3D, dropped the bevel and curve resolution);
@@ -102,7 +108,7 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
 ```sh
 cd '/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2'
 git status --short && git log --oneline -8
-npm run test:run          # 437 tests / 78 files on the branch
+npm run test:run          # 443 tests / 79 files on the branch
 npm run build
 npx vite --host 127.0.0.1 --port 5188 --strictPort   # or preview_start "tycoon-qa-5188" (.claude/launch.json)
 '/Applications/Blender.app/Contents/MacOS/Blender' --background --factory-startup --python scripts/build-town-people.py   # then bump PEOPLE_VERSION
@@ -110,6 +116,10 @@ npx vite --host 127.0.0.1 --port 5188 --strictPort   # or preview_start "tycoon-
 ```
 
 **QA save on `localhost:5188`:** Alex, month 2, $11,249 cash, cart bought and licensed, investor journey 2/4. To reach the city: Continue Adult → Enter 3D city.
+
+**Later QA saves:**
+- `localhost:5189`: Alex at month 4 or 5, with a coffee cart and `tycoon_start_in_city=1`. It runs on the previous chat's server.
+- `localhost:5191` (`tycoon-qa-5191`): Alex at month 2, first steps done and `tycoon_start_in_city=1`, so Continue lands in the city (the build 50 check).
 
 ### Visual QA with a hidden browser (added 2026-09-25)
 
@@ -311,7 +321,7 @@ These are last-observed snapshots, not values to restore over newer play:
 
 ## Validation and evidence
 
-Latest validation (2026-09-25, branch `town-lighting-pass`): **437 tests / 78 files**, TypeScript and production build; receipts in `docs/verification/lighting-2026-09-25/`, `docs/verification/characters-2026-09-25/` and `docs/verification/hero-alex-2026-09-25/`; assessment in `docs/assessment-2026-09-25.md`.
+Latest validation (2026-09-25, branch `town-lighting-pass`, build 50): **443 tests / 79 files**, TypeScript and production build; the latest receipt is `docs/verification/phase1-slice4-2026-09-25/`; earlier receipts in `docs/verification/lighting-2026-09-25/`, `docs/verification/characters-2026-09-25/` and `docs/verification/hero-alex-2026-09-25/`; assessment in `docs/assessment-2026-09-25.md`.
 
 Earlier validation (live playthrough fixes): **333 tests / 59 files passed**, TypeScript + production build passed; `git diff --check` passed. Existing chunk-size warnings remain. `dist/` was rebuilt at the end of that pass, so an already-open 5187 page needs a full refresh before opening the city. Commit `35a074d` (townhouse facade) is deployed: Netlify deploy `6a9d135b` published 2026-09-06 07:17 UTC and the live `TownModal-*.js` chunk contains the facade code. Note: the 3D city is a code-split chunk, so the `index-*.js` hash does not change for town-only work; grep the `TownModal` chunk instead. This handover does not repeat financial/cloud testing.
 

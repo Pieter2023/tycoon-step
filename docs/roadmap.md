@@ -2,14 +2,14 @@
 
 ## Current priorities — September 25, 2026
 
-Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). Production is `origin/main` = `073f397` (build 39). Branch `town-lighting-pass` holds the lighting pass, the camera, the skinned townspeople and the AI-modelled Alex (builds 40–42), with 437 tests / 78 files passing; it is pushed to `origin` as a backup, not merged or deployed.
+Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). Production is `origin/main` = `073f397` (build 39). Branch `town-lighting-pass` holds builds 40–50 (the lighting pass, the camera, the skinned townspeople, the AI-modelled Alex, the economy fixes, the traffic fix and Phase 1 slices 1–3 plus the slice-4 setting), with 443 tests / 79 files passing; it is pushed to `origin` as a backup, not merged or deployed.
 
 1. ✅ **Economy fix (Phase 0)** (build 44): prices drift with expected returns, businesses saturate and can lose money, shortfalls go on a credit card, tax is withheld monthly, and the 4% rule counts toward freedom. `docs/verification/economy-2026-09-25/`.
 2. ✅ **Traffic deadlock** fixed (build 45).
 3. ✅ **AI-modelled Alex** (build 42, concept 2, 38 credits; `docs/verification/hero-alex-2026-09-25/`). On the branch; not merged or deployed.
-4. **The city as the game (Phase 1):** slices 1–3 done (builds 46–47: wealth you can see, sleep to end the month, events in the world); slices 4–5 wait for Pieter. `docs/phase1-plan.md`.
-5. **Visual follow-ups:** sign lettering replaced by decals, an AO bake, textures, hair polish, and a Sit clip.
-6. **Real phone and Chromebook test,** then ship the branch with Pieter's go-ahead.
+4. **The city as the game (Phase 1):** slices 1–3 done (builds 46–47: wealth you can see, sleep to end the month, events in the world). Slice 4 is an opt-in setting, "Start in the 3D city" (build 50); making it the default, and slice 5, wait for Pieter. `docs/phase1-plan.md`.
+5. **Visual follow-ups:** lighter sign lettering done (build 48); an AO bake, textures, hair polish, a Sit clip and a blink for the hero Alex remain.
+6. **Chromebook test** (Pieter's iPhone passed at builds 43 and 47; repeat after layout changes), then ship the branch with Pieter's go-ahead.
 
 The September 5 list (real-phone test, Spanish native read, pacing second opinion, publication discipline, street-life follow-ups) is carried in HANDOVER's "Next session priorities".
 
