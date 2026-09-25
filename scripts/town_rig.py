@@ -35,10 +35,12 @@ def add_clips(arm, names, legs=LEGS):
         for frame in range(1, length + 2):
             t = (frame - 1) / length; phase = t * math.tau; moving = clip in ('Walk', 'Run')
             rot = {n: [0., 0., 0.] for n in names}
-            # Standing hips 1.5 cm below rest keep the knees nearly straight; walking and running drop the hips just enough
-            # for the stride to stay within the leg's reach. Ground speed = travel / stance time:
-            # Walk .66 m / .64 s = 1.03125 m/s, Run .80 m / .5333 s = 1.5 m/s (CLIP_GROUND_SPEED in townLocomotion.ts).
-            hips_z = (rest - .07 * k + .015 * k * math.cos(phase * 2)) if clip == 'Walk' else (rest - .10 * k + .02 * k * math.cos(phase * 2)) if clip == 'Run' else rest - .015 * k + .006 * k * math.sin(phase)
+            # Standing hips 1.5 cm below rest keep the knees nearly straight. Walking vaults over the stance leg: the hips peak at
+            # mid-stance (t = .3 and .8, knee about 30 degrees) and dip in double support; the stretched leg at heel strike and
+            # toe-off stays just inside its reach (.834 of .838). Running is lowest at mid-stance, as running is.
+            # Ground speed = travel / stance time: Walk .66 m / .64 s = 1.03125 m/s, Run .80 m / .5333 s = 1.5 m/s
+            # (CLIP_GROUND_SPEED in townLocomotion.ts).
+            hips_z = (rest - .054 * k + .025 * k * math.cos(phase * 2 - 1.2 * math.pi)) if clip == 'Walk' else (rest - .10 * k + .02 * k * math.cos(phase * 2)) if clip == 'Run' else rest - .015 * k + .006 * k * math.sin(phase)
             rot['Torso'][0] = -.07 if clip == 'Run' else -.015
             rot['Torso'][2] = .025 * math.sin(phase) if moving else .008 * math.sin(phase)
             for i, side in enumerate((-1, 1)):

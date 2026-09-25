@@ -220,7 +220,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   }
   // Vehicles are optional: the square still opens if only their file fails.
   // Bump when any model in public/models/town changes: the files keep their names, so browsers would otherwise reuse a cached copy.
-  const MODEL_VERSION = '20260906a', PEOPLE_VERSION = '20260925b', HERO_VERSION = '20260925c';
+  const MODEL_VERSION = '20260906a', PEOPLE_VERSION = '20260925d', HERO_VERSION = '20260925d';
   // The player's own model: the AI-modelled hero (scripts/build-town-hero.py) or the retired Sept-13 atelier Alex.
   const heroFile = options.hero ? `/models/town/town-hero-${options.hero}.glb?v=${HERO_VERSION}` : options.characterAtelier ? '/models/town/alex-atelier.glb?v=alex1' : null;
   Promise.all([load(`/models/town/freedom-square.glb?v=${MODEL_VERSION}`), load(`/models/town/town-people.glb?v=${PEOPLE_VERSION}`), load(`/models/town/town-vehicles.glb?v=${MODEL_VERSION}`).catch(() => null),heroFile?load(heroFile).catch(()=>null):Promise.resolve(null)]).then(([town, character, vehicles, hero]) => {
