@@ -35,7 +35,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { clampTownPoint, nearbyPlace, routeToPlace, TOWN_PLACES, TownPlaceId, TownPoint } from './townWorld';
-import { cameraRelativeMovement, normalizeStick, cameraPreset, CameraPreset, turnTowards, isWalkTap, WALK_SPEED, JOG_SPEED } from './townControls';
+import { cameraRelativeMovement, normalizeStick, cameraPreset, cameraFov, CameraPreset, turnTowards, isWalkTap, WALK_SPEED, JOG_SPEED } from './townControls';
 
 export type TownController = {
   setCafeService:(service?:CafeService)=>void; walkToServiceStation:(station:ServiceStation)=>void; getPlayerPoint:()=>TownPoint;
@@ -113,7 +113,8 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const fountain = new THREE.Points(droplets, new THREE.PointsMaterial({ color: '#c3f1ed', size: .047, transparent: true, opacity: .8 })); fountain.position.set(0,1.55,12); fountain.visible = !reducedMotion; outdoors.add(fountain);
   let statsElapsed=0,statsFrames=0;
   let alive = true, ready = false, contextAvailable = true, frame = 0, previousTime = performance.now(), elapsed = 0;
-  let path: TownPoint[] = [], near: TownPlaceId | null = null, yaw = atelier?-.55:.12, pitch = .40, distance = 9, zoomDistance = 9;
+  const opening = cameraPreset('follow', false);
+  let path: TownPoint[] = [], near: TownPlaceId | null = null, yaw = atelier?-.55:.12, pitch = opening.pitch, distance = opening.distance, zoomDistance = opening.distance;
   // The college stands south of the square, exactly where the camera normally hangs. Arriving at its door eases the camera round to the north so the building, not its back wall, is in frame; leaving eases it home. A drag cancels the ease.
   let yawGoal: number | undefined, yawAuto = false;
   const keys = new Set<string>(); let stick = { x: 0, z: 0 }; const velocity = new THREE.Vector2(), cameraTarget = new THREE.Vector3(0,1.65,7), desiredCamera = new THREE.Vector3();
@@ -303,7 +304,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   // through a canopy on its way up must not drag the camera onto the player's shoulders.
   const crowns=[[-16,-1,1.35],[16,-1,1.4],[-12,8,1.5],[12,8,1.5],[-9,13,1.25],[9,13,1.3],[-18,12,1.4],[18,12,1.5]].map(([x,z,scale])=>new THREE.Box3(new THREE.Vector3(x-1.85*scale,1.6*scale,z-1.65*scale),new THREE.Vector3(x+1.85*scale,4.5*scale,z+1.65*scale)));
   const cameraRay = new THREE.Ray(), hitPoint = new THREE.Vector3(), cameraDirection = new THREE.Vector3();
-  const resize = () => { if (!host.clientWidth || !host.clientHeight) return; camera.aspect = host.clientWidth / host.clientHeight; camera.fov = camera.aspect < .8 ? 58 : 48; camera.updateProjectionMatrix(); renderer.setSize(host.clientWidth, host.clientHeight, false); };
+  const resize = () => { if (!host.clientWidth || !host.clientHeight) return; camera.aspect = host.clientWidth / host.clientHeight; camera.fov = cameraFov(camera.aspect, inside); camera.updateProjectionMatrix(); renderer.setSize(host.clientWidth, host.clientHeight, false); };
   const observer = new ResizeObserver(resize); observer.observe(host); resize();
   const clearMovement = () => { keys.clear(); stick = { x: 0, z: 0 }; velocity.set(0,0); };
   const stopPath = () => { path = []; destinationRing.visible = false; };
@@ -535,8 +536,9 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     clearMovement();stopPath();cancel();paused=false;doorLockedUntil=performance.now()+800;
     yawGoal=undefined;yawAuto=false;
     if(enter){cityView={x:player.position.x,z:player.position.z,yaw,pitch,distance:zoomDistance,mode:cameraMode};player.position.set(0,.22,5);yaw=.12;const preset=cameraPreset(cameraMode,true);pitch=preset.pitch;zoomDistance=preset.distance;}
-    else {const view=cityView??{x:-10.5,z:-1.1,yaw:.12,pitch:.4,distance:9};player.position.set(view.x,.22,view.z);yaw=view.yaw;pitch=view.pitch;zoomDistance=view.distance;}
+    else {const view=cityView??{x:-10.5,z:-1.1,yaw:.12,...cameraPreset(cameraMode,false)};player.position.set(view.x,.22,view.z);yaw=view.yaw;pitch=view.pitch;zoomDistance=view.distance;}
     inside=enter;cafeInside=enter&&cafe;exchangeInside=enter&&trading;officeInside=enter&&estate;homeInside=enter&&flat;workInside=enter&&desk;collegeInside=enter&&campus;const backdrop=enter?(trading?'#1e2a33':estate?'#d8cfc4':flat?'#d4cbbd':desk?'#d3dbe2':campus?'#e4dccb':'#ccd7cd'):rainy?'#adbec7':'#bdd7e4';scene.background=new THREE.Color(backdrop);scene.fog=new THREE.Fog(backdrop,34,90);bank.root.visible=enter&&!cafe&&!trading&&!estate&&!flat&&!desk&&!campus;work.root.visible=enter&&desk;college.root.visible=enter&&campus;cafeRoom.root.visible=enter&&cafe;exchange.root.visible=enter&&trading;office.root.visible=enter&&estate;home.root.visible=enter&&flat;ambience?.update(rainy,inside,document.hidden);outdoors.visible=!enter;near=null;spot=null;onNear(null);options.onSpot?.(null);options.onRoom?.(enter?room:'city');
+    camera.fov=cameraFov(camera.aspect,inside);camera.updateProjectionMatrix();
     player.rotation.y=Math.PI;cameraTarget.set(player.position.x,1.65,player.position.z);distance=zoomDistance;
     camera.position.set(cameraTarget.x+Math.sin(yaw)*Math.cos(pitch)*distance,cameraTarget.y+Math.sin(pitch)*distance,cameraTarget.z+Math.cos(yaw)*Math.cos(pitch)*distance);
     canvas.setAttribute('aria-label',enter?(cafe?'3D café. Walk to the counter to manage your business.':trading?'3D trading floor. Walk to the broker or the city exit.':estate?'3D property office. Walk to the agent or the city exit.':flat?'3D apartment. Walk to the desk or the square exit.':desk?'3D office. Walk to your manager or the square exit.':campus?'3D classroom. Walk to the registrar or the square exit.':'3D bank lobby. Walk to the teller or the city exit.'):'3D city. Tap pavement to walk.');
