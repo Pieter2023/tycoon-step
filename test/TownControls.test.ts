@@ -25,13 +25,20 @@ describe('third-person controls and Blender assets', () => {
   });
   it('ships separate playable animation clips and a compressed town under 2MB', () => {
     const read = (path:string) => { const b=readFileSync(path); return JSON.parse(b.subarray(20,20+b.readUInt32LE(12)).toString()); };
-    const character = read('public/models/town/town-character.glb');
+    const character = read('public/models/town/town-people.glb');
     expect(character.animations.map((a:any)=>a.name).sort()).toEqual(['Celebrate','Idle','Run','Serve','Walk','Wave']);
     for (const clip of character.animations) {
       const joints=clip.channels.map((c:any)=>character.nodes[c.target.node].name);
       expect(joints).toEqual(expect.arrayContaining(['Hips','Thigh1','Knee1','Ankle1']));
       if(clip.name!=='Idle')expect(joints).toContain('Shoulder1');
     }
+    // One skinned body whose joints keep the old names and an identity rest rotation, so the seated,
+    // carrying and cycling poses (which set joint.rotation.x directly) still work.
+    expect(character.skins).toHaveLength(1);
+    const joints=character.skins[0].joints.map((i:number)=>character.nodes[i]);
+    expect(joints.map((n:any)=>n.name)).toEqual(expect.arrayContaining(['Hips','Torso','Head','Shoulder1','Elbow1','Grip1','Grip-1','Thigh1','Knee1','Ankle1','Ankle-1']));
+    for(const joint of joints)expect(joint.rotation??[0,0,0,1]).toEqual([0,0,0,1]);
+    expect(character.meshes.find((m:any)=>m.name==='Body').extras.targetNames).toEqual(['Fem','Blink']);
     const city='public/models/town/freedom-square.glb';
     expect(read(city).extensionsUsed).toContain('KHR_draco_mesh_compression');
     expect(statSync(city).size).toBeLessThan(2_000_000);

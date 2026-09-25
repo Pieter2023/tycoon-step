@@ -93,12 +93,12 @@ describe('pigeons and bunting', () => {
 });
 
 describe('exported extras', () => {
-  it('ships sex-specific parts on the one animated character and compact Draco vehicles', () => {
-    const character = readGlb('public/models/town/town-character.glb');
+  it('ships optional parts on the one skinned townsperson and compact Draco vehicles', () => {
+    const character = readGlb('public/models/town/town-people.glb');
     const names = character.nodes.map((n: { name: string }) => n.name);
-    for (const part of ['Fem_Skirt', 'Fem_HairLong', 'Fem_Ponytail', 'Fem_Lips', 'Fem_Bust', 'Masc_Beard', 'Masc_Cap']) expect(names.some((n: string) => n.startsWith(part))).toBe(true);
+    for (const part of ['Hair', 'Fem_HairLong', 'Fem_Ponytail', 'Fem_Lashes', 'Fem_Earrings', 'Masc_Beard', 'Masc_Cap']) expect(names).toContain(part);
     expect(character.animations.map((a: { name: string }) => a.name).sort()).toEqual(['Celebrate', 'Idle', 'Run', 'Serve', 'Walk', 'Wave']);
-    expect(statSync('public/models/town/town-character.glb').size).toBeLessThan(450_000);
+    expect(statSync('public/models/town/town-people.glb').size).toBeLessThan(700_000);
     const vehicles = readGlb('public/models/town/town-vehicles.glb');
     const vehicleNames = vehicles.nodes.map((n: { name: string }) => n.name);
     expect(vehicleNames).toContain('Car'); expect(vehicleNames).toContain('Van');

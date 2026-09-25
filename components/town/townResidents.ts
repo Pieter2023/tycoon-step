@@ -52,7 +52,46 @@ export function residentStyle(index: number): ResidentStyle {
 // also brings the shoulder pivots in), slimmer limbs, and the head kept near its normal size.
 // Pivots are scaled rather than moved because the clips key pivot positions every frame.
 export const FEMALE_BUILD = { height: .95, hips: [.90, .93, 1], torso: [.88, .93, 1], head: [1.18, 1.05, 1], sleeve: [.82, .85, .96], forearm: [.84, .86, .97], leg: [.84, .86, 1] } as const;
+
+// The skinned townspeople (public/models/town/town-people.glb, scripts/build-town-people.py) are
+// one smooth body per person: optional parts are shown or hidden by name, the female build is a
+// morph target ('Fem') rather than scaled pivots, and colours follow the material names.
+const SKINNED_PARTS: Record<string, (style: ResidentStyle) => boolean> = {
+  Hair: s => s.sex === 'm' || s.hair === 'short',
+  Fem_HairLong: s => s.sex === 'f' && s.hair === 'long',
+  Fem_Ponytail: s => s.sex === 'f' && s.hair === 'tail',
+  Fem_Lashes: s => s.sex === 'f',
+  Fem_Earrings: s => s.sex === 'f',
+  Masc_Beard: s => s.sex === 'm' && !!s.beard,
+  Masc_Cap: s => s.sex === 'm' && !!s.cap,
+};
+export const isSkinnedRig = (root: THREE.Object3D) => { let skinned = false; root.traverse(o => { if ((o as THREE.SkinnedMesh).isSkinnedMesh) skinned = true; }); return skinned; };
+function styleSkinned(root: THREE.Object3D, style: ResidentStyle) {
+  const female = style.sex === 'f';
+  (root.getObjectByName('Character') ?? root).scale.setScalar(female ? FEMALE_BUILD.height : 1);
+  root.traverse(object => {
+    const part = SKINNED_PARTS[object.name]; if (part) object.visible = part(style);
+    if (!(object instanceof THREE.Mesh) || Array.isArray(object.material)) return;
+    const fem = object.morphTargetDictionary?.Fem; if (fem !== undefined && object.morphTargetInfluences) object.morphTargetInfluences[fem] = female ? 1 : 0;
+    const key = object.material.name as keyof NonNullable<ResidentStyle['colors']>;
+    const colour = female && key === 'trousers' ? style.colors?.skirt ?? style.colors?.trousers : style.colors?.[key];
+    if (!colour) return;
+    const material = (object.material as THREE.MeshStandardMaterial).clone(); material.color.set(colour); object.material = material;
+  });
+}
+
+// Every seat in the city (benches, café chairs, desks, the bike saddle) was fitted to the old
+// articulated model, whose clips held the hips at .82. The skinned townspeople stand with the
+// hips at .945, so a seated pose lowers them by the difference after the mixer has run.
+export const SIT_DROP = .125;
+export function sitHips(root: THREE.Object3D) {
+  const hips = root.getObjectByName('Hips'); if (!hips) return;
+  if (hips.userData.sitDrop === undefined) hips.userData.sitDrop = isSkinnedRig(root) ? SIT_DROP : 0;
+  hips.position.y -= hips.userData.sitDrop;
+}
+
 export function styleCharacter(root: THREE.Object3D, style: ResidentStyle) {
+  if (isSkinnedRig(root)) { styleSkinned(root, style); return; }
   const female = style.sex === 'f';
   const set = (object: THREE.Object3D, scale: readonly [number, number, number] | number) => typeof scale === 'number' ? object.scale.setScalar(scale) : object.scale.set(...scale);
   const figure = root.getObjectByName('Character') ?? root; set(figure, female ? FEMALE_BUILD.height : 1);
@@ -134,4 +173,5 @@ export function seatActor(root: THREE.Object3D, thigh = -1.05, knee = .35) {
     const leg = root.getObjectByName('Thigh' + side), joint = root.getObjectByName('Knee' + side), ankle = root.getObjectByName('Ankle' + side);
     if (leg) leg.rotation.x = thigh; if (joint) joint.rotation.x = knee; if (ankle) ankle.rotation.x = -thigh - knee;
   }
+  sitHips(root);
 }

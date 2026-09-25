@@ -113,6 +113,8 @@ export function createCyclist(bike: THREE.Object3D, rider: THREE.Object3D, reduc
   frame.traverse(o => { if (o.name.startsWith('BikeWheel') || o.name.startsWith('BikeHub')) wheels.push(o); if (o.name.startsWith('BikePedal')) pedals.push(o); if (o instanceof THREE.Mesh) { o.castShadow = true; o.receiveShadow = true; } });
   rider.position.set(-.08, .21, 0); rider.rotation.y = Math.PI / 2; root.add(rider);
   const joint = (name: string) => rider.getObjectByName(name);
+  // No mixer runs on the rider, so the hips stay where the model rests them; the saddle was fitted to .82.
+  const hips = joint('Hips'); if (hips) hips.position.y = .82;
   let x = -18; const speed = 4.4;
   root.position.set(x, .22, 5.3);   // kerb of the promenade, clear of the keep-right walking lines
   function update(dt: number, elapsed: number) {

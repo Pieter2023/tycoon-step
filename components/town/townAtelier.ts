@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { isSkinnedRig } from './townResidents';
 
 // Local, deterministic material library. No network assets or generation services.
 export function createAtelierMaterials() {
@@ -63,7 +64,10 @@ export function dressTown(root: THREE.Object3D, library: AtelierMaterials) {
 
 // Keep the established pivot/clip contract while improving the featured player's outfit.
 export function dressPlayer(root: THREE.Object3D, library: AtelierMaterials) {
-  root.traverse(o => {
+  // The skinned townspeople already wear the concept outfit (teal jacket, cream tee) and have no UVs
+  // for the grain map; they only get the apron, fitted to their slimmer chest.
+  const skinned = isSkinnedRig(root), front = skinned ? .135 : .23, half = skinned ? .16 : .195;
+  if (!skinned) root.traverse(o => {
     if (!(o instanceof THREE.Mesh) || Array.isArray(o.material) || !(o.material instanceof THREE.MeshStandardMaterial)) return;
     const m = o.material.clone(); o.material = m;
     if (m.name === 'shirt') { m.color.set('#406f5b'); m.map = library.grain; m.roughness = .86; }
@@ -78,15 +82,15 @@ export function dressPlayer(root: THREE.Object3D, library: AtelierMaterials) {
     // glTF converts the existing character hierarchy to Y-up; forward is +Z.
     const positions: number[] = [], indices: number[] = [];
     for (const z of [-.025, .40]) for (let i=0;i<=8;i++) {
-      const x=(i/8-.5)*.39, y=-.23+Math.pow(x/.22,2)*.065;
+      const x=(i/8-.5)*half*2, y=-front+Math.pow(x/.22,2)*.065;
       positions.push(x,z,-y);
     }
     for(let i=0;i<8;i++)indices.push(i,i+9,i+1,i+1,i+9,i+10);
     const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setIndex(indices);geometry.computeVertexNormals();
     const apronMaterial=new THREE.MeshStandardMaterial({color:'#b69870',roughness:.92,side:THREE.DoubleSide});
     const apron=new THREE.Mesh(geometry,apronMaterial);apron.name='Atelier_apron';apron.castShadow=true;outfit.add(apron);
-    const pocket=new THREE.Mesh(new THREE.BoxGeometry(.18,.10,.018),new THREE.MeshStandardMaterial({color:'#947551',roughness:.95}));pocket.position.set(0,.12,.247);pocket.name='Atelier_apron_pocket';outfit.add(pocket);
-    for(const x of [-.115,.115]){const strap=new THREE.Mesh(new THREE.BoxGeometry(.025,.18,.018),apronMaterial);strap.position.set(x,.43,.205);strap.rotation.x=.40;outfit.add(strap);}
+    const pocket=new THREE.Mesh(new THREE.BoxGeometry(.18,.10,.018),new THREE.MeshStandardMaterial({color:'#947551',roughness:.95}));pocket.position.set(0,.12,front+.017);pocket.name='Atelier_apron_pocket';outfit.add(pocket);
+    for(const x of [-.115,.115]){const strap=new THREE.Mesh(new THREE.BoxGeometry(.025,.18,.018),apronMaterial);strap.position.set(x*half/.195,.43,front-.025);strap.rotation.x=.40;outfit.add(strap);}
   }
   return outfit;
 }

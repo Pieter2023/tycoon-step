@@ -1,6 +1,6 @@
-import { characterExpression } from './townCharacterExpression';
+import { characterExpression, createBlink } from './townCharacterExpression';
 import { doorwayEntry } from './townDoors';
-import { followRoute, locomotionClip, turnSpeedFactor } from './townLocomotion';
+import { followRoute, locomotionClip, turnSpeedFactor, CLIP_GROUND_SPEED } from './townLocomotion';
 import { createAtelierMaterials, dressTown, dressPlayer } from './townAtelier';
 import { createSkyDome, createSkyEnvironment, createContactShadow, outdoorLighting, skyColors, LIGHT_BALANCE, CONTACT_SHADOW_NAME, SkyColors } from './townLighting';
 import { CafeService, ServiceStation, SERVICE_STATIONS } from '../../services/cafeService';
@@ -26,13 +26,14 @@ import type { Lifestyle } from '../../types';
 import { createCoffeeCart } from './townBusiness';
 import { createTownTraffic } from './townTraffic';
 import { createTownLife, createCyclist, createDogWalker, createFireworks } from './townLife';
-import { residentStyle, seatActor, styleCharacter, yieldTo, Sex, YieldState, WALK_KEEP_RIGHT, steerAround } from './townResidents';
+import { residentStyle, seatActor, sitHips, styleCharacter, yieldTo, Sex, YieldState, WALK_KEEP_RIGHT, steerAround } from './townResidents';
 import { createQualityGovernor, initialQuality, QUALITY_SETTINGS, QualityLevel, QualityMode } from './townQuality';
 export type TownView = { x:number; z:number; yaw:number; pitch:number; distance:number; mode?:CameraPreset };
 export type TownSpot = 'teller' | 'exit' | 'cart' | 'cafe-counter' | 'broker' | 'agent' | 'board' | 'home' | 'desk' | 'rosa' | 'work' | 'manager' | 'college' | 'registrar' | 'garage' | null;
 export type TownSceneOptions = { autoDoors?:boolean; characterAtelier?:boolean; art?:'original'|'atelier'; review?:{phase:number;season:Season;room?:'cafe'}; onStats?:(stats:{fps:number;calls:number;triangles:number})=>void; view?:TownView; onView?:(view:TownView)=>void; onRoom?:(room:'city'|'bank'|'cafe'|'exchange'|'property'|'home'|'work'|'college')=>void; onPlayerPoint?:(point:TownPoint)=>void; onSpot?:(spot:TownSpot)=>void; onManual?:()=>void; playerSex?:Sex; playerScale?:number; quality?:QualityMode; onQuality?:(level:QualityLevel, automatic:boolean)=>void; onProgress?:(fraction:number)=>void; onTimeOfDay?:(label:Daylight['label'])=>void };
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { clampTownPoint, nearbyPlace, routeToPlace, TOWN_PLACES, TownPlaceId, TownPoint } from './townWorld';
 import { cameraRelativeMovement, normalizeStick, cameraPreset, cameraFov, CameraPreset, turnTowards, isWalkTap, WALK_SPEED, JOG_SPEED } from './townControls';
@@ -193,8 +194,10 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   // Who is home: applied when the figures change and again once the character model has loaded.
   let familyFigures: Figures = { spouse: false, crib: false, toys: false, children: [] };
   const applyFamily = () => { home.setFamily(familyFigures); if (spouse) spouse.root.visible = familyFigures.spouse; kids.forEach((kid, i) => { const scale = familyFigures.children[i]; kid.root.visible = scale !== undefined; if (scale !== undefined) kid.root.scale.setScalar(scale); }); }; const pedestrians: (Actor & { offset: number; lane: number; seat?: number; yield: YieldState })[] = [];
+  const blinks: ((seconds:number, reducedMotion:boolean)=>void)[] = [];
   const addActor = (root: THREE.Object3D, clips: THREE.AnimationClip[]): Actor => {
     const mixer = new THREE.AnimationMixer(root), actions: Record<string, THREE.AnimationAction> = {};
+    blinks.push(createBlink(root, blinks.length));
     for (const clip of clips){const action=mixer.clipAction(clip);if(['Serve','Wave','Celebrate'].includes(clip.name)){action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;}actions[clip.name]=action;}
     return { root, mixer, actions, current: '' };
   };
@@ -208,7 +211,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   // Each successful load is released even if the other request fails or the view closes.
   const loaded: THREE.Object3D[] = [];
   // Download progress across the three model files (the city is by far the largest), reported as one fraction.
-  const progress = new Map<string, number>(), weights: Record<string, number> = { 'freedom-square': .72, 'town-character': .2, 'town-vehicles': .08 };
+  const progress = new Map<string, number>(), weights: Record<string, number> = { 'freedom-square': .72, 'town-people': .2, 'town-vehicles': .08 };
   const report = () => { let sum = 0; for (const [key, weight] of Object.entries(weights)) sum += weight * (progress.get(key) ?? 0); options.onProgress?.(Math.min(1, sum)); };
   const load = async (url: string) => { const key = Object.keys(weights).find(k => url.includes(k)) ?? url; const gltf = await loader.loadAsync(url, e => { progress.set(key, e.total ? e.loaded / e.total : .5); report(); }); progress.set(key, 1); report(); if (!alive) disposeTree(gltf.scene); else loaded.push(gltf.scene); return gltf; };
   if(library){
@@ -217,8 +220,8 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   }
   // Vehicles are optional: the square still opens if only their file fails.
   // Bump when any model in public/models/town changes: the files keep their names, so browsers would otherwise reuse a cached copy.
-  const MODEL_VERSION = '20260906a';
-  Promise.all([load(`/models/town/freedom-square.glb?v=${MODEL_VERSION}`), load(`/models/town/town-character.glb?v=${MODEL_VERSION}`), load(`/models/town/town-vehicles.glb?v=${MODEL_VERSION}`).catch(() => null),options.characterAtelier?load('/models/town/alex-atelier.glb?v=alex1').catch(()=>null):Promise.resolve(null)]).then(([town, character, vehicles, hero]) => {
+  const MODEL_VERSION = '20260906a', PEOPLE_VERSION = '20260925b';
+  Promise.all([load(`/models/town/freedom-square.glb?v=${MODEL_VERSION}`), load(`/models/town/town-people.glb?v=${PEOPLE_VERSION}`), load(`/models/town/town-vehicles.glb?v=${MODEL_VERSION}`).catch(() => null),options.characterAtelier?load('/models/town/alex-atelier.glb?v=alex1').catch(()=>null):Promise.resolve(null)]).then(([town, character, vehicles, hero]) => {
     if (!alive) return;
     for (const root of [town.scene, character.scene]) root.traverse(o => { if (o instanceof THREE.Mesh) { o.castShadow = true; o.receiveShadow = true; } });
     // A soft contact shadow under every figure; clones below inherit it.
@@ -234,43 +237,43 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       for (const vehicle of traffic.fleet) vehicle.root.add(createContactShadow(vehicle.length + .5, 2.4, .5, -.16));
       carPrototype = vehicles.scene.getObjectByName('Car') ?? undefined; applyGarage();
       const bike = vehicles.scene.getObjectByName('Bike'), dog = vehicles.scene.getObjectByName('Dog');
-      if (bike) { const rider = character.scene.clone(true); styleCharacter(rider, residentStyle(12)); const riderShadow = rider.getObjectByName(CONTACT_SHADOW_NAME); if (riderShadow) riderShadow.visible = false; cyclist = createCyclist(bike, rider, reducedMotion); outdoors.add(cyclist.root); }
+      if (bike) { const rider = cloneSkinned(character.scene); styleCharacter(rider, residentStyle(12)); const riderShadow = rider.getObjectByName(CONTACT_SHADOW_NAME); if (riderShadow) riderShadow.visible = false; cyclist = createCyclist(bike, rider, reducedMotion); outdoors.add(cyclist.root); }
       if (dog) { dogWalker = createDogWalker(dog, reducedMotion); outdoors.add(dogWalker.root, dogWalker.leash); }
     }
     // Dev-only QA handle for inspecting traffic and pigeons from the console; stripped from production builds.
-    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { traffic, life, cyclist, dogWalker, player: () => ({ x: player.position.x, z: player.position.z }), view: () => ({ yaw, pitch, distance, goal: yawGoal, camera: { x: camera.position.x, y: camera.position.y, z: camera.position.z } }), setPhase: (p?: number) => { phaseOverride = p; }, celebrate: (won: boolean) => { celebrating = won; }, fireworks, walk: (x: number, z: number) => { if (!inside) { clearMovement(); path = findTownPath(player.position, { x, z }); } }, setView: (v: { x?: number; z?: number; yaw?: number; pitch?: number; distance?: number }) => { clearMovement(); stopPath(); if (!inside && v.x !== undefined && v.z !== undefined && isWalkable({ x: v.x, z: v.z })) { player.position.x = v.x; player.position.z = v.z; cameraTarget.set(v.x, 1.65, v.z); } if (v.yaw !== undefined) { yaw = v.yaw; yawGoal = undefined; } if (v.pitch !== undefined) pitch = v.pitch; if (v.distance !== undefined) zoomDistance = distance = v.distance; }, residents: () => pedestrians.map(p => ({ x: p.root.position.x, z: p.root.position.z, visible: p.root.visible, seated: p.seat !== undefined })), quality: () => quality, setQuality: (mode: QualityMode) => { governor.set(initialQuality(mode, deviceHints()), mode === 'auto'); applyQuality(governor.level); }, governor, setSeason: (s?: Season) => { seasonOverride = s; palette?.apply(s ?? season); }, lighting: LIGHT_BALANCE, toneMapping: (curve: 'aces' | 'neutral') => { renderer.toneMapping = curve === 'aces' ? THREE.ACESFilmicToneMapping : THREE.NeutralToneMapping; }, advance: (frames = 1) => { if (!contextAvailable) return; for (let i = 0; i < frames; i++) step(performance.now(), 1000 / 60, 1 / 60); } };
+    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { traffic, life, cyclist, dogWalker, player: () => ({ x: player.position.x, z: player.position.z }), view: () => ({ yaw, pitch, distance, goal: yawGoal, camera: { x: camera.position.x, y: camera.position.y, z: camera.position.z } }), setPhase: (p?: number) => { phaseOverride = p; }, celebrate: (won: boolean) => { celebrating = won; }, fireworks, walk: (x: number, z: number) => { if (!inside) { clearMovement(); path = findTownPath(player.position, { x, z }); } }, setView: (v: { x?: number; z?: number; yaw?: number; pitch?: number; distance?: number }) => { clearMovement(); stopPath(); if (!inside && v.x !== undefined && v.z !== undefined && isWalkable({ x: v.x, z: v.z })) { player.position.x = v.x; player.position.z = v.z; cameraTarget.set(v.x, 1.65, v.z); } if (v.yaw !== undefined) { yaw = v.yaw; yawGoal = undefined; } if (v.pitch !== undefined) pitch = v.pitch; if (v.distance !== undefined) zoomDistance = distance = v.distance; }, residents: () => pedestrians.map(p => ({ x: p.root.position.x, z: p.root.position.z, visible: p.root.visible, seated: p.seat !== undefined })), quality: () => quality, setQuality: (mode: QualityMode) => { governor.set(initialQuality(mode, deviceHints()), mode === 'auto'); applyQuality(governor.level); }, governor, setSeason: (s?: Season) => { seasonOverride = s; palette?.apply(s ?? season); }, lighting: LIGHT_BALANCE, info: () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }), toneMapping: (curve: 'aces' | 'neutral') => { renderer.toneMapping = curve === 'aces' ? THREE.ACESFilmicToneMapping : THREE.NeutralToneMapping; }, advance: (frames = 1) => { if (!contextAvailable) return; for (let i = 0; i < frames; i++) step(performance.now(), 1000 / 60, 1 / 60); } };
     if(library)void load('/models/town/bistro-furniture.glb?v=atelier1').then(asset=>{if(alive)cafeRoom.installFurniture(asset.scene);}).catch(()=>{});
     if(library)void load('/models/town/cafe-espresso.glb?v=atelier1').then(asset=>{if(alive){cart.installMachine(asset.scene);cafeRoom.installMachine(asset.scene.clone(true));}}).catch(()=>{});
     // Twelve neighbours: walkers on both pavements plus two resting on the promenade benches.
     for (let i = 0; i < 12; i++) {
-      const root = character.scene.clone(true); root.scale.setScalar(.86 + (i % 3) * .07);
+      const root = cloneSkinned(character.scene); root.scale.setScalar(.86 + (i % 3) * .07);
       styleCharacter(root, residentStyle(i));
       if (i === 8) styleCharacter(root, { sex: 'f', hair: 'long', colors: { shirt: '#8c5a7e', skin: '#d4a57d', hair: '#cfc8c0', trousers: '#4a5465', skirt: '#5d4a6b' } }); // Rosa
       outdoors.add(root); pedestrians.push({ ...addActor(root, character.animations), offset: i * 5.3, lane: i % 2 ? 6.35 : -.2, yield: { side: 0, wait: 0 }, seat: i === 8 ? -6 : i === 9 ? 6 : undefined });
     }
-    const tellerRoot = character.scene.clone(true);
+    const tellerRoot = cloneSkinned(character.scene);
     styleCharacter(tellerRoot, { sex: 'f', hair: 'long', colors: { shirt: '#487b74', hair: '#3a2a24', skin: '#d4a57d', trousers: '#354955' } });
     tellerRoot.position.set(0,.22,-1.5); bank.root.add(tellerRoot);
     teller = addActor(tellerRoot,character.animations);
-    const brokerRoot = character.scene.clone(true);
+    const brokerRoot = cloneSkinned(character.scene);
     styleCharacter(brokerRoot, { sex: 'm', hair: 'short', colors: { shirt: '#2f4a6d', hair: '#322d2b', skin: '#bb805b', trousers: '#1f2c3a' } });
     brokerRoot.position.set(0,.22,-1.5); exchange.root.add(brokerRoot); broker = addActor(brokerRoot,character.animations);
-    const agentRoot = character.scene.clone(true);
+    const agentRoot = cloneSkinned(character.scene);
     styleCharacter(agentRoot, { sex: 'f', hair: 'tail', colors: { shirt: '#8a5c8a', hair: '#71503a', skin: '#e2b78c', trousers: '#354955', skirt: '#5d4a6b' } });
     agentRoot.position.set(0,.22,-1.5); office.root.add(agentRoot); agent = addActor(agentRoot,character.animations);
-    const managerRoot = character.scene.clone(true);
+    const managerRoot = cloneSkinned(character.scene);
     styleCharacter(managerRoot, { sex: 'm', hair: 'short', beard: true, colors: { shirt: '#3f5a73', hair: '#252a2e', skin: '#865d44', trousers: '#2f3a44' } });
     managerRoot.position.set(0,.22,-1.5); work.root.add(managerRoot); manager = addActor(managerRoot,character.animations);
-    const registrarRoot = character.scene.clone(true);
+    const registrarRoot = cloneSkinned(character.scene);
     styleCharacter(registrarRoot, { sex: 'f', hair: 'long', colors: { shirt: '#6b4f8a', hair: '#4a3b2c', skin: '#c98d6a', trousers: '#3a3f47', skirt: '#4f3d66' } });
     registrarRoot.position.set(0,.22,-1.5); college.root.add(registrarRoot); registrar = addActor(registrarRoot,character.animations);
-    for (const [i, [x, z]] of [[-1.6, 2.0], [1.6, 3.7]].entries()) { const student = character.scene.clone(true); styleCharacter(student, residentStyle(18 + i)); student.position.set(x,-.1,z+.05); student.rotation.y=Math.PI; college.root.add(student); collegeActors.push(addActor(student, character.animations)); }
-    const spouseRoot = character.scene.clone(true); styleCharacter(spouseRoot, residentStyle(options.playerSex === 'f' ? 22 : 21)); spouseRoot.position.set(2.0,.22,1.9); spouseRoot.rotation.y = Math.PI * .8; home.root.add(spouseRoot); spouse = addActor(spouseRoot, character.animations);
-    for (const [i, [x, z]] of [[-2.2, 3.9], [-1.2, 4.9], [2.2, 3.2]].entries()) { const kid = character.scene.clone(true); styleCharacter(kid, residentStyle(24 + i)); kid.position.set(x,.22,z); kid.rotation.y = Math.PI * (.2 + i * .5); home.root.add(kid); kids.push(addActor(kid, character.animations)); }
+    for (const [i, [x, z]] of [[-1.6, 2.0], [1.6, 3.7]].entries()) { const student = cloneSkinned(character.scene); styleCharacter(student, residentStyle(18 + i)); student.position.set(x,-.1,z+.05); student.rotation.y=Math.PI; college.root.add(student); collegeActors.push(addActor(student, character.animations)); }
+    const spouseRoot = cloneSkinned(character.scene); styleCharacter(spouseRoot, residentStyle(options.playerSex === 'f' ? 22 : 21)); spouseRoot.position.set(2.0,.22,1.9); spouseRoot.rotation.y = Math.PI * .8; home.root.add(spouseRoot); spouse = addActor(spouseRoot, character.animations);
+    for (const [i, [x, z]] of [[-2.2, 3.9], [-1.2, 4.9], [2.2, 3.2]].entries()) { const kid = cloneSkinned(character.scene); styleCharacter(kid, residentStyle(24 + i)); kid.position.set(x,.22,z); kid.rotation.y = Math.PI * (.2 + i * .5); home.root.add(kid); kids.push(addActor(kid, character.animations)); }
     applyFamily();
-    for (const [i, [x, z]] of [[-3.4, 3.3], [3.4, 3.3]].entries()) { const colleague = character.scene.clone(true); styleCharacter(colleague, residentStyle(16 + i)); colleague.position.set(x,-.1,z+.05); colleague.rotation.y=Math.PI; work.root.add(colleague); workActors.push(addActor(colleague, character.animations)); }
+    for (const [i, [x, z]] of [[-3.4, 3.3], [3.4, 3.3]].entries()) { const colleague = cloneSkinned(character.scene); styleCharacter(colleague, residentStyle(16 + i)); colleague.position.set(x,-.1,z+.05); colleague.rotation.y=Math.PI; work.root.add(colleague); workActors.push(addActor(colleague, character.animations)); }
     for (const [i, [x, z]] of [[-2.9, 2.0], [2.9, 4.4]].entries()) {
-      const trader = character.scene.clone(true); styleCharacter(trader, residentStyle(14 + i));
+      const trader = cloneSkinned(character.scene); styleCharacter(trader, residentStyle(14 + i));
       trader.position.set(x, .22, z); trader.rotation.y = x < 0 ? -Math.PI / 2 : Math.PI / 2; exchange.root.add(trader); cafeActors.push({ ...addActor(trader, character.animations), root: trader } as Actor & { root: THREE.Object3D });
     }
     const cafeStyles = [
@@ -282,7 +285,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       { sex: 'f' as const, hair: 'tail' as const, colors: { shirt: '#a0687e', skin: '#f0cba5', hair: '#8a7f78', skirt: '#5d7a55' } },
     ];
     for(let i=0;i<6;i++) {
-      const root=character.scene.clone(true); root.scale.setScalar(i>1?.9:1);
+      const root=cloneSkinned(character.scene); root.scale.setScalar(i>1?.9:1);
       styleCharacter(root, cafeStyles[i]);
       root.position.set(i<2?(i===0?.8:-1.5):2.6,.22,i<2?-1.5:.8+(i-2)*1.2); root.rotation.y=i<2?0:Math.PI;
       cafeRoom.root.add(root); cafeActors.push(addActor(root,character.animations));
@@ -351,7 +354,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const step = (now:number, frameMs:number, dt:number) => {
     elapsed+=dt;
     if(ready){const tier=governor.sample(frameMs);if(tier){applyQuality(tier);options.onQuality?.(tier,true);}}
-    updateExpression?.(elapsed,reducedMotion);
+    updateExpression?.(elapsed,reducedMotion);for(const blink of blinks)blink(elapsed,reducedMotion);
     if(workApron)workApron.visible=cafeInside||!!serviceStage||!!options.review;
     if(ready && !paused) {
       const input=normalizeStick(stick.x+Number(keys.has('d')||keys.has('arrowright'))-Number(keys.has('a')||keys.has('arrowleft')),stick.z+Number(keys.has('s')||keys.has('arrowdown'))-Number(keys.has('w')||keys.has('arrowup')));
@@ -391,7 +394,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       if(serviceStage==='serve'){player.rotation.y=turnTowards(player.rotation.y,0,dt);if(elapsed>=serviceUntil){serviceStage='return';path=findTownPath(player.position,serviceReturn);}}
       if(serviceStage==='return'&&!path.length){serviceStage=null;if(serviceView){yaw=serviceView.yaw;pitch=serviceView.pitch;zoomDistance=serviceView.distance;}serviceDone?.();serviceDone=undefined;}
       if(actualSpeed>.3 && elapsed-lastStep>(actualSpeed>3.3?.27:.40)){stepSound(actualSpeed);lastStep=elapsed;}
-      if(playerActor){const gait=locomotionClip(actualSpeed,playerActor.current),moving=gait!=='Idle';const clip=serviceStage==='serve'||(cafeInside&&cafeService?.brewing)?'Serve':elapsed<celebrationUntil?'Celebrate':gait;animateActor(playerActor,clip,reducedMotion&& !moving?0:dt,moving?actualSpeed/(playerAtelier?(gait==='Run'?2.5:(.72/.55)):(gait==='Run'?1.6875:1.3125)):1);}
+      if(playerActor){const gait=locomotionClip(actualSpeed,playerActor.current),moving=gait!=='Idle';const clip=serviceStage==='serve'||(cafeInside&&cafeService?.brewing)?'Serve':elapsed<celebrationUntil?'Celebrate':gait;animateActor(playerActor,clip,reducedMotion&& !moving?0:dt,moving?actualSpeed/(playerAtelier?(gait==='Run'?2.5:(.72/.55)):CLIP_GROUND_SPEED[gait==='Run'?'Run':'Walk']):1);}
       if(!inside) for(const [index,npc] of pedestrians.entries()) {
         if(npc.seat!==undefined){
           // Resting on a promenade bench, facing the fountain; feet reach the pavement.
@@ -410,7 +413,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
         const previous=npc.root.position.clone();
         npc.root.position.set(visiting?1.1+approach*1.1:queued?1.1-index*.9:cafeVisitor?3.8+(index-5)*.65:forward?-16+t:48-t,.22,visiting?9.5+approach*.15:queued?9.5:cafeVisitor?-.9:npc.lane+(forward?WALK_KEEP_RIGHT:-WALK_KEEP_RIGHT)+npc.yield.side);
         npc.root.rotation.y=visiting||queued||cafeVisitor?Math.PI:forward?Math.PI/2:-Math.PI/2;
-        if(!reducedMotion){const v=npc.root.position.distanceTo(previous)/Math.max(.001,dt);animateActor(npc,serving&&approach>=1?'Serve':v>.08?'Walk':'Idle',dt,serving&&approach>=1?1:Math.min(2,v/1.3125));}
+        if(!reducedMotion){const v=npc.root.position.distanceTo(previous)/Math.max(.001,dt);animateActor(npc,serving&&approach>=1?'Serve':v>.08?'Walk':'Idle',dt,serving&&approach>=1?1:Math.min(2,v/CLIP_GROUND_SPEED.Walk));}
       }
       if(!inside){
         const here={x:player.position.x,z:player.position.z};
@@ -482,8 +485,8 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       const seated=motion.seated&&!motion.path.length&&!departing;
       actor.root.position.y=THREE.MathUtils.lerp(actor.root.position.y,seated?-.03:.22,1-Math.exp(-dt*10));
       if(!moving)actor.root.rotation.y=turnTowards(actor.root.rotation.y,seated?0:Math.PI,dt);
-      animateActor(actor,moving?'Walk':guest.status==='served'&&!seated?'Wave':'Idle',paused||reducedMotion?0:dt,moving?2.2/1.3125:1);
-      if(seated){for(const side of ['-1','1']){const leg=actor.root.getObjectByName('Thigh'+side),knee=actor.root.getObjectByName('Knee'+side),ankle=actor.root.getObjectByName('Ankle'+side);if(leg)leg.rotation.x=-Math.PI/2;if(knee)knee.rotation.x=Math.PI/2;if(ankle)ankle.rotation.x=0;}}
+      animateActor(actor,moving?'Walk':guest.status==='served'&&!seated?'Wave':'Idle',paused||reducedMotion?0:dt,moving?2.2/CLIP_GROUND_SPEED.Walk:1);
+      if(seated){for(const side of ['-1','1']){const leg=actor.root.getObjectByName('Thigh'+side),knee=actor.root.getObjectByName('Knee'+side),ankle=actor.root.getObjectByName('Ankle'+side);if(leg)leg.rotation.x=-Math.PI/2;if(knee)knee.rotation.x=Math.PI/2;if(ankle)ankle.rotation.x=0;}sitHips(actor.root);}
       const label=guestLabels[guest.id];
       if(label){const text=guest.status==='served'?(guest.tip?'Thanks! +$'+guest.tip+' tip':'Thanks!'):guest.status==='left'?'Too slow…':guest.status==='ordered'?guest.name+' · '+guest.drink:guest.name+' · Order please';if(label.text!==text){label.text=text;const ctx=label.canvas.getContext('2d')!;ctx.clearRect(0,0,512,100);ctx.fillStyle=guest.status==='left'?'#a45c50':guest.status==='served'?'#4c8265':'#294d43';ctx.fillRect(0,0,512,100);ctx.fillStyle='#fff1cc';ctx.font='600 39px sans-serif';ctx.textAlign='center';ctx.fillText(text,256,64);label.texture.needsUpdate=true;}label.sprite.visible=actor.root.visible;label.sprite.position.set(actor.root.position.x,actor.root.position.y+2.15,actor.root.position.z);}
     }

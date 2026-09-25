@@ -15,6 +15,10 @@ export function followRoute(position:TownPoint, route:TownPoint[], hurry:boolean
   return {path,movement:{x:dx/distance,z:dz/distance},speed:path.length===1?Math.min(cruise,Math.sqrt(9*distance),distance*7):Math.min(cruise,Math.max(.7,distance*10))};
 }
 
+// Ground speed of the townspeople's Walk and Run clips at timeScale 1 (stride travel / stance time,
+// scripts/build-town-people.py): the mixer plays them at actual speed / this so feet do not slide.
+export const CLIP_GROUND_SPEED = { Walk: .66 / .64, Run: .8 / (.5 * 32 / 30) } as const;
+
 // Hysteresis avoids repeatedly restarting the walk/run blend near a speed boundary.
 export function locomotionClip(speed:number,previous:string):'Idle'|'Walk'|'Run' {
   if(speed<(previous==='Idle'?.10:.055))return 'Idle';
