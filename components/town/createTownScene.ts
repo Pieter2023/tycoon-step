@@ -24,7 +24,7 @@ import type { WorkBoard } from '../../services/townWork';
 import { createSeasonPalette, createSeasonFall, seasonFor, Season } from './townSeasons';
 import type { Lifestyle } from '../../types';
 import { createCoffeeCart } from './townBusiness';
-import { createTownTraffic } from './townTraffic';
+import { createTownTraffic, stepPastVehicles, pavementEscape } from './townTraffic';
 import { createTownLife, createCyclist, createDogWalker, createFireworks } from './townLife';
 import { residentStyle, seatActor, sitHips, styleCharacter, yieldTo, Sex, YieldState, WALK_KEEP_RIGHT, steerAround } from './townResidents';
 import { createQualityGovernor, initialQuality, QUALITY_SETTINGS, QualityLevel, QualityMode } from './townQuality';
@@ -384,13 +384,17 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
         // A sidestep must not leave the route: the steered point has to be walkable AND still see the next waypoint, or the queue at the cart steers the player into the cart's blind side.
         const ahead=path[0]; const clear=(p:TownPoint)=>isWalkable(p)&&(!ahead||segmentClear(p,ahead));
         const steered=steerAround(player.position,next,bystanders,.6); if(clear(steered))next=steered; else {const other=steerAround(player.position,next,bystanders,.6,true); if(clear(other))next=other;}
-        for(const v of traffic?.obstacles()??[]){if(Math.abs(next.x-v.x)<v.halfLength+.35&&Math.abs(next.z-v.z)<v.halfWidth+.35){const keepX={x:player.position.x,z:next.z},keepZ={x:next.x,z:player.position.z};next=Math.abs(keepX.z-v.z)>=v.halfWidth+.35||Math.abs(keepX.x-v.x)>=v.halfLength+.35?keepX:Math.abs(keepZ.x-v.x)>=v.halfLength+.35||Math.abs(keepZ.z-v.z)>=v.halfWidth+.35?keepZ:{x:player.position.x,z:player.position.z};}}
+        next=stepPastVehicles(player.position,next,traffic?.obstacles()??[]);
       }
       const actualDX=next.x-player.position.x,actualDZ=next.z-player.position.z;
       const actualSpeed=Math.hypot(actualDX,actualDZ)/Math.max(dt,.001); player.position.x=next.x;player.position.z=next.z;
       if(!inside&&!serviceStage&&path.length&&!input.x&&!input.z&&actualSpeed<.08){
         routeBlockedFor+=dt;
-        if(routeBlockedFor>1.1){const recovered=findTownPath(player.position,path[path.length-1],traffic?.obstacles()??[]);if(recovered.length){path=recovered;velocity.set(0,0);}routeBlockedFor=0;}
+        if(routeBlockedFor>1.1){
+          // Route around the traffic; if the player is boxed in on the carriageway (a car waiting for them, them waiting for the car), step off to the nearer pavement first.
+          const goal=path[path.length-1];let recovered=findTownPath(player.position,goal,traffic?.obstacles()??[]);
+          if(!recovered.length){const escape=pavementEscape(player.position);if(escape&&isWalkable(escape))recovered=[escape,...findTownPath(escape,goal)];}
+          if(recovered.length){path=recovered;velocity.set(0,0);}routeBlockedFor=0;}
       }else routeBlockedFor=0;
       if(actualSpeed>.08)player.rotation.y=turnTowards(player.rotation.y,Math.atan2(actualDX,actualDZ),dt);
       else if(inside&&(spot==='teller'||spot==='cafe-counter'||spot==='broker'||spot==='agent'||spot==='desk'||spot==='manager'||spot==='registrar'||!!cafeService?.brewing))player.rotation.y=turnTowards(player.rotation.y,Math.PI,dt);

@@ -18,6 +18,30 @@ export function vehicleSpeed(current: number, cruise: number, obstacleAhead: num
   return current + (target - current) * (1 - Math.exp(-dt * rate));
 }
 
+export type VehicleFootprint = { x: number; z: number; halfLength: number; halfWidth: number };
+export const VEHICLE_MARGIN = .35;
+const within = (p: TownPoint, v: VehicleFootprint, m: number) => Math.abs(p.x - v.x) < v.halfLength + m && Math.abs(p.z - v.z) < v.halfWidth + m;
+/**
+ * The player's step past vehicles: a vehicle is solid, so a step into its footprint (plus a margin) slides
+ * along it or stops. A player already inside the margin (a car braked close) may always step away from it;
+ * otherwise a car waiting for the player and a player blocked by the car wait for each other forever.
+ */
+export function stepPastVehicles(from: TownPoint, next: TownPoint, vehicles: VehicleFootprint[], margin = VEHICLE_MARGIN): TownPoint {
+  for (const v of vehicles) {
+    if (!within(next, v, margin)) continue;
+    if (within(from, v, margin) && (Math.abs(next.z - v.z) > Math.abs(from.z - v.z) || Math.abs(next.x - v.x) > Math.abs(from.x - v.x))) continue;
+    const keepX = { x: from.x, z: next.z }, keepZ = { x: next.x, z: from.z };
+    next = !within(keepX, v, margin) ? keepX : !within(keepZ, v, margin) ? keepZ : { x: from.x, z: from.z };
+  }
+  return next;
+}
+/** Where to step off the carriageway when no route around the traffic exists: the nearer pavement, same x. */
+export function pavementEscape(p: TownPoint): TownPoint | null {
+  const north = TRAFFIC_LANES[0].z - PLAYER_LANE_BAND - .15, south = TRAFFIC_LANES[TRAFFIC_LANES.length - 1].z + PLAYER_LANE_BAND + .15;
+  if (p.z <= north || p.z >= south) return null;
+  return { x: p.x, z: p.z - north < south - p.z ? north : south };
+}
+
 export type Vehicle = { root: THREE.Object3D; wheels: THREE.Object3D[]; lamps: THREE.MeshStandardMaterial[]; lane: number; dir: 1 | -1; x: number; speed: number; cruise: number; length: number; passed: boolean };
 export const PAINT = ['#c4483d', '#3f6fa8', '#e0c35a', '#5d8a6a', '#f2eee4', '#7c5aa0'];
 
@@ -47,7 +71,7 @@ export function createTownTraffic(vehicles: THREE.Object3D, reducedMotion: boole
   }
   // Returns the vehicles that crossed the player's x this frame, for a passing whoosh.
   // Footprints of every vehicle for the player's collision: centre, half length along x and half width across z.
-  const obstacles = () => fleet.map(v => ({ x: v.x, z: v.root.position.z, halfLength: v.length / 2, halfWidth: 1.0 }));
+  const obstacles = (): VehicleFootprint[] => fleet.map(v => ({ x: v.x, z: v.root.position.z, halfLength: v.length / 2, halfWidth: 1.0 }));
   function update(dt: number, player: TownPoint, rainy: boolean, visible: boolean): { pan: number; closeness: number }[] {
     const passes: { pan: number; closeness: number }[] = [];
     root.visible = visible;
