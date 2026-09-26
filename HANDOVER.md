@@ -1,6 +1,13 @@
 # Start here — Tycoon handover
 
-Updated **September 25, 2026 (late evening PDT)**. That day produced: a full game assessment, a lighting pass, new skinned characters, the AI-modelled Alex (build 42), the walk-bob fix (43), the first real-phone check, the economy fix Phase 0 (44), the traffic-deadlock fix (45), Phase 1 slices 1–3 (46–47: wealth you can see, sleep to end the month, events in the world), lighter sign lettering (48: the city drops from 246k to 122k triangles), the smaller economy issues (49: property tax, insurance, closing costs, PMI, one FHA loan, no lender re-roll, a slower credit climb) Phase 1 slice 4 as an opt-in setting (50: "Start in the 3D city"), unique asset ids with a real production save as a migration test (51), pacing (52: "free in about N years at this pace"), Phase 1 slice 5 (53: the Freedom Track) and events staged in 3D (54). **Builds 40–54 are live** after two releases that evening. Later that night builds 55–57 followed: 55 the course rewards, 56 the hero blink, 57 a cleaner face texture. **They went live at 21:01 PDT** on Pieter's "ship it, release 55-57" (`main` = `21f7771`, deploy `6ab743ad`). Then builds 58–59 followed (58: a real wave, a Sit clip and tapered hair; 59: baked ambient occlusion for the city). **They went live at 22:27 PDT** on "ship it, release 58-59" (`main` = `e3097ca`, deploy `6ab757c4`). Making the city the default screen (slice 4) still waits for Pieter (`docs/phase1-plan.md`). Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
+Updated **September 26, 2026, 06:00 PDT**. **Builds 40–59 are live** after four releases on the evening of September 25 (all with Pieter's go-ahead; receipts and rollbacks in `docs/verification/release-2026-09-25/`). That day produced a full game assessment, then:
+- the art upgrade: the lighting pass (40), skinned townspeople (41), the AI-modelled Alex (42), the walk-bob fix (43) and lighter sign lettering (48);
+- the economy: Phase 0 (44), property costs and loans (49), pacing (52) and course rewards that pay a raise (55);
+- fixes and plumbing: the traffic deadlock (45), unique asset ids with a production-save migration test (51);
+- Phase 1, the city as the game: wealth you can see (46), sleep and events in the world (47), "Start in the 3D city" as an opt-in (50), the Freedom Track (53) and events staged in 3D (54);
+- the visual list: the hero blink (56), a cleaner hero face (57), a real wave, a Sit clip and tapered hair (58), and baked city AO (59).
+
+Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
 
 ## 1. Where things stand
 
@@ -8,14 +15,14 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 |---|---|
 | Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | **Builds 40–59 are live** after four releases, each with Pieter's go-ahead:<br>• 40–51 at 17:21 PDT, deploy `6ab70fda`;<br>• 52–54 at 18:19 PDT ("ship it"), deploy `6ab71d6d`;<br>• 55–57 at 21:01 PDT ("ship it, release 55-57"), deploy `6ab743ad`;<br>• 58–59 at 22:27 PDT ("ship it, release 58-59"): `origin/main` = `e3097ca`, deploy `6ab757c4`.<br>Before that, production was a Sept-13 **CLI** deploy (`6aa6c7fa`), not `origin/main` (`073f397`). Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`. |
 | Branch `codex/game-overhaul-20260503-223748` | The old release branch at `073f397` (build 39); now behind `main`. |
-| **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `4436196`. Later commits here are ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
+| **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `e3097ca` (release 4). The branch is one docs commit ahead (`b689c41`, release-4 receipt), and later commits stay ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
 | Validation on the branch | 483 tests / 85 files, TypeScript and the production build (build 59, live). |
 | Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
-| QA servers | Another chat's Vite server held `127.0.0.1:5188`, so builds 42–45 were checked on `localhost:5189` (`tycoon-qa-5189` in `.claude/launch.json`) with a fresh Alex save. `tycoon-lan-preview` serves `dist/` on `0.0.0.0:5190` for the phone (`http://192.168.1.80:5190/?stats`). Builds 50–54 were checked on `localhost:5191` (`tycoon-qa-5191`), because 5189 was still held by the previous chat's server. |
+| QA servers | Another chat's Vite server held `127.0.0.1:5188`, so builds 42–45 were checked on `localhost:5189` (`tycoon-qa-5189` in `.claude/launch.json`) with a fresh Alex save. `tycoon-lan-preview` serves `dist/` on `0.0.0.0:5190` for the phone (`http://192.168.1.80:5190/?stats`). Builds 50–59 were checked on `localhost:5191` (`tycoon-qa-5191`), because 5189 was still held by the previous chat's server. An older chat's capture receiver holds port 5199, so builds 56–59 used one on 5198. |
 | Phone | Pieter's iPhone is reachable through macOS iPhone Mirroring (computer-use app `iPhone Mirroring`; clicks need full-screen control, background clicks do nothing). First check passed: 60 fps (`docs/verification/phone-2026-09-25/`). |
 
 **Commits on `town-lighting-pass`, oldest first:**
@@ -53,67 +60,53 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 32. `a36d1b8`: a real wave, a Sit clip and tapered hair (build 58). Receipt: `docs/verification/characters-polish-2026-09-25/`.
 33. `6bde70f`: baked ambient occlusion for the city (build 59). Receipt: `docs/verification/city-ao-2026-09-25/`.
 34. `e3097ca`: builds 58–59 docs. **Released: `main` = `e3097ca`** (builds 58–59, deploy `6ab757c4`).
+35. `b689c41`: release-4 receipt; then this handover.
 
-## 1b. Where the last session stopped (2026-09-25, ~22:35 PDT)
+## 1b. Where the last session stopped (2026-09-26, 06:00 PDT)
 
-**Live: builds 40–59.** Release 4 (builds 58–59) went out at 22:27 PDT; receipt and rollback in `docs/verification/release-2026-09-25/`.
+**Live: builds 40–59**, in four releases on 2026-09-25. Each has a receipt, live checks and a one-line rollback in `docs/verification/release-2026-09-25/`:
 
-**Builds 58–59, the rest of the visual list: live since release 4.**
-- **58, characters** (`docs/verification/characters-polish-2026-09-25/`):
-  - **Wave:** the arm is aimed (upper arm out, forward and a little down; forearm up beside the head, sweeping). The old sideways raise read as scratching the neck and webbed the jacket; `tether_torso_sides()` keeps the torso's sides on the Torso.
-  - **Sit, a seventh clip** (hands on the thighs, breathing), played by `seatedClip()` wherever someone sits.
-  - **`sitHips` fix:** it drops the hips once per value the mixer writes. Under a still clip, or at dt 0 with reduced motion, it had sunk seated people through the floor.
-  - **Hair:** the short hair tapers to the nape instead of ending in a flat helmet edge.
-  - Rebuilt `town-people.glb` (PEOPLE_VERSION e) and the hero (HERO_VERSION g).
-- **59, city AO** (`docs/verification/city-ao-2026-09-25/`): a Cycles AO bake into a shared lightmap on `TEXCOORD_1`, shipped as the glTF occlusion texture (1024 px), strength `TOWN_AO_STRENGTH` 1.4.
-  - Cost: +481 KB on the city file (1.38 MB), +4% vertices, one texture. MODEL_VERSION d.
-  - It's a look change (darker, more grounded): worth Pieter's eye and the phone/Chromebook check.
+| Release | Builds | Time (PDT) | `main` | Netlify deploy |
+|---|---|---|---|---|
+| 1 | 40–51 | 17:21 | `15c4812` | `6ab70fda` |
+| 2 | 52–54 | 18:19 | `4436196` | `6ab71d6d` |
+| 3 | 55–57 | 21:01 | `21f7771` | `6ab743ad` |
+| 4 | 58–59 | 22:27 | `e3097ca` | `6ab757c4` (current) |
 
-**Earlier that night: builds 40–57.** Release 3 (builds 55–57) went out at 21:01 PDT. A pre-release save on the live site passed Sales for the 3% raise, and its pace went from 19 to 18 years. Receipt and rollback: `docs/verification/release-2026-09-25/`.
+**What the last session built (details in each receipt):**
+- **55, course rewards** (`course-rewards-2026-09-25/`):
+  - a pass pays a lasting raise (Negotiations +5%, Sales +3%, EQ +3%; `services/courseRewards.ts`, `getCourseRaiseMultiplier`) instead of cash;
+  - a third miss costs $150;
+  - fixed along the way: the negotiation salary-growth bonus had compounded ~27% a year, and the EQ 1.5× career-experience perk was never applied.
+- **56, the hero blinks** (`hero-blink-2026-09-25/`): eyelid meshes (`build_eyelids()`), driven by `createBlink`. Dev handle: `__town.blink(amount)`.
+- **57, a cleaner hero face** (`hero-face-2026-09-25/`): `repair_face()` removes Meshy's grey seam lines. A shading step down one cheek is face geometry and remains.
+- **58, characters** (`characters-polish-2026-09-25/`):
+  - a real wave, with the arm aimed and `tether_torso_sides()`;
+  - a Sit clip (`seatedClip()`);
+  - `sitHips` made idempotent (seated people had sunk through the floor);
+  - short hair that tapers to the nape.
+- **59, city AO** (`city-ao-2026-09-25/`): a Cycles AO lightmap on `TEXCOORD_1` (1024 px) at strength `TOWN_AO_STRENGTH` 1.4. It adds 481 KB (the city file is 1.38 MB) and one texture.
 
-**Live: builds 40–54.** There were two releases that evening, each with Pieter's word; see `docs/verification/release-2026-09-25/` for both, with live checks and one-line rollbacks.
-- **40–51** at 17:21 PDT (deploy `6ab70fda`). Production had been a Sept-13 CLI deploy, not `origin/main`.
-- **52–54** at 18:19 PDT (deploy `6ab71d6d`, `main` = `4436196`):
-  - pacing (`docs/verification/pacing-2026-09-25/`);
-  - the Freedom Track (`docs/verification/phase1-slice5-2026-09-25/`);
-  - events staged in 3D (`docs/verification/event-stage-2026-09-25/`).
-- **Checks:** a save made on the live site before either release plays on the new code: the pace line, the track card, claiming, the log and the city header.
-
-**Build 55, the course rewards: live since release 3.** Pieter approved the design on 2026-09-25 ("I will do the course rewards as you recommended"). Commit `3364c54`; receipt `docs/verification/course-rewards-2026-09-25/`.
-- **Pass:** a lasting raise instead of cash. Negotiations +5%, Sales +3%, EQ +3%.
-  - It is applied after the education premium (`getCourseRaiseMultiplier`), so promotions keep it; a one-off `salaryChangePct` would vanish at the next promotion.
-  - Saves that claimed the old cash keep it and get no raise.
-- **Miss:** 3 tries included; a third miss costs $150 (cash, then the card) and buys 3 more.
-  - EQ no longer demotes.
-  - Sales no longer charges $25k per miss.
-  - The loader reopens Sales courses that three misses had locked.
-- **Two bugs found and fixed:**
-  - The negotiation bonus added up to 2% a *month* to salary growth (~27% a year). It is now a yearly figure. Certified negotiators: median freedom 109 → 158 months (no courses: 191).
-  - The EQ "1.5× career XP" perk was never applied; now it is.
-- **One UI fix:** Finish counts once per quiz run (a double click during the fade-out counted two misses).
-
-**Builds 56–57, visuals: live since release 3.**
-- **56, the hero blinks.** `build_eyelids()` in `scripts/build-town-hero.py` raycasts a skin-coloured lid over each painted eye, with a vertex-colour lash line. It hangs on the Head joint as `Eyelids`, stored open. `createBlink` lowers it. `__town.blink(amount)` holds a closure for stills. Receipt: `docs/verification/hero-blink-2026-09-25/`.
-- **57, a cleaner face.** `repair_face()` replaces Meshy's grey seam lines with the local 3D skin tone. The lower face is clean. Receipt: `docs/verification/hero-face-2026-09-25/`.
-  - Still visible: a few forehead lines near the brows, and a shading step down one cheek. The step is the face geometry: normal smoothing was tried and reverted.
-  - The real fix is subdividing or re-topologising the face by hand in Blender. Ask Pieter whether it's worth it.
-
-**Then, in order:**
-1. **Visuals (§3.4).** Blender work that benefits from Pieter's eye on the result:
-   - ✅ the hero blink (build 56);
-   - ✅ hero face skin evenness (build 57; the cheek's shading step remains, see above);
-   - ✅ the Wave armpit crease (build 58, live);
-   - ✅ a Sit clip (build 58);
-   - ✅ hair polish (build 58);
-   - ✅ an AO bake (build 59).
-2. **A real-phone check of builds 52–54** (iPhone Mirroring; clicks need full-screen control). The pane's 375-px check passed.
-3. **A Chromebook check.**
-4. **Still Pieter's calls:** slice 4 as the default (kept opt-in because the Chromebook, the classroom device, is untested), and the daily challenge's demo gate (from June).
+**Next, in order:**
+1. **A real-phone check of builds 52–59.** Use iPhone Mirroring (computer-use app `iPhone Mirroring`; clicks need full-screen control). Watch fps with the AO texture and the heavier models; the last phone check was build 43 (60 fps) and build 47 (55 fps on Detailed).
+2. **A Chromebook check**, the classroom device. It has never been done.
+3. **Tileable textures** for pavement, brick and road: the last open item of assessment §3's visual list.
+4. **Pieter's calls:**
+   - slice 4 as the default screen, and the ledger drawer;
+   - the daily challenge's demo gate (from June);
+   - whether the hero's cheek shading step is worth hand re-topology in Blender.
+5. **Analytics: Pieter will do it himself once all the phases are completed** (he said so on 2026-09-26). Don't prompt him before then; when the phases are done, remind him.
+   - The code is ready: `services/analytics.ts` tracks the whole funnel, and the snippet is commented out in `index.html`.
+   - The plan is Umami Cloud **Hobby**: $0, 100K events a month, 1 website, 6-month retention, no cookie banner.
+   - His part: sign up at https://cloud.umami.is, add the website `tycoonjan22026.netlify.app`, and send the Website ID.
+   - Then: uncomment the snippet with that ID plus `data-domains="tycoonjan22026.netlify.app"` (so local QA doesn't count), check it locally and release it.
 
 **QA state:**
-- `localhost:5191` (`tycoon-qa-5191`) holds the production fixture save at month 8, with first steps reviewed and `tycoon_start_in_city=1`, so Continue opens the city. The build-55 check left it with Sales certified (the 3% raise), one Negotiations miss, and $150 less cash after a retake fee.
-- The production origin in the browser pane holds a throwaway Alex save at month 8 (First Investment claimed).
-- Production saves were copied out of the live page with a SHA-256 check. A public page cannot post to a local receiver, even with `Access-Control-Allow-Private-Network`.
+- `localhost:5191` (`tycoon-qa-5191`) holds the production fixture save at month 8, with first steps reviewed and `tycoon_start_in_city=1`, so Continue opens the city.
+  - Sales is certified there (the 3% raise), with one Negotiations miss after a retake fee.
+  - To reload the fixture: see §5.
+- The production origin in the browser pane holds a throwaway Alex save at month 8: Sales certified through the live UI in release 3 (`courseRaises: {sales: 3}`), $10,091.
+- Scratch capture receivers were stopped. Blender's live session was not touched; every build ran headless.
 
 ## 2. Decisions waiting on Pieter
 
@@ -129,6 +122,9 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
    - **Slice 5:** built as the Freedom Track (build 53). Say what to change.
 6. ✅ **Builds 52–54 shipped** on 2026-09-25 at 18:19 PDT ("ship it"; `docs/verification/release-2026-09-25/`).
 7. ✅ **Course rewards: live** (build 55, release 3 at 21:01 PDT; receipt `docs/verification/course-rewards-2026-09-25/`). Certified negotiators on existing saves now get the corrected, slower growth.
+8. ✅ **Builds 56–59 shipped** (releases 3 and 4). Pieter saw the AO before-and-after and said "ship it".
+9. **The hero's cheek shading step** (build 57 receipt): leave it, or re-topologise the face by hand in Blender?
+10. **Analytics: deferred by Pieter until all the phases are completed.** He will sign up for Umami (free Hobby plan) and send the Website ID; §1b item 5 has the steps.
 
 Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the AI Alex cost 38 (receipt: `docs/verification/hero-alex-2026-09-25/`). Still: never spend credits without a fresh yes.
 
@@ -149,7 +145,8 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
    - ✅ hair polish, the armpit crease in Wave and a Sit clip (build 58, live);
    - ✅ a blink for the hero Alex (build 56, live);
    - ✅ an even skin tone on the hero's face texture (build 57, live; the shading step on one cheek is geometry and remains).
-5. **Phone**: first iPhone check passed at build 43 (60 fps). Repeat after Phase 1 layout changes; a Chromebook is still untested.
+5. **Phone**: first iPhone check passed at build 43 (60 fps). Repeat for builds 52–59 (the AO texture and heavier models are new); a Chromebook is still untested.
+6. **Analytics, after all the phases:** Pieter's step (Umami sign-up and Website ID), then a one-line release. See §1b item 5.
 
 ## 4. What Pieter wants (standing)
 
@@ -163,12 +160,17 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
 ```sh
 cd '/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2'
 git status --short && git log --oneline -8
-npm run test:run          # 468 tests / 84 files on the branch
+npm run test:run          # 483 tests / 85 files on the branch
 npm run build
 npx vite --host 127.0.0.1 --port 5188 --strictPort   # or preview_start "tycoon-qa-5188" (.claude/launch.json)
 '/Applications/Blender.app/Contents/MacOS/Blender' --background --factory-startup --python scripts/build-town-people.py   # then bump PEOPLE_VERSION
 '/Applications/Blender.app/Contents/MacOS/Blender' --background --factory-startup --python scripts/build-town-hero.py     # then bump HERO_VERSION; TYCOON_PREVIEW=<dir> renders QA stills
+'/Applications/Blender.app/Contents/MacOS/Blender' --background --factory-startup --python scripts/build-town-assets.py   # the city incl. the AO bake (~70 s); then bump MODEL_VERSION
 ```
+
+Two side effects of those scripts:
+- `build-town-people.py` also saves `assets/town/town-people.blend`, and `build-town-assets.py` rewrites the legacy `town-character.glb` and `.blend`. For scratch builds, redirect `OUT_GLB`, `OUT_BLEND`, `OUT` and `SOURCE` (exec the script with those lines replaced), and `git checkout` the legacy character files after a real city build.
+- The hero build is byte-deterministic. The people build differs only by float noise (same accessors and bounds).
 
 **QA save on `localhost:5188`:** Alex, month 2, $11,249 cash, cart bought and licensed, investor journey 2/4. To reach the city: Continue Adult → Enter 3D city.
 
@@ -193,7 +195,7 @@ The in-app browser pane is often hidden (`document.hidden` is true), which pause
 
 Capture recipe:
 
-1. Run `python3 scripts/qa/capture-receiver.py <scratch-dir>` in the background. It listens on port 5199.
+1. Run `python3 scripts/qa/capture-receiver.py <scratch-dir> [port]` in the background. The default port is 5199; if an older chat still holds it, pass 5198 and use that port in `__snap`.
 2. In the page:
    ```js
    window.__snap = async (name, frames = 100) => { __town.advance(frames); const c = document.querySelector('canvas[role=application]'); await fetch('http://127.0.0.1:5199/' + name, { method: 'POST', body: c.toDataURL('image/jpeg', .9) }); };
@@ -224,7 +226,7 @@ To enter a room while the pane is hidden:
   3. Render with `bpy.ops.render.render(write_still=True)`.
   4. Switch the window back to Pieter's `Scene` when done.
 
-## 6. Gotchas learned on 2026-09-25
+## 6. Gotchas learned on 2026-09-25 and 26
 
 **Lighting**
 - Neutral tone mapping has none of ACES's hidden ~1.7× exposure boost, so night has its own lift (`LIGHT_BALANCE.nightExposure`).
@@ -253,6 +255,25 @@ To enter a room while the pane is hidden:
 - The café apron hangs off the `Torso` joint; the hero's fit is `HERO_APRON` in `townAtelier.ts`. The café cameras only see his back, so check the fit in Blender.
 - Synthetic `KeyboardEvent`s don't move the player; use `__town.walk(x,z)` outdoors.
 
+**Animation and the three.js mixer (builds 58–59)**
+- The mixer only writes a joint when its value changes. A still clip (Sit), or any clip at dt 0 under reduced motion, writes nothing. So any per-frame offset applied after the mixer must be idempotent: `sitHips` stores what it applied.
+- Aim limbs with target directions (`rotation_difference`, the `aim()` helper in `town_rig.py`) rather than Euler angles when the result must land somewhere specific (the wave's hand).
+- A new clip needs its name added to the clip-list tests (`TownControls`, `TownLife`); the old atelier model keeps six.
+
+**Hero texture and blink (builds 56–57)**
+- The painted eyes were measured once from an unlit orthographic Workbench render (`color_type='TEXTURE'`, `light='FLAT'`). Workbench shows untextured meshes as plain white, so an open lid sliver appears as a white line in those QA renders only.
+- Meshy's face lines sit mostly on chart borders but some inside charts; the rules in `repair_face()` cover both.
+
+**City AO (build 59)**
+- three.js applies `aoMap` to indirect light only (hemisphere, environment), so it needs strength above 1 here. At strength 1 the difference image was black.
+- A 1 m reach gave grimy facade streaks; 0.6 m was cleaner.
+- The seasonal palette recolours materials in place, so the `aoMap` survives. The atelier art (`dressTown`) uses `TEXCOORD_0`, so AO lives on `TEXCOORD_1`.
+
+**Browser checks**
+- React's "update while rendering" warning is logged once per page, and the console tool keeps messages across reloads. To prove a warning is gone, hook `console.error` on a fresh page before the action.
+- With the pane hidden, `computer screenshot` shows a blank canvas; use `__town.advance` with the capture receiver. `resize_window` to 1600×1400 gives larger canvases.
+- On the square the camera always aims at 1.65 m and the lens is long; for face shots use distance ~1.9 and a larger canvas.
+
 **Tooling**
 - Higgsfield's `get_cost` with `count` > 1 returns one item's price. For a single 3D job it was exact (38 quoted, 38 charged).
 - Vite re-optimises dependencies on the first load after a new `three/examples` import, which reloads the page once.
@@ -269,6 +290,25 @@ To enter a room while the pane is hidden:
 46. **Lighting pass (branch `town-lighting-pass`, 2026-09-25, NOT merged or deployed):** commit `263aeeb` snapshots the previously uncommitted Sept-13 atelier work as found; `98ce027` adds the sky-lit outdoor rig (`components/town/townLighting.ts`: Neutral tone mapping, captured sky environment + visible dome, sun path offset south-east so midday shadows show, longer golden hour, readable moonlit night, contact shadows under figures and vehicles); `e1ab846` gives the square a longer lens (pitch .45, 11.5 m, 40°; rooms unchanged), revertable on its own. Dev handle `__town.advance(frames)` renders while the tab is hidden, so visual QA no longer needs a visible browser. Receipt and before/after grid: `docs/verification/lighting-2026-09-25/`. 395 tests / 70 files + build pass. To ship: Pieter reviews the grid or plays the branch, then merge into the release branch and deploy as usual.
 47. **Skinned townspeople (same branch, 2026-09-25, NOT merged or deployed):** every person in the city is now one skinned body from `scripts/build-town-people.py` (`public/models/town/town-people.glb`), replacing the 45-part rigid mannequin; joints keep the old names and identity rest rotation, so all direct poses still work. New helpers: `sitHips`/`SIT_DROP` and the skinned branch of `styleCharacter` (`townResidents.ts`), `CLIP_GROUND_SPEED` (`townLocomotion.ts`), `createBlink` (`townCharacterExpression.ts`). Draw calls on the square 1,431 → 815. The Sept-13 rigid Alex is switched off (`characterAtelier: false`). Receipt: `docs/verification/characters-2026-09-25/`. The AI-modelled Alex followed on this rig (item 48).
 48. **AI-modelled Alex (same branch, 2026-09-25, build 42, NOT merged or deployed):** Pieter picked concept 2 and approved up to 50 Higgsfield credits; 38 were spent (Meshy 7 image-to-3D, textured, A-pose, 10k triangles, no Meshy rig). `scripts/build-town-hero.py` welds the source (`assets/town/alex-meshy-source.glb`), rigs it onto the town skeleton at Alex's own joints, swings the arms to the 12° rest pose, repairs the A-pose texture smudges and exports `public/models/town/town-hero-alex.glb` (502 KB, Draco). The clip generator moved to `scripts/town_rig.py` (shared with the townspeople; their animation is unchanged, max difference 0). Runtime: `hero?: 'alex'` in `createTownScene` (TownModal passes it for Alex only), `HERO_APRON` for the café apron. Licensing: Higgsfield ToS §4.4, no ownership claim and no commercial restriction. Receipt: `docs/verification/hero-alex-2026-09-25/`. 401 tests / 71 files + build pass.
+49. **Builds 43–59, all live after releases 1–4 (2026-09-25):** each has a receipt in `docs/verification/`:
+   - 43, walk bob: `walk-bob-2026-09-25/`;
+   - 44, economy Phase 0: `economy-2026-09-25/`;
+   - 45, traffic: `traffic-2026-09-25/`;
+   - 46–47, Phase 1 slices 1–3: `phase1-slice1-…`, `phase1-slices2-3-…`;
+   - 48, sign lettering: `sign-lettering-…`;
+   - 49, property costs: covered by the economy receipt;
+   - 50, "Start in the 3D city": `phase1-slice4-…`;
+   - 51, unique asset ids: `release-2026-09-25/`;
+   - 52, pacing: `pacing-2026-09-25/`;
+   - 53, the Freedom Track: `phase1-slice5-…`;
+   - 54, event staging: `event-stage-…`;
+   - 55, course rewards: `course-rewards-…`;
+   - 56, hero blink: `hero-blink-…`;
+   - 57, hero face: `hero-face-…`;
+   - 58, wave, Sit and hair: `characters-polish-…`;
+   - 59, city AO: `city-ao-…`.
+
+   Tests grew from 401 to 483 over the day.
 45. **Dashboard shell translated (committed, build 39):** the v2 shell (`components/v2/*`, the App.tsx header and quick-actions menu) reads every visible string through `useI18n().t` under `shell.<component>.<slug>` keys (342, both languages). `scripts/i18n-shell-transform.py` did the mechanical pass; interpolated sentences were keyed by hand; module-level copy helpers take a `Translate` parameter. Tab bodies (`components/tabs/*`) and the monthly-action cards are still English by choice: next slice if the whole adult game should speak Spanish.
 44. **Dashboard Spanish rewritten (committed, build 38):** `i18n/translations/es.json` regenerated from the English structure with full Spanish (accents/ñ, ¿?, tú, city vocabulary; 323 previously-English strings translated: `events.*` used by `data/events.json`, character questlines, `salesQuiz.*`, `quiz.sales_q*`). Recipe in the receipt: flatten en.json, translate into a flat dict, refill the English structure, assert placeholders match. The dashboard's translation and the city's now share one vocabulary.
 43. **Spanish read (committed, build 37):** every city `tl` pair (1,474) read in full; 21 strings fixed (neutral gender, LatAm terms, phrasing; list in the receipt). Recipe: extract pairs with a regex over `components/town`, `services/town*`, `i18n/town.ts` into one file and read it; heuristics catch untranslated/Spain-only/¿¡ slips. A true native-speaker pass by a person remains worthwhile; the dashboard's `es.json` was not part of this read.

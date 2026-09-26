@@ -1,6 +1,6 @@
 # Roadmap
 
-## Current priorities — September 25, 2026 (evening)
+## Current priorities — September 26, 2026
 
 Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). **Production is builds 40–59**: `origin/main` = `e3097ca`, four releases on 2026-09-25 with receipts in `docs/verification/release-2026-09-25/`. 483 tests / 85 files pass.
 
@@ -13,9 +13,14 @@ Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](
    - ✅ hero face skin evenness (build 57, live; the shading step on one cheek is geometry and remains);
    - ✅ the Wave crease, a Sit clip and hair polish (build 58, live);
    - ✅ an AO bake (build 59, live).
-3. **A real-phone check of builds 52–54, then a Chromebook check.**
-4. **Pieter's calls:** slice 4 as the default screen; the daily challenge's demo gate.
-5. **Done on 2026-09-25:**
+3. **A real-phone check of builds 52–59, then a Chromebook check.** Next up. The AO texture and heavier models are new since the last phone check.
+4. **Tileable textures** for pavement, brick and road (the last open item of assessment §3's visual list).
+5. **Pieter's calls:**
+   - slice 4 as the default screen;
+   - the daily challenge's demo gate;
+   - hand re-topology of the hero's cheek.
+6. **Analytics: after all the phases are completed** (Pieter's decision, 2026-09-26). He signs up for Umami (free Hobby) and sends the Website ID; then it's a one-line release. Steps: HANDOVER §1b.
+7. **Done on 2026-09-25:**
    - ✅ the economy fix (44, 49);
    - ✅ traffic (45);
    - ✅ the AI-modelled Alex (42);
