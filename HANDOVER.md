@@ -1,11 +1,9 @@
 # Start here — Tycoon handover
 
-Updated **September 26, 2026, 07:45 PDT**. **Build 62, the phone check's findings, is on the branch, not released** (`docs/verification/phone-findings-2026-09-26/`):
+Updated **September 26, 2026, 07:50 PDT**. **Builds 40–62 are live.** Build 62, the phone check's findings, was released at 07:41 PDT ("ship it, release 62"): `main` = `7a4d644`, deploy `6ab7d981`. The receipt is release 7 in `docs/verification/release-2026-09-25/`. Build 62 (`docs/verification/phone-findings-2026-09-26/`):
 - events are framed where they happen: office, doormat, Main Street, home, square, and a new Property & Co. place for rentals;
 - the destination row gets ‹ › buttons when it overflows;
-- on phones, rooms trade the destination row for a one-row room bar, and the journey strip is one row. The bank's 3D view goes from 305 to 467 px.
-
-**Builds 40–61 are live.** Build 61, tileable paving, brick and asphalt (`docs/verification/surfaces-2026-09-26/`), was released at 07:13 PDT ("ship it, release 61"): `main` = `1bc4d4e`, deploy `6ab7d2f2`. The receipt is release 6 in `docs/verification/release-2026-09-25/`.
+- on phones, rooms trade the destination row for a one-row room bar, and the journey strip is one row. The bank's 3D view goes from 305 to 467 px. Build 61, tileable paving, brick and asphalt (`docs/verification/surfaces-2026-09-26/`), was released at 07:13 PDT ("ship it, release 61"): `main` = `1bc4d4e`, deploy `6ab7d2f2`. The receipt is release 6 in `docs/verification/release-2026-09-25/`.
 
 Earlier the same morning (06:55 PDT): **builds 40–60 went live.** The real-phone check of builds 52–59 passed (56–60 fps, `docs/verification/phone-2026-09-26/`). It found one phone bug: dialogs taller than the screen, such as the Sales quiz and Save and load, had their close and action buttons out of reach. The fix, **build 60**, was **released at 06:45 PDT** ("ship it, release 60"): `main` = `e8e1d16`, deploy `6ab7cc8d`. The receipt is release 5 in `docs/verification/release-2026-09-25/`.
 
@@ -22,12 +20,12 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 
 | What | State |
 |---|---|
-| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | **Builds 40–61 are live** after six releases, each with Pieter's go-ahead:<br>• 40–51 at 17:21 PDT, deploy `6ab70fda`;<br>• 52–54 at 18:19 PDT ("ship it"), deploy `6ab71d6d`;<br>• 55–57 at 21:01 PDT ("ship it, release 55-57"), deploy `6ab743ad`;<br>• 58–59 at 22:27 PDT ("ship it, release 58-59"), deploy `6ab757c4`;<br>• 60 on 2026-09-26 at 06:45 PDT ("ship it, release 60"), deploy `6ab7cc8d`;<br>• **61 on 2026-09-26 at 07:13 PDT** ("ship it, release 61"): `origin/main` = `1bc4d4e`, deploy `6ab7d2f2`.<br>Before that, production was a Sept-13 **CLI** deploy (`6aa6c7fa`), not `origin/main` (`073f397`). Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`. |
+| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | **Builds 40–62 are live** after seven releases, each with Pieter's go-ahead:<br>• 40–51 at 17:21 PDT, deploy `6ab70fda`;<br>• 52–54 at 18:19 PDT ("ship it"), deploy `6ab71d6d`;<br>• 55–57 at 21:01 PDT ("ship it, release 55-57"), deploy `6ab743ad`;<br>• 58–59 at 22:27 PDT ("ship it, release 58-59"), deploy `6ab757c4`;<br>• 60 on 2026-09-26 at 06:45 PDT ("ship it, release 60"), deploy `6ab7cc8d`;<br>• 61 on 2026-09-26 at 07:13 PDT ("ship it, release 61"), deploy `6ab7d2f2`;<br>• **62 on 2026-09-26 at 07:41 PDT** ("ship it, release 62"): `origin/main` = `7a4d644`, deploy `6ab7d981`.<br>Before that, production was a Sept-13 **CLI** deploy (`6aa6c7fa`), not `origin/main` (`073f397`). Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`. |
 | Branch `codex/game-overhaul-20260503-223748` | The old release branch at `073f397` (build 39); now behind `main`. |
-| **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `1bc4d4e` (release 6, build 61). Later commits, such as the release-6 receipt, stay ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
+| **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `7a4d644` (release 7, build 62). Later commits, such as the release-7 receipt, stay ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
-| Validation on the branch | 496 tests / 88 files, TypeScript and the production build (build 62, not released; build 61 is live). |
+| Validation on the branch | 496 tests / 88 files, TypeScript and the production build (build 62, live). |
 | Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
@@ -74,11 +72,12 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 37. `9bed375`: the release-5 receipt.
 38. `1bc4d4e`: build 61, tileable paving, brick and asphalt (`components/town/townSurfaces.ts`, `dressTown`, wall materials in `scripts/build-town-assets.py`, `MODEL_VERSION` `20260926b`). Receipt: `docs/verification/surfaces-2026-09-26/`. **Released: `main` = `1bc4d4e`** (deploy `6ab7d2f2`).
 39. `c079952`: the release-6 receipt.
-40. Build 62: the phone check's findings (`services/townEvents.ts` `EVENT_PLACES`, the `property` stage, the destination scroll buttons and the phone room bar in `TownModal`/`town.css`). Receipt: `docs/verification/phone-findings-2026-09-26/`. **Not released.**
+40. Build 62: the phone check's findings (`services/townEvents.ts` `EVENT_PLACES`, the `property` stage, the destination scroll buttons and the phone room bar in `TownModal`/`town.css`). Receipt: `docs/verification/phone-findings-2026-09-26/`. **Released: `main` = `7a4d644`** (deploy `6ab7d981`).
+41. The release-7 receipt and this handover.
 
 ## 1b. Where the last session stopped (2026-09-26, 06:00 PDT)
 
-**Live: builds 40–61**, in four releases on 2026-09-25 and two on 2026-09-26. Each has a receipt, live checks and a one-line rollback in `docs/verification/release-2026-09-25/`:
+**Live: builds 40–62**, in four releases on 2026-09-25 and three on 2026-09-26. Each has a receipt, live checks and a one-line rollback in `docs/verification/release-2026-09-25/`:
 
 | Release | Builds | Time (PDT) | `main` | Netlify deploy |
 |---|---|---|---|---|
@@ -87,7 +86,8 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 | 3 | 55–57 | 21:01 | `21f7771` | `6ab743ad` |
 | 4 | 58–59 | 22:27 | `e3097ca` | `6ab757c4` |
 | 5 | 60 | 06:45 (Sept 26) | `e8e1d16` | `6ab7cc8d` |
-| 6 | 61 | 07:13 (Sept 26) | `1bc4d4e` | `6ab7d2f2` (current) |
+| 6 | 61 | 07:13 (Sept 26) | `1bc4d4e` | `6ab7d2f2` |
+| 7 | 62 | 07:41 (Sept 26) | `7a4d644` | `6ab7d981` (current) |
 
 **What the last session built (details in each receipt):**
 - **55, course rewards** (`course-rewards-2026-09-25/`):
@@ -107,7 +107,7 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 1. ✅ **The real-phone check of builds 52–59** (2026-09-26, `docs/verification/phone-2026-09-26/`): 56–60 fps on Detailed over 3 minutes, 60 on Auto, the café shift and sleep-at-home work on the phone. It found build 60 (below).
 2. ✅ **Build 60 released** (2026-09-26, 06:45 PDT, deploy `6ab7cc8d`; release 5 in `docs/verification/release-2026-09-25/`). On a phone, dialogs taller than the screen (the Sales quiz, Save and load) had their close and action buttons out of reach, so a phone player couldn't take the Sales certification. The shared `Modal` now scrolls. Code: `components/Modal.tsx`, plus one line each in `TutorialModal`, `TownModal` and `KidsSquareModal`.
 3. **A Chromebook check**, the classroom device. It has never been done, and it needs Pieter or a Chromebook on the network.
-4. ✅ **The phone check's findings** (build 62, on the branch, **awaiting Pieter's release go-ahead**; `docs/verification/phone-findings-2026-09-26/`): event places per event, ‹ › on the destination row, and a compact room layout on phones.
+4. ✅ **The phone check's findings** (build 62, **live since 07:41 PDT**, deploy `6ab7d981`; `docs/verification/phone-findings-2026-09-26/`): event places per event, ‹ › on the destination row, and a compact room layout on phones.
 5. ✅ **Tileable textures** (build 61, **live since 07:13 PDT**, deploy `6ab7d2f2`; `docs/verification/surfaces-2026-09-26/`):
    - sandstone paving, painted brick walls and asphalt, painted at runtime with normal maps;
    - iPhone 58–60 fps on Detailed.

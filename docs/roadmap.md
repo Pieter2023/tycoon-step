@@ -2,7 +2,7 @@
 
 ## Current priorities — September 26, 2026
 
-Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). **Production is builds 40–61**: `origin/main` = `1bc4d4e`, six releases (four on 2026-09-25, builds 60 and 61 on 2026-09-26) with receipts in `docs/verification/release-2026-09-25/`. Build 62 (the phone check's findings) is on the branch, not released. 496 tests / 88 files pass.
+Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). **Production is builds 40–62**: `origin/main` = `7a4d644`, seven releases (four on 2026-09-25, builds 60–62 on 2026-09-26) with receipts in `docs/verification/release-2026-09-25/`. 496 tests / 88 files pass.
 
 1. ✅ **Live: the course rewards** (build 55, `3364c54`, release 3).
    - A pass pays a lasting raise instead of cash; a third miss costs a $150 retake fee.
@@ -13,7 +13,7 @@ Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](
    - ✅ hero face skin evenness (build 57, live; the shading step on one cheek is geometry and remains);
    - ✅ the Wave crease, a Sit clip and hair polish (build 58, live);
    - ✅ an AO bake (build 59, live).
-3. ✅ **The real-phone check of builds 52–59** (2026-09-26, `docs/verification/phone-2026-09-26/`): 56–60 fps. It found **build 60**: on a phone, tall dialogs (the Sales quiz, Save and load) hid their close and action buttons. The fix is in `components/Modal.tsx`, **live since 06:45 PDT on 2026-09-26** (deploy `6ab7cc8d`). **A Chromebook check** is still open. ✅ The check's smaller findings are fixed in build 62 (`docs/verification/phone-findings-2026-09-26/`), awaiting release.
+3. ✅ **The real-phone check of builds 52–59** (2026-09-26, `docs/verification/phone-2026-09-26/`): 56–60 fps. It found **build 60**: on a phone, tall dialogs (the Sales quiz, Save and load) hid their close and action buttons. The fix is in `components/Modal.tsx`, **live since 06:45 PDT on 2026-09-26** (deploy `6ab7cc8d`). **A Chromebook check** is still open. ✅ The check's smaller findings are fixed in build 62 (`docs/verification/phone-findings-2026-09-26/`), live since 07:41 PDT on 2026-09-26.
 4. ✅ **Tileable textures** for pavement, brick and road (build 61, `docs/verification/surfaces-2026-09-26/`), **live since 07:13 PDT on 2026-09-26** (deploy `6ab7d2f2`).
 5. **Pieter's calls:**
    - slice 4 as the default screen;

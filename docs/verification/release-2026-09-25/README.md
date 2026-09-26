@@ -274,3 +274,45 @@ netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb
   - all eight models load with 200, including the city at `20260926b`;
   - no console errors.
 - **Not done live:** a visual capture of the canvas (the pane was hidden; production has no frame-stepping handle). The textures were checked on the branch and on the iPhone with this same chunk (`surfaces-2026-09-26/`).
+
+# Release 7: build 62 (2026-09-26, 07:41 PDT = 14:41 UTC)
+
+Pieter's word: "ship it, release 62".
+
+## What shipped
+
+`origin/main` was fast-forwarded from `1bc4d4ef` to `7a4d644a` (pushed 14:41:03 UTC). That was 2 commits: the release-6 receipt and build 62, with no config, function or dependency changes. The Netlify production deploy is `6ab7d981fbace400085c96ec`, published 14:41:37 UTC, 34 s after the push.
+
+**Build 62, the phone check's findings** (`docs/verification/phone-findings-2026-09-26/`):
+- events framed where they happen: `EVENT_PLACES` by id, plus a new Property & Co. place for rentals;
+- ‹ › buttons on the destination row while it overflows;
+- on phones, rooms swap the destination row for a one-row room bar, and the journey strip is one row.
+
+**Rollback** to builds 40–61:
+
+```sh
+netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb9907db","deploy_id":"6ab7d2f20038cd00084ae7a8"}'
+```
+
+## Checks
+
+- **Before the push:**
+  - a fast-forward, with the branch equal to `origin` and nothing on `main` missing from it;
+  - config, functions, dependencies, `vite.config.ts` and `index.html` unchanged;
+  - a clean tree;
+  - 496 tests / 88 files.
+- **The live bundle:**
+  - `main-q4ciCKTY.js` holds `EVENT_PLACES` (`coworker_birthday:"work"`) and "At Property & Co.";
+  - `TownModal-B7Y8Bn6w.js` holds the room bar, the ‹ › buttons and the seven "Exit ↗" labels;
+  - the town CSS has the phone rules.
+- **The live site at iPhone size** (iPhone 15 Pro WebKit, `phone-findings-2026-09-26/phone-layout.cjs`). It matches the branch exactly:
+  - the square's 3D view is 459 px (was 405);
+  - one › shows Café, Home and Work, and › hides at the end;
+  - in the bank the destination row is hidden, the room bar fits in 393 px, and the 3D view is 467 px (was 305);
+  - the long guide "Confirm my cash reserve →" shows in full.
+- **Functions and pages:** `validate-access`, `/educators` and `/teacher-packet` answer 200.
+- **The pre-release Alex save on the live site** (month 8, $10,091):
+  - it continues;
+  - the city opens with "Freedom 13%" and the new destination wrapper;
+  - all eight models load with 200;
+  - no console errors.

@@ -1,16 +1,17 @@
 # Tycoon: Financial Freedom Simulator
 
-## Current handover — September 26, 2026 (07:45 PDT)
+## Current handover — September 26, 2026 (07:50 PDT)
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
-- **Production:** builds 40–61 are live after six releases. Four were on 2026-09-25, and builds 60 and 61 followed on 2026-09-26:
+- **Production:** builds 40–62 are live after seven releases. Four were on 2026-09-25, and builds 60–62 followed on 2026-09-26:
   - 40–51 at 17:21 PDT, deploy `6ab70fda`;
   - 52–54 at 18:19 PDT, deploy `6ab71d6d`;
   - 55–57 at 21:01 PDT, deploy `6ab743ad`;
   - 58–59 at 22:27 PDT, deploy `6ab757c4`;
   - 60 on 2026-09-26 at 06:45 PDT, deploy `6ab7cc8d`;
-  - **61 on 2026-09-26 at 07:13 PDT, `origin/main` = `1bc4d4e`, deploy `6ab7d2f2`** ("ship it, release 61").
+  - 61 on 2026-09-26 at 07:13 PDT, deploy `6ab7d2f2`;
+  - **62 on 2026-09-26 at 07:41 PDT, `origin/main` = `7a4d644`, deploy `6ab7d981`** ("ship it, release 62").
 
   Both were fast-forwards from the branch. Receipts and rollbacks: `docs/verification/release-2026-09-25/`. (Before that, production was a Sept-13 CLI deploy, not `origin/main`.)
 - **Work branch `town-lighting-pass`:** checked out and pushed to `origin`. `main` is fast-forwarded to it for each release, and later commits wait here for the next one. It holds, all now live:
@@ -55,12 +56,12 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - The city model gives the building walls their own `wall*` materials, and `MODEL_VERSION` is `20260926b`.
   - iPhone: 58–60 fps on Detailed.
   - Receipt: `docs/verification/surfaces-2026-09-26/`. Test: `test/TownSurfaces.test.ts`.
-- **Build 62, on the branch, not released:** the phone check's findings (`docs/verification/phone-findings-2026-09-26/`).
+- **Build 62, live since 2026-09-26 07:41 PDT:** the phone check's findings (`docs/verification/phone-findings-2026-09-26/`).
   - Events take their place by id first (`EVENT_PLACES` in `services/townEvents.ts`), with a new Property & Co. place for rentals.
   - The destination row gets ‹ › buttons when it overflows.
   - On phones, rooms swap the destination row for a one-row room bar ("?", walk-to, "Exit ↗"), and the journey strip is one row. The bank's 3D view goes from 305 to 467 px at 393×659.
 - **Validation:** 496 tests / 88 files and the production build pass on the branch.
-- **Next session, first:** release build 62 when Pieter says so. Then:
+- **Next session, first:**
   - a Chromebook check (needs a Chromebook);
   - Pieter's open calls (HANDOVER §1b item 6).
 - **Waiting on Pieter:**
