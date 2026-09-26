@@ -1,15 +1,16 @@
 # Tycoon: Financial Freedom Simulator
 
-## Current handover — September 26, 2026 (07:15 PDT)
+## Current handover — September 26, 2026 (07:20 PDT)
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
-- **Production:** builds 40–60 are live after five releases. Four were on 2026-09-25, and build 60 followed on 2026-09-26:
+- **Production:** builds 40–61 are live after six releases. Four were on 2026-09-25, and builds 60 and 61 followed on 2026-09-26:
   - 40–51 at 17:21 PDT, deploy `6ab70fda`;
   - 52–54 at 18:19 PDT, deploy `6ab71d6d`;
   - 55–57 at 21:01 PDT, deploy `6ab743ad`;
   - 58–59 at 22:27 PDT, deploy `6ab757c4`;
-  - **60 on 2026-09-26 at 06:45 PDT, `origin/main` = `e8e1d16`, deploy `6ab7cc8d`** ("ship it, release 60").
+  - 60 on 2026-09-26 at 06:45 PDT, deploy `6ab7cc8d`;
+  - **61 on 2026-09-26 at 07:13 PDT, `origin/main` = `1bc4d4e`, deploy `6ab7d2f2`** ("ship it, release 61").
 
   Both were fast-forwards from the branch. Receipts and rollbacks: `docs/verification/release-2026-09-25/`. (Before that, production was a Sept-13 CLI deploy, not `origin/main`.)
 - **Work branch `town-lighting-pass`:** checked out and pushed to `origin`. `main` is fast-forwarded to it for each release, and later commits wait here for the next one. It holds, all now live:
@@ -49,13 +50,13 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - The overlay now scrolls, and the dialog has auto top/bottom margins (centred when it fits, top-aligned when it doesn't).
   - `TutorialModal` keeps its bottom sheet (margins 0). The city modals pass `overflow: 'hidden'`.
   - Test: `test/Modal.test.tsx`. Checked on the iPhone.
-- **Build 61, on the branch, not released:** tileable paving, brick and asphalt (`components/town/townSurfaces.ts`, applied by `dressTown`).
+- **Build 61, live since 2026-09-26 07:13 PDT:** tileable paving, brick and asphalt (`components/town/townSurfaces.ts`, applied by `dressTown`).
   - Painted at runtime with normal maps; no download.
   - The city model gives the building walls their own `wall*` materials, and `MODEL_VERSION` is `20260926b`.
   - iPhone: 58–60 fps on Detailed.
   - Receipt: `docs/verification/surfaces-2026-09-26/`. Test: `test/TownSurfaces.test.ts`.
 - **Validation:** 491 tests / 86 files and the production build pass on the branch.
-- **Next session, first:** release build 61 when Pieter says so. Then:
+- **Next session, first:**
   - a Chromebook check (needs a Chromebook);
   - the phone check's small findings (HANDOVER §1b item 4).
 - **Waiting on Pieter:**

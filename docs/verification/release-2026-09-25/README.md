@@ -237,3 +237,40 @@ netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb
   - all eight models load with 200 at their current versions;
   - no console errors.
 - **Not done live:** a visual capture of the city canvas (the pane was hidden) and the iPhone itself on production. The iPhone check of this code ran on the LAN build before the release.
+
+# Release 6: build 61 (2026-09-26, 07:13 PDT = 14:13 UTC)
+
+Pieter's word: "ship it, release 61".
+
+## What shipped
+
+`origin/main` was fast-forwarded from `e8e1d160` to `1bc4d4ef` (pushed 14:13:03 UTC). That was 2 commits: the release-5 receipt and build 61, with no config, function or dependency changes. The Netlify production deploy is `6ab7d2f20038cd00084ae7a8`, published 14:13:37 UTC, 34 s after the push.
+
+**Build 61, tileable paving, brick and asphalt** (`docs/verification/surfaces-2026-09-26/`):
+- runtime-painted textures with normal maps (`components/town/townSurfaces.ts`);
+- the city model's new `wall*` materials, with the paving seams and the buried crosswalk dash removed (`MODEL_VERSION` `20260926b`).
+
+**Rollback** to builds 40–60:
+
+```sh
+netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb9907db","deploy_id":"6ab7cc8da1c1eb000829f51d"}'
+```
+
+## Checks
+
+- **Before the push:**
+  - a fast-forward, with the branch equal to `origin` and nothing on `main` missing from it;
+  - `netlify.toml`, `netlify/`, `package.json`, `package-lock.json`, `vite.config.ts` and `index.html` unchanged;
+  - a clean tree;
+  - 491 tests / 86 files.
+- **The live bundle:**
+  - the HTML serves `main-IpmUCX_J.js`;
+  - the city chunk is `createTownScene-B5AZMoWU.js`, the same file the iPhone check ran on the LAN build. It holds `MODEL_VERSION` `20260926b` and the `wall*` brick hook.
+- **The model:** `freedom-square.glb?v=20260926b` answers 200 at 1,365,412 bytes, byte-identical to the local build.
+- **Functions and pages:** `validate-access`, `/educators` and `/teacher-packet` answer 200.
+- **The pre-release Alex save on the live site** (month 8, $10,091):
+  - it continues;
+  - the city opens with the header "Freedom 13%";
+  - all eight models load with 200, including the city at `20260926b`;
+  - no console errors.
+- **Not done live:** a visual capture of the canvas (the pane was hidden; production has no frame-stepping handle). The textures were checked on the branch and on the iPhone with this same chunk (`surfaces-2026-09-26/`).

@@ -1,6 +1,6 @@
 # Start here — Tycoon handover
 
-Updated **September 26, 2026, 07:15 PDT**. **Build 61, tileable paving, brick and asphalt, is on the branch, not released** (`docs/verification/surfaces-2026-09-26/`). Builds 40–60 are live.
+Updated **September 26, 2026, 07:20 PDT**. **Builds 40–61 are live.** Build 61, tileable paving, brick and asphalt (`docs/verification/surfaces-2026-09-26/`), was released at 07:13 PDT ("ship it, release 61"): `main` = `1bc4d4e`, deploy `6ab7d2f2`. The receipt is release 6 in `docs/verification/release-2026-09-25/`.
 
 Earlier the same morning (06:55 PDT): **builds 40–60 went live.** The real-phone check of builds 52–59 passed (56–60 fps, `docs/verification/phone-2026-09-26/`). It found one phone bug: dialogs taller than the screen, such as the Sales quiz and Save and load, had their close and action buttons out of reach. The fix, **build 60**, was **released at 06:45 PDT** ("ship it, release 60"): `main` = `e8e1d16`, deploy `6ab7cc8d`. The receipt is release 5 in `docs/verification/release-2026-09-25/`.
 
@@ -17,12 +17,12 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 
 | What | State |
 |---|---|
-| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | **Builds 40–60 are live** after five releases, each with Pieter's go-ahead:<br>• 40–51 at 17:21 PDT, deploy `6ab70fda`;<br>• 52–54 at 18:19 PDT ("ship it"), deploy `6ab71d6d`;<br>• 55–57 at 21:01 PDT ("ship it, release 55-57"), deploy `6ab743ad`;<br>• 58–59 at 22:27 PDT ("ship it, release 58-59"), deploy `6ab757c4`;<br>• **60 on 2026-09-26 at 06:45 PDT** ("ship it, release 60"): `origin/main` = `e8e1d16`, deploy `6ab7cc8d`.<br>Before that, production was a Sept-13 **CLI** deploy (`6aa6c7fa`), not `origin/main` (`073f397`). Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`. |
+| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | **Builds 40–61 are live** after six releases, each with Pieter's go-ahead:<br>• 40–51 at 17:21 PDT, deploy `6ab70fda`;<br>• 52–54 at 18:19 PDT ("ship it"), deploy `6ab71d6d`;<br>• 55–57 at 21:01 PDT ("ship it, release 55-57"), deploy `6ab743ad`;<br>• 58–59 at 22:27 PDT ("ship it, release 58-59"), deploy `6ab757c4`;<br>• 60 on 2026-09-26 at 06:45 PDT ("ship it, release 60"), deploy `6ab7cc8d`;<br>• **61 on 2026-09-26 at 07:13 PDT** ("ship it, release 61"): `origin/main` = `1bc4d4e`, deploy `6ab7d2f2`.<br>Before that, production was a Sept-13 **CLI** deploy (`6aa6c7fa`), not `origin/main` (`073f397`). Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`. |
 | Branch `codex/game-overhaul-20260503-223748` | The old release branch at `073f397` (build 39); now behind `main`. |
-| **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `e8e1d16` (release 5, build 60). Later commits, such as the release-5 receipt, stay ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
+| **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `1bc4d4e` (release 6, build 61). Later commits, such as the release-6 receipt, stay ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
-| Validation on the branch | 491 tests / 86 files, TypeScript and the production build (build 61, not released; build 60 is live). |
+| Validation on the branch | 491 tests / 86 files, TypeScript and the production build (build 61, live). |
 | Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
@@ -67,11 +67,12 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 35. `b689c41`: release-4 receipt; then `e010f24`, the 06:00 handover.
 36. `e8e1d16`: build 60, dialogs fit a phone (`components/Modal.tsx`), found by the phone check of builds 52–59. Receipt: `docs/verification/phone-2026-09-26/`. **Released: `main` = `e8e1d16`** (deploy `6ab7cc8d`).
 37. `9bed375`: the release-5 receipt.
-38. Build 61: tileable paving, brick and asphalt (`components/town/townSurfaces.ts`, `dressTown`, wall materials in `scripts/build-town-assets.py`, `MODEL_VERSION` `20260926b`). Receipt: `docs/verification/surfaces-2026-09-26/`. **Not released.**
+38. `1bc4d4e`: build 61, tileable paving, brick and asphalt (`components/town/townSurfaces.ts`, `dressTown`, wall materials in `scripts/build-town-assets.py`, `MODEL_VERSION` `20260926b`). Receipt: `docs/verification/surfaces-2026-09-26/`. **Released: `main` = `1bc4d4e`** (deploy `6ab7d2f2`).
+39. The release-6 receipt and this handover.
 
 ## 1b. Where the last session stopped (2026-09-26, 06:00 PDT)
 
-**Live: builds 40–60**, in four releases on 2026-09-25 and one on 2026-09-26. Each has a receipt, live checks and a one-line rollback in `docs/verification/release-2026-09-25/`:
+**Live: builds 40–61**, in four releases on 2026-09-25 and two on 2026-09-26. Each has a receipt, live checks and a one-line rollback in `docs/verification/release-2026-09-25/`:
 
 | Release | Builds | Time (PDT) | `main` | Netlify deploy |
 |---|---|---|---|---|
@@ -79,7 +80,8 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 | 2 | 52–54 | 18:19 | `4436196` | `6ab71d6d` |
 | 3 | 55–57 | 21:01 | `21f7771` | `6ab743ad` |
 | 4 | 58–59 | 22:27 | `e3097ca` | `6ab757c4` |
-| 5 | 60 | 06:45 (Sept 26) | `e8e1d16` | `6ab7cc8d` (current) |
+| 5 | 60 | 06:45 (Sept 26) | `e8e1d16` | `6ab7cc8d` |
+| 6 | 61 | 07:13 (Sept 26) | `1bc4d4e` | `6ab7d2f2` (current) |
 
 **What the last session built (details in each receipt):**
 - **55, course rewards** (`course-rewards-2026-09-25/`):
@@ -100,7 +102,7 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 2. ✅ **Build 60 released** (2026-09-26, 06:45 PDT, deploy `6ab7cc8d`; release 5 in `docs/verification/release-2026-09-25/`). On a phone, dialogs taller than the screen (the Sales quiz, Save and load) had their close and action buttons out of reach, so a phone player couldn't take the Sales certification. The shared `Modal` now scrolls. Code: `components/Modal.tsx`, plus one line each in `TutorialModal`, `TownModal` and `KidsSquareModal`.
 3. **A Chromebook check**, the classroom device. It has never been done, and it needs Pieter or a Chromebook on the network.
 4. **Small findings from the phone check** (receipt, "Other findings"): all `SOCIAL` events are framed as "Rosa knocks on your door", including the office birthday collection; rooms leave the 3D view about a third of a portrait screen.
-5. ✅ **Tileable textures** (build 61, on the branch, **awaiting Pieter's release go-ahead**; `docs/verification/surfaces-2026-09-26/`):
+5. ✅ **Tileable textures** (build 61, **live since 07:13 PDT**, deploy `6ab7d2f2`; `docs/verification/surfaces-2026-09-26/`):
    - sandstone paving, painted brick walls and asphalt, painted at runtime with normal maps;
    - iPhone 58–60 fps on Detailed.
 
@@ -157,7 +159,7 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
    - ✅ course rewards (build 55, live): a lasting raise instead of cash, a $150 retake fee, and two course bugs fixed.
 4. **More visuals:**
    - ✅ lighter sign lettering (build 48: −125k triangles; kept 3D, dropped the bevel and curve resolution);
-   - ✅ AO bake (build 59, live); ✅ tileable textures for pavement, brick and road (build 61, not released; `docs/verification/surfaces-2026-09-26/`);
+   - ✅ AO bake (build 59, live); ✅ tileable textures for pavement, brick and road (build 61, live; `docs/verification/surfaces-2026-09-26/`);
    - ✅ hair polish, the armpit crease in Wave and a Sit clip (build 58, live);
    - ✅ a blink for the hero Alex (build 56, live);
    - ✅ an even skin tone on the hero's face texture (build 57, live; the shading step on one cheek is geometry and remains).
