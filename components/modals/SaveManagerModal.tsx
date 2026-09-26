@@ -1,10 +1,14 @@
 import React from 'react';
-import { Save as SaveIcon, FolderOpen as FolderOpenIcon, Trash2 } from 'lucide-react';
+import { Save as SaveIcon, FolderOpen as FolderOpenIcon, Trash2, RefreshCw, History } from 'lucide-react';
 import Modal from '../Modal';
 import { SaveSlotId, SaveSummary } from '../../services/storageService';
 import { useI18n, formatCurrencyCompactValue, formatDateTimeValue } from '../../i18n';
+import { SheetItem, SheetStagger } from './sheet';
 
 const formatMoney = (val: number): string => formatCurrencyCompactValue(val);
+
+const fieldClass =
+  'rounded-[12px] bg-[rgb(118_118_128/0.18)] px-3 py-2 text-[16px] sm:text-[14px] text-white placeholder:text-slate-500';
 
 // In-game save manager: slots + export/import. Controlled — slot drafts and
 // import state live in App because handleImportSave/refresh read them there.
@@ -61,171 +65,204 @@ const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
     }
   };
 
+  const renderSlot = (slotId: SaveSlotId) => {
+    const summary = saveSummaries.find(s => s.slotId === slotId);
+    const isEmpty = !summary;
+    const isAuto = slotId === 'autosave';
+    const title = isAuto ? 'Autosave' : `Slot ${slotId.replace('slot', '')}`;
+
+    return (
+      <div key={slotId} className="px-4 py-3.5">
+        {/* On phones the actions drop to their own row under the title; from sm up they sit on the right. */}
+        <div className="flex flex-wrap items-start gap-x-3 gap-y-2.5 sm:flex-nowrap">
+          <span
+            aria-hidden
+            className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] ${
+              isAuto ? 'bg-emerald-400/[0.18] text-emerald-300' : isEmpty ? 'bg-white/[0.05] text-slate-500' : 'bg-[#0a84ff]/[0.18] text-sky-300'
+            }`}
+          >
+            {isAuto ? <History size={19} strokeWidth={2.2} /> : <span className="num text-[15px] font-bold">{slotId.replace('slot', '')}</span>}
+          </span>
+
+          <div className="min-w-0 flex-1 basis-[calc(100%-52px)] sm:basis-auto">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <p className="text-[16px] font-semibold text-white">{title}</p>
+              {summary?.label && !isAuto && (
+                <span className="rounded-full bg-emerald-400/[0.15] px-2 py-0.5 text-[12px] font-medium text-emerald-300">
+                  {summary.label}
+                </span>
+              )}
+            </div>
+            {isEmpty ? (
+              <p className="mt-0.5 text-[13px] text-slate-500">Empty</p>
+            ) : (
+              <p className="num mt-0.5 text-[13px] text-slate-400">Last saved: {formatDateTime(summary.updatedAt)}</p>
+            )}
+          </div>
+
+          <div className="flex w-full shrink-0 items-center gap-1.5 pl-[52px] sm:w-auto sm:pl-0">
+            <button
+              type="button"
+              onClick={() => onSaveToSlot(slotId, isAuto ? undefined : saveLabelDrafts[slotId])}
+              className="pressable inline-flex h-9 items-center gap-1.5 rounded-full bg-emerald-400/[0.16] px-3.5 text-[13px] font-semibold text-emerald-300 hover:bg-emerald-400/[0.24]"
+            >
+              <SaveIcon size={15} strokeWidth={2.3} /> Save
+            </button>
+            <button
+              type="button"
+              disabled={isEmpty}
+              onClick={() => onLoadFromSlot(slotId)}
+              className="pressable inline-flex h-9 items-center gap-1.5 rounded-full bg-[rgb(118_118_128/0.24)] px-3.5 text-[13px] font-semibold text-white hover:bg-[rgb(118_118_128/0.36)] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <FolderOpenIcon size={15} strokeWidth={2.3} /> Load
+            </button>
+            <button
+              type="button"
+              disabled={isEmpty}
+              onClick={() => onDeleteSlot(slotId)}
+              className="pressable flex h-9 w-9 items-center justify-center rounded-full text-[#ff6961] hover:bg-red-500/[0.16] disabled:cursor-not-allowed disabled:text-slate-600 disabled:hover:bg-transparent"
+              title="Delete save"
+              aria-label={`Delete ${title}`}
+            >
+              <Trash2 size={16} strokeWidth={2.2} />
+            </button>
+          </div>
+        </div>
+
+        {!isEmpty && (
+          <dl className="mt-3 grid grid-cols-3 gap-x-3 gap-y-2 sm:ml-[52px] sm:grid-cols-5">
+            <div>
+              <dt className="text-[12px] text-slate-500">Time</dt>
+              <dd className="num text-[14px] font-semibold text-white">Y{Math.ceil((summary.month || 1) / 12)} • M{(((summary.month || 1) - 1) % 12) + 1}</dd>
+            </div>
+            <div>
+              <dt className="text-[12px] text-slate-500">Cash</dt>
+              <dd className="num text-[14px] font-semibold text-emerald-300">{formatMoney(summary.cash || 0)}</dd>
+            </div>
+            <div>
+              <dt className="text-[12px] text-slate-500">Net Worth</dt>
+              <dd className="num text-[14px] font-semibold text-white">{formatMoney(summary.netWorth || 0)}</dd>
+            </div>
+            <div>
+              <dt className="text-[12px] text-slate-500">Passive/mo</dt>
+              <dd className="num text-[14px] font-semibold text-amber-300">{formatMoney(summary.passiveIncome || 0)}</dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-[12px] text-slate-500">Difficulty</dt>
+              <dd className="truncate text-[14px] font-semibold text-white">{summary.difficulty || t('save.unknown')}</dd>
+            </div>
+          </dl>
+        )}
+
+        {!isAuto && (
+          <div className="mt-3 flex items-center gap-2 sm:ml-[52px]">
+            <input
+              type="text"
+              value={saveLabelDrafts[slotId] || ''}
+              onChange={(e) => setSaveLabelDrafts(prev => ({ ...prev, [slotId]: e.target.value }))}
+              placeholder="Name this save"
+              className={`${fieldClass} min-w-0 flex-1`}
+            />
+            <button
+              type="button"
+              disabled={isEmpty}
+              onClick={() => onRenameSlot(slotId, saveLabelDrafts[slotId] || '')}
+              className="pressable shrink-0 rounded-full px-3 py-2 text-[13px] font-semibold text-[#0a84ff] hover:bg-[rgb(118_118_128/0.18)] disabled:cursor-not-allowed disabled:text-slate-600 disabled:hover:bg-transparent"
+            >
+              Update label
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const autoSlots = saveSlots.filter((id) => id === 'autosave');
+  const manualSlots = saveSlots.filter((id) => id !== 'autosave');
+  const slotName = (slotId: SaveSlotId) => (slotId === 'autosave' ? 'Autosave' : `Slot ${slotId.replace('slot', '')}`);
+
   return (
     <Modal
       isOpen
       onClose={onClose}
       ariaLabel="Save and load"
-      overlayClassName="bg-black/70"
+      overlayClassName="bg-black/60"
       closeOnOverlayClick
       closeOnEsc
-      contentClassName="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden"
+      contentClassName="max-w-2xl!"
     >
-      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700">
-        <div>
-          <h2 className="text-white font-bold text-lg">💾 Save & Load</h2>
-          <p className="text-slate-400 text-xs">Autosaves at the end of every month • Use slots for manual saves</p>
-        </div>
-      </div>
+      <SheetStagger className="px-5 pb-5 pt-6 sm:px-6" gap={0.045}>
+        <SheetItem className="pr-10">
+          <h2 className="t-title-2 text-white">💾 Save & Load</h2>
+          <p className="mt-1 text-[14px] text-slate-400">Autosaves at the end of every month • Use slots for manual saves</p>
+        </SheetItem>
 
-      <div className="p-6 space-y-3">
-        {saveSlots.map(slotId => {
-          const summary = saveSummaries.find(s => s.slotId === slotId);
-          const isEmpty = !summary;
-          const title = slotId === 'autosave' ? 'Autosave' : `Slot ${slotId.replace('slot', '')}`;
-
-          return (
-            <div key={slotId} className="bg-slate-800/60 border border-slate-700 rounded-xl p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-white font-bold">{title}</p>
-                    {summary?.label && slotId !== 'autosave' && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">
-                        {summary.label}
-                      </span>
-                    )}
-                  </div>
-
-                  {isEmpty ? (
-                    <p className="text-slate-400 text-sm mt-1">Empty</p>
-                  ) : (
-                    <div className="text-slate-300 text-sm mt-1 space-y-1">
-                      <p className="text-slate-400 text-xs">Last saved: {formatDateTime(summary.updatedAt)}</p>
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
-                        <div className="bg-slate-900/40 rounded-lg p-2">
-                          <p className="text-slate-500">Time</p>
-                          <p className="text-white font-medium">Y{Math.ceil((summary.month || 1) / 12)} • M{(((summary.month || 1) - 1) % 12) + 1}</p>
-                        </div>
-                        <div className="bg-slate-900/40 rounded-lg p-2">
-                          <p className="text-slate-500">Cash</p>
-                          <p className="text-emerald-300 font-medium">{formatMoney(summary.cash || 0)}</p>
-                        </div>
-                        <div className="bg-slate-900/40 rounded-lg p-2">
-                          <p className="text-slate-500">Net Worth</p>
-                          <p className="text-white font-medium">{formatMoney(summary.netWorth || 0)}</p>
-                        </div>
-                        <div className="bg-slate-900/40 rounded-lg p-2">
-                          <p className="text-slate-500">Passive/mo</p>
-                          <p className="text-amber-300 font-medium">{formatMoney(summary.passiveIncome || 0)}</p>
-                        </div>
-                        <div className="bg-slate-900/40 rounded-lg p-2">
-                          <p className="text-slate-500">Difficulty</p>
-                          <p className="text-white font-medium">{summary.difficulty || t('save.unknown')}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-2 shrink-0">
-                  <button
-                    onClick={() => onSaveToSlot(slotId, slotId === 'autosave' ? undefined : saveLabelDrafts[slotId])}
-                    className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium flex items-center gap-2"
-                  >
-                    <SaveIcon size={16} /> Save
-                  </button>
-
-                  <button
-                    disabled={isEmpty}
-                    onClick={() => onLoadFromSlot(slotId)}
-                    className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-500 text-white text-sm font-medium flex items-center gap-2"
-                  >
-                    <FolderOpenIcon size={16} /> Load
-                  </button>
-
-                  <div className="flex gap-2">
-                    <button
-                      disabled={isEmpty}
-                      onClick={() => onDeleteSlot(slotId)}
-                      className="px-3 py-2 rounded-lg bg-red-600/80 hover:bg-red-600 disabled:bg-slate-900 disabled:text-slate-600 text-white text-xs flex items-center gap-1"
-                      title="Delete save"
-                      aria-label={`Delete ${title}`}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-              {slotId !== 'autosave' && (
-                <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
-                  <input
-                    type="text"
-                    value={saveLabelDrafts[slotId] || ''}
-                    onChange={(e) => setSaveLabelDrafts(prev => ({ ...prev, [slotId]: e.target.value }))}
-                    placeholder="Name this save"
-                    className="flex-1 rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500"
-                  />
-                  <button
-                    disabled={isEmpty}
-                    onClick={() => onRenameSlot(slotId, saveLabelDrafts[slotId] || '')}
-                    className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 disabled:text-slate-600 text-slate-200 text-xs"
-                  >
-                    Update label
-                  </button>
-                </div>
-              )}
+        {/* The autosave is the one most players reach for: it gets its own highlighted group. */}
+        {autoSlots.length > 0 && (
+          <SheetItem className="mt-5">
+            <div className="overflow-hidden rounded-[18px] bg-emerald-400/[0.07] ring-1 ring-inset ring-emerald-400/20">
+              {autoSlots.map(renderSlot)}
             </div>
-          );
-        })}
+          </SheetItem>
+        )}
 
-        <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-4 space-y-3">
-          <div>
-            <p className="text-white font-semibold text-sm">Export / Import</p>
-            <p className="text-slate-400 text-xs">Keep a backup or move saves between devices.</p>
+        {manualSlots.length > 0 && (
+          <SheetItem className="mt-3">
+            <div className="list-group divide-y divide-[rgb(84_84_88/0.45)]">
+              {manualSlots.map(renderSlot)}
+            </div>
+          </SheetItem>
+        )}
+
+        <SheetItem className="mt-6">
+          <div className="px-4">
+            <p className="text-[15px] font-semibold text-white">Export / Import</p>
+            <p className="text-[13px] text-slate-400">Keep a backup or move saves between devices.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="rounded-lg border border-slate-700/70 bg-slate-900/60 p-3">
-              <p className="text-slate-300 text-xs mb-2">Export a save</p>
-              <div className="flex items-center gap-2">
-                <select
-                  value={exportSlotId}
-                  onChange={(e) => setExportSlotId(e.target.value as SaveSlotId)}
-                  className="flex-1 rounded-lg bg-slate-900 border border-slate-700 px-2 py-2 text-xs text-slate-200"
-                >
-                  {saveSlots.map(slotId => (
-                    <option key={`export-${slotId}`} value={slotId}>
-                      {slotId === 'autosave' ? 'Autosave' : `Slot ${slotId.replace('slot', '')}`}
-                    </option>
-                  ))}
-                </select>
+          <div className="mt-2.5 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="surface-inset space-y-2.5 p-3.5">
+              <p className="text-[13px] font-medium text-slate-300">Export a save</p>
+              <select
+                value={exportSlotId}
+                onChange={(e) => setExportSlotId(e.target.value as SaveSlotId)}
+                className={`${fieldClass} w-full cursor-pointer`}
+              >
+                {saveSlots.map(slotId => (
+                  <option key={`export-${slotId}`} value={slotId}>
+                    {slotName(slotId)}
+                  </option>
+                ))}
+              </select>
+              <div className="grid grid-cols-2 gap-2">
                 <button
+                  type="button"
                   onClick={() => void onExportSlot(exportSlotId, 'copy')}
-                  className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs"
+                  className="btn-secondary min-h-[38px] px-3 text-[13px]"
                 >
                   Copy JSON
                 </button>
                 <button
+                  type="button"
                   onClick={() => void onExportSlot(exportSlotId, 'download')}
-                  className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs"
+                  className="btn-secondary min-h-[38px] px-3 text-[13px]"
                 >
                   Download
                 </button>
               </div>
             </div>
 
-            <div className="rounded-lg border border-slate-700/70 bg-slate-900/60 p-3 space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-slate-300 text-xs">Import a save</p>
+            <div className="surface-inset space-y-2.5 p-3.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[13px] font-medium text-slate-300">Import a save</p>
                 <select
                   value={importSlotId}
                   onChange={(e) => setImportSlotId(e.target.value as SaveSlotId)}
-                  className="rounded-lg bg-slate-900 border border-slate-700 px-2 py-1 text-xs text-slate-200"
+                  className={`${fieldClass} cursor-pointer py-1 sm:text-[13px]`}
                 >
                   {saveSlots.map(slotId => (
                     <option key={`import-${slotId}`} value={slotId}>
-                      {slotId === 'autosave' ? 'Autosave' : `Slot ${slotId.replace('slot', '')}`}
+                      {slotName(slotId)}
                     </option>
                   ))}
                 </select>
@@ -234,35 +271,35 @@ const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
                 value={importPayload}
                 onChange={(e) => setImportPayload(e.target.value)}
                 placeholder="Paste save JSON here..."
-                className="w-full min-h-[96px] rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-xs text-slate-100 placeholder:text-slate-500"
+                className={`${fieldClass} block min-h-[84px] w-full resize-y sm:text-[13px]`}
               />
-              {importError && <p className="text-red-300 text-xs">{importError}</p>}
+              {importError && <p className="text-[13px] text-red-300">{importError}</p>}
               <button
+                type="button"
                 onClick={onImport}
-                className="w-full px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold"
+                className="btn-primary min-h-[38px] w-full px-3 text-[13px]"
               >
                 Import & Load
               </button>
             </div>
           </div>
-        </div>
+        </SheetItem>
 
-        <div className="flex items-center justify-between pt-2">
+        <SheetItem className="mt-5 flex items-center justify-between">
           <button
+            type="button"
             onClick={onRefresh}
-            className="text-slate-400 hover:text-white text-sm"
+            className="pressable inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-[15px] font-medium text-[#0a84ff] hover:bg-[rgb(118_118_128/0.18)]"
           >
+            <RefreshCw size={15} strokeWidth={2.3} aria-hidden />
             Refresh
           </button>
 
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white text-sm"
-          >
+          <button type="button" onClick={onClose} className="btn-secondary min-h-[42px] px-6 text-[15px]">
             Close
           </button>
-        </div>
-      </div>
+        </SheetItem>
+      </SheetStagger>
     </Modal>
   );
 };

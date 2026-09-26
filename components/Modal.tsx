@@ -1,7 +1,16 @@
 import React, { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useI18n } from '../i18n';
+import type { Variants } from 'framer-motion';
+import { MOTION_DISABLED, materialize, springs } from './ui/motion';
+
+const sideSheet: Variants = {
+  hidden: { x: '104%', opacity: 0.6 },
+  show: { x: 0, opacity: 1, transition: springs.smooth },
+  exit: { x: '104%', opacity: 0.6, transition: { type: 'spring', bounce: 0, duration: 0.32 } }
+};
 
 type ModalProps = {
   isOpen: boolean;
@@ -184,16 +193,38 @@ const Modal: React.FC<ModalProps> = ({
     };
   }, [isOpen, modalId, closeOnEsc, onClose, initialFocusRef]);
 
-  if (!isOpen) return null;
   if (typeof document === 'undefined') return null;
+  if (!isOpen && MOTION_DISABLED) return null;
 
   // A dialog taller than the screen (the Sales quiz on a phone) must stay reachable: the page is
   // scroll-locked, so the overlay scrolls instead. Auto margins centre the dialog while it fits and
   // pin it to the top when it doesn't (plain centring would push its close button off the top).
-  return createPortal(
-    <div
+  //
+  // Motion: the scrim fades while the dialog materialises (scale + blur + rise) and it leaves by the
+  // same path. While it leaves it no longer takes clicks, focus or keys (the modal stack has already
+  // let it go), so the player is never kept waiting on an exit.
+  const overlayMotion = MOTION_DISABLED
+    ? {}
+    : {
+        initial: { opacity: 0 },
+        animate: { opacity: 1, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] } },
+        exit: { opacity: 0, transition: { duration: 0.2, ease: [0.4, 0, 1, 1] } }
+      };
+  // Side sheets (overlay pinned to the right edge) slide in from that edge and leave the same way;
+  // everything else materialises in place.
+  const isSideSheet = /(^|\s)justify-end(\s|$)/.test(overlayClassName ?? '');
+  const contentMotion = MOTION_DISABLED
+    ? {}
+    : { variants: isSideSheet ? sideSheet : materialize, initial: 'hidden', animate: 'show', exit: 'exit' };
+  const Overlay = (MOTION_DISABLED ? 'div' : motion.div) as React.ElementType;
+  const Content = (MOTION_DISABLED ? 'div' : motion.div) as React.ElementType;
+
+  const dialog = isOpen ? (
+    <Overlay
+      key="modal-overlay"
+      {...overlayMotion}
       className={joinClassNames(
-        'fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto overscroll-contain',
+        'fixed inset-0 bg-black/55 backdrop-blur-[6px] flex items-center justify-center p-4 overflow-y-auto overscroll-contain',
         overlayClassName
       )}
       style={{ zIndex, ...overlayStyle }}
@@ -201,35 +232,41 @@ const Modal: React.FC<ModalProps> = ({
         if (closeOnOverlayClick && isTopModal(modalId)) onClose();
       }}
     >
-      <div
+      <Content
         ref={contentRef}
+        {...contentMotion}
         role={role}
         aria-modal="true"
         aria-label={ariaLabelledBy ? undefined : title}
         aria-labelledby={ariaLabelledBy}
         className={joinClassNames(
-          'relative w-full max-w-lg bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl outline-none',
+          'relative w-full mat-sheet rounded-[28px] outline-none',
+          // Default width only when the caller sets none: two max-w utilities would fight on CSS order.
+          !/(^|\s)!?max-w-/.test(contentClassName ?? '') && 'max-w-lg',
           contentClassName
         )}
         style={{ marginTop: 'auto', marginBottom: 'auto', ...contentStyle }}
         tabIndex={-1}
-        onClick={(event) => event.stopPropagation()}
+        onClick={(event: React.MouseEvent) => event.stopPropagation()}
       >
         {showCloseButton && (
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white"
+            className="pressable absolute top-2 right-2 z-10 flex h-11 w-11 items-center justify-center rounded-full text-slate-300 hover:text-white group"
             aria-label={closeLabel}
           >
-            <X size={18} />
+            <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[rgb(118_118_128/0.28)] transition-colors group-hover:bg-[rgb(118_118_128/0.42)]">
+              <X size={15} strokeWidth={2.6} />
+            </span>
           </button>
         )}
         {children}
-      </div>
-    </div>,
-    document.body
-  );
+      </Content>
+    </Overlay>
+  ) : null;
+
+  return createPortal(MOTION_DISABLED ? dialog : <AnimatePresence>{dialog}</AnimatePresence>, document.body);
 };
 
 export default Modal;

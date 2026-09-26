@@ -308,33 +308,33 @@ const ChallengeShareCard: React.FC<ChallengeShareCardProps> = ({ gameState, netW
         ref={canvasRef}
         width={CARD_W}
         height={CARD_H}
-        className="w-full max-w-2xl rounded-xl border border-slate-700 shadow-2xl"
+        className="w-full max-w-2xl rounded-[18px] border border-white/[0.08] shadow-[0_24px_60px_-20px_rgb(0_0_0/0.8)]"
       />
       <div className="flex flex-wrap items-center justify-center gap-3">
         <button
           onClick={handleCopy}
-          className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold transition-colors"
+          className="btn-primary h-11 px-5 text-[15px]"
         >
           {copied ? 'Copied — now paste it!' : 'Copy result'}
         </button>
         {shareSupported && (
           <button
             onClick={handleShare}
-            className="px-5 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold transition-colors"
+            className="btn-secondary h-11 px-5 text-[15px]"
           >
             Share
           </button>
         )}
         <button
           onClick={handleDownload}
-          className="px-5 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold transition-colors"
+          className="btn-secondary h-11 px-5 text-[15px]"
         >
           Save image
         </button>
         {onClose && (
           <button
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold transition-colors"
+            className="pressable h-11 rounded-full px-4 text-[15px] font-semibold text-[#0a84ff] hover:bg-white/[0.06]"
           >
             Close
           </button>

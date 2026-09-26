@@ -1,5 +1,6 @@
 import { useI18n, type Translate } from '../../i18n';
 import React, { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import {
   Area,
   AreaChart,
@@ -11,12 +12,15 @@ import {
   XAxis,
   YAxis
 } from 'recharts';
-import { Activity, ArrowRight, Banknote, LineChart, PieChart as PieChartIcon, ShieldCheck, Target, TrendingUp, Wallet } from 'lucide-react';
+import { Activity, ArrowRight, Banknote, ChevronRight, LineChart, PieChart as PieChartIcon, ShieldCheck, Target, TrendingUp, Wallet } from 'lucide-react';
 import InvestTab from '../tabs/InvestTab';
 import PortfolioTab from '../tabs/PortfolioTab';
 import BankTab from '../tabs/BankTab';
 import { financialFreedom } from '../../services/gameLogic';
 import { AssetType, GameState, TABS, TabId } from '../../types';
+import { AnimatedNumber, SegmentedControl, MOTION_DISABLED, riseIn, springs, stagger } from '../ui';
+
+type MoneyTab = 'invest' | 'portfolio' | 'bank' | 'reports';
 
 type MoneyPageLayoutProps = {
   gameState: GameState;
@@ -29,8 +33,8 @@ type MoneyPageLayoutProps = {
   portfolioTabProps: Omit<React.ComponentProps<typeof PortfolioTab>, 'activeTab' | 'setActiveTab'>;
   bankTabProps: React.ComponentProps<typeof BankTab>;
   showQuiz: boolean;
-  activeTab: 'invest' | 'portfolio' | 'bank' | 'reports';
-  onTabChange: (tab: 'invest' | 'portfolio' | 'bank' | 'reports') => void;
+  activeTab: MoneyTab;
+  onTabChange: (tab: MoneyTab) => void;
 };
 
 const assetTypeLabelsFor = (t: Translate): Record<string, string> => ({
@@ -44,7 +48,34 @@ const assetTypeLabelsFor = (t: Translate): Record<string, string> => ({
   [AssetType.SAVINGS]: t('shell.moneyPage.savings')
 });
 
-const allocationColors = ['#22d3ee', '#34d399', '#a78bfa', '#fbbf24', '#f87171', '#60a5fa', '#f472b6', '#94a3b8'];
+// Apple system colours, in the order the allocation slices are drawn.
+const allocationColors = ['#64D2FF', '#30D158', '#BF5AF2', '#FF9F0A', '#FF453A', '#0A84FF', '#FF375F', '#8E8E93'];
+
+const chartTooltipStyle = {
+  contentStyle: {
+    background: 'rgb(30 30 32 / 0.94)',
+    border: '1px solid rgb(255 255 255 / 0.12)',
+    borderRadius: 12,
+    boxShadow: '0 12px 30px -12px rgb(0 0 0 / 0.7)',
+    fontSize: 12,
+    color: '#fff',
+    padding: '6px 10px'
+  },
+  itemStyle: { color: '#e5e5ea' },
+  labelStyle: { display: 'none' },
+  cursor: { stroke: 'rgb(255 255 255 / 0.18)', strokeWidth: 1 }
+};
+
+/** One figure in the stat strip under the hero: a tinted glyph, a quiet label, a tabular value. */
+const Stat: React.FC<{ icon: React.ReactNode; tint: string; label: string; children: React.ReactNode }> = ({ icon, tint, label, children }) => (
+  <div className="flex min-w-0 flex-col justify-between px-3 first:pl-0 last:pr-0 sm:px-5">
+    <div className="flex items-center gap-1.5 text-[12px] font-medium leading-4 text-slate-400">
+      <span className={`hidden h-5 w-5 shrink-0 place-items-center rounded-full sm:grid ${tint}`}>{icon}</span>
+      <span>{label}</span>
+    </div>
+    <div className="mt-1.5 text-[17px] font-semibold leading-6 tracking-[-0.015em] text-white sm:text-[20px]">{children}</div>
+  </div>
+);
 
 export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
   gameState,
@@ -135,215 +166,275 @@ export const MoneyPageLayout: React.FC<MoneyPageLayoutProps> = ({
     if (tabId === TABS.BANK) onTabChange('bank');
   };
 
-  const tabButtonClass = (tab: string) =>
-    `rounded-lg px-4 py-2 text-xs font-bold border transition ${
-      activeTab === tab
-        ? 'border-emerald-400/30 bg-emerald-400 text-slate-950 shadow-[0_10px_24px_rgba(52,211,153,0.14)]'
-        : 'border-slate-700/70 text-slate-200 hover:border-emerald-400/40 hover:text-white'
-    }`;
+  const tabOptions: { value: MoneyTab; label: string }[] = [
+    { value: 'invest', label: t('shell.moneyPage.invest') },
+    { value: 'portfolio', label: t('shell.moneyPage.portfolio') },
+    { value: 'bank', label: t('shell.moneyPage.bank') },
+    { value: 'reports', label: t('shell.moneyPage.reports') }
+  ];
+
+  const deltaPositive = netMonthlyCashFlow >= 0;
+  const formatRunway = (value: number) =>
+    t('shell.moneyPage.months_short', { value: value >= 12 ? '12+' : value.toFixed(1) });
 
   return (
-    <div className="space-y-4">
-      <section className="tycoon-panel p-5">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="tycoon-kicker">{t('shell.moneyPage.capital_hq')}</p>
-            <h2 className="mt-2 text-3xl font-bold text-white">{t('shell.moneyPage.choose_your_next_money_move')}</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">{t('shell.moneyPage.keep_a_cash_reserve_compare')}
+    <motion.div
+      className="space-y-4"
+      variants={stagger(0.05)}
+      initial={MOTION_DISABLED ? false : 'hidden'}
+      animate="show"
+    >
+      {/* Hero: where the money stands, at a glance (Stocks / Wallet). */}
+      <motion.section variants={riseIn} className="surface relative overflow-hidden p-5 sm:p-6">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgb(48_209_88/0.16),transparent_65%)]"
+        />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0 max-w-xl">
+            <p className="eyebrow">{t('shell.moneyPage.capital_hq')}</p>
+            <h2 className="t-title-2 mt-1 text-white">{t('shell.moneyPage.choose_your_next_money_move')}</h2>
+            <p className="mt-1.5 text-[15px] leading-[21px] text-slate-400">{t('shell.moneyPage.keep_a_cash_reserve_compare')}
             </p>
           </div>
-          <div className="grid gap-2 grid-cols-3 lg:min-w-[400px]">
-            <div className="rounded-lg border border-slate-800 bg-slate-950/35 p-3">
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
-                <ShieldCheck size={14} className="text-emerald-300" />{t('shell.moneyPage.runway')}
+          <div className="shrink-0 lg:text-right">
+            <p className="text-[13px] font-medium text-slate-400">{t('ui.money.netWorth')}</p>
+            <AnimatedNumber
+              value={netWorth}
+              format={formatMoney}
+              className="mt-0.5 block text-[40px] font-bold leading-[44px] tracking-[-0.03em] text-white sm:text-[46px] sm:leading-[50px]"
+            />
+          </div>
+        </div>
+
+        <div className="relative mt-5 grid grid-cols-3 divide-x divide-white/[0.08] border-t border-white/[0.08] pt-4">
+          <Stat
+            icon={<ShieldCheck size={12} strokeWidth={2.4} />}
+            tint="bg-emerald-400/15 text-emerald-300"
+            label={t('shell.moneyPage.runway')}
+          >
+            <AnimatedNumber value={Math.min(runwayMonths, 12)} format={formatRunway} />
+          </Stat>
+          <Stat
+            icon={<Target size={12} strokeWidth={2.4} />}
+            tint="bg-cyan-400/15 text-cyan-300"
+            label={t('shell.moneyPage.passive_target')}
+          >
+            <AnimatedNumber value={passiveTarget} format={(v) => `${formatMoney(v)}/mo`} flash={false} />
+          </Stat>
+          <Stat
+            icon={<TrendingUp size={12} strokeWidth={2.4} />}
+            tint={deltaPositive ? 'bg-emerald-400/15 text-emerald-300' : 'bg-rose-400/15 text-rose-300'}
+            label={t('shell.moneyPage.monthly_delta')}
+          >
+            <AnimatedNumber
+              value={netMonthlyCashFlow}
+              format={(v) => `${v >= 0 ? '+' : ''}${formatMoney(v)}`}
+              className={deltaPositive ? 'text-emerald-400' : 'text-rose-400'}
+            />
+          </Stat>
+        </div>
+      </motion.section>
+
+      {/* Charts sit one level deeper: a disclosure row, like Settings. */}
+      <motion.details variants={riseIn} className="group surface overflow-hidden">
+        <summary className="flex cursor-pointer list-none items-center gap-3 px-5 py-3.5 transition-colors hover:bg-white/[0.03] [&::-webkit-details-marker]:hidden">
+          <span className="grid h-7 w-7 place-items-center rounded-[8px] bg-sky-500/15 text-sky-300">
+            <LineChart size={15} />
+          </span>
+          <span className="flex-1 text-[15px] font-medium text-slate-100">{t('shell.moneyPage.view_charts_and_financial_overview')}</span>
+          <ChevronRight size={17} className="text-slate-500 transition-transform duration-300 ease-spring group-open:rotate-90" />
+        </summary>
+        <div className="space-y-5 border-t border-white/[0.06] px-5 pb-5 pt-4">
+          <section className="grid gap-5 lg:grid-cols-3 lg:gap-8">
+            <div className="lg:col-span-2">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="t-headline flex items-center gap-2 text-white">{t('shell.moneyPage.net_worth_over_time')}
+                  </h2>
+                  <p className="mt-0.5 text-[13px] text-slate-400">{t('shell.moneyPage.track_progress_toward_financial_freedom')}</p>
+                </div>
+                <p className="num text-[20px] font-semibold tracking-[-0.015em] text-white">{formatMoney(netWorth)}</p>
               </div>
-              <p className="mt-2 text-lg font-bold text-white">{t('shell.moneyPage.months_short', { value: runwayMonths >= 12 ? '12+' : runwayMonths.toFixed(1) })}</p>
+              <div className="mt-3 h-40 min-h-[1px] min-w-[1px]">
+                <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1} initialDimension={{width:300,height:220}}>
+                  <AreaChart data={netWorthHistory.map((entry) => ({ month: entry.month, value: entry.value }))}>
+                    <defs>
+                      <linearGradient id="netWorthGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#30D158" stopOpacity={0.38} />
+                        <stop offset="100%" stopColor="#30D158" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="month" hide />
+                    <YAxis hide />
+                    <Tooltip {...chartTooltipStyle} formatter={(value: number) => [formatMoneyFull(value), t('ui.money.netWorth')]} />
+                    <Area type="monotone" dataKey="value" stroke="#30D158" fill="url(#netWorthGradient)" strokeWidth={2.25} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div className="rounded-lg border border-slate-800 bg-slate-950/35 p-3">
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
-                <Target size={14} className="text-cyan-300" />{t('shell.moneyPage.passive_target')}
+
+            <div>
+              <h3 className="t-headline flex items-center gap-2 text-white">
+                <PieChartIcon size={16} className="text-sky-300" />{t('shell.moneyPage.asset_allocation')}
+              </h3>
+              <div className="mt-3 h-40 min-h-[1px] min-w-[1px]">
+                {assetAllocation.length === 0 ? (
+                  <div className="flex h-full items-center justify-center text-[13px] text-slate-500">{t('shell.moneyPage.no_assets_yet')}
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1} initialDimension={{width:300,height:220}}>
+                    <PieChart>
+                      <Pie
+                        data={assetAllocation}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={46}
+                        outerRadius={70}
+                        paddingAngle={2}
+                        cornerRadius={4}
+                        stroke="none"
+                      >
+                        {assetAllocation.map((entry, index) => (
+                          <Cell key={`slice-${entry.name}`} fill={allocationColors[index % allocationColors.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        {...chartTooltipStyle}
+                        formatter={(value: number, _name: string, props: any) => [
+                          formatMoneyFull(value),
+                          props?.payload?.name || t('shell.moneyPage.asset_class')
+                        ]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
               </div>
-              <p className="mt-2 text-lg font-bold text-white">{formatMoney(passiveTarget)}/mo</p>
             </div>
-            <div className="rounded-lg border border-slate-800 bg-slate-950/35 p-3">
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
-                <TrendingUp size={14} className={netMonthlyCashFlow >= 0 ? 'text-emerald-300' : 'text-rose-300'} />{t('shell.moneyPage.monthly_delta')}
+          </section>
+
+          <section className="grid grid-cols-1 divide-y divide-white/[0.06] rounded-[16px] bg-white/[0.04] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <div className="px-4 py-3">
+              <div className="flex items-center gap-1.5 text-[12px] font-medium text-slate-400">
+                <Wallet size={13} />{t('shell.moneyPage.net_cash_flow')}
               </div>
-              <p className={`mt-2 text-lg font-bold ${netMonthlyCashFlow >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>
-                {netMonthlyCashFlow >= 0 ? '+' : ''}{formatMoney(netMonthlyCashFlow)}
+              <p className={`num mt-1 text-[17px] font-semibold ${cashFlow.income - cashFlow.expenses >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {cashFlow.income - cashFlow.expenses >= 0 ? '+' : ''}
+                {formatMoney(cashFlow.income - cashFlow.expenses)}/mo
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <details className="tycoon-panel p-4">
-        <summary className="cursor-pointer text-sm font-semibold text-slate-200">{t('shell.moneyPage.view_charts_and_financial_overview')}</summary>
-        <div className="mt-4 space-y-4">
-      <section className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 glass-panel p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                <LineChart size={18} className="text-emerald-300" />{t('shell.moneyPage.net_worth_over_time')}
-              </h2>
-              <p className="text-xs text-slate-400 mt-1">{t('shell.moneyPage.track_progress_toward_financial_freedom')}</p>
+            <div className="px-4 py-3">
+              <div className="flex items-center gap-1.5 text-[12px] font-medium text-slate-400">
+                <Banknote size={13} />{t('shell.moneyPage.total_liabilities')}
+              </div>
+              <p className="num mt-1 text-[17px] font-semibold text-rose-400">{formatMoney(liabilitiesTotal)}</p>
             </div>
-            <p className="text-lg font-semibold text-white">{formatMoney(netWorth)}</p>
-          </div>
-          <div className="h-40 mt-4 min-w-[1px] min-h-[1px]">
-            <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1} initialDimension={{width:300,height:220}}>
-              <AreaChart data={netWorthHistory.map((entry) => ({ month: entry.month, value: entry.value }))}>
-                <defs>
-                  <linearGradient id="netWorthGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#34d399" stopOpacity={0.5} />
-                    <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="month" hide />
-                <YAxis hide />
-                <Tooltip formatter={(value: number) => [formatMoneyFull(value), t('shell.moneyPage.net_worth')]} />
-                <Area type="monotone" dataKey="value" stroke="#34d399" fill="url(#netWorthGradient)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="glass-panel p-6">
-          <div className="flex items-center gap-2">
-            <PieChartIcon size={18} className="text-blue-300" />
-            <h3 className="text-lg font-semibold">{t('shell.moneyPage.asset_allocation')}</h3>
-          </div>
-          <div className="h-40 mt-4 min-w-[1px] min-h-[1px]">
-            {assetAllocation.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-sm text-slate-500">{t('shell.moneyPage.no_assets_yet')}
+            <div className="px-4 py-3">
+              <div className="flex items-center gap-1.5 text-[12px] font-medium text-slate-400">
+                <Wallet size={13} />{t('shell.moneyPage.portfolio_value')}
               </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%" minHeight={1} minWidth={1} initialDimension={{width:300,height:220}}>
-                <PieChart>
-                  <Pie
-                    data={assetAllocation}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={40}
-                    outerRadius={70}
-                    paddingAngle={2}
-                  >
-                    {assetAllocation.map((entry, index) => (
-                      <Cell key={`slice-${entry.name}`} fill={allocationColors[index % allocationColors.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: number, _name: string, props: any) => [
-                      formatMoneyFull(value),
-                      props?.payload?.name || t('shell.moneyPage.asset_class')
-                    ]}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+              <p className="num mt-1 text-[17px] font-semibold text-white">{formatMoney(portfolioValue)}</p>
+            </div>
+          </section>
         </div>
-      </section>
+      </motion.details>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <div className="glass-tile p-4">
-          <div className="flex items-center gap-2 text-slate-400 text-xs">
-            <Wallet size={14} />{t('shell.moneyPage.net_cash_flow')}
-          </div>
-          <p className={`mt-2 text-lg font-semibold ${cashFlow.income - cashFlow.expenses >= 0 ? 'text-emerald-300' : 'text-red-400'}`}>
-            {cashFlow.income - cashFlow.expenses >= 0 ? '+' : ''}
-            {formatMoney(cashFlow.income - cashFlow.expenses)}/mo
-          </p>
-        </div>
-        <div className="glass-tile p-4">
-          <div className="flex items-center gap-2 text-slate-400 text-xs">
-            <Banknote size={14} />{t('shell.moneyPage.total_liabilities')}
-          </div>
-          <p className="mt-2 text-lg font-semibold text-red-400">{formatMoney(liabilitiesTotal)}</p>
-        </div>
-        <div className="glass-tile p-4">
-          <div className="flex items-center gap-2 text-slate-400 text-xs">
-            <Wallet size={14} />{t('shell.moneyPage.portfolio_value')}
-          </div>
-          <p className="mt-2 text-lg font-semibold text-white">{formatMoney(portfolioValue)}</p>
-        </div>
-      </section>
+      <motion.section variants={riseIn} className="pt-1">
+        <SegmentedControl
+          role="group"
+          ariaLabel={t('shell.moneyPage.money')}
+          options={tabOptions}
+          value={activeTab}
+          onChange={onTabChange}
+          size="md"
+          fill
+          className="sm:inline-flex sm:w-auto"
+        />
 
-        </div>
-      </details>
-
-      <section className="glass-panel p-6">
-        <div className="flex flex-wrap items-center gap-2 mb-6">
-          <button type="button" className={tabButtonClass('invest')} onClick={() => onTabChange('invest')}>{t('shell.moneyPage.invest')}
-          </button>
-          <button type="button" className={tabButtonClass('portfolio')} onClick={() => onTabChange('portfolio')}>{t('shell.moneyPage.portfolio')}
-          </button>
-          <button type="button" className={tabButtonClass('bank')} onClick={() => onTabChange('bank')}>{t('shell.moneyPage.bank')}
-          </button>
-          <button type="button" className={tabButtonClass('reports')} onClick={() => onTabChange('reports')}>{t('shell.moneyPage.reports')}
-          </button>
-        </div>
-
-        {activeTab === 'invest' && (
-          <InvestTab {...investTabProps} showQuiz={showQuiz} />
-        )}
-        {activeTab === 'portfolio' && (
-          <PortfolioTab
-            {...portfolioTabProps}
-            activeTab={TABS.ASSETS}
-            setActiveTab={handleLegacyTabChange}
-          />
-        )}
-        {activeTab === 'bank' && (
-          <BankTab {...bankTabProps} />
-        )}
-        {activeTab === 'reports' && (
-          <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
-            <div className="tycoon-card p-5">
-              <div className="flex items-center gap-2">
-                <Activity size={17} className="text-emerald-300" />
-                <h3 className="text-lg font-semibold text-white">{t('shell.moneyPage.capital_diagnosis')}</h3>
-              </div>
-              <div className="mt-5 space-y-4">
-                {reportRows.map((row) => (
-                  <div key={row.label}>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-400">{row.label}</span>
-                      <span className="font-semibold text-white">{row.value}</span>
+        {/* The new sub-page rises in over the old one's slot; nothing waits for anything to leave. */}
+        <motion.div
+          key={activeTab}
+          className="mt-5"
+          initial={MOTION_DISABLED ? false : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={springs.smooth}
+        >
+          {activeTab === 'invest' && (
+            <InvestTab {...investTabProps} showQuiz={showQuiz} />
+          )}
+          {activeTab === 'portfolio' && (
+            <PortfolioTab
+              {...portfolioTabProps}
+              activeTab={TABS.ASSETS}
+              setActiveTab={handleLegacyTabChange}
+            />
+          )}
+          {activeTab === 'bank' && (
+            <BankTab {...bankTabProps} />
+          )}
+          {activeTab === 'reports' && (
+            <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
+              <div className="surface p-5">
+                <div className="flex items-center gap-2.5">
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-emerald-400/15 text-emerald-300">
+                    <Activity size={16} />
+                  </span>
+                  <h3 className="t-title-3 text-white">{t('shell.moneyPage.capital_diagnosis')}</h3>
+                </div>
+                <div className="mt-5 space-y-5">
+                  {reportRows.map((row) => (
+                    <div key={row.label}>
+                      <div className="flex items-baseline justify-between text-[15px]">
+                        <span className="text-slate-300">{row.label}</span>
+                        <span className="num text-[17px] font-semibold text-white">{row.value}</span>
+                      </div>
+                      <div className="meter mt-2">
+                        <motion.div
+                          className={`h-full rounded-full ${row.tone}`}
+                          initial={MOTION_DISABLED ? false : { width: 0 }}
+                          animate={{ width: `${row.progress}%` }}
+                          transition={springs.settle}
+                        />
+                      </div>
                     </div>
-                    <div className="mt-2 h-2 rounded-full bg-slate-800">
-                      <div className={`h-full rounded-full ${row.tone}`} style={{ width: `${row.progress}%` }} />
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <div className="tycoon-card p-5">
-              <div className="flex items-center gap-2">
-                <Target size={17} className="text-cyan-300" />
-                <h3 className="text-lg font-semibold text-white">{t('shell.moneyPage.decision_rules')}</h3>
+              <div className="surface flex flex-col p-5">
+                <div className="flex items-center gap-2.5">
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-cyan-400/15 text-cyan-300">
+                    <Target size={16} />
+                  </span>
+                  <h3 className="t-title-3 text-white">{t('shell.moneyPage.decision_rules')}</h3>
+                </div>
+                <ol className="mt-4 space-y-3 text-[15px] leading-[21px] text-slate-300">
+                  {[
+                    t('shell.moneyPage.keep_at_least_3_months'),
+                    t('shell.moneyPage.convert_surplus_cash_into_diversified'),
+                    t('shell.moneyPage.if_monthly_delta_turns_negative')
+                  ].map((rule, index) => (
+                    <li key={index} className="flex gap-3">
+                      <span className="num mt-px grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white/[0.08] text-[11px] font-semibold text-slate-300">{index + 1}</span>
+                      <p>{rule}</p>
+                    </li>
+                  ))}
+                </ol>
+                <div className="mt-4 flex items-center justify-between rounded-[12px] bg-white/[0.045] px-3.5 py-2.5 text-[13px] text-slate-400">{t('shell.moneyPage.current_interest_rate')} <span className="num font-semibold text-white">{formatPercent(gameState.economy?.interestRate || 0.065)}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onTabChange('invest')}
+                  className="btn-primary mt-5 self-start px-5 py-2.5 text-[15px]"
+                >{t('shell.moneyPage.review_investments')}
+                  <ArrowRight size={16} />
+                </button>
               </div>
-              <div className="mt-4 space-y-3 text-sm leading-6 text-slate-300">
-                <p>{t('shell.moneyPage.keep_at_least_3_months')}</p>
-                <p>{t('shell.moneyPage.convert_surplus_cash_into_diversified')}</p>
-                <p>{t('shell.moneyPage.if_monthly_delta_turns_negative')}</p>
-              </div>
-              <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/35 px-3 py-2 text-xs text-slate-400">{t('shell.moneyPage.current_interest_rate')} <span className="font-semibold text-white">{formatPercent(gameState.economy?.interestRate || 0.065)}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => onTabChange('invest')}
-                className="mt-5 inline-flex items-center gap-2 rounded-md bg-emerald-400 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-emerald-300"
-              >{t('shell.moneyPage.review_investments')}
-                <ArrowRight size={15} />
-              </button>
             </div>
-          </div>
-        )}
-      </section>
-    </div>
+          )}
+        </motion.div>
+      </motion.section>
+    </motion.div>
   );
 };
 
@@ -351,9 +442,9 @@ const MoneyPage: React.FC = () => {
   const { t } = useI18n();
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6">
-        <h2 className="text-2xl font-bold">{t('shell.moneyPage.money')}</h2>
-        <p className="mt-2 text-sm text-slate-400">{t('shell.moneyPage.budgeting_cash_flow_investments_and')}
+      <section className="surface p-6">
+        <h2 className="t-title-2 text-white">{t('shell.moneyPage.money')}</h2>
+        <p className="mt-2 text-[15px] text-slate-400">{t('shell.moneyPage.budgeting_cash_flow_investments_and')}
         </p>
       </section>
     </div>

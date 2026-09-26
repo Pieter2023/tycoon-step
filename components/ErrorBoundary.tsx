@@ -33,24 +33,24 @@ export default class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       const t = this.context?.t ?? ((key: string) => key);
       return (
-        <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-6">
-          <div className="max-w-lg w-full bg-slate-800/60 border border-slate-700 rounded-2xl p-6">
+        <div className="min-h-screen text-white flex items-center justify-center p-6">
+          <div className="surface max-w-lg w-full p-6">
             <h1 className="text-xl font-bold mb-2">{t("errors.genericTitle")}</h1>
             <p className="text-slate-300 text-sm mb-4">
               {t("errors.genericBody")}
             </p>
-            <div className="bg-slate-900/60 border border-slate-700 rounded-xl p-3 text-xs text-slate-300 overflow-auto">
+            <div className="surface-inset p-3 text-xs text-slate-300 overflow-auto">
               {this.state.error?.message || t("errors.unknown")}
             </div>
             <div className="mt-4 flex gap-2">
               <button
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-semibold"
+                className="btn-primary h-10 px-5 text-sm"
                 onClick={this.handleReset}
               >
                 {t("actions.refresh")}
               </button>
               <button
-                className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 font-semibold"
+                className="btn-secondary h-10 px-5 text-sm"
                 onClick={() => this.setState({ hasError: false, error: undefined })}
               >
                 {t("actions.tryContinue")}

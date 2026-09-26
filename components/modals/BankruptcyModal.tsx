@@ -1,75 +1,94 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import Modal from '../Modal';
 import { GameState } from '../../types';
 import { playClick } from '../../services/audioService';
 import { formatCurrencyCompactValue } from '../../i18n';
+import { SheetEmblem, SheetItem, SheetStagger } from './sheet';
 
 const formatMoney = (val: number): string => formatCurrencyCompactValue(val);
 
 // Game-over screen for normal (non-challenge) games. Blocking by design.
+// Calm on purpose: no shaking or bouncing, a quiet red, and the way back in front.
 interface BankruptcyModalProps {
   gameState: GameState;
   onShare: () => void;
   onPlayAgain: () => void;
 }
 
-const BankruptcyModal: React.FC<BankruptcyModalProps> = ({ gameState, onShare, onPlayAgain }) => (
-  <Modal
-    isOpen={gameState.isBankrupt}
-    onClose={() => undefined}
-    ariaLabel="Bankruptcy"
-    overlayClassName="bg-black/90"
-    closeOnOverlayClick={false}
-    closeOnEsc={false}
-    showCloseButton={false}
-    contentClassName="bg-transparent border-0 shadow-none max-w-md w-full"
-  >
-    <motion.div
-      initial={{ scale: 0.5 }}
-      animate={{ scale: 1 }}
-      className="bg-gradient-to-br from-red-900/50 to-slate-900/50 border border-red-500/50 rounded-2xl p-8 w-full text-center"
+const BankruptcyModal: React.FC<BankruptcyModalProps> = ({ gameState, onShare, onPlayAgain }) => {
+  const years = Math.floor(gameState.month / 12);
+  const stats: { label: string; value: React.ReactNode; tone: string }[] = [
+    { label: 'Time Survived', value: `${years}y ${gameState.month % 12}m`, tone: 'text-white' },
+    { label: 'Credit Rating', value: <>{gameState.creditRating || 'N/A'} 📉</>, tone: 'text-red-300' },
+    { label: 'Missed Payments', value: <>{gameState.missedPayments || 0} 😅</>, tone: 'text-red-300' },
+    { label: 'Final Debt', value: formatMoney(gameState.liabilities.reduce((s, l) => s + l.balance, 0)), tone: 'text-red-300' }
+  ];
+  return (
+    <Modal
+      isOpen={gameState.isBankrupt}
+      onClose={() => undefined}
+      ariaLabel="Bankruptcy"
+      overlayClassName="bg-black/80"
+      closeOnOverlayClick={false}
+      closeOnEsc={false}
+      showCloseButton={false}
+      contentClassName="max-w-md overflow-hidden"
     >
-      <motion.div
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 2, repeat: Infinity }}
-        className="text-7xl mb-4"
-      >💸</motion.div>
-      <h2 className="text-4xl font-bold text-red-400 mb-2">BROKE!</h2>
-      <p className="text-white mb-2">Your wallet has filed for emotional support.</p>
-      <p className="text-slate-400 text-sm mb-4 italic">
-        {Math.floor(gameState.month / 12) < 2
-          ? "Speedrun bankruptcy! That's... actually impressive in a way? 😬"
-          : Math.floor(gameState.month / 12) < 5
-            ? "The bank called. They said 'LOL.' Then hung up. 📞"
-            : "Your credit score is now a cautionary tale told to finance students. 📚"}
-      </p>
-      <div className="bg-black/30 rounded-xl p-4 mb-6 text-sm">
-        <p className="text-slate-400 mb-2">📊 The Damage Report</p>
-        <div className="grid grid-cols-2 gap-2">
-          <div><p className="text-slate-400">Time Survived</p><p className="text-white font-bold">{Math.floor(gameState.month / 12)}y {gameState.month % 12}m</p></div>
-          <div><p className="text-slate-400">Credit Rating</p><p className="text-red-400 font-bold">{gameState.creditRating || 'N/A'} 📉</p></div>
-          <div><p className="text-slate-400">Missed Payments</p><p className="text-red-400 font-bold">{gameState.missedPayments || 0} 😅</p></div>
-          <div><p className="text-slate-400">Final Debt</p><p className="text-red-400 font-bold">{formatMoney(gameState.liabilities.reduce((s, l) => s + l.balance, 0))}</p></div>
-        </div>
-      </div>
-      <p className="text-yellow-400 text-sm mb-4">
-        💡 Pro tip: Emergency funds are like umbrellas. You never need one until you REALLY need one.
-      </p>
-      <button
-        onClick={() => { playClick(); onShare(); }}
-        className="w-full py-3 mb-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-bold transition-all"
-      >
-        📤 Share the damage report
-      </button>
-      <button
-        onClick={() => { playClick(); onPlayAgain(); }}
-        className="w-full py-3 bg-red-600 hover:bg-red-500 rounded-xl font-bold transition-all"
-      >
-        🎮 Redemption Arc Time
-      </button>
-    </motion.div>
-  </Modal>
-);
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(100%_90%_at_50%_0%,rgb(255_69_58/0.14),transparent_75%)]" />
+      <SheetStagger className="relative px-6 pb-6 pt-8 text-center" gap={0.06} delay={0.12}>
+        <SheetEmblem className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-red-500/[0.14] ring-1 ring-inset ring-red-400/20">
+          <span className="text-[40px] leading-none" aria-hidden>💸</span>
+        </SheetEmblem>
+
+        <SheetItem className="mt-5">
+          <h2 className="font-display text-[34px] font-bold leading-[1.1] tracking-[-0.025em] text-red-300">BROKE!</h2>
+          <p className="mt-2 text-[15px] text-slate-200">Your wallet has filed for emotional support.</p>
+          <p className="mx-auto mt-1.5 max-w-sm text-[14px] italic text-slate-400">
+            {years < 2
+              ? "Speedrun bankruptcy! That's... actually impressive in a way? 😬"
+              : years < 5
+                ? "The bank called. They said 'LOL.' Then hung up. 📞"
+                : "Your credit score is now a cautionary tale told to finance students. 📚"}
+          </p>
+        </SheetItem>
+
+        <SheetItem className="mt-5 text-left">
+          <p className="eyebrow mb-2 px-1">📊 The Damage Report</p>
+          <div className="list-group grid grid-cols-2">
+            {stats.map((s, i) => (
+              <div key={s.label} className={`p-3.5 ${i < 2 ? 'border-b border-white/[0.06]' : ''} ${i % 2 === 0 ? 'border-r border-white/[0.06]' : ''}`}>
+                <p className="text-[12px] text-slate-400">{s.label}</p>
+                <p className={`num mt-0.5 text-[18px] font-bold ${s.tone}`}>{s.value}</p>
+              </div>
+            ))}
+          </div>
+        </SheetItem>
+
+        <SheetItem className="mt-4">
+          <p className="rounded-[14px] bg-yellow-400/[0.08] px-4 py-3 text-left text-[14px] leading-snug text-yellow-200">
+            💡 Pro tip: Emergency funds are like umbrellas. You never need one until you REALLY need one.
+          </p>
+        </SheetItem>
+
+        <SheetItem className="mt-5 space-y-2.5">
+          <button
+            type="button"
+            onClick={() => { playClick(); onPlayAgain(); }}
+            className="btn-primary min-h-[50px] w-full px-5 text-[16px]"
+          >
+            🎮 Redemption Arc Time
+          </button>
+          <button
+            type="button"
+            onClick={() => { playClick(); onShare(); }}
+            className="btn-secondary min-h-[50px] w-full px-5 text-[16px]"
+          >
+            📤 Share the damage report
+          </button>
+        </SheetItem>
+      </SheetStagger>
+    </Modal>
+  );
+};
 
 export default BankruptcyModal;

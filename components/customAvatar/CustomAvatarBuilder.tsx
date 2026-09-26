@@ -148,7 +148,7 @@ const CustomAvatarBuilder: React.FC<CustomAvatarBuilderProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 md:p-8">
+    <div className="min-h-screen p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -158,21 +158,21 @@ const CustomAvatarBuilder: React.FC<CustomAvatarBuilderProps> = ({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 rounded-full text-sm font-semibold text-slate-300 hover:text-white transition-colors"
+            className="btn-secondary h-9 px-4 text-sm"
           >
             Back to Characters
           </button>
         </div>
 
         {error && (
-          <div className="mb-6 rounded-2xl border border-red-500/40 bg-red-900/20 p-4 text-red-200 text-sm">
+          <div className="mb-6 rounded-[18px] bg-[#ff453a]/12 p-4 text-[#ff8a82] text-sm">
             {error}
           </div>
         )}
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <div className="w-12 h-12 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+            <div className="w-10 h-10 rounded-full border-[3px] border-white/15 border-t-[#30d158] animate-spin"></div>
             <p className="text-slate-300 text-sm">{loadingMessage}</p>
           </div>
         ) : (
@@ -200,7 +200,7 @@ const CustomAvatarBuilder: React.FC<CustomAvatarBuilderProps> = ({
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleBaseSelected(char)}
-                      className="relative aspect-[9/16] rounded-3xl overflow-hidden bg-slate-900 border border-slate-700 hover:border-emerald-500 transition-all shadow-2xl"
+                      className="relative aspect-[9/16] rounded-[28px] overflow-hidden bg-slate-900 border border-white/[0.08] hover:border-[#30d158]/70 transition-colors shadow-2xl"
                     >
                       <img src={char.url} alt="Avatar option" className="w-full h-full object-cover" />
                       <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/70 to-transparent text-white text-sm font-semibold">
@@ -213,7 +213,7 @@ const CustomAvatarBuilder: React.FC<CustomAvatarBuilderProps> = ({
                   <button
                     type="button"
                     onClick={() => setStep('capture')}
-                    className="text-slate-400 text-sm font-semibold hover:text-white transition-colors"
+                    className="pressable rounded-full px-3 py-1.5 text-[#0a84ff] text-sm font-semibold hover:bg-white/[0.06]"
                   >
                     Retake photo
                   </button>
@@ -223,7 +223,7 @@ const CustomAvatarBuilder: React.FC<CustomAvatarBuilderProps> = ({
 
             {step === 'style' && selectedBase && (
               <div className="grid lg:grid-cols-2 gap-10 items-start">
-                <div className="rounded-3xl overflow-hidden border border-slate-700 bg-slate-900">
+                <div className="rounded-[28px] overflow-hidden border border-white/[0.08] bg-slate-900 shadow-2xl">
                   <img src={selectedBase.url} alt="Selected base" className="w-full h-full object-cover" />
                 </div>
                 <div className="space-y-6">
@@ -243,10 +243,10 @@ const CustomAvatarBuilder: React.FC<CustomAvatarBuilderProps> = ({
                               key={opt.id}
                               type="button"
                               onClick={() => toggleSelection(opt)}
-                              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+                              className={`pressable px-4 py-2 rounded-full text-[13px] font-semibold transition-colors ${
                                 selected
-                                  ? 'bg-emerald-500 text-white shadow-lg'
-                                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                                  ? 'bg-[#30d158] text-[#03170a]'
+                                  : 'bg-[rgb(118_118_128/0.24)] text-slate-200 hover:bg-[rgb(118_118_128/0.36)]'
                               }`}
                             >
                               {opt.name}
@@ -261,14 +261,14 @@ const CustomAvatarBuilder: React.FC<CustomAvatarBuilderProps> = ({
                     <button
                       type="button"
                       onClick={() => setStep('select')}
-                      className="px-4 py-2 rounded-full text-sm font-semibold text-slate-300 hover:text-white transition-colors"
+                      className="btn-secondary h-10 px-4 text-sm"
                     >
                       Back
                     </button>
                     <button
                       type="button"
                       onClick={finalizeAvatar}
-                      className="px-5 py-2 rounded-full bg-emerald-500 text-white text-sm font-semibold"
+                      className="btn-primary h-10 px-5 text-sm"
                     >
                       Render Final Avatar
                     </button>
@@ -279,7 +279,7 @@ const CustomAvatarBuilder: React.FC<CustomAvatarBuilderProps> = ({
 
             {step === 'final' && finalAvatar && (
               <div className="grid lg:grid-cols-2 gap-10 items-start">
-                <div className="rounded-3xl overflow-hidden border border-slate-700 bg-slate-900">
+                <div className="rounded-[28px] overflow-hidden border border-white/[0.08] bg-slate-900 shadow-2xl">
                   <img src={finalAvatar} alt="Final avatar" className="w-full h-full object-cover" />
                 </div>
                 <div className="space-y-6">
@@ -295,7 +295,7 @@ const CustomAvatarBuilder: React.FC<CustomAvatarBuilderProps> = ({
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Enter a name"
-                      className="w-full rounded-xl bg-slate-900 border border-slate-700 px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                      className="w-full rounded-[12px] bg-[rgb(118_118_128/0.24)] px-4 py-3 text-white text-[15px] placeholder:text-slate-500 focus:outline-none focus:ring-[3px] focus:ring-[#0a84ff]/60"
                     />
                   </div>
 
@@ -310,10 +310,10 @@ const CustomAvatarBuilder: React.FC<CustomAvatarBuilderProps> = ({
                             key={path}
                             type="button"
                             onClick={() => setCareerPath(path)}
-                            className={`rounded-xl border px-3 py-3 text-left transition-all ${
+                            className={`pressable rounded-[14px] border px-3 py-3 text-left transition-colors ${
                               selected
-                                ? 'border-emerald-500 bg-emerald-500/10 text-white'
-                                : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-500'
+                                ? 'border-[#30d158]/70 bg-[#30d158]/10 text-white'
+                                : 'border-white/[0.07] bg-white/[0.04] text-slate-300 hover:bg-white/[0.07]'
                             }`}
                           >
                             <p className="text-sm font-semibold">{career.name}</p>
@@ -328,14 +328,14 @@ const CustomAvatarBuilder: React.FC<CustomAvatarBuilderProps> = ({
                     <button
                       type="button"
                       onClick={() => setStep('style')}
-                      className="px-4 py-2 rounded-full text-sm font-semibold text-slate-300 hover:text-white transition-colors"
+                      className="btn-secondary h-10 px-4 text-sm"
                     >
                       Back to Style Lab
                     </button>
                     <button
                       type="button"
                       onClick={handleComplete}
-                      className="px-5 py-2 rounded-full bg-emerald-500 text-white text-sm font-semibold"
+                      className="btn-primary h-10 px-5 text-sm"
                     >
                       Start Game
                     </button>

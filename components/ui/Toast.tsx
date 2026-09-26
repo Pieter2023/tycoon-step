@@ -19,27 +19,11 @@ interface ToastProps {
   onDismiss: (id: string) => void;
 }
 
-const toastConfig: Record<ToastType, { icon: typeof CheckCircle; color: string; bgColor: string }> = {
-  success: {
-    icon: CheckCircle,
-    color: 'text-emerald-400',
-    bgColor: 'bg-emerald-500/20',
-  },
-  error: {
-    icon: XCircle,
-    color: 'text-rose-400',
-    bgColor: 'bg-rose-500/20',
-  },
-  warning: {
-    icon: AlertTriangle,
-    color: 'text-amber-400',
-    bgColor: 'bg-amber-500/20',
-  },
-  info: {
-    icon: Info,
-    color: 'text-cyan-400',
-    bgColor: 'bg-cyan-500/20',
-  },
+const toastConfig: Record<ToastType, { icon: typeof CheckCircle; tile: string }> = {
+  success: { icon: CheckCircle, tile: 'bg-[#30d158]' },
+  error: { icon: XCircle, tile: 'bg-[#ff453a]' },
+  warning: { icon: AlertTriangle, tile: 'bg-[#ff9f0a]' },
+  info: { icon: Info, tile: 'bg-[#0a84ff]' },
 };
 
 export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
@@ -55,34 +39,33 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
     return () => clearTimeout(timer);
   }, [toast.id, toast.duration, onDismiss]);
 
+  // Slides in from the right edge it lives on and leaves the same way; neighbours glide into
+  // the gap (layout) instead of jumping.
   return (
     <motion.div
-      initial={{ opacity: 0, x: 100, scale: 0.9 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 100, scale: 0.9 }}
-      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-      className="min-w-[320px] max-w-[400px] glass-card p-4 shadow-2xl border-l-4"
-      style={{
-        borderLeftColor: toast.type === 'success' ? '#10b981' : 
-                        toast.type === 'error' ? '#f43f5e' :
-                        toast.type === 'warning' ? '#f59e0b' : '#06b6d4'
-      }}
+      layout
+      initial={{ opacity: 0, x: 48, scale: 0.94, filter: 'blur(6px)' }}
+      animate={{ opacity: 1, x: 0, scale: 1, filter: 'blur(0px)', transitionEnd: { filter: 'none' } }}
+      exit={{ opacity: 0, x: 48, scale: 0.96, filter: 'blur(4px)', transition: { type: 'spring', bounce: 0, duration: 0.3 } }}
+      transition={{ type: 'spring', bounce: 0.18, duration: 0.5 }}
+      className="mat-popover w-[min(380px,calc(100vw-2rem))] rounded-[20px] p-3 pr-2.5"
+      role="status"
     >
       <div className="flex items-start gap-3">
-        <div className={`p-2 rounded-lg ${config.bgColor} flex-shrink-0`}>
-          <Icon className={`w-5 h-5 ${config.color}`} />
+        <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25)] ${config.tile}`}>
+          <Icon className="h-[18px] w-[18px]" strokeWidth={2.4} />
         </div>
-        <div className="flex-1 min-w-0">
-          <h4 className="font-semibold text-white text-sm">{toast.title}</h4>
-          <p className="text-slate-400 text-xs mt-0.5">{toast.message}</p>
-          
+        <div className="min-w-0 flex-1 pt-0.5">
+          <h4 className="text-[14px] font-semibold leading-5 tracking-[-0.01em] text-white">{toast.title}</h4>
+          <p className="mt-0.5 text-[13px] leading-[1.125rem] text-slate-400">{toast.message}</p>
+
           {toast.actionLabel && toast.onAction && (
             <button
               onClick={() => {
                 toast.onAction?.();
                 onDismiss(toast.id);
               }}
-              className="mt-2 text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
+              className="pressable mt-2 rounded-full bg-[rgb(118_118_128/0.24)] px-3 py-1 text-[12px] font-semibold text-white hover:bg-[rgb(118_118_128/0.36)]"
             >
               {toast.actionLabel}
             </button>
@@ -90,9 +73,10 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
         </div>
         <button
           onClick={() => onDismiss(toast.id)}
-          className="text-slate-500 hover:text-slate-300 transition-colors p-1 hover:bg-white/10 rounded"
+          aria-label="Dismiss"
+          className="pressable flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-slate-400 hover:bg-white/[0.08] hover:text-white"
         >
-          <X className="w-4 h-4" />
+          <X className="h-3.5 w-3.5" strokeWidth={2.6} />
         </button>
       </div>
     </motion.div>
@@ -107,7 +91,7 @@ interface ToastContainerProps {
 
 export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismiss }) => {
   return (
-    <div className="fixed top-24 right-6 z-[100] flex flex-col gap-3">
+    <div className="fixed top-24 right-4 z-[100] flex flex-col items-end gap-2.5 md:right-6">
       <AnimatePresence mode="popLayout">
         {toasts.map((toast) => (
           <Toast key={toast.id} toast={toast} onDismiss={onDismiss} />

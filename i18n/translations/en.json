@@ -939,6 +939,7 @@
   "shell.pageHeader.next_month_shortcut": "Next Month (N)",
   "shell.mobileShell.next_month_shortcut": "Next Month (N)",
   "shell.mobileShell.ai_risk": "AI Risk: {level}",
+  "shell.mobileShell.open_profile": "Open your profile",
   "shell.commandDashboard.actions_left": "{remaining} of {max} actions left. Balance income, learning and rest.",
   "shell.commandDashboard.freedom_target": "Freedom target: {target}/mo · {ratio} covered",
   "shell.commandDashboard.goal_sentence": "Your goal is freedom income above {target}/mo: investments count at 4% of their value a year, businesses and rentals at what they pay. Current coverage is {ratio}, with {remaining} of {max} monthly actions available.",
@@ -964,6 +965,7 @@
   "shell.lifePage.income_per_month": "{amount}/mo income",
   "shell.lifePage.children_count": "Children: {count}",
   "shell.moneyPage.months_short": "{value} mo",
+  "ui.money.netWorth": "Net worth",
   "shell.header.next_month": "Next Month",
   "shell.header.next_month_shortcut": "Next Month (N)",
   "shell.header.autoplay": "Autoplay",
@@ -1016,5 +1018,12 @@
   "track.chapterDoneTitle": "Chapter {n} complete: {title}",
   "track.chapterDoneBody": "Next up: {title}.",
   "track.milestoneTitle": "Milestone reached: {title}",
-  "shell.profileScreen.more_about_you": "More about you: happiness and health"
+  "shell.profileScreen.more_about_you": "More about you: happiness and health",
+  "ui.career.monthlySalary": "Monthly salary",
+  "ui.career.levelOf": "Level {level} of {total}",
+  "ui.career.monthsShort": "{months} mo",
+  "ui.career.current": "Current",
+  "ui.career.next": "Next",
+  "ui.career.towardNext": "{have} of {need} mo of experience",
+  "ui.learn.certifiedCount": "{count} of {total} certified"
 }

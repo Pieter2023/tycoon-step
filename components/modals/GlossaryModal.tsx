@@ -1,6 +1,7 @@
 import React from 'react';
 import Modal from '../Modal';
 import { GLOSSARY_ENTRIES } from '../../data/learning';
+import { SheetItem, SheetStagger } from './sheet';
 
 // Glossary of financial terms, reachable from the learn surfaces.
 interface GlossaryModalProps {
@@ -14,20 +15,35 @@ const GlossaryModal: React.FC<GlossaryModalProps> = ({ onClose }) => (
     ariaLabel="Glossary"
     closeOnOverlayClick
     closeOnEsc
-    contentClassName="bg-slate-800 border border-slate-700 rounded-2xl p-6 max-w-2xl w-full"
+    contentClassName="max-w-2xl! overflow-hidden"
   >
-    <h2 className="text-xl font-bold text-white mb-2">Glossary</h2>
-    <p className="text-slate-400 text-sm mb-4">
-      Quick definitions to help you learn without slowing down gameplay.
-    </p>
-    <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-      {GLOSSARY_ENTRIES.map((entry) => (
-        <div key={entry.term} className="rounded-xl border border-slate-700 bg-slate-900/40 p-3">
-          <p className="text-sm font-semibold text-white">{entry.term}</p>
-          <p className="text-sm text-slate-300 mt-1">{entry.definition}</p>
+    <SheetStagger className="flex flex-col" gap={0.05}>
+      <SheetItem className="px-5 pb-3 pr-14 pt-6 sm:px-6">
+        <h2 className="t-title-1 text-white">Glossary</h2>
+        <p className="mt-1 text-[15px] text-slate-400">
+          Quick definitions to help you learn without slowing down gameplay.
+        </p>
+      </SheetItem>
+      <SheetItem>
+        {/* The list scrolls under a soft fade rather than a hard divider. */}
+        <div
+          className="max-h-[60vh] overflow-y-auto overscroll-contain px-5 pb-6 pt-1 sm:px-6"
+          style={{
+            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 20px), transparent 100%)',
+            maskImage: 'linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 20px), transparent 100%)'
+          }}
+        >
+          <dl className="list-group">
+            {GLOSSARY_ENTRIES.map((entry) => (
+              <div key={entry.term} className="list-row block py-3">
+                <dt className="text-[15px] font-semibold text-white">{entry.term}</dt>
+                <dd className="mt-0.5 text-[14px] leading-[1.45] text-slate-400">{entry.definition}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
-      ))}
-    </div>
+      </SheetItem>
+    </SheetStagger>
   </Modal>
 );
 

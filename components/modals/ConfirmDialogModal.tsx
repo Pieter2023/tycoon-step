@@ -1,5 +1,6 @@
 import React from 'react';
 import Modal from '../Modal';
+import { SheetItem, SheetStagger } from './sheet';
 
 // Confirmation dialog (prevents costly mis-clicks). The config carries its
 // own callbacks; the dialog closes itself before invoking them so a callback
@@ -20,70 +21,73 @@ interface ConfirmDialogModalProps {
   onClose: () => void;
 }
 
+// Drawn as an Apple alert: compact and centred, the question first, the figures in a quiet inset
+// list, and two capsule buttons (Cancel on the left, the action on the right; red when destructive).
 const ConfirmDialogModal: React.FC<ConfirmDialogModalProps> = ({ config, onClose }) => (
   <Modal
     isOpen
     onClose={onClose}
     ariaLabel="Confirmation"
-    overlayClassName="bg-black/80 backdrop-blur-sm"
+    overlayClassName="bg-black/60"
     overlayStyle={{
       paddingTop: 'calc(env(safe-area-inset-top) + 1rem)',
       paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)',
       paddingLeft: 'calc(env(safe-area-inset-left) + 1rem)',
       paddingRight: 'calc(env(safe-area-inset-right) + 1rem)'
     }}
-    contentClassName="w-full max-w-lg bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden"
-    contentStyle={{ maxHeight: 'calc(100dvh - 2rem)' }}
+    contentClassName="max-w-[23.5rem]!"
     closeOnOverlayClick
     closeOnEsc
+    showCloseButton={false}
   >
-    <div className="flex items-start justify-between gap-4 p-5 border-b border-slate-700/60">
-      <div>
-        <h2 className="text-lg font-bold text-white">{config.title}</h2>
-        <p className="text-slate-400 text-sm mt-1">{config.description}</p>
-      </div>
-    </div>
-    <div className="p-5 space-y-4">
+    <SheetStagger className="px-5 pb-5 pt-6 text-center" gap={0.04} delay={0.04}>
+      <SheetItem>
+        <h2 className="text-[17px] font-semibold leading-snug tracking-[-0.013em] text-white text-balance">{config.title}</h2>
+        <p className="mx-auto mt-1.5 max-w-[20rem] text-[13px] leading-[1.4] text-slate-400 text-pretty">{config.description}</p>
+      </SheetItem>
+
       {config.details && config.details.length > 0 && (
-        <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-4">
-          <div className="space-y-2">
+        <SheetItem className="mt-4">
+          <div className="list-group text-left">
             {config.details.map((d) => (
-              <div key={d.label} className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-slate-300">{d.label}</span>
-                <span className="text-slate-200 font-semibold text-right">{d.value}</span>
+              <div key={d.label} className="list-row min-h-[40px] justify-between py-2 text-[14px]">
+                <span className="text-slate-400">{d.label}</span>
+                <span className="num text-right font-semibold text-white">{d.value}</span>
               </div>
             ))}
           </div>
-        </div>
+        </SheetItem>
       )}
 
-      <div className="flex flex-col sm:flex-row gap-2">
+      <SheetItem className="mt-5 grid grid-cols-2 gap-2.5">
         <button
+          type="button"
           onClick={() => {
             const onCancel = config.onCancel;
             onClose();
             onCancel?.();
           }}
-          className="w-full sm:w-auto px-5 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-semibold touch-target"
+          className="btn-secondary touch-target min-h-[46px] w-full px-4 text-[15px]"
         >
           {config.cancelLabel || 'Cancel'}
         </button>
         <button
+          type="button"
           onClick={() => {
             const onConfirm = config.onConfirm;
             onClose();
             onConfirm();
           }}
-          className={`w-full sm:flex-1 px-5 py-3 rounded-xl text-white font-semibold touch-target ${
+          className={`touch-target min-h-[46px] w-full px-4 text-[15px] ${
             config.danger
-              ? 'bg-red-600 hover:bg-red-500'
-              : 'bg-emerald-600 hover:bg-emerald-500'
+              ? 'btn-primary bg-[#ff453a] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_8px_22px_-10px_rgb(255_69_58/0.7)] hover:bg-[#ff5b51]'
+              : 'btn-primary'
           }`}
         >
           {config.confirmLabel}
         </button>
-      </div>
-    </div>
+      </SheetItem>
+    </SheetStagger>
   </Modal>
 );
 

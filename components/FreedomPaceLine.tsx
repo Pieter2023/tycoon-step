@@ -1,4 +1,5 @@
 import React from 'react';
+import { Flag, Hourglass, Pause, TriangleAlert } from 'lucide-react';
 import { useI18n } from '../i18n';
 import { FreedomPace } from '../services/freedomPace';
 
@@ -17,6 +18,12 @@ export const paceText = (pace: FreedomPace, t: Translate) =>
 /** The freedom meter's countdown: how far away freedom is at today's pace (services/freedomPace.ts). */
 export default function FreedomPaceLine({ pace, className = '' }: { pace: FreedomPace; className?: string }) {
   const { t } = useI18n();
-  const tone = pace.status === 'off-track' ? 'text-amber-300' : pace.status === 'free' ? 'text-emerald-300' : 'text-slate-300';
-  return <p className={`${tone} ${className}`} title={t('shell.pace.hint')} data-pace={pace.status}>{paceText(pace, t)}</p>;
+  const tone = pace.status === 'off-track' ? 'text-[#ff9f0a]' : pace.status === 'free' ? 'text-[#30d158]' : 'text-slate-300';
+  const Glyph = pace.status === 'off-track' ? TriangleAlert : pace.status === 'free' ? Flag : pace.status === 'between-jobs' ? Pause : Hourglass;
+  return (
+    <p className={`flex items-center gap-1.5 ${tone} ${className}`} title={t('shell.pace.hint')} data-pace={pace.status}>
+      <Glyph size={12} strokeWidth={2.4} aria-hidden className="shrink-0 opacity-80" />
+      {paceText(pace, t)}
+    </p>
+  );
 }

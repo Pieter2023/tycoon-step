@@ -1,6 +1,9 @@
 import React from 'react';
+import { ChevronsUpDown } from 'lucide-react';
 import Modal from '../Modal';
+import { SegmentedControl } from '../ui';
 import { useI18n } from '../../i18n';
+import { SheetItem, SheetStagger, Switch } from './sheet';
 
 export type AccessibilityPrefs = {
   largeText: boolean;
@@ -22,6 +25,36 @@ interface AccessibilityModalProps {
   onClose: () => void;
 }
 
+/** One Settings row: title and a footnote on the left, the switch on the right; the whole row toggles. */
+const SwitchRow: React.FC<{
+  title: string;
+  description: string;
+  checked: boolean;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+}> = ({ title, description, checked, onChange }) => (
+  <label className="list-row cursor-pointer select-none items-center py-3 transition-colors hover:bg-white/[0.03]">
+    <div className="min-w-0 flex-1">
+      <div className="text-[15px] font-medium leading-snug text-white">{title}</div>
+      <div className="mt-0.5 text-[13px] leading-snug text-slate-400">{description}</div>
+    </div>
+    <Switch checked={checked} onChange={onChange} />
+  </label>
+);
+
+const SHORTCUTS: [string, string][] = [
+  ['N', 'Next Month'],
+  ['T', 'Toggle Autoplay'],
+  ['A', 'Actions'],
+  ['I', 'Invest'],
+  ['P', 'Portfolio'],
+  ['B', 'Bank'],
+  ['C', 'Career'],
+  ['E', 'Education'],
+  ['S', 'Side Hustles'],
+  ['L', 'Lifestyle'],
+  ['?', 'Shortcuts']
+];
+
 const AccessibilityModal: React.FC<AccessibilityModalProps> = ({
   prefs,
   setPrefs,
@@ -37,179 +70,131 @@ const AccessibilityModal: React.FC<AccessibilityModalProps> = ({
       isOpen
       onClose={onClose}
       ariaLabel={t('settings.accessibility.ariaLabel')}
-      overlayClassName="bg-black/80 backdrop-blur-sm"
+      overlayClassName="bg-black/60"
       overlayStyle={{
         paddingTop: 'calc(env(safe-area-inset-top) + 1rem)',
         paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)',
         paddingLeft: 'calc(env(safe-area-inset-left) + 1rem)',
         paddingRight: 'calc(env(safe-area-inset-right) + 1rem)'
       }}
-      contentClassName="w-full max-w-lg bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden"
-      contentStyle={{ maxHeight: 'calc(100dvh - 2rem)' }}
+      contentClassName="max-w-lg"
       closeOnOverlayClick
       closeOnEsc
     >
-      <div className="flex items-start justify-between gap-4 p-5 border-b border-slate-700/60">
-        <div>
-          <h2 className="text-lg font-bold text-white">{t('settings.accessibility.title')}</h2>
-          <p className="text-slate-400 text-sm mt-1">{t('settings.accessibility.subtitle')}</p>
-        </div>
-      </div>
+      <SheetStagger className="px-5 pb-5 pt-6 sm:px-6" gap={0.035}>
+        <SheetItem className="pr-10">
+          <h2 className="t-title-2 text-white">{t('settings.accessibility.title')}</h2>
+          <p className="mt-1 text-[15px] leading-snug text-slate-400">{t('settings.accessibility.subtitle')}</p>
+        </SheetItem>
 
-      <div className="p-5 space-y-4">
-        <div className="space-y-2">
-          <label className="text-white font-semibold" htmlFor="language-select">
-            {t('settings.language.label')}
-          </label>
-          <select
-            id="language-select"
-            value={locale}
-            onChange={(e) => setLocale(e.target.value as typeof locale)}
-            className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white"
-          >
-            <option value="en">{t('language.en')}</option>
-            <option value="es">{t('language.es')}</option>
-          </select>
-          <p className="text-slate-400 text-sm">{t('settings.language.helper')}</p>
-        </div>
-
-        <label className="flex items-start gap-3 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={prefs.largeText}
-            onChange={(e) => setPrefs((p) => ({ ...p, largeText: e.target.checked }))}
-            className="mt-1"
-          />
-          <div>
-            <div className="text-white font-semibold">{t('settings.accessibility.largeText.title')}</div>
-            <div className="text-slate-400 text-sm">{t('settings.accessibility.largeText.description')}</div>
+        {/* Language: a Settings row with the value on the right. */}
+        <SheetItem className="mt-5">
+          <div className="list-group">
+            <div className="list-row py-2.5">
+              <label className="flex-1 text-[15px] font-medium text-white" htmlFor="language-select">
+                {t('settings.language.label')}
+              </label>
+              <div className="relative">
+                <select
+                  id="language-select"
+                  value={locale}
+                  onChange={(e) => setLocale(e.target.value as typeof locale)}
+                  className="cursor-pointer appearance-none rounded-[10px] bg-transparent py-1.5 pl-3 pr-7 text-right text-[15px] text-slate-400 outline-none transition-colors hover:bg-white/[0.06] focus-visible:bg-white/[0.06]"
+                >
+                  <option value="en">{t('language.en')}</option>
+                  <option value="es">{t('language.es')}</option>
+                </select>
+                <ChevronsUpDown size={14} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden />
+              </div>
+            </div>
           </div>
-        </label>
+          <p className="mt-1.5 px-4 text-[13px] text-slate-500">{t('settings.language.helper')}</p>
+        </SheetItem>
 
-        <label className="flex items-start gap-3 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={prefs.highContrast}
-            onChange={(e) => setPrefs((p) => ({ ...p, highContrast: e.target.checked }))}
-            className="mt-1"
-          />
-          <div>
-            <div className="text-white font-semibold">{t('settings.accessibility.highContrast.title')}</div>
-            <div className="text-slate-400 text-sm">{t('settings.accessibility.highContrast.description')}</div>
+        <SheetItem className="mt-5">
+          <div className="list-group">
+            <SwitchRow
+              title={t('settings.accessibility.largeText.title')}
+              description={t('settings.accessibility.largeText.description')}
+              checked={prefs.largeText}
+              onChange={(e) => setPrefs((p) => ({ ...p, largeText: e.target.checked }))}
+            />
+            <SwitchRow
+              title={t('settings.accessibility.highContrast.title')}
+              description={t('settings.accessibility.highContrast.description')}
+              checked={prefs.highContrast}
+              onChange={(e) => setPrefs((p) => ({ ...p, highContrast: e.target.checked }))}
+            />
+            <SwitchRow
+              title={t('settings.accessibility.reduceMotion.title')}
+              description={t('settings.accessibility.reduceMotion.description')}
+              checked={prefs.reduceMotion}
+              onChange={(e) => setPrefs((p) => ({ ...p, reduceMotion: e.target.checked }))}
+            />
+            <SwitchRow
+              title={t('settings.accessibility.disableConfetti.title')}
+              description={t('settings.accessibility.disableConfetti.description')}
+              checked={prefs.disableConfetti}
+              onChange={(e) => setPrefs((p) => ({ ...p, disableConfetti: e.target.checked }))}
+            />
           </div>
-        </label>
+        </SheetItem>
 
-        <label className="flex items-start gap-3 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={prefs.reduceMotion}
-            onChange={(e) => setPrefs((p) => ({ ...p, reduceMotion: e.target.checked }))}
-            className="mt-1"
-          />
-          <div>
-            <div className="text-white font-semibold">{t('settings.accessibility.reduceMotion.title')}</div>
-            <div className="text-slate-400 text-sm">{t('settings.accessibility.reduceMotion.description')}</div>
+        <SheetItem className="mt-5">
+          <div className="list-group">
+            <SwitchRow
+              title={t('settings.accessibility.disableVideoPreload.title')}
+              description={t('settings.accessibility.disableVideoPreload.description')}
+              checked={prefs.disableVideoPreload}
+              onChange={(e) => setPrefs((p) => ({ ...p, disableVideoPreload: e.target.checked }))}
+            />
+            <SwitchRow
+              title={t('settings.tutorialPopups.title')}
+              description={t('settings.tutorialPopups.description')}
+              checked={autoTutorialPopups}
+              onChange={(e) => setAutoTutorialPopups(e.target.checked)}
+            />
           </div>
-        </label>
-
-        <label className="flex items-start gap-3 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={prefs.disableConfetti}
-            onChange={(e) => setPrefs((p) => ({ ...p, disableConfetti: e.target.checked }))}
-            className="mt-1"
-          />
-          <div>
-            <div className="text-white font-semibold">{t('settings.accessibility.disableConfetti.title')}</div>
-            <div className="text-slate-400 text-sm">{t('settings.accessibility.disableConfetti.description')}</div>
-          </div>
-        </label>
-
-        <label className="flex items-start gap-3 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={prefs.disableVideoPreload}
-            onChange={(e) => setPrefs((p) => ({ ...p, disableVideoPreload: e.target.checked }))}
-            className="mt-1"
-          />
-          <div>
-            <div className="text-white font-semibold">{t('settings.accessibility.disableVideoPreload.title')}</div>
-            <div className="text-slate-400 text-sm">{t('settings.accessibility.disableVideoPreload.description')}</div>
-          </div>
-        </label>
-
-        <label className="flex items-start gap-3 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={autoTutorialPopups}
-            onChange={(e) => setAutoTutorialPopups(e.target.checked)}
-            className="mt-1"
-          />
-          <div>
-            <div className="text-white font-semibold">{t('settings.tutorialPopups.title')}</div>
-            <div className="text-slate-400 text-sm">{t('settings.tutorialPopups.description')}</div>
-          </div>
-        </label>
+        </SheetItem>
 
         {/* View Mode Toggle */}
-        <div className="border-t border-slate-700/50 pt-4 mt-4">
-          <div className="text-white font-semibold mb-2">Dashboard View Mode</div>
-          <div className="flex bg-slate-900 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('compact')}
-              className={`flex-1 px-3 py-2 text-sm rounded-md transition-all ${
-                viewMode === 'compact'
-                  ? 'bg-slate-700 text-white'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Compact
-            </button>
-            <button
-              onClick={() => setViewMode('expanded')}
-              className={`flex-1 px-3 py-2 text-sm rounded-md transition-all ${
-                viewMode === 'expanded'
-                  ? 'bg-slate-700 text-white'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Expanded
-            </button>
-          </div>
-          <p className="text-slate-400 text-sm mt-2">
+        <SheetItem className="mt-6">
+          <div className="mb-2 px-4 text-[15px] font-semibold text-white">Dashboard View Mode</div>
+          <SegmentedControl
+            role="group"
+            fill
+            value={viewMode}
+            onChange={setViewMode}
+            options={[
+              { value: 'compact', label: 'Compact' },
+              { value: 'expanded', label: 'Expanded' }
+            ]}
+          />
+          <p className="mt-2 px-4 text-[13px] text-slate-400">
             {viewMode === 'compact'
               ? 'Collapsible sections to reduce information overwhelm'
               : 'All sections expanded with full details visible'}
           </p>
-        </div>
+        </SheetItem>
 
-        <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-4">
-          <h3 className="text-sm font-semibold text-white">Keyboard shortcuts</h3>
-          <p className="text-xs text-slate-400 mt-1">Press a key to jump without clicking.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 text-sm">
-            {[
-              ['N', 'Next Month'],
-              ['T', 'Toggle Autoplay'],
-              ['A', 'Actions'],
-              ['I', 'Invest'],
-              ['P', 'Portfolio'],
-              ['B', 'Bank'],
-              ['C', 'Career'],
-              ['E', 'Education'],
-              ['S', 'Side Hustles'],
-              ['L', 'Lifestyle'],
-              ['?', 'Shortcuts']
-            ].map(([key, label]) => (
-              <div key={key} className="flex items-center justify-between rounded-lg border border-slate-700/70 bg-slate-950/40 px-3 py-2">
+        <SheetItem className="mt-6">
+          <h3 className="px-4 text-[15px] font-semibold text-white">Keyboard shortcuts</h3>
+          <p className="mt-0.5 px-4 text-[13px] text-slate-400">Press a key to jump without clicking.</p>
+          <div className="list-group mt-2.5 grid grid-cols-1 sm:grid-cols-2">
+            {SHORTCUTS.map(([key, label]) => (
+              <div key={key} className="flex min-h-[40px] items-center justify-between gap-3 border-white/[0.06] px-4 py-2 text-[14px] [&:not(:last-child)]:border-b sm:odd:border-r">
                 <span className="text-slate-300">{label}</span>
-                <span className="text-xs font-semibold text-emerald-300">{key}</span>
+                <kbd className="inline-flex h-[24px] min-w-[24px] items-center justify-center rounded-[6px] bg-white/[0.1] px-1.5 font-sans text-[12px] font-semibold text-white shadow-[inset_0_-1px_0_rgb(0_0_0/0.35),0_1px_0_rgb(255_255_255/0.06)]">
+                  {key}
+                </kbd>
               </div>
             ))}
           </div>
-        </div>
+        </SheetItem>
 
-        <div className="pt-2 flex flex-col sm:flex-row gap-2">
+        <SheetItem className="mt-6 flex flex-col-reverse gap-2.5 sm:flex-row">
           <button
+            type="button"
             onClick={() =>
               setPrefs({
                 largeText: false,
@@ -219,18 +204,15 @@ const AccessibilityModal: React.FC<AccessibilityModalProps> = ({
                 disableVideoPreload: false
               })
             }
-            className="w-full sm:w-auto px-4 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-semibold"
+            className="btn-secondary min-h-[46px] w-full px-5 text-[15px] sm:w-auto"
           >
             {t('actions.reset')}
           </button>
-          <button
-            onClick={onClose}
-            className="w-full sm:flex-1 px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold"
-          >
+          <button type="button" onClick={onClose} className="btn-primary min-h-[46px] w-full px-5 text-[15px] sm:flex-1">
             {t('actions.done')}
           </button>
-        </div>
-      </div>
+        </SheetItem>
+      </SheetStagger>
     </Modal>
   );
 };

@@ -939,6 +939,7 @@
   "shell.pageHeader.next_month_shortcut": "Siguiente mes (N)",
   "shell.mobileShell.next_month_shortcut": "Siguiente mes (N)",
   "shell.mobileShell.ai_risk": "Riesgo IA: {level}",
+  "shell.mobileShell.open_profile": "Abrir tu perfil",
   "shell.commandDashboard.actions_left": "{remaining} de {max} acciones restantes. Equilibra ingresos, aprendizaje y descanso.",
   "shell.commandDashboard.freedom_target": "Meta de libertad: {target}/mes · {ratio} cubierto",
   "shell.commandDashboard.goal_sentence": "Tu meta son ingresos de libertad por encima de {target}/mes: las inversiones cuentan al 4% de su valor al año; los negocios y las rentas, por lo que pagan. La cobertura actual es {ratio}, con {remaining} de {max} acciones mensuales disponibles.",
@@ -964,6 +965,7 @@
   "shell.lifePage.income_per_month": "{amount}/mes de ingresos",
   "shell.lifePage.children_count": "Hijos: {count}",
   "shell.moneyPage.months_short": "{value} meses",
+  "ui.money.netWorth": "Patrimonio neto",
   "shell.header.next_month": "Siguiente mes",
   "shell.header.next_month_shortcut": "Siguiente mes (N)",
   "shell.header.autoplay": "Avance automático",
@@ -1016,5 +1018,12 @@
   "track.chapterDoneTitle": "Capítulo {n} completo: {title}",
   "track.chapterDoneBody": "Sigue: {title}.",
   "track.milestoneTitle": "Hito logrado: {title}",
-  "shell.profileScreen.more_about_you": "Más sobre ti: felicidad y salud"
+  "shell.profileScreen.more_about_you": "Más sobre ti: felicidad y salud",
+  "ui.career.monthlySalary": "Salario mensual",
+  "ui.career.levelOf": "Nivel {level} de {total}",
+  "ui.career.monthsShort": "{months} meses",
+  "ui.career.current": "Actual",
+  "ui.career.next": "Siguiente",
+  "ui.career.towardNext": "{have} de {need} meses de experiencia",
+  "ui.learn.certifiedCount": "{count} de {total} certificados"
 }

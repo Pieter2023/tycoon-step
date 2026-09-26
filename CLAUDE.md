@@ -1,8 +1,10 @@
 # Tycoon: Financial Freedom Simulator
 
-## Current handover — September 26, 2026 (09:30 PDT, end of the sound session)
+## Current handover — September 26, 2026 (~11:00 PDT, end of the standard-UI session)
 
-**In progress in another session: the standard (2D) UI upgrade with the apple-design skill, not the 3D world.** If you are that session, read HANDOVER.md §1d first: it covers scope, the untracked dead files, the test contracts, and the sound, motion and QA rules. The sound session has finished; from here the UI session owns this file and HANDOVER.md.
+**Build 67, the Apple-style UI upgrade, is built on the branch and NOT released.** It is waiting for Pieter's look and a "ship it"; see HANDOVER.md §1d and `docs/verification/ui-apple-2026-09-26/` (before/after shots). **Any 2D UI work starts with [docs/ui-design-system.md](docs/ui-design-system.md)**:
+- the re-derived palette, type, materials and motion primitives;
+- the contracts: accessible names, `Modal`, sound handlers, money figures read from `financialFreedom`/`freedomPace`, and copy in English and Spanish.
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
@@ -78,15 +80,15 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - **The city's Sound button is now the game's sound setting** (the same as Quick actions → Mute), so the city soundscape plays by default when sound is on, from the first click. Pieter can reverse this default.
   - Dev meter: `window.__audio.output`.
   - **Not ear-tested:** the listening files are in the receipt's `audio/`.
-- **Validation:** 518 tests / 89 files, `tsc` and the production build pass on the branch.
-- **The branch is ahead of `main` only by docs** (the release-10 receipt). There is no unreleased code.
+- **Validation:** 524 tests / 90 files, `tsc` and the production build pass on the branch.
+- **The branch is ahead of `main` by build 67 (unreleased UI code)** plus docs.
 - **Next session, first:**
-  - the standard-UI upgrade (in progress in another session; HANDOVER §1d);
+  - build 67: Pieter's review, an iPhone check of the glass (headless WebKit can't draw `backdrop-filter`) and a Chromebook frame-rate check, then release on his "ship it";
   - tune build 66's sounds once Pieter has listened;
   - a Chromebook check (needs a Chromebook), which matters more now that the city is the first screen;
   - the ledger drawer, only if Pieter wants it;
   - the visual items never started (assessment §3): a modular building kit, splitting the city for culling, the male hip/waist ratio, and the hero's remaining texture lines.
-- **Waiting on Pieter:** his ear on build 66's sounds (live, or the receipt's `audio/`): what to change; whether to build the ledger drawer.
+- **Waiting on Pieter:** a look at build 67 (the UI upgrade) and whether to ship it; his ear on build 66's sounds (live, or the receipt's `audio/`): what to change; whether to build the ledger drawer.
 - **Analytics: ON since 2026-09-26** (build 65, release 9).
   - Umami Cloud, Hobby plan ($0), in Pieter's account. Site "Tycoon", Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`.
   - Dashboard: https://cloud.umami.is/analytics/us/websites/a8297643-15e9-4122-95b8-0b49cf4a7f98
@@ -114,7 +116,8 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (89 files / 518 tests on `town-lighting-pass`, 2026-09-26 build 66; integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (90 files / 524 tests on `town-lighting-pass`, 2026-09-26 build 67; integration tests drive the v2 shell)
+- `node scripts/qa/ui-shot.cjs --out <dir> --name <n> [--size 393x659 --engine webkit] [--nav Money] [--click Bank] [--fixture]` — headless UI screenshots (opts out of analytics)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)

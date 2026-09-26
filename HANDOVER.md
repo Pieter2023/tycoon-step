@@ -1,6 +1,6 @@
 # Start here — Tycoon handover
 
-Updated **September 26, 2026, 09:30 PDT**, at the end of the sound session. **In progress in another session: an upgrade of the standard (2D) UI with the apple-design skill** (§1d, read it first if you are that session). **Build 66, the sound audit and upgrade, went live at 09:16 PDT** (release 10, `main` = `6bb25f1`, deploy `6ab7efe0`; §1c). **Builds 40–65 were live** after nine releases (four on Sept 25, five on Sept 26), each with Pieter's go-ahead. **Analytics are on** (build 65, release 9): Umami Cloud Hobby, Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`. Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`.
+Updated **September 26, 2026, ~11:00 PDT**, at the end of the standard-UI session. **Build 67, the Apple-style UI upgrade, is built but NOT released** (§1d; receipt `docs/verification/ui-apple-2026-09-26/`). It needs Pieter's look and a separate "ship it". **Build 66, the sound audit and upgrade, went live at 09:16 PDT** (release 10, `main` = `6bb25f1`, deploy `6ab7efe0`; §1c). **Builds 40–65 were live** after nine releases (four on Sept 25, five on Sept 26), each with Pieter's go-ahead. **Analytics are on** (build 65, release 9): Umami Cloud Hobby, Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`. Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`.
 
 **This session** (Sept 26, 06:00–08:20 PDT) ran the real-phone check of builds 52–59 (56–60 fps on the iPhone), then built and released builds 60–64:
 
@@ -160,43 +160,60 @@ Pieter switched the city's sound on at the bank teller, and it "tweeted loudly l
 - **Not done:** an ear test. Pieter should listen to `audio/bank-before-then-after.m4a` (turn the volume down for the first 3 s) and the `after-*` files, then say what to change.
 - **Released** on Pieter's "ship it, release 66": deploy `6ab7efe0`. On the live site, at the teller with sound switched off and on, the output measured −52.9 dBFS RMS with nothing at 4.3 kHz. The receipt and a one-line rollback are under release 10 in `docs/verification/release-2026-09-25/`. The engine ships in the shared `investmentModel-*.js` chunk, not `main-*.js`.
 
-## 1d. For the standard-UI upgrade session (started 2026-09-26, 09:30 PDT)
+## 1d. Build 67: the Apple-style UI upgrade (2026-09-26, built, not released)
 
-Pieter is upgrading the standard 2D UI with the apple-design skill in a separate session, **not the 3D world**. The sound session has finished: it committed its docs and will not edit files again. From here the UI session owns `CLAUDE.md` and `HANDOVER.md`. Both sessions share this folder and the branch `town-lighting-pass`, whose HEAD at hand-off was the commit that added this section.
+Pieter asked for "a significant overall UI upgrade of the standard UI using apple design skill … look and feel absolutely incredible … don't change back end functionality … the absolute best animations". He later allowed restyling the 3D city's panels "if you think it must be restyled". The 3D scene is untouched. Receipt with before/after shots: `docs/verification/ui-apple-2026-09-26/`. **Read `docs/ui-design-system.md` before touching any 2D UI.**
 
-**What is in scope**, the 2D shell:
-- `components/v2/`: `DesktopShell`, `MobileShell` (the bottom nav), `PageHeader`, `KpiChip`, `PlayPage`, `CommandDashboard`, `MoneyPage`, `CareerPage`, `LearnPage`, `LifePage`, `ActionsScreen`/`ActionsDrawer`, `MoreScreen`, `ProfileScreen`, `EventFeed`, `SignalsStack`, `NextBestStep`, `FirstSteps` and `MonthlyActionsPreview`;
-- the tab content in `components/tabs/`;
-- the dialogs in `components/modals/`, plus the shared `components/Modal.tsx`;
-- `ModeSelector.tsx` and `components/UnlockModal.tsx`;
-- the styles in `index.css` (Tailwind 4, `@theme` tokens) and `components/NEW_STYLES.css`.
+**What it is:**
+- **The system (`index.css`):**
+  - Tailwind's palette is re-derived: slate becomes Apple's neutral grays, and the accent families take Apple system hues on Tailwind's lightness steps. Every existing utility renders the new look.
+  - The system font (SF Pro, with Inter as the fallback) replaces Sora, with size-specific tracking.
+  - Rounder corners; materials (`.mat-*`) with no-blur, reduced-transparency and high-contrast fallbacks; spring easings as CSS `linear()`; `.pressable`; grouped lists; native dark scrollbars.
+- **Motion primitives (`components/ui/`):**
+  - `springs`/`riseIn`/`stagger`/`materialize`, `project()`/`rubberband()`;
+  - `AnimatedNumber` (money counts on a spring), `SegmentedControl` and `ActivityRing`;
+  - `MOTION_DISABLED` under Vitest; App's `<MotionConfig reducedMotion>` turns springs into cross-fades.
+- **Shell and dialogs (lead):**
+  - A glass sidebar with coloured tiles and a gliding selection. The large title condenses on scroll, the month rolls like an odometer, and pages rise in.
+  - Phone: a glass header with a floating tab bar whose blob springs between tabs. The avatar opens the profile (new; it was unreachable on phones).
+  - `Modal` materialises in and out, and side sheets slide from their edge. Its default `max-w-lg` no longer beats a caller's `max-w-*`.
+  - Quick actions is an iOS list with a switch; notifications and toasts are glass banners; the character select is redesigned.
+  - New screens start at the top. This fixes a bug where picking a character low in the list opened the dashboard scrolled down.
+- **Pages (six parallel agents, one exclusive file set each):** ModeSelector; the dashboard (+ FirstSteps, Freedom Track, EventFeed); Money (+ Invest/Portfolio/Bank); Career and Learn (+ quizzes); Life, Profile, More and Actions (the actions drawer is a real drag-to-dismiss sheet with momentum projection); and all dialogs (`components/modals/sheet.tsx` has the shared switch, money chips and emblem).
+- **Bugs fixed on the way:**
+  - the Career ladder on phones showed wrong current/next levels and no Promote button from level 3 up;
+  - completed programs weren't dimmed;
+  - Save & Load's buttons overlapped slot titles on phones;
+  - the coach highlight's infinite pulse is now two breaths.
+- **The 3D city's chrome** (`components/town/town.css` only, Apple Maps-style):
+  - one neutral bar with hairlines instead of teal and gold;
+  - glass over the 3D view;
+  - green and gray capsules, and segmented toggles.
+  - The room bar is one row on desktop. The build-62 phone layout and Kids mode's look are kept, and 233 town and kids tests pass.
+  - Follow-ups need TSX: ~15 panels type labels in ALL CAPS, and in-card actions need a secondary class.
 
-**Out of scope:** `components/town/**` and `town.css`, the 3D city including `TownModal`'s panels. The city is the default screen, so the 2D shell is what a player sees after closing it. A brand-new player sees it first, on the first-steps dashboard.
+**Checks:** `tsc` clean; 90 files / 524 tests (+ `test/UiPrimitives.test.tsx`); `npm run build` passes; shots at 1280×800, 1366×768, iPhone 393×659 (WebKit) and with reduced motion. In real Chrome (the preview pane), a month advance showed the preview sheet materialising over a blurred page, the odometer month, figures counting with a red tint and the glass money capsule.
 
-**Don't touch the untracked dead files:** `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`, `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` (with its test and snapshot) and `components/NewUiRoot.tsx`.
-- They look like live UI, but nothing imports them. They were deleted in `3d55d82` and reappeared on disk.
-- Never commit them. The only snapshot test in the repo belongs to one of them.
+**Before releasing:**
+- Look on the iPhone: headless WebKit does not draw `backdrop-filter` and ghosts even 96%-opaque layers, so the glass could only be judged in Chrome.
+- Check the Chromebook's frame rate with the glass bars over scrolling content.
+- Use the fast-forward recipe in `docs/verification/release-2026-09-25/`.
 
-**Contracts that tests and players rely on:**
-- **Accessible names:** the integration tests drive the v2 shell by role and name. For example, the button "More options" opens the dialog "Quick actions", which holds the "Start in the 3D city" toggle (`test/StartInCity.test.tsx`). Keep the names, or change the tests on purpose.
-- **Test setup keys:** `tycoon_onboarding_seen_v1` is seeded by five integration tests.
-- **Keyboard:** one `createGameShortcuts` config in `App.tsx` drives both the keydown listener and the "?" overlay.
-- **`Modal.tsx`** (build 60): the overlay scrolls and the dialog has auto top and bottom margins, so tall dialogs keep their buttons on a phone. `TutorialModal` keeps its bottom sheet, and the city's dialogs pass `overflow: 'hidden'`. Test: `test/Modal.test.tsx`. Check the Sales quiz and Save and load at 393×659.
-- **Sound (build 66):** interface sounds fire from App's handlers (`playPurchase`, `playClick` and the others from `services/audioService.ts`). Restyled buttons must keep calling the same handlers, so the sounds and the de-duplication stay.
-  - Mute (the desktop header icon and Quick actions) is `toggleSound`. It is also the city's Sound button now.
-  - Don't add new sound calls in components. Ask the sound owner, or keep them in App.
-- **Motion:** use App's `reduceMotion`, which is `accessibilityPrefs.reduceMotion || prefers-reduced-motion`. Spring and gesture animations (framer-motion, the `motion` chunk) must fall back to none or a cross-fade under it.
-- **Money on screen:** the freedom meter and every progress bar read `financialFreedom` in `services/gameLogic.ts`, and the pace line reads `services/freedomPace.ts`. Don't recompute them in the UI.
-- **Market:** it is North America, in USD, with English and Spanish (`tl()` and `useI18n`). New copy needs both languages where the surrounding code has them.
+**Open, not changed:**
+- MortgageModal's "reduce cash to X" leaves out closing costs, while App's confirm dialog includes them. That was already the case before this build.
+- On phones, ActionsScreen and MoreScreen are still unreachable. Their content lives on the dashboard and in Quick actions.
 
-**QA:**
-- Start a fresh dev server on a new port with a new `.claude/launch.json` entry. Older chats hold 5188, 5189 and 5191, and 5190 is the LAN preview of `dist/`.
-- **Never touch Pieter's save on `127.0.0.1:5187`.**
-- Seed `tycoon_authenticated=true`, `tycoon_access_tier=full`, `tycoon_onboarding_seen_v1=1` and `tycoon_quick_tutorial_seen_v1=1` to skip the gates and tutorials.
-- Check desktop 1280×800, a Chromebook-like 1366×768, the iPhone at 393×659, and dark and light if the design adds a light theme.
-- Suite: 518 tests / 89 files, plus `tsc` and `npm run build`.
+**Contracts that still hold:**
+- **Accessible names:** "More options" → "Quick actions" → "Start in the 3D city"; "Next Month" and "Month N" inside the first `<header>`; nav names are label + description, e.g. `/^money invest/i`.
+- **Setup and keyboard:** `tycoon_onboarding_seen_v1`; one `createGameShortcuts`.
+- **`Modal`:** the scrolling overlay with auto margins (build 60), and `TutorialModal`'s bottom sheet.
+- **Sound** stays in App's handlers.
+- **Money** is read from `financialFreedom`/`freedomPace`, never recomputed.
+- **Copy** is in English and Spanish.
 
-**Release:** a separate "ship it" from Pieter per release, using the fast-forward recipe in `docs/verification/release-2026-09-25/`. Grep the live bundles by chunk: the audio engine ships in `investmentModel-*.js` and the city in `createTownScene-*.js`/`TownModal-*.js`, so `main-*.js` alone proves nothing.
+**Tools:** `scripts/qa/ui-shot.cjs` takes headless screenshots of any page (Chromium or WebKit). It opts out of Umami, so shots of the live site aren't counted.
+
+**Untracked dead files: still don't commit them.** `components/v2/DashboardScreen*.tsx`, `SidebarShell.tsx`, `components/ActionCard.tsx`, `CharacterSelect.tsx`, `FinancialFreedomBreakdown.tsx` (+ test) and `NewUiRoot.tsx`.
 
 ## 2. Decisions waiting on Pieter
 
@@ -215,6 +232,7 @@ Pieter is upgrading the standard 2D UI with the apple-design skill in a separate
 8. ✅ **Builds 56–59 shipped** (releases 3 and 4). Pieter saw the AO before-and-after and said "ship it".
 9. ✅ **The hero's cheek shading step:** Pieter said yes on 2026-09-26; fixed in build 64 (`docs/verification/hero-cheek-2026-09-26/`), live since 08:02 PDT.
 10. ✅ **Analytics: on** since 2026-09-26 (build 65; §1b item 5).
+11. **Build 67, the Apple-style UI upgrade: review, then "ship it" or not** (§1d). Look at `docs/verification/ui-apple-2026-09-26/compare-*.jpg`, or play the branch on 127.0.0.1:5192. Before releasing, check the glass on the iPhone and the Chromebook's frame rate.
 
 Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the AI Alex cost 38 (receipt: `docs/verification/hero-alex-2026-09-25/`). Still: never spend credits without a fresh yes.
 

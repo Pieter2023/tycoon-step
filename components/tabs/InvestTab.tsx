@@ -1,8 +1,9 @@
 import { nextBusinessUnitShare } from '../../services/gameLogic';
 import { incomeYield, incomeLabel, nominalPrice } from '../../services/investmentModel';
 import React, { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Badge, Button } from '../ui';
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertTriangle, Banknote, Check, ChevronRight, GitCompareArrows, Info, Landmark, Layers, Lightbulb, Lock, Search, X } from 'lucide-react';
+import { AnimatedNumber, Badge, Button, SegmentedControl, MOTION_DISABLED, springs } from '../ui';
 import { AssetType, AutoInvestSettings, MarketItem } from '../../types';
 import { AUTO_INVEST_PRESETS, MARKET_ITEMS } from '../../constants';
 import { QuizQuestion } from '../../data/learning';
@@ -51,6 +52,54 @@ type InvestTabProps = {
   onSubmitQuiz: () => void;
   onSkipQuiz: () => void;
 };
+
+const CATEGORY_FILTERS = [
+  { id: 'ALL', label: 'All' },
+  { id: AssetType.SAVINGS, label: 'Savings' },
+  { id: AssetType.BOND, label: 'Bonds' },
+  { id: AssetType.INDEX_FUND, label: 'Index Funds' },
+  { id: AssetType.STOCK, label: 'Stocks' },
+  { id: AssetType.REAL_ESTATE, label: 'Real Estate' },
+  { id: AssetType.BUSINESS, label: 'Business' },
+  { id: AssetType.CRYPTO, label: 'Crypto' },
+];
+
+const TIER_FILTERS: { value: 'ALL' | 'STARTER' | 'MID' | 'ADVANCED'; label: string }[] = [
+  { value: 'ALL', label: 'All tiers' },
+  { value: 'STARTER', label: 'Starter' },
+  { value: 'MID', label: 'Mid' },
+  { value: 'ADVANCED', label: 'Advanced' },
+];
+
+/** App-icon style tile behind each asset's glyph, tinted by asset class. */
+const ICON_TINT: Record<string, string> = {
+  [AssetType.SAVINGS]: 'from-emerald-400/30 to-emerald-400/10',
+  [AssetType.BOND]: 'from-blue-400/30 to-blue-400/10',
+  [AssetType.INDEX_FUND]: 'from-cyan-400/30 to-cyan-400/10',
+  [AssetType.STOCK]: 'from-indigo-400/30 to-indigo-400/10',
+  [AssetType.REAL_ESTATE]: 'from-orange-400/30 to-orange-400/10',
+  [AssetType.BUSINESS]: 'from-amber-300/30 to-amber-300/10',
+  [AssetType.CRYPTO]: 'from-purple-400/30 to-purple-400/10',
+  [AssetType.COMMODITY]: 'from-yellow-300/30 to-yellow-300/10',
+};
+
+const sentenceCase = (value: string) => {
+  const lower = value.toLowerCase();
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+};
+
+const fieldClass =
+  'rounded-[10px] border-0 bg-[rgb(118_118_128/0.24)] text-[15px] text-white placeholder:text-slate-500 outline-none transition-shadow focus-visible:shadow-[0_0_0_3px_rgb(10_132_255/0.55)]';
+
+/** An iOS switch drawn around a real checkbox, so its label, role and keyboard behaviour stay native. */
+const SwitchVisual: React.FC = () => (
+  <span
+    aria-hidden
+    className="relative inline-flex h-[26px] w-[44px] shrink-0 rounded-full bg-[rgb(120_120_128/0.32)] transition-colors duration-300 peer-checked:bg-emerald-500 peer-focus-visible:shadow-[0_0_0_3px_rgb(10_132_255/0.6)] peer-checked:[&>span]:translate-x-[18px]"
+  >
+    <span className="absolute left-[2px] top-[2px] h-[22px] w-[22px] rounded-full bg-white shadow-[0_2px_6px_rgb(0_0_0/0.3)] transition-transform duration-300 ease-spring" />
+  </span>
+);
 
 const InvestTab: React.FC<InvestTabProps> = (props) => {
   const {
@@ -155,31 +204,352 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
     return `${formatMoneyFull(monthly)}/mo`;
   };
 
-  return (
-    <div>
-      <div className="mb-4 rounded-xl border border-slate-700 p-4 text-sm leading-6 text-slate-300">
-        <strong className="text-white">Income and price growth are different.</strong> Interest, dividends, rent and profit can provide cash. A higher market price increases wealth, but you must sell to spend it. All rates below are fictional teaching assumptions, not live offers or guaranteed returns.
-        <p className="mt-2 text-xs text-amber-200">{gameState.difficulty === 'EASY' ? 'Easy mode: investment prices cannot fall below 50% of purchase cost. This is a learning aid, not real protection.' : 'Prices can fall substantially, including below half the purchase price. Speculative investments can lose all their value.'}</p>
+  const cartVisible = batchBuyCart.totalUnits > 0;
+  const cartBar = cartVisible && (
+    <motion.div
+      key="batch-cart"
+      initial={MOTION_DISABLED ? false : { opacity: 0, y: 28, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 28, scale: 0.97, transition: { type: 'spring', bounce: 0, duration: 0.3 } }}
+      transition={springs.smooth}
+      className="pointer-events-none sticky bottom-[calc(env(safe-area-inset-bottom)+5.4rem)] z-30 mt-6 flex justify-center md:bottom-6"
+    >
+      <div className={`mat-popover pointer-events-auto flex w-full max-w-xl items-center gap-2 rounded-full bg-[rgb(36_36_38/0.84)] py-2 pl-5 pr-2 ${
+        batchBuyCart.canAfford ? '' : 'ring-1 ring-inset ring-rose-500/60'
+      }`}>
+        <div className="min-w-0 flex-1 text-[13px] leading-[18px] text-slate-300">
+          <div className="truncate">
+            Cart total: <span className="num font-semibold text-white">{batchBuyCart.totalUnits}</span> •{' '}
+            <AnimatedNumber value={batchBuyCart.totalCost} format={formatMoneyFull} className="font-semibold text-white" />
+          </div>
+          {!batchBuyCart.canAfford && <span className="text-[12px] font-medium text-rose-300">Not enough cash</span>}
+        </div>
+        <button
+          type="button"
+          onClick={clearBatchBuyCart}
+          className="btn-secondary shrink-0 px-3.5 py-2 text-[13px]"
+        >
+          Clear
+        </button>
+        <button
+          type="button"
+          onClick={openBatchBuyConfirm}
+          disabled={!batchBuyCart.canAfford}
+          className="btn-primary shrink-0 px-4 py-2 text-[13px]"
+        >
+          Review &amp; Buy
+        </button>
       </div>
-      {guided && <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-slate-300">Start by comparing savings, interest and dividends.</p><button onClick={() => setShowAllInvestments(true)} className="rounded-lg border border-slate-600 px-3 py-2 text-sm">Explore all 45 investments</button></div>}
+    </motion.div>
+  );
+
+  const toggleChip = (active: boolean) =>
+    `pressable inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-4 text-[14px] font-semibold transition-colors ${
+      active ? 'bg-emerald-400/[0.16] text-emerald-300 hover:bg-emerald-400/[0.22]' : 'bg-[rgb(118_118_128/0.24)] text-slate-100 hover:bg-[rgb(118_118_128/0.32)]'
+    }`;
+
+  const renderCard = (item: MarketItem, idx: number) => {
+    const price = nominalPrice(item, gameState.month, gameState.economy.inflationRate);
+    const canAffordCash = gameState.cash >= price;
+    const canMortgage = item.canMortgage && gameState.cash >= price * 0.035;
+    const tier = getItemTier(item);
+    const riskRating = getRiskRating(item);
+    const isSelected = compareSelection.includes(item.id);
+    const hasEducation = hasRequiredEducationForInvestment(item, gameState.education.degrees);
+    const isLocked = !hasEducation;
+    const requiredEducationLabel = item.requiredEducationCategory
+      ? item.requiredEducationCategory.join(' or ')
+      : 'Education';
+    const requiredLevelLabel = item.requiredEducationLevel ? item.requiredEducationLevel.replace('_', ' ') : null;
+
+    let actions: React.ReactNode;
+    if (item.canMortgage) {
+      actions = (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => { playClick(); setShowMortgageModal(item); setSelectedMortgage(''); }}
+            disabled={!canMortgage || isLocked}
+            className="btn-secondary flex-1 px-3 py-2 text-[14px]"
+          >
+            <Landmark size={15} aria-hidden />
+            Finance
+          </button>
+          <button
+            type="button"
+            onClick={() => handleBuyAsset(item)}
+            disabled={!canAffordCash || isLocked}
+            className={`${canAffordCash && !isLocked ? 'btn-primary' : 'btn-secondary'} flex-1 px-3 py-2 text-[14px]`}
+          >
+            <Banknote size={15} aria-hidden />
+            Cash
+          </button>
+        </div>
+      );
+    } else if (batchBuyMode && isBatchBuyEligible(item)) {
+      if (isLocked) {
+        actions = (
+          <div className="w-full rounded-full bg-white/[0.05] py-2 text-center text-[14px] font-medium text-slate-500">
+            Education Required
+          </div>
+        );
+      } else {
+        const qty = batchBuyQuantities[item.id] || 0;
+        const lineCost = qty * price;
+        const otherCost = batchBuyCart.totalCost - lineCost;
+        const canAddOne = otherCost + (qty + 1) * price <= gameState.cash;
+        const canBuyQty = qty > 0 && lineCost <= gameState.cash;
+        const maxAffordable = Math.max(0, Math.floor(gameState.cash / price));
+
+        actions = (
+          <div className="rounded-[16px] bg-white/[0.045] p-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="text-left">
+                <div className="text-[12px] text-slate-400">Quantity</div>
+                <div className="num text-[15px] font-semibold text-white">
+                  {qty}x
+                  <span className="ml-2 font-medium text-slate-400">{qty > 0 ? formatMoneyFull(lineCost) : '—'}</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBatchQty(item.id, maxAffordable)}
+                disabled={maxAffordable <= 0}
+                className="pressable num rounded-full bg-[rgb(118_118_128/0.24)] px-3 py-1.5 text-[12px] font-semibold text-slate-200 transition-colors hover:bg-[rgb(118_118_128/0.32)] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Buy max ({formatMoneyFull(maxAffordable * price)})
+              </button>
+            </div>
+
+            <div className="mt-3 flex items-center gap-2">
+              {/* Capsule stepper, like iOS's UIStepper. */}
+              <div className="flex shrink-0 items-center rounded-full bg-[rgb(118_118_128/0.24)] p-[3px]">
+                <button
+                  type="button"
+                  onClick={() => setBatchQty(item.id, qty - 1)}
+                  disabled={qty <= 0}
+                  className="pressable grid h-8 w-8 place-items-center rounded-full text-[18px] font-semibold text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:text-slate-600"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  inputMode="numeric"
+                  value={qty === 0 ? '' : qty}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    if (next === '') {
+                      setBatchQty(item.id, 0);
+                      return;
+                    }
+                    const parsed = Math.max(0, Math.floor(Number(next)));
+                    if (Number.isNaN(parsed)) return;
+                    setBatchQty(item.id, parsed);
+                  }}
+                  placeholder="0"
+                  className="num h-8 w-11 appearance-none bg-transparent text-center text-[15px] font-semibold text-white outline-none placeholder:text-slate-500 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  aria-label={`${item.name} quantity`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setBatchQty(item.id, qty + 1)}
+                  disabled={!canAddOne}
+                  className="pressable grid h-8 w-8 place-items-center rounded-full text-[18px] font-semibold text-emerald-300 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:text-slate-600"
+                >
+                  +
+                </button>
+              </div>
+
+              <Button
+                onClick={() => {
+                  if (!canBuyQty) return;
+                  playClick();
+                  setBatchBuyQuantities({ [item.id]: qty });
+                  setTimeout(() => openBatchBuyConfirm(), 0);
+                }}
+                variant={canBuyQty ? 'primary' : 'secondary'}
+                size="md"
+                disabled={!canBuyQty}
+                className="num flex-1"
+              >
+                Buy {qty > 0 ? `${qty}x` : ''}
+              </Button>
+            </div>
+          </div>
+        );
+      }
+    } else {
+      actions = (
+        <Button
+          onClick={() => handleBuyAsset(item)}
+          disabled={!canAffordCash || isLocked}
+          variant={canAffordCash && !isLocked ? 'primary' : 'secondary'}
+          size="md"
+          className="num min-w-[96px] shrink-0 whitespace-nowrap px-5"
+        >
+          {isLocked ? 'Education Required' : canAffordCash ? `Buy ${formatMoney(price)}` : 'Insufficient Funds'}
+        </Button>
+      );
+    }
+
+    const simpleBuy = !item.canMortgage && !(batchBuyMode && isBatchBuyEligible(item));
+
+    return (
+      <motion.div
+        key={item.id}
+        layout={MOTION_DISABLED ? false : 'position'}
+        initial={MOTION_DISABLED ? false : { opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0, transition: { ...springs.smooth, delay: Math.min(idx, 12) * 0.03 } }}
+        exit={{ opacity: 0, scale: 0.96, transition: { type: 'spring', bounce: 0, duration: 0.22 } }}
+        transition={springs.smooth}
+        className={`relative flex flex-col rounded-[22px] border bg-[linear-gradient(180deg,rgb(255_255_255/0.05),rgb(255_255_255/0.018))] p-4 shadow-[inset_0_1px_0_rgb(255_255_255/0.05),0_14px_32px_-22px_rgb(0_0_0/0.8)] transition-[border-color,background-color] duration-200 hover:bg-white/[0.04] ${
+          isSelected ? 'border-sky-400/50' : 'border-white/[0.08] hover:border-white/[0.14]'
+        }`}
+      >
+        <div className="flex items-start gap-3">
+          <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-[12px] bg-gradient-to-b ${ICON_TINT[item.type] || 'from-slate-500/30 to-slate-500/10'} text-[22px] leading-none shadow-[inset_0_1px_0_rgb(255_255_255/0.12)]`}>
+            {getAssetIcon(item.type)}
+          </div>
+          <div className="min-w-0 flex-1 pt-0.5">
+            <h4 className="text-[15px] font-semibold leading-5 tracking-[-0.012em] text-white">{item.name}</h4>
+            <p className="mt-0.5 text-[12px] leading-4 text-slate-400">
+              {sentenceCase(item.type.replace('_', ' '))} · {sentenceCase(tier)}
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            <Badge variant={riskRating === 'LOW' ? 'low' : riskRating === 'MEDIUM' ? 'med' : 'high'}>
+              {sentenceCase(riskRating)} risk
+            </Badge>
+            {compareMode && (
+              <label className="flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-slate-300">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded accent-sky-400"
+                  checked={isSelected}
+                  onChange={(e) => {
+                    if (!isSelected && compareSelection.length >= 3) return;
+                    const checked = e.target.checked;
+                    setCompareSelection((prev) => {
+                      if (checked) {
+                        return [...prev, item.id].slice(0, 3);
+                      }
+                      return prev.filter((id) => id !== item.id);
+                    });
+                  }}
+                />
+                Compare
+              </label>
+            )}
+          </div>
+        </div>
+
+        <p className="mt-3 line-clamp-2 text-[13px] leading-[18px] text-slate-400">{item.description}</p>
+
+        {item.educationalNote && (
+          <p className="mt-2 flex items-start gap-1.5 text-[12px] leading-4 text-sky-300/90">
+            <Lightbulb size={13} className="mt-px shrink-0" aria-hidden />
+            <span>{item.educationalNote}</span>
+          </p>
+        )}
+
+        {isLocked && (
+          <p className="mt-2 flex items-center gap-1.5 text-[12px] font-medium leading-4 text-amber-300">
+            <Lock size={12} className="shrink-0" aria-hidden />
+            <span>
+              Requires {requiredEducationLabel}
+              {requiredLevelLabel ? ` (${requiredLevelLabel})` : ''}
+            </span>
+          </p>
+        )}
+
+        <div className="mt-auto pt-4">
+          <div className="grid grid-cols-2 divide-x divide-white/[0.07] rounded-[14px] bg-white/[0.045]">
+            <div className="px-3 py-2.5">
+              <p className="text-[12px] leading-4 text-slate-400">Price</p>
+              <p className="num mt-0.5 text-[18px] font-semibold leading-6 tracking-[-0.015em] text-white">{formatMoney(price)}</p>
+            </div>
+            <div className="px-3 py-2.5">
+              <p className="truncate text-[12px] leading-4 text-slate-400">{incomeLabel(item.type, item.id)} / year</p>
+              <p className="num mt-0.5 text-[18px] font-semibold leading-6 tracking-[-0.015em] text-emerald-400">{formatPercent(incomeYield(item))}/yr</p>
+            </div>
+          </div>
+          <p className="num mt-2 px-1 text-[12px] leading-4 text-slate-400">{getPassiveIncome(item, price)} before costs and tax</p>
+
+          {simpleBuy ? (
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={onOpenGlossary}
+                className="pressable -ml-1 min-w-0 truncate rounded-full px-1 py-1 text-left text-[12px] font-medium text-sky-400 hover:text-sky-300"
+                title="Open glossary"
+              >
+                Glossary: APY, REIT, risk…
+              </button>
+              {actions}
+            </div>
+          ) : (
+            <>
+              <div className="mt-2 flex justify-start">
+                <button
+                  type="button"
+                  onClick={onOpenGlossary}
+                  className="pressable -ml-1 truncate rounded-full px-1 py-1 text-left text-[12px] font-medium text-sky-400 hover:text-sky-300"
+                  title="Open glossary"
+                >
+                  Glossary: APY, REIT, risk…
+                </button>
+              </div>
+              <div className="mt-2">{actions}</div>
+            </>
+          )}
+        </div>
+      </motion.div>
+    );
+  };
+
+  const cards = visibleInvestments.map((item, idx) => renderCard(item, idx));
+
+  return (
+    <div className="relative">
+      {/* Teaching note: one quiet callout, not a boxed wall of text. */}
+      <div className="mb-5 flex gap-3 rounded-[18px] bg-white/[0.04] p-4 ring-1 ring-inset ring-white/[0.06]">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sky-500/15 text-sky-300">
+          <Info size={16} aria-hidden />
+        </span>
+        <div className="min-w-0 text-[13px] leading-5 text-slate-300">
+          <strong className="font-semibold text-white">Income and price growth are different.</strong> Interest, dividends, rent and profit can provide cash. A higher market price increases wealth, but you must sell to spend it. All rates below are fictional teaching assumptions, not live offers or guaranteed returns.
+          <p className="mt-2 flex items-start gap-1.5 text-[12px] leading-4 text-amber-300/90">
+            <AlertTriangle size={13} className="mt-px shrink-0" aria-hidden />
+            <span>{gameState.difficulty === 'EASY' ? 'Easy mode: investment prices cannot fall below 50% of purchase cost. This is a learning aid, not real protection.' : 'Prices can fall substantially, including below half the purchase price. Speculative investments can lose all their value.'}</span>
+          </p>
+        </div>
+      </div>
+      {guided && <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><p className="text-[15px] text-slate-300">Start by comparing savings, interest and dividends.</p><button onClick={() => setShowAllInvestments(true)} className="pressable inline-flex items-center gap-1 rounded-full bg-sky-500/15 py-2 pl-4 pr-3 text-[14px] font-semibold text-sky-300 transition-colors hover:bg-sky-500/25">Explore all 45 investments<ChevronRight size={16} aria-hidden /></button></div>}
       {showQuiz && quizQuestions.length > 0 && (
-        <div className="mb-4 glass-panel p-4">
-          <div className="flex items-start justify-between gap-3 mb-3">
+        <motion.div
+          initial={MOTION_DISABLED ? false : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={springs.smooth}
+          className="surface mb-5 p-5"
+        >
+          <div className="mb-4 flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-white">{quizTitle || 'Quick investing quiz'}</p>
-              <p className="text-xs text-slate-400">{quizIntro || 'Answer a few questions to earn small bonuses.'}</p>
+              <p className="t-headline text-white">{quizTitle || 'Quick investing quiz'}</p>
+              <p className="mt-0.5 text-[13px] text-slate-400">{quizIntro || 'Answer a few questions to earn small bonuses.'}</p>
             </div>
             <button
               onClick={onSkipQuiz}
-              className="text-xs text-slate-400 hover:text-white"
+              className="pressable rounded-full px-3 py-1.5 text-[14px] font-medium text-sky-400 hover:bg-white/[0.06]"
             >
               Skip
             </button>
           </div>
           <div className="space-y-3">
             {quizQuestions.map((question, idx) => (
-              <div key={question.id} className="glass-tile p-3">
-                <p className="text-sm text-slate-200 mb-2">{idx + 1}. {question.question}</p>
+              <div key={question.id} className="rounded-[16px] bg-white/[0.045] p-3.5">
+                <p className="mb-2.5 text-[14px] leading-5 text-slate-100"><span className="num text-slate-400">{idx + 1}.</span> {question.question}</p>
                 <div className="flex flex-wrap gap-2">
                   {question.options.map((option) => {
                     const isSelected = quizAnswers[question.id] === option;
@@ -187,11 +557,13 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                       <button
                         key={`${question.id}-${option}`}
                         onClick={() => onSelectQuizAnswer(question.id, option)}
-                        className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${isSelected
-                          ? 'bg-emerald-600/30 border-emerald-500/60 text-emerald-100'
-                          : 'bg-slate-900/40 border-slate-700 text-slate-300 hover:text-white hover:border-slate-500'
+                        aria-pressed={isSelected}
+                        className={`pressable inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors ${isSelected
+                          ? 'bg-emerald-400/[0.18] text-emerald-200 shadow-[inset_0_0_0_1px_rgb(48_209_88/0.5)]'
+                          : 'bg-[rgb(118_118_128/0.2)] text-slate-200 hover:bg-[rgb(118_118_128/0.3)]'
                           }`}
                       >
+                        {isSelected && <Check size={13} strokeWidth={3} aria-hidden />}
                         {option}
                       </button>
                     );
@@ -200,169 +572,148 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
               </div>
             ))}
           </div>
-          <div className="mt-3 flex items-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
               onClick={onSubmitQuiz}
-              className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold"
+              className="btn-primary px-5 py-2.5 text-[15px]"
             >
               Submit quiz
             </button>
-            <span className="text-xs text-slate-500">Rewards are small and optional.</span>
+            <span className="text-[12px] text-slate-500">Rewards are small and optional.</span>
           </div>
-        </div>
+        </motion.div>
       )}
-      {/* Filters */}
-      <div className="sticky top-3 z-20 -mx-2 mb-4 glass-panel px-2 py-2 backdrop-blur">
-        <div className="flex gap-2 overflow-x-auto pb-1 glass-scroll">
-          {[
-            { id: 'ALL', label: 'All' },
-            { id: AssetType.SAVINGS, label: 'Savings' },
-            { id: AssetType.BOND, label: 'Bonds' },
-            { id: AssetType.INDEX_FUND, label: 'Index Funds' },
-            { id: AssetType.STOCK, label: 'Stocks' },
-            { id: AssetType.REAL_ESTATE, label: 'Real Estate' },
-            { id: AssetType.BUSINESS, label: 'Business' },
-            { id: AssetType.CRYPTO, label: 'Crypto' },
-          ].map(f => (
-            <Button
-              key={f.id}
-              size="sm"
-              variant={investmentFilter === f.id ? 'primary' : 'secondary'}
-              onClick={() => setInvestmentFilter(f.id)}
-              className="whitespace-nowrap"
-            >
-              {f.label}
-            </Button>
-          ))}
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-1 glass-scroll">
-          {[
-            { id: 'ALL', label: 'All tiers' },
-            { id: 'STARTER', label: 'Starter' },
-            { id: 'MID', label: 'Mid' },
-            { id: 'ADVANCED', label: 'Advanced' },
-          ].map(f => (
-            <Button
-              key={f.id}
-              size="sm"
-              variant={investmentTierFilter === f.id ? 'secondary' : 'ghost'}
-              onClick={() => setInvestmentTierFilter(f.id as 'ALL' | 'STARTER' | 'MID' | 'ADVANCED')}
-              className="whitespace-nowrap"
-            >
-              {f.label}
-            </Button>
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={investmentSearch}
-            onChange={(e) => setInvestmentSearch(e.target.value)}
-            placeholder="Search investments"
-            className="flex-1 rounded-lg bg-slate-900/60 border border-slate-700 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500"
+      {/* Filters: a floating toolbar (sticks under the header on wider screens). */}
+      <div className="mat-bar z-20 mb-4 space-y-2 rounded-[20px] border border-white/[0.08] bg-[rgb(20_20_22/0.8)] p-2 shadow-[0_12px_30px_-18px_rgb(0_0_0/0.8)] md:sticky md:top-[5.25rem]">
+        <motion.div layoutScroll className="-mx-0.5 flex gap-1.5 overflow-x-auto px-0.5 no-scrollbar [mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] lg:[mask-image:none]">
+          {CATEGORY_FILTERS.map(f => {
+            const selected = investmentFilter === f.id;
+            return (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setInvestmentFilter(f.id)}
+                aria-pressed={selected}
+                className={`ds-button ds-button--sm relative shrink-0 whitespace-nowrap ${
+                  selected ? 'ds-button--primary bg-transparent shadow-none hover:bg-transparent' : 'ds-button--secondary'
+                }`}
+              >
+                {selected && (
+                  <motion.span
+                    layoutId={MOTION_DISABLED ? undefined : 'invest-filter-thumb'}
+                    transition={springs.glide}
+                    aria-hidden
+                    className="absolute inset-0 rounded-full bg-[var(--accent)] shadow-[inset_0_1px_0_rgb(255_255_255/0.28),0_6px_16px_-8px_rgb(48_209_88/0.7)]"
+                  />
+                )}
+                <span className="relative">{f.label}</span>
+              </button>
+            );
+          })}
+        </motion.div>
+        <div className="flex flex-wrap items-center gap-2">
+          <SegmentedControl
+            role="group"
+            ariaLabel="Tier"
+            size="sm"
+            options={TIER_FILTERS}
+            value={investmentTierFilter}
+            onChange={(value) => setInvestmentTierFilter(value)}
           />
-          {investmentSearch && (
-            <button
-              onClick={() => setInvestmentSearch('')}
-              className="px-3 py-2 rounded-lg bg-slate-800 text-slate-300 text-sm hover:bg-slate-700"
-            >
-              Clear
-            </button>
-          )}
+          <div className="relative min-w-[200px] flex-1">
+            <Search size={15} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden />
+            <input
+              type="text"
+              value={investmentSearch}
+              onChange={(e) => setInvestmentSearch(e.target.value)}
+              placeholder="Search investments"
+              className={`h-9 w-full pl-8 ${investmentSearch ? 'pr-9' : 'pr-3'} ${fieldClass}`}
+            />
+            {investmentSearch && (
+              <button
+                onClick={() => setInvestmentSearch('')}
+                aria-label="Clear"
+                className="pressable absolute right-1.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-slate-900"
+              >
+                <span className="grid h-[18px] w-[18px] place-items-center rounded-full bg-slate-400">
+                  <X size={11} strokeWidth={3.2} aria-hidden />
+                </span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <p className="text-slate-400 text-sm">
-          Available: {formatMoney(gameState.cash)} • {visibleInvestments.length} investments
+      <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <p className="text-[13px] text-slate-400">
+          Available: <span className="num font-semibold text-white">{formatMoney(gameState.cash)}</span> • <span className="num">{visibleInvestments.length}</span> investments
         </p>
 
         <div className="flex items-center gap-2">
-          <Button
-            onClick={toggleBatchBuyMode}
-            variant={batchBuyMode ? 'primary' : 'secondary'}
-            size="md"
-          >
-            {batchBuyMode ? 'Batch Buy: ON' : 'Batch Buy'}
-          </Button>
-          <Button
+          <button type="button" onClick={toggleBatchBuyMode} aria-pressed={batchBuyMode} className={toggleChip(batchBuyMode)}>
+            {batchBuyMode ? <Check size={15} strokeWidth={3} aria-hidden /> : <Layers size={15} aria-hidden />}
+            Batch Buy{batchBuyMode && <span className="sr-only">: ON</span>}
+          </button>
+          <button
+            type="button"
             onClick={() => {
               setCompareMode((prev) => !prev);
               if (compareMode) {
                 setCompareSelection([]);
               }
             }}
-            variant={compareMode ? 'primary' : 'secondary'}
-            size="md"
+            aria-pressed={compareMode}
+            className={toggleChip(compareMode)}
           >
-            {compareMode ? 'Compare: ON' : 'Compare'}
-          </Button>
+            {compareMode ? <Check size={15} strokeWidth={3} aria-hidden /> : <GitCompareArrows size={15} aria-hidden />}
+            Compare{compareMode && <span className="sr-only">: ON</span>}
+          </button>
         </div>
       </div>
-      {batchBuyCart.totalUnits > 0 && (
-        <div className={`mb-4 flex flex-wrap items-center gap-3 rounded-xl border px-3 py-2 ${
-          batchBuyCart.canAfford ? 'border-slate-700 bg-slate-900/60' : 'border-rose-500/50 bg-rose-900/20'
-        }`}>
-          <div className="text-xs text-slate-400">
-            Cart total: <span className="text-white font-semibold">{batchBuyCart.totalUnits}</span> • {formatMoneyFull(batchBuyCart.totalCost)}
-            {!batchBuyCart.canAfford && <span className="text-rose-300 ml-2">Not enough cash</span>}
-          </div>
-          <div className="flex gap-2 ml-auto">
-            <button
-              type="button"
-              onClick={clearBatchBuyCart}
-              className="px-3 py-1.5 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-white text-xs font-semibold"
-            >
-              Clear
-            </button>
-            <button
-              type="button"
-              onClick={openBatchBuyConfirm}
-              disabled={!batchBuyCart.canAfford}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
-                batchBuyCart.canAfford ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'
-              }`}
-            >
-              Review &amp; Buy
-            </button>
-          </div>
-        </div>
-      )}
 
-      <div className="mb-6 glass-panel p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="surface mb-5 overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
           <button
             type="button"
             onClick={() => setAutoInvestOpen((prev) => !prev)}
-            className="flex items-center gap-2 text-sm font-semibold text-white"
+            className="pressable -ml-1 flex items-center gap-2.5 rounded-full py-1 pl-1 pr-3 text-[15px] font-semibold text-white"
             aria-expanded={autoInvestOpen}
           >
-            <span>{autoInvestOpen ? '▾' : '▸'}</span>
+            <span className="grid h-7 w-7 place-items-center rounded-[8px] bg-emerald-400/15 text-emerald-300">
+              <ChevronRight size={16} className={`transition-transform duration-300 ease-spring ${autoInvestOpen ? 'rotate-90' : ''}`} aria-hidden />
+            </span>
             Auto-Invest
           </button>
-          <label className="flex items-center gap-2 text-xs text-slate-300">
+          <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-slate-300">
+            Enable auto-invest
             <input
               type="checkbox"
-              className="rounded border-slate-600 bg-slate-900"
+              className="peer sr-only"
               checked={autoInvest.enabled}
               onChange={(e) => {
                 onUpdateAutoInvest({ ...autoInvest, enabled: e.target.checked });
               }}
             />
-            Enable auto-invest
+            <SwitchVisual />
           </label>
         </div>
         {autoInvestOpen && (
-          <>
-            <p className="text-xs text-slate-400 mt-2">
+          <motion.div
+            key="auto-invest-body"
+            initial={MOTION_DISABLED ? false : { opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={springs.smooth}
+          >
+          <div className="border-t border-white/[0.06] px-4 pb-4 pt-3">
+            <p className="text-[13px] text-slate-400">
               Invest from last month’s disposable income when you hit Next Month.
             </p>
 
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <div className="glass-tile p-3">
-                <div className="flex items-center justify-between text-xs text-slate-400">
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <div className="rounded-[16px] bg-white/[0.045] p-3.5">
+                <div className="flex items-center justify-between text-[13px] text-slate-400">
                   <span>Max auto-invest</span>
-                  <span>{autoInvest.maxPercent}% of disposable income</span>
+                  <span className="num font-medium text-slate-200">{autoInvest.maxPercent}% of disposable income</span>
                 </div>
                 <input
                   type="range"
@@ -376,22 +727,22 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                   }}
                   className="mt-3 w-full accent-emerald-400"
                 />
-                <p className="mt-2 text-[11px] text-slate-500">Round down always. Max 50%.</p>
+                <p className="mt-2 text-[12px] text-slate-500">Round down always. Max 50%.</p>
               </div>
 
-              <div className="glass-tile p-3">
-                <div className="flex items-center justify-between text-xs text-slate-400">
+              <div className="rounded-[16px] bg-white/[0.045] p-3.5">
+                <div className="flex items-center justify-between text-[13px] text-slate-400">
                   <span>Allocation total</span>
-                  <span>{autoTotalPercent}%</span>
+                  <span className="num font-medium text-slate-200">{autoTotalPercent}%</span>
                 </div>
-                <div className="mt-2 text-[11px] text-slate-500">
-                  Remaining: {autoRemaining}% • {autoRemaining === 0 ? 'Fully allocated' : 'Add more allocations'}
+                <div className="mt-1.5 text-[12px] text-slate-500">
+                  Remaining: <span className="num">{autoRemaining}%</span> • {autoRemaining === 0 ? 'Fully allocated' : 'Add more allocations'}
                 </div>
                 <div className="mt-3 flex items-center gap-2">
                   <select
                     value={autoAddId}
                     onChange={(e) => setAutoAddId(e.target.value)}
-                    className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-200"
+                    className={`h-9 flex-1 px-3 text-[13px] ${fieldClass}`}
                   >
                     {autoInvestOptions
                       .filter((item) => !autoInvest.allocations.some((alloc) => alloc.itemId === item.id))
@@ -420,40 +771,39 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
               </div>
             </div>
 
-            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
               {AUTO_INVEST_PRESETS.map((preset) => (
                 <button
                   key={preset.id}
                   type="button"
                   aria-label={`Apply ${preset.label} auto-invest preset`}
                   onClick={() => applyPreset(preset.id)}
-                  className="glass-tile px-3 py-3 text-left transition hover:border-emerald-400/50 hover:shadow-[0_0_18px_rgba(52,211,153,0.25)]"
+                  className="surface-interactive rounded-[16px] border border-white/[0.06] bg-white/[0.045] px-3.5 py-3 text-left"
                 >
-                  <div className="text-sm font-semibold text-white">{preset.label}</div>
-                  <div className="mt-1 text-[11px] text-slate-400">{preset.description}</div>
-                  <div className="mt-2 text-[11px] text-emerald-200">Apply preset →</div>
+                  <div className="text-[14px] font-semibold text-white">{preset.label}</div>
+                  <div className="mt-1 text-[12px] leading-4 text-slate-400">{preset.description}</div>
+                  <div className="mt-2 inline-flex items-center gap-0.5 text-[12px] font-semibold text-emerald-300">Apply preset<ChevronRight size={13} aria-hidden /></div>
                 </button>
               ))}
             </div>
 
             {autoInvest.allocations.length === 0 ? (
-              <p className="mt-4 text-xs text-slate-500">No allocations yet. Add investments to begin auto-investing.</p>
+              <p className="mt-4 text-[13px] text-slate-500">No allocations yet. Add investments to begin auto-investing.</p>
             ) : (
-              <div className="mt-4 space-y-3">
+              <div className="list-group mt-4">
                 {autoInvest.allocations.map((alloc) => {
                   const item = autoInvestOptions.find((entry) => entry.id === alloc.itemId);
                   if (!item) return null;
-                  const inflationMult = Math.pow(1 + gameState.economy.inflationRate, gameState.month / 12);
                   const price = nominalPrice(item, gameState.month, gameState.economy.inflationRate);
                   const totalWithout = autoTotalPercent - alloc.percent;
                   const maxAllowed = Math.max(0, 100 - totalWithout);
 
                   return (
-                    <div key={alloc.itemId} className="flex flex-col gap-2 glass-tile p-3">
+                    <div key={alloc.itemId} className="list-row flex-col items-stretch gap-2 py-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
-                          <p className="text-sm font-semibold text-white">{item.name}</p>
-                          <p className="text-[11px] text-slate-500">Price: {formatMoney(price)}</p>
+                          <p className="text-[14px] font-semibold text-white">{item.name}</p>
+                          <p className="num text-[12px] text-slate-500">Price: {formatMoney(price)}</p>
                         </div>
                         <button
                           type="button"
@@ -463,7 +813,7 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                               allocations: autoInvest.allocations.filter((entry) => entry.itemId !== alloc.itemId)
                             });
                           }}
-                          className="text-[11px] text-rose-300 hover:text-rose-200"
+                          className="pressable rounded-full bg-rose-500/[0.14] px-3 py-1 text-[12px] font-semibold text-rose-300 hover:bg-rose-500/[0.22]"
                         >
                           Remove
                         </button>
@@ -486,330 +836,114 @@ const InvestTab: React.FC<InvestTabProps> = (props) => {
                           }}
                           className="flex-1 accent-emerald-400"
                         />
-                        <div className="w-12 text-right text-xs text-slate-300">{alloc.percent}%</div>
+                        <div className="num w-12 text-right text-[13px] font-semibold text-slate-200">{alloc.percent}%</div>
                       </div>
                     </div>
                   );
                 })}
               </div>
             )}
-          </>
+          </div>
+          </motion.div>
         )}
       </div>
 
       {compareMode && (
-        <div className="mb-4 glass-panel p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <motion.div
+          key="compare-panel"
+          initial={MOTION_DISABLED ? false : { opacity: 0, y: -6, scale: 0.99 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={springs.smooth}
+          className="surface mb-5 p-4 sm:p-5"
+        >
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-semibold text-white">Compare investments</p>
-              <p className="text-xs text-slate-400">
+              <p className="t-headline text-white">Compare investments</p>
+              <p className="mt-0.5 text-[13px] text-slate-400">
                 Select up to three options to compare key metrics.
               </p>
             </div>
-            <div className="text-xs text-slate-400">
+            <div className="num self-start rounded-full bg-[rgb(118_118_128/0.24)] px-3 py-1 text-[12px] font-semibold text-slate-200 sm:self-auto">
               Selected: {compareSelection.length}/3
             </div>
           </div>
 
           {selectedInvestments.length === 0 ? (
-            <p className="text-xs text-slate-500 mt-3">Pick investments below to see the comparison table.</p>
+            <p className="mt-3 text-[13px] text-slate-500">Pick investments below to see the comparison table.</p>
           ) : (
-            <div className="mt-3 overflow-x-auto">
-              <table className="w-full text-sm text-slate-300">
+            <div className="mt-4 overflow-x-auto rounded-[14px] bg-white/[0.035]">
+              <table className="w-full text-[13px] text-slate-300">
                 <thead>
-                  <tr className="text-xs uppercase text-slate-500">
-                    <th className="text-left py-2 pr-3">Metric</th>
+                  <tr className="text-[12px] text-slate-400">
+                    <th className="px-3 py-2.5 text-left font-medium">Metric</th>
                     {selectedInvestments.map((item) => (
-                      <th key={`compare-${item.id}`} className="text-left py-2 pr-3">
+                      <th key={`compare-${item.id}`} className="px-3 py-2.5 text-left font-semibold text-white">
                         {item.name}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody>
-                  {(() => {
-                    const inflationMult = Math.pow(1 + gameState.economy.inflationRate, gameState.month / 12);
-                    return (
-                      <>
-                        <tr className="border-t border-slate-800">
-                          <td className="py-2 pr-3 text-slate-400">Cost</td>
-                          {selectedInvestments.map((item) => {
-                            const price = nominalPrice(item, gameState.month, gameState.economy.inflationRate);
-                            return (
-                              <td key={`cost-${item.id}`} className="py-2 pr-3 text-white">
-                                {formatMoney(price)}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                        <tr className="border-t border-slate-800">
-                          <td className="py-2 pr-3 text-slate-400">Cash income rate</td>
-                          {selectedInvestments.map((item) => (
-                            <td key={`return-${item.id}`} className="py-2 pr-3 text-emerald-300">
-                              {formatPercent(incomeYield(item))}/yr
-                            </td>
-                          ))}
-                        </tr>
-                        <tr className="border-t border-slate-800">
-                          <td className="py-2 pr-3 text-slate-400">Risk rating</td>
-                          {selectedInvestments.map((item) => (
-                            <td key={`risk-${item.id}`} className="py-2 pr-3">
-                              {getRiskRating(item)}
-                            </td>
-                          ))}
-                        </tr>
-                        <tr className="border-t border-slate-800">
-                          <td className="py-2 pr-3 text-slate-400">Lock-up period</td>
-                          {selectedInvestments.map((item) => (
-                            <td key={`lockup-${item.id}`} className="py-2 pr-3">
-                              {getLockupPeriod(item)}
-                            </td>
-                          ))}
-                        </tr>
-                        <tr className="border-t border-slate-800">
-                          <td className="py-2 pr-3 text-slate-400">Dividends / passive</td>
-                          {selectedInvestments.map((item) => {
-                            const price = nominalPrice(item, gameState.month, gameState.economy.inflationRate);
-                            return (
-                              <td key={`income-${item.id}`} className="py-2 pr-3">
-                                {getPassiveIncome(item, price)}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      </>
-                    );
-                  })()}
+                <tbody className="[&>tr]:border-t [&>tr]:border-white/[0.06]">
+                  <tr>
+                    <td className="px-3 py-2.5 text-slate-400">Cost</td>
+                    {selectedInvestments.map((item) => {
+                      const price = nominalPrice(item, gameState.month, gameState.economy.inflationRate);
+                      return (
+                        <td key={`cost-${item.id}`} className="num px-3 py-2.5 font-semibold text-white">
+                          {formatMoney(price)}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-2.5 text-slate-400">Cash income rate</td>
+                    {selectedInvestments.map((item) => (
+                      <td key={`return-${item.id}`} className="num px-3 py-2.5 font-semibold text-emerald-400">
+                        {formatPercent(incomeYield(item))}/yr
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-2.5 text-slate-400">Risk rating</td>
+                    {selectedInvestments.map((item) => (
+                      <td key={`risk-${item.id}`} className="px-3 py-2.5">
+                        {getRiskRating(item)}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-2.5 text-slate-400">Lock-up period</td>
+                    {selectedInvestments.map((item) => (
+                      <td key={`lockup-${item.id}`} className="px-3 py-2.5">
+                        {getLockupPeriod(item)}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-2.5 text-slate-400">Dividends / passive</td>
+                    {selectedInvestments.map((item) => {
+                      const price = nominalPrice(item, gameState.month, gameState.economy.inflationRate);
+                      return (
+                        <td key={`income-${item.id}`} className="num px-3 py-2.5">
+                          {getPassiveIncome(item, price)}
+                        </td>
+                      );
+                    })}
+                  </tr>
                 </tbody>
               </table>
             </div>
           )}
-        </div>
+        </motion.div>
       )}
 
-      {/* Investment Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {visibleInvestments.map((item, idx) => {
-          const inflationMult = Math.pow(1 + gameState.economy.inflationRate, gameState.month / 12);
-          const price = nominalPrice(item, gameState.month, gameState.economy.inflationRate);
-          const canAffordCash = gameState.cash >= price;
-          const canMortgage = item.canMortgage && gameState.cash >= price * 0.035;
-          const tier = getItemTier(item);
-          const riskRating = getRiskRating(item);
-          const isSelected = compareSelection.includes(item.id);
-          const hasEducation = hasRequiredEducationForInvestment(item, gameState.education.degrees);
-          const isLocked = !hasEducation;
-          const requiredEducationLabel = item.requiredEducationCategory
-            ? item.requiredEducationCategory.join(' or ')
-            : 'Education';
-          const requiredLevelLabel = item.requiredEducationLevel ? item.requiredEducationLevel.replace('_', ' ') : null;
-
-          return (
-            <motion.div key={item.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.02 }}
-              className="glass-panel p-4 hover:border-emerald-500/20 transition-all">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{getAssetIcon(item.type)}</span>
-                  <div>
-                    <h4 className="text-white font-bold text-sm">{item.name}</h4>
-                    <p className="text-slate-500 text-xs">{item.type.replace('_', ' ')}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {compareMode && (
-                    <label className="flex items-center gap-1 text-xs text-slate-300 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="rounded border-slate-600 bg-slate-900"
-                        checked={isSelected}
-                        onChange={(e) => {
-                          if (!isSelected && compareSelection.length >= 3) return;
-                          const checked = e.target.checked;
-                          setCompareSelection((prev) => {
-                            if (checked) {
-                              return [...prev, item.id].slice(0, 3);
-                            }
-                            return prev.filter((id) => id !== item.id);
-                          });
-                        }}
-                      />
-                      Compare
-                    </label>
-                  )}
-                  <Badge variant="neutral">{tier.toLowerCase()}</Badge>
-                  <Badge variant={riskRating === 'LOW' ? 'low' : riskRating === 'MEDIUM' ? 'med' : 'high'}>
-                    {riskRating.toLowerCase()} risk
-                  </Badge>
-                </div>
-              </div>
-
-              <p className="text-slate-400 text-xs mb-2 line-clamp-2">{item.description}</p>
-
-              {item.educationalNote && (
-                <p className="text-blue-400/70 text-xs mb-2 italic">💡 {item.educationalNote}</p>
-              )}
-
-              {isLocked && (
-                <p className="text-amber-400 text-xs mb-2">
-                  🔒 Requires {requiredEducationLabel}
-                  {requiredLevelLabel ? ` (${requiredLevelLabel})` : ''}
-                </p>
-              )}
-
-              <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                <div className="bg-slate-900/50 rounded-lg p-2">
-                  <p className="text-slate-500">Price</p>
-                  <p className="text-white font-bold">{formatMoney(price)}</p>
-                </div>
-                <div className="bg-slate-900/50 rounded-lg p-2">
-                  <p className="text-slate-400">{incomeLabel(item.type, item.id)} / year</p>
-                  <p className="text-emerald-400 font-bold">{formatPercent(incomeYield(item))}/yr</p>
-                  <p className="mt-1 text-xs text-slate-300">{getPassiveIncome(item, price)} before costs and tax</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-[11px] text-slate-400 mb-3">
-                <span>
-                  Risk:{' '}
-                  <span className={`font-semibold ${riskRating === 'LOW' ? 'text-emerald-300' : riskRating === 'MEDIUM' ? 'text-amber-300' : 'text-rose-300'}`}>
-                    {riskRating}
-                  </span>
-                </span>
-                <button
-                  type="button"
-                  onClick={onOpenGlossary}
-                  className="text-sky-300 hover:text-sky-200"
-                  title="Open glossary"
-                >
-                  Glossary: APY, REIT, risk…
-                </button>
-              </div>
-
-              {item.canMortgage ? (
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => { playClick(); setShowMortgageModal(item); setSelectedMortgage(''); }}
-                    disabled={!canMortgage || isLocked}
-                    variant={canMortgage && !isLocked ? 'secondary' : 'ghost'}
-                    fullWidth
-                  >
-                    🏦 Finance
-                  </Button>
-                  <Button
-                    onClick={() => handleBuyAsset(item)}
-                    disabled={!canAffordCash || isLocked}
-                    variant={canAffordCash && !isLocked ? 'primary' : 'ghost'}
-                    fullWidth
-                  >
-                    💵 Cash
-                  </Button>
-                </div>
-              ) : batchBuyMode && isBatchBuyEligible(item) ? (
-                isLocked ? (
-                  <div className="w-full py-2.5 rounded-lg text-sm font-medium bg-slate-800 text-slate-500 border border-slate-700 text-center">
-                    Education Required
-                  </div>
-                ) : (
-                  (() => {
-                    const qty = batchBuyQuantities[item.id] || 0;
-                    const lineCost = qty * price;
-                    const otherCost = batchBuyCart.totalCost - lineCost;
-                    const canAddOne = otherCost + (qty + 1) * price <= gameState.cash;
-                    const canBuyQty = qty > 0 && lineCost <= gameState.cash;
-                    const maxAffordable = Math.max(0, Math.floor(gameState.cash / price));
-
-                    return (
-                      <div className="w-full flex flex-col gap-2 py-2 px-3 rounded-lg border border-slate-700 bg-slate-900/40">
-                        <div className="text-left">
-                          <div className="text-slate-400 text-xs">Quantity</div>
-                          <div className="text-white font-bold text-sm">
-                            {qty}x
-                            <span className="text-slate-400 font-medium ml-2">{qty > 0 ? formatMoneyFull(lineCost) : '—'}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => setBatchQty(item.id, qty - 1)}
-                            disabled={qty <= 0}
-                            className={`w-9 h-9 rounded-lg font-bold transition-all ${qty > 0 ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                              }`}
-                          >
-                            −
-                          </button>
-                          <input
-                            type="number"
-                            min={0}
-                            step={1}
-                            inputMode="numeric"
-                            value={qty === 0 ? '' : qty}
-                            onChange={(e) => {
-                              const next = e.target.value;
-                              if (next === '') {
-                                setBatchQty(item.id, 0);
-                                return;
-                              }
-                              const parsed = Math.max(0, Math.floor(Number(next)));
-                              if (Number.isNaN(parsed)) return;
-                              setBatchQty(item.id, parsed);
-                            }}
-                            className="w-14 rounded-md border border-slate-700 bg-slate-900 text-center text-sm text-white px-1 py-1"
-                            aria-label={`${item.name} quantity`}
-                          />
-                          <button
-                            onClick={() => setBatchQty(item.id, qty + 1)}
-                            disabled={!canAddOne}
-                            className={`w-9 h-9 rounded-lg font-bold transition-all ${canAddOne ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                              }`}
-                          >
-                            +
-                          </button>
-                          <button
-                            onClick={() => setBatchQty(item.id, maxAffordable)}
-                            disabled={maxAffordable <= 0}
-                            className={`ml-auto rounded-lg px-3 py-2 text-xs font-semibold transition-all ${maxAffordable > 0
-                              ? 'bg-slate-800 text-slate-200 hover:bg-slate-700'
-                              : 'bg-slate-900 text-slate-600 cursor-not-allowed'
-                              }`}
-                          >
-                            Buy max ({formatMoneyFull(maxAffordable * price)})
-                          </button>
-                        </div>
-
-                        <Button
-                          onClick={() => {
-                            if (!canBuyQty) return;
-                            playClick();
-                            setBatchBuyQuantities({ [item.id]: qty });
-                            setTimeout(() => openBatchBuyConfirm(), 0);
-                          }}
-                          variant={canBuyQty ? 'primary' : 'ghost'}
-                          size="sm"
-                          disabled={!canBuyQty}
-                          fullWidth
-                        >
-                          Buy {qty > 0 ? `${qty}x` : ''}
-                        </Button>
-                      </div>
-                    );
-                  })()
-                )
-              ) : (
-                <Button
-                  onClick={() => handleBuyAsset(item)}
-                  disabled={!canAffordCash || isLocked}
-                  variant={canAffordCash && !isLocked ? 'primary' : 'ghost'}
-                  fullWidth
-                >
-                  {isLocked ? 'Education Required' : canAffordCash ? `Buy ${formatMoney(price)}` : 'Insufficient Funds'}
-                </Button>
-              )}
-            </motion.div>
-          );
-        })}
+      {/* Investment grid: cards reflow on a spring when the filter changes. */}
+      <div className="relative grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {MOTION_DISABLED ? cards : <AnimatePresence mode="popLayout" initial={true}>{cards}</AnimatePresence>}
       </div>
+
+      {/* The batch cart floats over the catalogue as a translucent bar, springing up when it fills. */}
+      {MOTION_DISABLED ? cartBar : <AnimatePresence>{cartBar}</AnimatePresence>}
     </div>
   );
 };

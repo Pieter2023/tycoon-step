@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 type TooltipProps = {
   content: React.ReactNode;
@@ -22,11 +23,20 @@ const Tooltip: React.FC<TooltipProps> = ({ content, className = '', children }) 
       >
         {children}
       </span>
-      {open && (
-        <span className="ds-tooltip top-full mt-2 right-0">
-          {content}
-        </span>
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.span
+            initial={{ opacity: 0, y: -4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            transition={{ type: 'spring', bounce: 0, duration: 0.26 }}
+            style={{ transformOrigin: 'top right' }}
+            className="ds-tooltip top-full mt-2 right-0"
+          >
+            {content}
+          </motion.span>
+        )}
+      </AnimatePresence>
     </span>
   );
 };

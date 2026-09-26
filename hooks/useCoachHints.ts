@@ -84,7 +84,7 @@ export const useCoachHints = (deps: CoachHintsDeps) => {
   const coachHighlight = useCallback((target: CoachTarget) => {
     const active = !!coachHint && coachHint.tabId === activeTab && coachHint.target === target;
     return active
-      ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-900 shadow-[0_0_0_4px_rgba(16,185,129,0.12)] animate-pulse'
+      ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-black coach-focus'
       : '';
   }, [activeTab, coachHint]);
 

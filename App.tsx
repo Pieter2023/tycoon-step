@@ -15,7 +15,7 @@ import FirstSteps from './components/v2/FirstSteps';
 import { resolveFirstRepair } from './services/firstSteps';
 import { incomeYield, nominalPrice, migrateInvestmentAssets } from './services/investmentModel';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig, useReducedMotion } from 'framer-motion';
 import { GameState, AssetType, MarketItem, Lifestyle, Character, Asset, SideHustle, EducationOption, Liability, PlayerConfig, MonthlyActionId, TABS, TabId, EducationLevel, PlayerStats } from './types';
 import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, AUTO_INVEST_PRESETS, FREEDOM_TRACK, FREEDOM_TRACK_IDS } from './constants';
 import { recordMilestones } from './services/townMilestones';
@@ -90,6 +90,7 @@ import { track } from './services/analytics';
 // New Components for Enhanced UI
 import CollapsibleSection from './components/ui/CollapsibleSection';
 import { ToastContainer, useToast } from './components/ui/Toast';
+import { MOTION_DISABLED, riseIn, springs, stagger } from './components/ui/motion';
 import KeyboardShortcutsOverlay from './components/KeyboardShortcutsOverlay';
 import CommandDashboard from './components/v2/CommandDashboard';
 
@@ -102,7 +103,7 @@ import {
   X, Wallet, Sparkles, Volume2, VolumeX,
   Bot, Coffee, Plus, Save as SaveIcon,
   Users, BookOpen, Trophy, Info, Settings, Home, MoreHorizontal,
-  Building2 as CityIcon,
+  Building2 as CityIcon, ChevronRight,
 } from 'lucide-react';
 
 
@@ -572,12 +573,39 @@ const calculateLoanPayment = (principal: number, annualRate: number, termMonths:
 const FloatingNumber: React.FC<{ value: number; onComplete: () => void }> = ({ value, onComplete }) => {
   useEffect(() => { const t = setTimeout(onComplete, 1500); return () => clearTimeout(t); }, [onComplete]);
   return (
-    <motion.div initial={{ opacity: 1, y: 0 }} animate={{ opacity: 0, y: -80 }} transition={{ duration: 1.5 }}
-      className={`fixed z-50 font-bold text-3xl pointer-events-none left-1/2 top-1/4 -translate-x-1/2 gpu-hint ${value >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+    <motion.div
+      initial={{ opacity: 0, y: 18, scale: 0.8, filter: 'blur(6px)' }}
+      animate={{ opacity: [0, 1, 1, 0], y: [18, 0, -18, -64], scale: [0.8, 1.06, 1, 0.96], filter: ['blur(6px)', 'blur(0px)', 'blur(0px)', 'blur(4px)'] }}
+      transition={{ duration: 1.5, times: [0, 0.2, 0.62, 1], ease: [0.22, 1, 0.36, 1] }}
+      className={`mat-popover num fixed left-1/2 top-1/4 z-50 -translate-x-1/2 rounded-full px-5 py-2 text-[26px] font-bold tracking-[-0.02em] pointer-events-none ${value >= 0 ? 'text-[#30d158]' : 'text-[#ff453a]'}`}>
       {value >= 0 ? '+' : ''}{formatMoney(value)}
     </motion.div>
   );
 };
+
+// ============================================
+// QUICK ACTIONS ROWS (iOS inset grouped list)
+// ============================================
+const QuickRow: React.FC<{ icon: React.ReactNode; tile: string; label: string; onClick: () => void; trailing?: React.ReactNode; ariaPressed?: boolean }> = ({ icon, tile, label, onClick, trailing, ariaPressed }) => (
+  <button type="button" onClick={onClick} aria-pressed={ariaPressed} className="list-row w-full text-left">
+    <span className={`flex h-[29px] w-[29px] shrink-0 items-center justify-center rounded-[8px] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.22)] ${tile}`} aria-hidden>{icon}</span>
+    <span className="flex-1 text-[15px] font-medium tracking-[-0.01em] text-white">{label}</span>
+    {trailing ?? <ChevronRight size={16} className="text-slate-600" aria-hidden />}
+  </button>
+);
+
+/** The visual of an iOS switch; the row it sits in carries the state (aria-pressed). */
+const SwitchVisual: React.FC<{ on: boolean; label: string }> = ({ on, label }) => (
+  <span className={`relative inline-flex h-[31px] w-[51px] shrink-0 items-center rounded-full transition-colors duration-300 ${on ? 'bg-[#30d158]' : 'bg-[rgb(120_120_128/0.32)]'}`}>
+    <span className="sr-only">{label}</span>
+    <motion.span
+      layout
+      transition={{ type: 'spring', bounce: 0.2, duration: 0.35 }}
+      className={`absolute top-[2px] h-[27px] w-[27px] rounded-full bg-white shadow-[0_3px_8px_rgb(0_0_0/0.25),0_1px_1px_rgb(0_0_0/0.16)] ${on ? 'right-[2px]' : 'left-[2px]'}`}
+      aria-hidden
+    />
+  </span>
+);
 
 // ============================================
 // MAIN APP COMPONENT
@@ -696,6 +724,13 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const [monthlyReport, setMonthlyReport] = useState<any>(null);
   const [dashboardModal, setDashboardModal] = useState<null | 'netWorth' | 'cashFlow' | 'credit' | 'ai'>(null);
   const [showCharacterSelect, setShowCharacterSelect] = useState(!isMultiplayer && !isResumingFromSave);
+  // A new screen starts at the top: without this, picking a character low in the list (or leaving
+  // the menu scrolled) carried that scroll offset into the dashboard.
+  const onGameScreen = gameStarted && !showCharacterSelect;
+  useEffect(() => {
+    if (MOTION_DISABLED) return; // jsdom has no scrolling
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+  }, [onGameScreen, showCharacterSelect]);
   // Start in the city: once per load, as soon as a game is running with nothing waiting in the 2D shell.
   useEffect(() => {
     if (!startInCity || autoOpenedCity.current) return;
@@ -1500,7 +1535,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           type="button"
           onClick={toggle}
           onBlur={() => close()}
-          className="ml-1 inline-flex items-center justify-center w-6 h-6 rounded-full hover:bg-slate-700/60 text-slate-400 hover:text-slate-200"
+          className="pressable ml-1 inline-flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/[0.08] text-slate-500 hover:text-slate-200"
           aria-label="Show info"
         >
           <Info size={14} />
@@ -1508,11 +1543,12 @@ const [gameState, setGameState] = useState<GameState>(() => {
         <AnimatePresence>
           {isOpen && (
             <motion.span
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.12 }}
-              className="absolute z-50 top-full mt-2 right-0 w-[min(18rem,calc(100vw-2rem))] bg-slate-900 border border-slate-700 rounded-xl p-3 shadow-xl block"
+              initial={{ opacity: 0, y: -4, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.96 }}
+              transition={{ type: 'spring', bounce: 0, duration: 0.28 }}
+              style={{ transformOrigin: 'top right' }}
+              className="mat-popover absolute z-50 top-full mt-2 right-0 w-[min(18rem,calc(100vw-2rem))] rounded-[14px] p-3 block"
               onClick={(e) => e.stopPropagation()}
             >
               <p className="text-slate-200 text-sm leading-relaxed">{text}</p>
@@ -3224,34 +3260,36 @@ const [gameState, setGameState] = useState<GameState>(() => {
   // Welcome Screen
   if (!gameStarted && !showCharacterSelect) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md w-full text-center">
+      <MotionConfig reducedMotion={reduceMotion ? 'always' : 'never'}>
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <motion.div variants={stagger(0.06)} initial="hidden" animate="show" className="max-w-md w-full text-center">
           {onBackToMenu && (
-            <button onClick={onBackToMenu} className="absolute top-4 left-4 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full text-white font-medium transition-all">
+            <button onClick={onBackToMenu} className="btn-secondary absolute top-4 left-4 h-9 px-4 text-sm">
               ← Back to Menu
             </button>
           )}
-          <motion.div animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.05, 1] }} transition={{ duration: 3, repeat: Infinity }} className="text-7xl mb-4">💰</motion.div>
-          <h1 className="text-5xl font-bold text-white mb-2">Tycoon</h1>
-          <p className="text-emerald-400 font-medium text-xl">Financial Freedom Simulator</p>
-          <p className="text-slate-400 mt-2 mb-6">Build wealth • Invest wisely • Beat the robots</p>
-          
-          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={handleQuickStart}
-            className="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold rounded-xl shadow-lg text-xl mb-4">
-            🚀 Start Your Journey
-          </motion.button>
-          
-          <button
-            onClick={toggleSound}
-            className="p-3 bg-slate-800 rounded-lg text-slate-400 hover:text-white"
-            aria-label={soundEnabled ? 'Mute sound' : 'Unmute sound'}
-          >
-            {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-          </button>
-          
-          <p className="text-slate-500 text-sm mt-6">v3.4.3 • Autoplay Continues After Events • Stop Autoplay in Event Popups • Event Cooldowns • Save/Load • Event Images</p>
+          <motion.div variants={riseIn} className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[28px] bg-gradient-to-br from-[#34c759] to-[#1f7a36] text-5xl shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_20px_40px_-12px_rgb(48_209_88/0.55)]">💰</motion.div>
+          <motion.h1 variants={riseIn} className="text-5xl font-bold text-white">Tycoon</motion.h1>
+          <motion.p variants={riseIn} className="mt-2 text-xl font-semibold text-[#30d158]">Financial Freedom Simulator</motion.p>
+          <motion.p variants={riseIn} className="mt-2 mb-8 text-slate-400">Build wealth • Invest wisely • Beat the robots</motion.p>
+          <motion.div variants={riseIn}>
+            <button onClick={handleQuickStart} className="btn-primary mb-4 h-14 w-full text-lg">
+              🚀 Start Your Journey
+            </button>
+          </motion.div>
+          <motion.div variants={riseIn}>
+            <button
+              onClick={toggleSound}
+              className="pressable inline-flex h-11 w-11 items-center justify-center rounded-full bg-[rgb(118_118_128/0.24)] text-slate-300 hover:text-white"
+              aria-label={soundEnabled ? 'Mute sound' : 'Unmute sound'}
+            >
+              {soundEnabled ? <Volume2 size={19} /> : <VolumeX size={19} />}
+            </button>
+          </motion.div>
+          <motion.p variants={riseIn} className="mt-8 text-xs text-slate-600">v3.4.3 • Autoplay Continues After Events • Stop Autoplay in Event Popups • Event Cooldowns • Save/Load • Event Images</motion.p>
         </motion.div>
       </div>
+      </MotionConfig>
     );
   }
 
@@ -3265,90 +3303,101 @@ const [gameState, setGameState] = useState<GameState>(() => {
         />
       );
     }
+    const difficultyKeys = Object.keys(DIFFICULTY_SETTINGS) as Array<keyof typeof DIFFICULTY_SETTINGS>;
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 md:p-8 overflow-y-auto">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-6">
-            {onBackToMenu && <button onClick={onBackToMenu} className="mb-4 rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-200">Back to menu</button>}
-            <h1 className="text-3xl font-bold text-white mb-2">Choose Your Path</h1>
-            <p className="text-slate-400">⚠️ Some careers are more AI-proof than others!</p>
-          </div>
-          
-          {/* Difficulty Selection */}
-          <div className="flex justify-center gap-2 mb-6 flex-wrap">
-            {(Object.keys(DIFFICULTY_SETTINGS) as Array<keyof typeof DIFFICULTY_SETTINGS>).map(diff => (
-              <motion.button key={diff} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                onClick={() => { playClick(); setSelectedDifficulty(diff); }}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${selectedDifficulty === diff ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>
-                {DIFFICULTY_SETTINGS[diff].label}
-              </motion.button>
-            ))}
-          </div>
-          
-          <p className="text-center text-slate-500 text-sm mb-6">{DIFFICULTY_SETTINGS[selectedDifficulty].description}</p>
-          
-          {/* Character Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <MotionConfig reducedMotion={reduceMotion ? 'always' : 'never'}>
+      <div className="min-h-screen px-4 pb-16 pt-6 md:px-8 md:pt-10 overflow-y-auto">
+        <motion.div variants={stagger(0.05)} initial="hidden" animate="show" className="max-w-6xl mx-auto">
+          <motion.div variants={riseIn} className="mb-8 text-center">
+            {onBackToMenu && <div className="mb-6 flex justify-start"><button onClick={onBackToMenu} className="pressable inline-flex h-9 items-center gap-1 rounded-full px-2 text-[15px] font-medium text-[#0a84ff] hover:bg-white/[0.06]"><ChevronRight size={18} className="rotate-180" aria-hidden />Back to menu</button></div>}
+            <h1 className="text-4xl font-bold text-white md:text-5xl">Choose Your Path</h1>
+            <p className="mx-auto mt-3 max-w-md text-[15px] text-slate-400">⚠️ Some careers are more AI-proof than others!</p>
+          </motion.div>
+
+          {/* Difficulty: an Apple segmented control with a gliding thumb */}
+          <motion.div variants={riseIn} className="mb-3 flex justify-center">
+            <div role="group" aria-label="Difficulty" className="inline-flex max-w-full gap-0.5 overflow-x-auto no-scrollbar rounded-[13px] bg-[rgb(118_118_128/0.2)] p-[3px]">
+              {difficultyKeys.map(diff => {
+                const selected = selectedDifficulty === diff;
+                return (
+                  <button key={diff} type="button" aria-pressed={selected}
+                    onClick={() => { playClick(); setSelectedDifficulty(diff); }}
+                    className={`pressable relative min-h-[36px] shrink-0 whitespace-nowrap rounded-[10px] px-4 text-sm font-semibold transition-colors ${selected ? 'text-white' : 'text-slate-400 hover:text-slate-200'}`}>
+                    {selected && <motion.span layoutId="difficulty-thumb" transition={springs.glide} className="absolute inset-0 rounded-[10px] bg-[#636366] shadow-[0_3px_8px_rgb(0_0_0/0.28),inset_0_1px_0_rgb(255_255_255/0.12)]" aria-hidden />}
+                    <span className="relative">{DIFFICULTY_SETTINGS[diff].label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.p key={selectedDifficulty} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={springs.snappy} className="mx-auto mb-8 max-w-xl text-center text-[13px] text-slate-500">{DIFFICULTY_SETTINGS[selectedDifficulty].description}</motion.p>
+          </AnimatePresence>
+
+          {/* Character grid */}
+          <motion.div variants={stagger(0.045, 0.05)} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <motion.div
-              whileHover={{ scale: 1.02, y: -5 }}
+              variants={riseIn}
+              whileHover={{ y: -4 }}
               whileTap={{ scale: 0.98 }}
+              transition={springs.smooth}
               onClick={() => setShowCustomAvatarBuilder(true)}
-              className="bg-slate-800/50 border border-emerald-500/40 rounded-2xl p-4 cursor-pointer hover:border-emerald-400 transition-all flex flex-col items-center justify-center text-center min-h-[260px]"
+              className="group relative flex min-h-[300px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[24px] border border-dashed border-[#30d158]/35 bg-[#30d158]/[0.04] p-5 text-center transition-colors hover:border-[#30d158]/60 hover:bg-[#30d158]/[0.07]"
             >
-              <div className="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center text-2xl mb-3">
-                <Plus size={28} className="text-emerald-300" />
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#30d158]/15 text-[#30d158] transition-transform duration-500 ease-spring group-hover:scale-110">
+                <Plus size={30} />
               </div>
-              <h3 className="text-lg font-bold text-white">Create Custom</h3>
-              <p className="text-sm text-slate-400 mt-2">
+              <h3 className="text-lg font-semibold text-white">Create Custom</h3>
+              <p className="mt-2 text-sm text-slate-400">
                 Build a 3D Pixar-style avatar from your photo.
               </p>
-              <div className="mt-4 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 text-xs font-semibold">
+              <div className="mt-4 rounded-full bg-[#30d158]/12 px-3 py-1 text-xs font-semibold text-[#30d158]">
                 Optional
               </div>
             </motion.div>
             {CHARACTERS.map(char => {
               const career = CAREER_PATHS[char.careerPath];
               const futureProof = career.futureProofScore;
-              
+              const proofTone = futureProof >= 80 ? '#30d158' : futureProof >= 50 ? '#ff9f0a' : '#ff453a';
               return (
-                <motion.div key={char.id} whileHover={{ scale: 1.02, y: -5 }} whileTap={{ scale: 0.98 }}
+                <motion.div key={char.id} variants={riseIn} whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }} transition={springs.smooth}
                   onClick={() => handleSelectCharacter(char)}
-                  className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 cursor-pointer hover:border-emerald-500/50 transition-all">
-                  <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${char.avatarColor} flex items-center justify-center text-2xl mb-3 mx-auto`}>
+                  className="surface-card group flex cursor-pointer flex-col !rounded-[24px] p-5 transition-[border-color,box-shadow] duration-300 hover:!border-white/[0.16] hover:shadow-[0_24px_48px_-20px_rgb(0_0_0/0.8)]">
+                  <div className={`mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br ${char.avatarColor} text-3xl shadow-[0_0_0_3px_rgb(255_255_255/0.06),0_10px_24px_-8px_rgb(0_0_0/0.6)] transition-transform duration-500 ease-spring group-hover:scale-105`}>
                     {char.avatarEmoji}
                   </div>
-                  <h3 className="text-lg font-bold text-white text-center">{char.name}</h3>
-                  <p className="text-emerald-400 text-sm text-center">{career.icon} {career.name}</p>
-                  <p className="text-slate-400 text-xs text-center mb-2 line-clamp-2">{char.backstory}</p>
+                  <h3 className="text-center text-lg font-semibold text-white">{char.name}</h3>
+                  <p className="mt-0.5 text-center text-[13px] font-medium text-[#30d158]">{career.icon} {career.name}</p>
+                  <p className="mt-2 mb-4 text-center text-[13px] leading-[1.35rem] text-slate-400 line-clamp-2">{char.backstory}</p>
 
-                  <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-2 mb-2">
-                    <p className="text-[10px] uppercase tracking-wide text-slate-500 text-center">Perk</p>
-                    <p className="text-xs text-slate-200 text-center font-medium">{char.perk.name}</p>
-                    <p className="text-[11px] text-slate-400 text-center">{char.perk.description}</p>
+                  <div className="surface-inset mb-3 px-3 py-2.5">
+                    <p className="text-[11px] font-semibold text-slate-500">Perk</p>
+                    <p className="text-[13px] font-semibold text-slate-100">{char.perk.name}</p>
+                    <p className="mt-0.5 text-[12px] leading-4 text-slate-400">{char.perk.description}</p>
                   </div>
-                  
-                  {/* AI-Proof Rating */}
-                  <div className={`text-center p-2 rounded-lg mb-2 ${
-                    futureProof >= 80 ? 'bg-emerald-900/30 border border-emerald-700/50' : 
-                    futureProof >= 50 ? 'bg-amber-900/30 border border-amber-700/50' : 
-                    'bg-red-900/30 border border-red-700/50'}`}>
-                    <div className="flex items-center justify-center gap-1">
-                      <Bot size={12} />
-                      <span className="text-xs font-medium">AI-Proof: {futureProof}%</span>
+
+                  {/* AI-proof rating as a meter */}
+                  <div className="mb-3 mt-auto px-0.5">
+                    <div className="mb-1.5 flex items-center justify-between text-[12px]">
+                      <span className="flex items-center gap-1 text-slate-400"><Bot size={12} /> AI-Proof</span>
+                      <span className="num font-semibold" style={{ color: proofTone }}>{futureProof}%</span>
                     </div>
+                    <div className="meter"><div className="meter-fill" style={{ width: `${futureProof}%`, background: proofTone }} /></div>
                   </div>
-                  
-                  <div className="text-center text-xs text-slate-500">
-                    Starting: {formatMoney(DIFFICULTY_SETTINGS[selectedDifficulty].startingCash + (char.startingBonus.type === 'cash' && char.startingBonus.amount > 0 ? char.startingBonus.amount : 0))}
-                    {char.startingBonus.amount < 0 && <span className="text-red-400"> + {formatMoney(Math.abs(char.startingBonus.amount))} debt</span>}
-                    {char.startingLifestyle && <span className="text-amber-300"> · starts {char.startingLifestyle.toLowerCase()}</span>}
+
+                  <div className="text-center text-[12px] text-slate-500">
+                    Starting: <span className="num font-semibold text-slate-200">{formatMoney(DIFFICULTY_SETTINGS[selectedDifficulty].startingCash + (char.startingBonus.type === 'cash' && char.startingBonus.amount > 0 ? char.startingBonus.amount : 0))}</span>
+                    {char.startingBonus.amount < 0 && <span className="text-[#ff6961]"> + {formatMoney(Math.abs(char.startingBonus.amount))} debt</span>}
+                    {char.startingLifestyle && <span className="text-[#ffb340]"> · starts {char.startingLifestyle.toLowerCase()}</span>}
                   </div>
                 </motion.div>
               );
             })}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
+      </MotionConfig>
     );
   }
 
@@ -3455,15 +3504,18 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const cityJourney = activeJourney(gameState), cityChallenges = monthlyChallenges(gameState), citySnapshot = currentSnapshot(gameState);
   const cityDone = cityChallenges.filter(c => challengeProgress(c, citySnapshot, gameState).done).length;
   const townLauncher = !isMultiplayer && !gameState.challenge ?
-    <div className="rounded-xl border border-amber-300/30 bg-gradient-to-r from-emerald-950 to-slate-900 px-5 py-4">
-      <button onClick={() => setShowTown(true)} disabled={isProcessing || gameState.isBankrupt} className="flex w-full items-center justify-between gap-4 text-left disabled:opacity-40">
-        <span><strong className="block text-sm text-amber-100">{tl('Enter 3D city','Entrar a la ciudad 3D')}</strong><span className="mt-1 block text-xs text-slate-300">{cityJourney.completed ? `${tl('Freedom Square · notice board','Plaza de la Libertad · tablón')} ${cityDone}/${cityChallenges.length} ${tl('this month','este mes')}` : `${cityJourney.stage === 3 ? tl('Neighbourhood tour','Recorrido del barrio') : cityJourney.stage === 2 ? tl('Investor journey','Recorrido del inversor') : tl('Your first business','Tu primer negocio')} · ${cityJourney.title}`}</span></span><span className="shrink-0 text-xs text-emerald-200">{cityJourney.completed ? tl('Explore →','Explorar →') : `${cityJourney.button} →`}</span>
+    <div className="surface-card relative overflow-hidden !rounded-[22px] !border-[#ffd60a]/15 px-5 py-4">
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_140%_at_0%_0%,rgb(48_209_88/0.20),transparent_55%),radial-gradient(90%_120%_at_100%_0%,rgb(255_214_10/0.10),transparent_60%)]" />
+      <button onClick={() => setShowTown(true)} disabled={isProcessing || gameState.isBankrupt} className="group relative flex w-full items-center gap-4 text-left transition-[scale] duration-[370ms] ease-spring active:scale-[0.99] disabled:opacity-40">
+        <span aria-hidden className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px] bg-gradient-to-br from-[#34c759] to-[#248a3d] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_6px_16px_-4px_rgb(48_209_88/0.6)]"><CityIcon size={20} /></span>
+        <span className="min-w-0 flex-1"><strong className="block text-[15px] font-semibold tracking-[-0.012em] text-white">{tl('Enter 3D city','Entrar a la ciudad 3D')}</strong><span className="mt-0.5 block text-[13px] text-slate-400 line-clamp-2 sm:line-clamp-1">{cityJourney.completed ? `${tl('Freedom Square · notice board','Plaza de la Libertad · tablón')} ${cityDone}/${cityChallenges.length} ${tl('this month','este mes')}` : `${cityJourney.stage === 3 ? tl('Neighbourhood tour','Recorrido del barrio') : cityJourney.stage === 2 ? tl('Investor journey','Recorrido del inversor') : tl('Your first business','Tu primer negocio')} · ${cityJourney.title}`}</span><span aria-hidden className="mt-1 block text-[13px] font-semibold text-[#30d158] sm:hidden">{cityJourney.completed ? tl('Explore','Explorar') : cityJourney.button}</span></span><span className="hidden shrink-0 rounded-full bg-white/[0.08] px-3.5 py-1.5 text-[13px] font-semibold text-[#30d158] transition-colors group-hover:bg-white/[0.12] sm:inline-flex">{cityJourney.completed ? tl('Explore →','Explorar →') : `${cityJourney.button} →`}</span><ChevronRight aria-hidden size={18} className="shrink-0 text-slate-500 sm:hidden" />
       </button>
-      <p className="mt-3 border-t border-emerald-900/60 pt-3 text-xs text-slate-300"><span className="text-amber-200">{tl('Rosa says','Rosa dice')}:</span> {adviceHeadline(gameState)}{cityJourney.completed ? '' : ` · ${tl('Board','Tablón')} ${cityDone}/${cityChallenges.length}`}</p>
+      <p className="relative mt-3.5 border-t border-white/[0.07] pt-3 text-[13px] text-slate-400"><span className="font-semibold text-[#ffd60a]">{tl('Rosa says','Rosa dice')}:</span> {adviceHeadline(gameState)}{cityJourney.completed ? '' : ` · ${tl('Board','Tablón')} ${cityDone}/${cityChallenges.length}`}</p>
     </div> : null;
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white pb-24 md:pb-4">
-      {showTown && <TabErrorBoundary tabName="3D neighbourhood"><React.Suspense fallback={<Modal isOpen onClose={() => setShowTown(false)} ariaLabel="Loading neighbourhood"><p className="p-8">Opening Freedom Square…</p></Modal>}>
+    <MotionConfig reducedMotion={reduceMotion ? 'always' : 'never'}>
+    <div className="min-h-screen text-white">
+      {showTown && <TabErrorBoundary tabName="3D neighbourhood"><React.Suspense fallback={<Modal isOpen onClose={() => setShowTown(false)} ariaLabel="Loading neighbourhood" contentClassName="max-w-xs"><div className="flex flex-col items-center gap-4 px-8 py-10 text-center"><span aria-hidden className="h-8 w-8 animate-spin rounded-full border-[3px] border-white/15 border-t-[#30d158]" /><p className="text-[15px] font-semibold text-white">Opening Freedom Square…</p></div></Modal>}>
         <TownModal state={gameState} disabled={isProcessing || !!gameState.pendingScenario || gameState.hasWon || gameState.isBankrupt} reduceMotion={!!reduceMotion} soundOn={soundEnabled} onToggleSound={toggleSound}
           onBuy={(item,quantity)=>handleBuyAsset(item,undefined,quantity)} onClose={() => setShowTown(false)} saveError={saveError} onBackup={downloadCurrentProgress}
           onFinishJourney={()=>setGameState(prev=>isProcessing?prev:completeActiveJourney(prev))}
@@ -3500,21 +3552,25 @@ const [gameState, setGameState] = useState<GameState>(() => {
       {/* Notification Toast */}
       <AnimatePresence>
         {notification && (
-          <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }}
-            className="fixed left-1/2 -translate-x-1/2 z-50 bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-2xl w-[min(24rem,calc(100vw-2rem))]" style={{ top: 'calc(env(safe-area-inset-top) + 1rem)' }}>
-            <div className="flex items-start gap-3">
-              <div className={`p-2 rounded-lg ${
-                notification.type === 'success' ? 'bg-emerald-500/20' : 
-                notification.type === 'error' ? 'bg-red-500/20' : 
-                notification.type === 'warning' ? 'bg-amber-500/20' : 'bg-blue-500/20'}`}>
-                {notification.type === 'success' ? <CheckCircle className="text-emerald-400" size={20} /> :
-                 notification.type === 'error' ? <X className="text-red-400" size={20} /> :
-                 notification.type === 'warning' ? <AlertTriangle className="text-amber-400" size={20} /> :
-                 <Sparkles className="text-blue-400" size={20} />}
+          <motion.div
+            initial={{ opacity: 0, y: -28, scale: 0.9, filter: 'blur(6px)' }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', transitionEnd: { filter: 'none' } }}
+            exit={{ opacity: 0, y: -24, scale: 0.94, filter: 'blur(4px)', transition: { type: 'spring', bounce: 0, duration: 0.3 } }}
+            transition={{ type: 'spring', bounce: 0.22, duration: 0.5 }}
+            className="mat-popover fixed left-1/2 -translate-x-1/2 z-50 rounded-[22px] py-3 pl-3 pr-3.5 w-[min(25rem,calc(100vw-1.5rem))]" style={{ top: 'calc(env(safe-area-inset-top) + 0.75rem)' }}>
+            <div className="flex items-center gap-3">
+              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                notification.type === 'success' ? 'bg-[#30d158]' :
+                notification.type === 'error' ? 'bg-[#ff453a]' :
+                notification.type === 'warning' ? 'bg-[#ff9f0a]' : 'bg-[#0a84ff]'} text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25)]`}>
+                {notification.type === 'success' ? <CheckCircle size={19} strokeWidth={2.4} /> :
+                 notification.type === 'error' ? <X size={19} strokeWidth={2.6} /> :
+                 notification.type === 'warning' ? <AlertTriangle size={18} strokeWidth={2.4} /> :
+                 <Sparkles size={18} strokeWidth={2.2} />}
               </div>
-              <div className="flex-1">
-                <h4 className="font-bold text-white">{notification.title}</h4>
-                <p className="text-slate-400 text-sm">{notification.message}</p>
+              <div className="min-w-0 flex-1">
+                <h4 className="text-[15px] font-semibold leading-5 tracking-[-0.012em] text-white">{notification.title}</h4>
+                <p className="text-[13px] leading-[1.125rem] text-slate-400">{notification.message}</p>
               </div>
               {notification.actionLabel && notification.onAction ? (
                 <button
@@ -3526,17 +3582,17 @@ const [gameState, setGameState] = useState<GameState>(() => {
                     }
                     setNotification(null);
                   }}
-                  className="px-3 py-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-200 text-xs font-semibold"
+                  className="pressable shrink-0 rounded-full bg-[rgb(118_118_128/0.28)] px-3.5 py-1.5 text-[13px] font-semibold text-white hover:bg-[rgb(118_118_128/0.4)]"
                 >
                   {notification.actionLabel}
                 </button>
               ) : (
                 <button
                   onClick={() => setNotification(null)}
-                  className="text-slate-500 hover:text-white"
+                  className="pressable flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgb(118_118_128/0.24)] text-slate-300 hover:text-white"
                   aria-label="Dismiss notification"
                 >
-                  <X size={18} />
+                  <X size={14} strokeWidth={2.6} />
                 </button>
               )}
             </div>
@@ -3604,7 +3660,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
         />
       )}
 
-      {saveError && <div role="alert" className="fixed bottom-24 left-4 right-4 z-[100] mx-auto max-w-lg rounded-xl border border-red-400 bg-red-950 p-4 text-sm text-red-100">{saveError}<button className="mt-2 block underline" onClick={downloadCurrentProgress}>Download current progress</button><button className="mt-2 block underline" onClick={() => recordAutosave(gameState)}>Retry saving</button></div>}
+      {saveError && <div role="alert" className="mat-popover fixed bottom-28 left-4 right-4 z-[100] mx-auto max-w-lg rounded-[20px] !border-[#ff453a]/40 p-4 text-sm text-[#ffb4ae]">{saveError}<div className="mt-3 flex flex-wrap gap-2"><button className="btn-secondary h-8 px-3.5 text-[13px]" onClick={downloadCurrentProgress}>Download current progress</button><button className="btn-secondary h-8 px-3.5 text-[13px]" onClick={() => recordAutosave(gameState)}>Retry saving</button></div></div>}
       {/* Confirmation Dialog (prevents costly mis-clicks) */}
       {confirmDialog && (
         <ConfirmDialogModal config={confirmDialog} onClose={closeConfirmDialog} />
@@ -4075,7 +4131,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
             )}
             {v2Path === '/money' && (
               <TabErrorBoundary tabName="Money">
-  {townOpenedMoney && <div className="mb-4"><button className="rounded-xl bg-emerald-950 border border-emerald-600 px-5 py-3" onClick={()=>setShowTown(true)}>← Return to city</button></div>}
+  {townOpenedMoney && <div className="mb-4"><button className="btn-secondary h-10 px-4 text-[14px]" onClick={()=>setShowTown(true)}><CityIcon size={15} className="text-[#30d158]" />← Return to city</button></div>}
   <MoneyPageLayout
                   gameState={gameState}
                   netWorth={netWorth}
@@ -4146,7 +4202,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
           {!isMobileViewport && (
             <DesktopShell
-              title="Financial Freedom"
+              title={playerConfig?.name || gameState.character?.name || 'Player'}
               subtitle="Tycoon"
               navItems={v2NavItems}
               activePath={v2Path}
@@ -4154,66 +4210,60 @@ const [gameState, setGameState] = useState<GameState>(() => {
               year={Math.ceil(gameState.month / 12)}
               month={((gameState.month - 1) % 12) + 1}
               headerLeading={
-                <div className="flex flex-col items-center gap-1">
-                  <div className={`h-12 w-12 rounded-full bg-gradient-to-br ${gameState.character?.avatarColor || 'from-slate-500 to-slate-600'} flex items-center justify-center text-xl overflow-hidden border border-white/10`}>
-                    {gameState.character?.avatarImage ? (
-                      <img
-                        src={gameState.character.avatarImage}
-                        alt={playerConfig?.name || gameState.character?.name || 'Player'}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      gameState.character?.avatarEmoji || '👤'
-                    )}
-                  </div>
-                  <span className="text-[11px] text-slate-300">
-                    {playerConfig?.name || gameState.character?.name || 'Player'}
-                  </span>
+                <div className={`h-10 w-10 shrink-0 rounded-full bg-gradient-to-br ${gameState.character?.avatarColor || 'from-slate-500 to-slate-600'} flex items-center justify-center text-lg overflow-hidden shadow-[0_0_0_1.5px_rgb(255_255_255/0.14),0_4px_12px_rgb(0_0_0/0.4)]`}>
+                  {gameState.character?.avatarImage ? (
+                    <img
+                      src={gameState.character.avatarImage}
+                      alt={playerConfig?.name || gameState.character?.name || 'Player'}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    gameState.character?.avatarEmoji || '👤'
+                  )}
                 </div>
               }
               headerActions={
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                 <button
                   type="button"
                   onClick={handleNextTurn}
                   disabled={isProcessing || !!gameState.pendingScenario}
-                  className="flex items-center gap-2 rounded-full bg-emerald-400/90 px-5 py-2 text-sm font-semibold text-slate-950 shadow-[0_12px_30px_rgba(16,185,129,0.35)] disabled:opacity-60"
+                  className="btn-primary h-10 gap-2 px-5 text-[14px]"
                   title={t('shell.header.next_month_shortcut')}
                 >
-                  {isProcessing ? <Play size={16} className="animate-spin" /> : <Play size={16} />}
+                  <Play size={14} fill="currentColor" className={isProcessing ? 'animate-pulse' : ''} />
                   {t('shell.header.next_month')}
                 </button>
-                <button
-                  type="button"
-                  onClick={toggleAutoplay}
-                  className={`flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold ${
-                    autoplayEnabled
-                      ? 'border-amber-400/70 bg-amber-400/10 text-amber-200'
-                      : 'border-slate-700/70 text-slate-300'
-                  }`}
-                  title={`${autoplayTooltip} • Shortcut: T`}
-                >
-                  {autoplayEnabled ? <FastForward size={14} /> : <Pause size={14} />}
-                  {t('shell.header.autoplay')} {autoplayEnabled ? t('shell.header.on') : t('shell.header.off')}
-                </button>
-                <div className="flex items-center gap-1">
+                <div className="flex h-10 items-center gap-0.5 rounded-full bg-[rgb(118_118_128/0.2)] p-1">
+                  <button
+                    type="button"
+                    onClick={toggleAutoplay}
+                    aria-pressed={autoplayEnabled}
+                    className={`pressable flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold transition-colors ${
+                      autoplayEnabled ? 'bg-[#ff9f0a] text-[#231400] shadow-[inset_0_1px_0_rgb(255_255_255/0.3)]' : 'text-slate-300 hover:text-white'
+                    }`}
+                    title={`${autoplayTooltip} • Shortcut: T`}
+                  >
+                    {autoplayEnabled ? <FastForward size={13} fill="currentColor" /> : <Pause size={13} />}
+                    {t('shell.header.autoplay')} {autoplayEnabled ? t('shell.header.on') : t('shell.header.off')}
+                  </button>
                   {AUTOPLAY_SPEED_OPTIONS.map((speed) => {
                     const label = AUTOPLAY_SPEED_LABELS[speed] || '1x';
-                    const isActive = autoPlaySpeed === speed;
+                    const isActive = autoplayEnabled && autoPlaySpeed === speed;
                     return (
                       <button
                         key={speed}
                         onClick={() => setAutoPlaySpeed(speed)}
                         disabled={!autoplayEnabled}
-                        className={`rounded-full border px-3 py-1 text-[10px] font-semibold ${
-                          !autoplayEnabled
-                            ? 'border-slate-800 text-slate-600 cursor-not-allowed'
-                            : isActive
-                              ? 'border-amber-400/70 bg-amber-400/10 text-amber-200'
-                              : 'border-slate-700/70 text-slate-300 hover:text-white'
+                        aria-pressed={isActive}
+                        className={`pressable num relative flex h-8 min-w-[34px] items-center justify-center rounded-full px-2 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed ${
+                          !autoplayEnabled ? 'text-slate-600' : isActive ? 'text-white' : 'text-slate-400 hover:text-white'
                         }`}
                       >
-                        {label}
+                        {isActive && (
+                          <motion.span layoutId="autoplay-speed-thumb" transition={{ type: 'spring', bounce: 0.12, duration: 0.4 }} className="absolute inset-0 rounded-full bg-[#636366] shadow-[0_2px_6px_rgb(0_0_0/0.3)]" aria-hidden />
+                        )}
+                        <span className="relative">{label}</span>
                       </button>
                     );
                   })}
@@ -4222,9 +4272,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   type="button"
                   onClick={() => setOverflowMenuOpen(true)}
                   aria-label={t('shell.quickActions.more_options')}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-700/70 text-slate-300 hover:text-white hover:bg-slate-800/60"
+                  className="pressable flex h-10 w-10 items-center justify-center rounded-full bg-[rgb(118_118_128/0.2)] text-slate-200 hover:bg-[rgb(118_118_128/0.32)] hover:text-white"
                 >
-                  <MoreHorizontal size={18} />
+                  <MoreHorizontal size={19} />
                 </button>
               </div>
             }
@@ -4277,7 +4327,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
             )}
             {v2Path === '/money' && (
               <TabErrorBoundary tabName="Money">
-  {townOpenedMoney && <div className="mb-4"><button className="rounded-xl bg-emerald-950 border border-emerald-600 px-5 py-3" onClick={()=>setShowTown(true)}>← Return to city</button></div>}
+  {townOpenedMoney && <div className="mb-4"><button className="btn-secondary h-10 px-4 text-[14px]" onClick={()=>setShowTown(true)}><CityIcon size={15} className="text-[#30d158]" />← Return to city</button></div>}
   <MoneyPageLayout
                   gameState={gameState}
                   netWorth={netWorth}
@@ -4357,104 +4407,50 @@ const [gameState, setGameState] = useState<GameState>(() => {
             isOpen={overflowMenuOpen}
             onClose={() => setOverflowMenuOpen(false)}
             ariaLabel={t('shell.quickActions.quick_actions')}
-            contentClassName="bg-slate-900 border border-slate-800 rounded-3xl p-4 max-w-sm w-full"
+            contentClassName="max-w-sm w-full p-3 pt-4"
           >
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => {
-                  openSaveManager();
-                  setOverflowMenuOpen(false);
-                }}
-                className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
-              >
-                <SaveIcon size={18} className="text-cyan-300" /> {t('shell.quickActions.save_load')}
-              </button>
-              {!gameState.challenge && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowRunCard(true);
-                    setOverflowMenuOpen(false);
-                  }}
-                  className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
-                >
-                  <LineChart size={18} className="text-violet-300" /> {t('shell.quickActions.run_summary_card')}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  setShowQuestLog(true);
-                  setOverflowMenuOpen(false);
-                }}
-                className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
-              >
-                <Trophy size={18} className="text-amber-300" /> {t('shell.quickActions.quests')}
-              </button>
-              {!isMultiplayer && !gameState.challenge && (
-                <button
-                  type="button"
-                  aria-pressed={startInCity}
-                  onClick={toggleStartInCity}
-                  className="glass-tile flex items-center justify-between gap-3 px-4 py-3 w-full"
-                >
-                  <span className="flex items-center gap-3"><CityIcon size={18} className="text-emerald-300" /> {t('shell.quickActions.start_in_city')}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${startInCity ? 'bg-emerald-400 text-slate-950' : 'bg-slate-700 text-slate-300'}`}>{startInCity ? t('shell.quickActions.setting_on') : t('shell.quickActions.setting_off')}</span>
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  setShowGlossary(true);
-                  setOverflowMenuOpen(false);
-                }}
-                className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
-              >
-                <BookOpen size={18} className="text-emerald-300" /> {t('shell.quickActions.glossary')}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowTutorialVideos(true);
-                  setOverflowMenuOpen(false);
-                }}
-                className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
-              >
-                <Play size={18} className="text-sky-300" /> {t('shell.quickActions.tutorial_videos')}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAccessibility(true);
-                  setOverflowMenuOpen(false);
-                }}
-                className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
-              >
-                <Settings size={18} className="text-purple-300" /> {t('shell.quickActions.accessibility')}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  toggleSound();
-                }}
-                className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
-              >
-                {soundEnabled ? <Volume2 size={18} className="text-emerald-300" /> : <VolumeX size={18} className="text-rose-300" />}
-                {soundEnabled ? t('shell.quickActions.mute') : t('shell.quickActions.unmute')}
-              </button>
+            <p className="px-3 pb-3 pr-12 text-[17px] font-semibold tracking-[-0.013em] text-white">{t('shell.quickActions.quick_actions')}</p>
+            <div className="space-y-3">
+              <div className="list-group list-group--icons">
+                <QuickRow icon={<SaveIcon size={16} />} tile="bg-[#0a84ff]" label={t('shell.quickActions.save_load')} onClick={() => { openSaveManager(); setOverflowMenuOpen(false); }} />
+                {!gameState.challenge && (
+                  <QuickRow icon={<LineChart size={16} />} tile="bg-[#5e5ce6]" label={t('shell.quickActions.run_summary_card')} onClick={() => { setShowRunCard(true); setOverflowMenuOpen(false); }} />
+                )}
+                <QuickRow icon={<Trophy size={16} />} tile="bg-[#ff9f0a]" label={t('shell.quickActions.quests')} onClick={() => { setShowQuestLog(true); setOverflowMenuOpen(false); }} />
+              </div>
+              <div className="list-group list-group--icons">
+                {!isMultiplayer && !gameState.challenge && (
+                  <QuickRow
+                    icon={<CityIcon size={16} />}
+                    tile="bg-[#30d158]"
+                    label={t('shell.quickActions.start_in_city')}
+                    ariaPressed={startInCity}
+                    onClick={toggleStartInCity}
+                    trailing={<SwitchVisual on={startInCity} label={startInCity ? t('shell.quickActions.setting_on') : t('shell.quickActions.setting_off')} />}
+                  />
+                )}
+                <QuickRow
+                  icon={soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                  tile={soundEnabled ? 'bg-[#ff375f]' : 'bg-[#636366]'}
+                  label={soundEnabled ? t('shell.quickActions.mute') : t('shell.quickActions.unmute')}
+                  onClick={() => { toggleSound(); }}
+                  trailing={<span aria-hidden />}
+                />
+              </div>
+              <div className="list-group list-group--icons">
+                <QuickRow icon={<BookOpen size={16} />} tile="bg-[#30b0c7]" label={t('shell.quickActions.glossary')} onClick={() => { setShowGlossary(true); setOverflowMenuOpen(false); }} />
+                <QuickRow icon={<Play size={16} fill="currentColor" />} tile="bg-[#ff453a]" label={t('shell.quickActions.tutorial_videos')} onClick={() => { setShowTutorialVideos(true); setOverflowMenuOpen(false); }} />
+                <QuickRow icon={<Settings size={16} />} tile="bg-[#8e8e93]" label={t('shell.quickActions.accessibility')} onClick={() => { setShowAccessibility(true); setOverflowMenuOpen(false); }} />
+              </div>
               {onBackToMenu && !isMultiplayer && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    recordAutosave(gameState);
-                    setOverflowMenuOpen(false);
-                    onBackToMenu();
-                  }}
-                  className="glass-tile flex items-center gap-3 px-4 py-3 w-full"
-                >
-                  <Home size={18} className="text-slate-300" /> {t('shell.quickActions.back_to_menu')}
-                </button>
+                <div className="list-group list-group--icons">
+                  <QuickRow
+                    icon={<Home size={16} />}
+                    tile="bg-[#48484a]"
+                    label={t('shell.quickActions.back_to_menu')}
+                    onClick={() => { recordAutosave(gameState); setOverflowMenuOpen(false); onBackToMenu(); }}
+                  />
+                </div>
               )}
             </div>
           </Modal>
@@ -4465,17 +4461,17 @@ const [gameState, setGameState] = useState<GameState>(() => {
       <AnimatePresence>
         {coachHint && coachHint.tabId === activeTab && (
           <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="fixed left-1/2 top-20 z-40 w-[min(560px,calc(100vw-2rem))] -translate-x-1/2 bg-slate-800/95 backdrop-blur border border-emerald-700/30 rounded-2xl p-4 shadow-2xl"
+            initial={{ opacity: 0, y: -12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -12, scale: 0.97 }}
+            transition={{ type: 'spring', bounce: 0.12, duration: 0.45 }}
+            className="mat-popover fixed left-1/2 top-20 z-40 w-[min(560px,calc(100vw-2rem))] -translate-x-1/2 rounded-[22px] p-4"
             role="status"
             aria-live="polite"
           >
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center">
-                <Sparkles size={18} className="text-emerald-300" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#30d158] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25)]">
+                <Sparkles size={18} />
               </div>
               <div className="flex-1">
                 <div className="flex items-start justify-between gap-3">
@@ -4485,7 +4481,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   </div>
                   <button
                     onClick={() => setCoachHint(null)}
-                    className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-700/40"
+                    className="pressable flex h-7 w-7 items-center justify-center rounded-full bg-[rgb(118_118_128/0.24)] text-slate-300 hover:text-white"
                     aria-label="Dismiss coach tip"
                   >
                     <X size={16} />
@@ -4496,7 +4492,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                   {coachHint.allowReopenPreview && (
                     <button
                       onClick={openTurnPreviewNow}
-                      className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold"
+                      className="btn-primary px-3.5 py-1.5 text-xs"
                     >
                       Re-open Preview
                     </button>
@@ -4513,15 +4509,15 @@ const [gameState, setGameState] = useState<GameState>(() => {
       <AnimatePresence>
         {showReopenPreviewPill && !showTurnPreview && !gameState.pendingScenario && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            initial={{ opacity: 0, y: 16, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.98 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="fixed right-4 bottom-24 md:bottom-6 z-40"
+            exit={{ opacity: 0, y: 16, scale: 0.96 }}
+            transition={{ type: 'spring', bounce: 0.14, duration: 0.45 }}
+            className="fixed right-4 bottom-28 md:bottom-6 z-40"
           >
-            <div className="bg-slate-800/90 backdrop-blur border border-slate-700 rounded-2xl shadow-2xl px-4 py-3 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center">
-                <Sparkles size={16} className="text-emerald-300" />
+            <div className="mat-popover rounded-[22px] px-4 py-3 flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#30d158] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25)]">
+                <Sparkles size={16} />
               </div>
               <div className="leading-tight">
                 <p className="text-white text-sm font-semibold">Want to re-check cashflow?</p>
@@ -4530,13 +4526,13 @@ const [gameState, setGameState] = useState<GameState>(() => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={openTurnPreviewNow}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold"
+                  className="btn-primary px-3.5 py-1.5 text-xs"
                 >
                   Open
                 </button>
                 <button
                   onClick={() => setShowReopenPreviewPill(false)}
-                  className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-700/40"
+                  className="pressable flex h-7 w-7 items-center justify-center rounded-full bg-[rgb(118_118_128/0.24)] text-slate-300 hover:text-white"
                   aria-label="Dismiss preview shortcut"
                 >
                   <X size={16} />
@@ -4549,6 +4545,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
 
     </div>
+    </MotionConfig>
   );
 };
 

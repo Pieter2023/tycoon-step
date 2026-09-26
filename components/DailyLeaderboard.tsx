@@ -22,6 +22,13 @@ const OUTCOME_BADGE: Record<LeaderboardEntry['outcome'], string> = {
   BANKRUPT: '💸'
 };
 
+// Gold, silver and bronze discs for the podium; everyone else gets a plain number.
+const RANK_TINT: Record<number, string> = {
+  0: 'bg-[#ffd60a]/[0.2] text-[#ffd60a]',
+  1: 'bg-[rgb(209_209_214/0.18)] text-slate-200',
+  2: 'bg-[#ff9f0a]/[0.18] text-[#ffb340]'
+};
+
 interface DailyLeaderboardProps {
   gameState: GameState;
   netWorth: number;
@@ -80,58 +87,60 @@ const DailyLeaderboard: React.FC<DailyLeaderboardProps> = ({ gameState, netWorth
   const clientId = getClientId();
 
   return (
-    <div className="w-full max-w-2xl rounded-xl border border-slate-700 bg-slate-800/60 p-4">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-violet-300">🏆 Today's leaderboard</p>
+    <div className="w-full max-w-2xl rounded-[20px] bg-white/[0.045] p-4 ring-1 ring-inset ring-white/[0.06] sm:p-5">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="eyebrow text-[15px] text-white">🏆 Today's leaderboard</p>
         {rank !== null && phase === 'done' && (
-          <p className="text-xs font-bold text-amber-300">You're #{rank} today</p>
+          <p className="num rounded-full bg-amber-400/[0.15] px-2.5 py-1 text-[13px] font-semibold text-amber-300">You're #{rank} today</p>
         )}
       </div>
 
       {phase !== 'done' && (
-        <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-2 mb-3">
+        <form onSubmit={handleSubmit} className="mb-4 flex flex-wrap items-center gap-2">
           <input
             type="text"
             value={name}
             maxLength={20}
             onChange={(e) => setName(e.target.value)}
             placeholder="Your name"
-            className="flex-1 min-w-[140px] px-3 py-2 bg-slate-900/70 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-400"
+            className="min-w-[140px] flex-1 rounded-full bg-[rgb(118_118_128/0.2)] px-4 py-2.5 text-[16px] sm:text-[15px] text-white placeholder-slate-500"
           />
           <button
             type="submit"
             disabled={phase === 'submitting' || !name.trim()}
-            className="px-4 py-2 rounded-lg bg-violet-500 hover:bg-violet-400 disabled:opacity-50 text-white text-sm font-bold transition-colors"
+            className="pressable rounded-full bg-violet-500 px-5 py-2.5 text-[15px] font-semibold text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.2),0_8px_22px_-10px_rgb(157_123_255/0.7)] hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-45"
           >
             {phase === 'submitting' ? 'Submitting…' : 'Submit score'}
           </button>
           {phase === 'error' && (
-            <p className="w-full text-xs text-red-400">Couldn't submit — check your connection and try again.</p>
+            <p className="w-full px-1 text-[13px] text-red-300">Couldn't submit — check your connection and try again.</p>
           )}
         </form>
       )}
 
       {entries === null ? (
-        <p className="text-sm text-slate-500">Leaderboard unavailable right now.</p>
+        <p className="px-1 text-[14px] text-slate-500">Leaderboard unavailable right now.</p>
       ) : entries.length === 0 ? (
-        <p className="text-sm text-slate-400">No scores yet — yours could be first!</p>
+        <p className="px-1 text-[14px] text-slate-400">No scores yet — yours could be first!</p>
       ) : (
-        <ol className="space-y-1">
+        <ol className="stagger-in list-group">
           {entries.map((entry, i) => {
             const isMe = entry.client_id === clientId;
             return (
               <li
                 key={`${entry.client_id}-${i}`}
-                className={`flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm ${
-                  isMe ? 'bg-violet-500/20 border border-violet-400/40' : 'bg-slate-900/40'
-                }`}
+                className={`list-row min-h-[46px] gap-3 py-2 text-[15px] ${isMe ? 'bg-violet-500/[0.16]' : ''}`}
               >
-                <span className="w-6 text-right font-bold text-slate-400">{i + 1}</span>
-                <span className="flex-1 truncate text-white">
-                  {entry.player_name} {isMe && <span className="text-violet-300 text-xs">(you)</span>}
+                <span
+                  className={`num flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[13px] font-bold ${RANK_TINT[i] ?? 'text-slate-500'}`}
+                >
+                  {i + 1}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-white">
+                  {entry.player_name} {isMe && <span className="text-[13px] font-medium text-violet-300">(you)</span>}
                 </span>
                 <span title={entry.outcome}>{OUTCOME_BADGE[entry.outcome] || '🏁'}</span>
-                <span className="font-bold text-emerald-300">{fmtScore(entry.score)}</span>
+                <span className="num font-semibold text-emerald-300">{fmtScore(entry.score)}</span>
               </li>
             );
           })}

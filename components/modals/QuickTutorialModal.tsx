@@ -1,5 +1,7 @@
 import React, { useRef, useState } from 'react';
+import { Play } from 'lucide-react';
 import Modal from '../Modal';
+import { SheetItem, SheetStagger, Switch } from './sheet';
 
 export const QUICK_TUTORIAL_STORAGE_KEY = 'tycoon_quick_tutorial_seen_v1';
 const QUICK_TUTORIAL_SRC = '/videos/quick-tutorial.mp4';
@@ -33,62 +35,62 @@ const QuickTutorialModal: React.FC<QuickTutorialModalProps> = ({ onClose }) => {
       overlayClassName="bg-black/70 items-center"
       closeOnOverlayClick
       closeOnEsc
-      contentClassName="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-3xl w-full"
+      contentClassName="max-w-3xl!"
     >
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">Quick Tutorial</h2>
-          <label className="flex items-center gap-2 text-xs text-slate-300">
-            <input
-              type="checkbox"
-              className="rounded border-slate-600 bg-slate-900"
-              checked={dontShow}
-              onChange={(e) => setDontShow(e.target.checked)}
-            />
+      <SheetStagger className="flex flex-col gap-4 px-5 pb-5 pt-6 sm:px-6" gap={0.06}>
+        <SheetItem className="pr-10">
+          <h2 className="t-title-2 text-white">Quick Tutorial</h2>
+        </SheetItem>
+        <SheetItem>
+          <div className="aspect-video overflow-hidden rounded-[18px] bg-black shadow-[0_18px_40px_-18px_rgb(0_0_0/0.8)] ring-1 ring-white/[0.08]">
+            <video
+              ref={videoRef}
+              className="h-full w-full object-contain"
+              preload="metadata"
+              controls
+              playsInline
+              muted
+              src={QUICK_TUTORIAL_SRC}
+              onPlay={(e) => {
+                const vid = e.currentTarget;
+                if (vid.muted) vid.muted = false;
+              }}
+            >
+              Your browser can’t play this video.
+            </video>
+          </div>
+        </SheetItem>
+        <SheetItem className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <label className="flex cursor-pointer select-none items-center gap-2.5 text-[14px] text-slate-300">
+            <Switch checked={dontShow} onChange={(e) => setDontShow(e.target.checked)} />
             Do not show again
           </label>
-        </div>
-        <div className="rounded-xl border border-slate-700 bg-black/40 overflow-hidden aspect-video">
-          <video
-            ref={videoRef}
-            className="w-full h-full object-contain"
-            preload="metadata"
-            controls
-            playsInline
-            muted
-            src={QUICK_TUTORIAL_SRC}
-            onPlay={(e) => {
-              const vid = e.currentTarget;
-              if (vid.muted) vid.muted = false;
-            }}
-          >
-            Your browser can’t play this video.
-          </video>
-        </div>
-        <div className="flex items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              const vid = videoRef.current;
-              if (!vid) return;
-              vid.muted = false;
-              vid.play().catch(() => {
-                window.open(QUICK_TUTORIAL_SRC, '_blank', 'noopener,noreferrer');
-              });
-            }}
-            className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold"
-          >
-            Play
-          </button>
-          <button
-            type="button"
-            onClick={close}
-            className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold"
-          >
-            Close
-          </button>
-        </div>
-      </div>
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={close}
+              className="btn-secondary min-h-[44px] flex-1 px-5 text-[15px] sm:flex-none"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const vid = videoRef.current;
+                if (!vid) return;
+                vid.muted = false;
+                vid.play().catch(() => {
+                  window.open(QUICK_TUTORIAL_SRC, '_blank', 'noopener,noreferrer');
+                });
+              }}
+              className="btn-primary min-h-[44px] flex-1 px-6 text-[15px] sm:flex-none"
+            >
+              <Play size={15} strokeWidth={2.6} className="fill-current" aria-hidden />
+              Play
+            </button>
+          </div>
+        </SheetItem>
+      </SheetStagger>
     </Modal>
   );
 };

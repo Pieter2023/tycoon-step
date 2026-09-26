@@ -1,8 +1,8 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Award, RefreshCw, ShieldAlert, Trophy } from 'lucide-react';
+import { Award, Check, HeartPulse, RefreshCw, ShieldAlert, X } from 'lucide-react';
 import { GameState } from '../types';
 import { COURSE_ATTEMPTS, COURSE_RAISE_PCT, COURSE_RETAKE_FEE, grantCourseRaise, recordMiss } from '../services/courseRewards';
+import { BulletList, CertifiedSeal, CourseMedallion, PhasePanel, QuizFeedback, QuizMeter, QuizOption, QuizOptionState, QuizScoreRing, QuizStep, SceneImage } from './SalesCertificationPanel';
 
 const RAISE_PCT = COURSE_RAISE_PCT.eq;
 
@@ -435,278 +435,233 @@ export default function UpgradeEQTab({ gameState, setGameState }: Props) {
   };
 
   const percent = Math.round((score / total) * 100);
+  const passedRun = lastOutcome === 'pass';
 
   return (
     <div className="space-y-4">
-      <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <Trophy className="text-emerald-300" size={20} /> Upgrade your EQ
-            </h2>
-            <p className="text-sm text-slate-300 mt-1">
-              Get certified in people-skills. Win more deals. Get promoted faster. Avoid becoming the villain in your own group chat.
-            </p>
-          </div>
-          <div className="text-right">
-            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-xl border ${certified ? 'bg-emerald-600/15 border-emerald-500/30 text-emerald-200' : 'bg-slate-900/40 border-slate-700 text-slate-300'}`}>
-              <Award size={16} /> {certified ? 'Certified' : 'Not certified'}
+      <div className="surface p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 flex-1 items-start gap-4">
+            <CourseMedallion tone="pink" size="lg">
+              <HeartPulse size={26} strokeWidth={2.3} />
+            </CourseMedallion>
+            <div className="min-w-0">
+              <h2 className="t-title-2 text-white">Upgrade your EQ</h2>
+              <p className="mt-1 text-[15px] leading-relaxed text-slate-400">
+                Get certified in people-skills. Win more deals. Get promoted faster. Avoid becoming the villain in your own group chat.
+              </p>
             </div>
+          </div>
+          <div className="flex flex-col items-start gap-2 sm:items-end sm:text-right">
+            {certified ? (
+              <CertifiedSeal label="Certified" />
+            ) : (
+              <span className="ds-badge ds-badge--neutral !text-[12px]"><Award size={13} /> Not certified</span>
+            )}
             {!certified && (
-              <p className="text-xs text-slate-400 mt-2">
-                Tries left before the retake fee: <span className="text-white font-semibold">{attemptInfo.remaining}</span>
+              <p className="text-[13px] text-slate-400">
+                Tries left before the retake fee: <span className="num font-semibold text-white">{attemptInfo.remaining}</span>
               </p>
             )}
           </div>
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
-        {phase === 'intro' && (
-          <motion.div
-            key="intro"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5"
-          >
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <p className="text-sm text-slate-200">
-                  <span className="font-semibold text-white">Rule:</span> You must score <span className="font-semibold text-emerald-200">100% (15/15)</span> to earn the rewards.
-                </p>
-                <div className="bg-slate-900/40 border border-slate-700 rounded-2xl p-4">
-                  <p className="text-sm font-semibold text-white">If you pass (100%)</p>
-                  <ul className="text-sm text-slate-300 mt-2 space-y-1 list-disc list-inside">
-                    <li>A {RAISE_PCT}% raise that stays through promotions and job changes (once per save)</li>
-                    <li>Career experience builds 1.5× faster, so promotions come sooner</li>
-                    <li>Bonus stats: Networking +12, Happiness +6, Stress −10, Energy +4, Fulfillment +5</li>
-                  </ul>
-                </div>
-                <div className="bg-slate-900/40 border border-amber-700/40 rounded-2xl p-4">
-                  <p className="text-sm font-semibold text-amber-200">If you fail (anything less than 100%)</p>
-                  <ul className="text-sm text-slate-300 mt-2 space-y-1 list-disc list-inside">
-                    <li>You can retry, but you must start from Question 1.</li>
-                    <li>{COURSE_ATTEMPTS} tries included. After a third miss, a ${COURSE_RETAKE_FEE} retake fee buys {COURSE_ATTEMPTS} more.</li>
-                  </ul>
-                </div>
+      {phase === 'intro' && (
+        <PhasePanel key="intro">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-3">
+              <p className="text-[15px] text-slate-200">
+                <span className="font-semibold text-white">Rule:</span> You must score <span className="num font-semibold text-emerald-300">100% (15/15)</span> to earn the rewards.
+              </p>
+              <div className="rounded-[18px] bg-emerald-500/[0.08] p-4">
+                <p className="text-[15px] font-semibold text-emerald-200">If you pass (100%)</p>
+                <BulletList tone="green" items={[
+                  `A ${RAISE_PCT}% raise that stays through promotions and job changes (once per save)`,
+                  'Career experience builds 1.5× faster, so promotions come sooner',
+                  'Bonus stats: Networking +12, Happiness +6, Stress −10, Energy +4, Fulfillment +5'
+                ]} />
               </div>
-              <div className="bg-slate-900/40 border border-slate-700 rounded-2xl p-4">
-                <p className="text-sm font-semibold text-white">Your progress</p>
-                <div className="mt-3 grid grid-cols-2 gap-3">
-                  <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-3">
-                    <p className="text-xs text-slate-400">Best score</p>
-                    <p className="text-lg font-bold text-white">{eqCourse.bestScore}/{total}</p>
-                  </div>
-                  <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-3">
-                    <p className="text-xs text-slate-400">Failed attempts</p>
-                    <p className="text-lg font-bold text-white">{certified ? '—' : eqCourse.failedAttempts}</p>
-                  </div>
-                </div>
-                <p className="text-xs text-slate-400 mt-3">
-                  Tip: once you’re certified, practice is free — no fees, no extra rewards.
-                </p>
+              <div className="rounded-[18px] bg-orange-500/[0.08] p-4">
+                <p className="text-[15px] font-semibold text-orange-200">If you fail (anything less than 100%)</p>
+                <BulletList tone="orange" items={[
+                  'You can retry, but you must start from Question 1.',
+                  `${COURSE_ATTEMPTS} tries included. After a third miss, a $${COURSE_RETAKE_FEE} retake fee buys ${COURSE_ATTEMPTS} more.`
+                ]} />
               </div>
             </div>
+            <div className="self-start rounded-[18px] bg-white/[0.045] p-4 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.06)]">
+              <p className="t-headline text-white">Your progress</p>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div className="rounded-[14px] bg-white/[0.05] p-3">
+                  <p className="text-[12px] text-slate-400">Best score</p>
+                  <p className="num text-[22px] font-bold text-white">{eqCourse.bestScore}/{total}</p>
+                  <QuizMeter value={eqCourse.bestScore} total={total} tone="pink" className="mt-2" />
+                </div>
+                <div className="rounded-[14px] bg-white/[0.05] p-3">
+                  <p className="text-[12px] text-slate-400">Failed attempts</p>
+                  <p className="num text-[22px] font-bold text-white">{certified ? '—' : eqCourse.failedAttempts}</p>
+                </div>
+              </div>
+              <p className="mt-3 text-[13px] text-slate-400">
+                Tip: once you’re certified, practice is free — no fees, no extra rewards.
+              </p>
+            </div>
+          </div>
 
-            <div className="mt-5 flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-wrap gap-2.5">
+            <button
+              onClick={() => resetRun()}
+              className="btn-primary ds-button--lg"
+            >
+              Start EQ Certification
+            </button>
+            {certified && (
               <button
                 onClick={() => resetRun()}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold"
+                className="btn-secondary ds-button--lg"
               >
-                Start EQ Certification
+                Practice Mode
               </button>
-              {certified && (
-                <button
-                  onClick={() => resetRun()}
-                  className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold"
-                >
-                  Practice Mode
-                </button>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {phase === 'quiz' && (
-          <motion.div
-            key="quiz"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs text-slate-400">Question {idx + 1} of {total}</p>
-                <p className="text-sm font-semibold text-white">Score: {score}/{total}</p>
-              </div>
-              <div className="w-48 bg-slate-900/50 border border-slate-700 rounded-full overflow-hidden h-2">
-                <div
-                  className="h-2 bg-gradient-to-r from-emerald-600 to-emerald-400"
-                  style={{ width: `${((idx + 1) / total) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="mt-4 grid lg:grid-cols-2 gap-4">
-              <div className="bg-slate-900/40 border border-slate-700 rounded-2xl overflow-hidden">
-                <div className="aspect-video bg-slate-950/30">
-                  <img
-                    src={current.image}
-                    alt="EQ question"
-                    className="w-full h-full object-contain"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="p-4">
-                  <p className="text-sm text-slate-200 leading-relaxed">{current.scenario}</p>
-                  <p className="text-base font-semibold text-white mt-3">{current.question}</p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {current.options.map((opt, i) => {
-                  const isCorrect = answered && i === current.correctIndex;
-                  const isWrong = answered && selected === i && i !== current.correctIndex;
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => onSelect(i)}
-                      disabled={answered}
-                      className={`w-full text-left px-4 py-3 rounded-2xl border transition-all ${
-                        isCorrect
-                          ? 'bg-emerald-600/15 border-emerald-500/40 text-emerald-100'
-                          : isWrong
-                            ? 'bg-rose-600/15 border-rose-500/40 text-rose-100'
-                            : 'bg-slate-900/40 border-slate-700 text-slate-200 hover:bg-slate-800/60'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${
-                          isCorrect ? 'bg-emerald-500/20 text-emerald-200' : isWrong ? 'bg-rose-500/20 text-rose-200' : 'bg-slate-800 text-slate-300'
-                        }`}>
-                          {String.fromCharCode(65 + i)}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm leading-relaxed">{opt}</p>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-
-                <AnimatePresence>
-                  {answered && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 8 }}
-                      className={`rounded-2xl border p-4 ${selected === current.correctIndex ? 'bg-emerald-600/10 border-emerald-500/30' : 'bg-rose-600/10 border-rose-500/30'}`}
-                    >
-                      <p className="text-sm font-semibold text-white">
-                        {selected === current.correctIndex ? 'Nice.' : 'Oof.'} <span className="text-slate-300">{current.skill}</span>
-                      </p>
-                      <p className="text-sm text-slate-200 mt-2 leading-relaxed">{current.explanation}</p>
-                      <div className="mt-4 flex gap-2">
-                        <button
-                          onClick={onNext}
-                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold"
-                        >
-                          {idx === total - 1 ? 'Finish' : 'Next'}
-                        </button>
-                        <button
-                          onClick={() => { setPhase('intro'); }}
-                          className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold"
-                        >
-                          Quit
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {phase === 'results' && (
-          <motion.div
-            key="results"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5"
-          >
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div>
-                <p className="text-sm text-slate-400">Result</p>
-                <p className="text-2xl font-bold text-white mt-1">{percent}%</p>
-                <p className="text-sm text-slate-300 mt-1">Score: {score}/{total}</p>
-              </div>
-              <div className={`px-4 py-2 rounded-2xl border ${lastOutcome === 'pass' ? 'bg-emerald-600/15 border-emerald-500/30 text-emerald-100' : 'bg-rose-600/15 border-rose-500/30 text-rose-100'}`}>
-                <p className="text-sm font-semibold">
-                  {lastOutcome === 'pass' ? 'Certified ✅' : 'Not certified ❌'}
-                </p>
-                <p className="text-xs opacity-90">{lastOutcome === 'pass' ? 'Rewards applied (if eligible)' : 'You must restart to retry'}</p>
-              </div>
-            </div>
-
-            {lastOutcome === 'pass' ? (
-              <div className="mt-4 bg-slate-900/40 border border-emerald-700/30 rounded-2xl p-4">
-                <p className="text-sm font-semibold text-white">Rewards</p>
-                <ul className="text-sm text-slate-300 mt-2 space-y-1 list-disc list-inside">
-                  <li>A {RAISE_PCT}% raise that stays through promotions and job changes (once per save)</li>
-                  <li>Career experience builds 1.5× faster (earlier promotions)</li>
-                  <li>Networking +12, Happiness +6, Stress −10, Energy +4, Fulfillment +5</li>
-                </ul>
-              </div>
-            ) : (
-              <div className="mt-4 bg-slate-900/40 border border-amber-700/40 rounded-2xl p-4">
-                <div className="flex items-start gap-2">
-                  <ShieldAlert className="text-amber-200 mt-0.5" size={18} />
-                  <div>
-                    <p className="text-sm font-semibold text-amber-200">Certification requires 100%</p>
-                    <p className="text-sm text-slate-300 mt-1">Retakes must start from Question 1.</p>
-                    {!certified && lastMiss > 0 && (
-                      <p className="text-xs text-slate-400 mt-2">Miss {lastMiss} of {COURSE_ATTEMPTS}</p>
-                    )}
-                    {penaltyApplied && !certified && (
-                      <p className="text-sm text-rose-200 mt-2 font-semibold">Retake fee: −${COURSE_RETAKE_FEE}. You have {COURSE_ATTEMPTS} more tries.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
             )}
+          </div>
+        </PhasePanel>
+      )}
 
-            <div className="mt-5 flex flex-wrap gap-2">
-              <button
-                onClick={() => { setPhase('intro'); }}
-                className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold"
-              >
-                Back
-              </button>
-
-              {lastOutcome === 'fail' && (
-                <button
-                  onClick={() => resetRun()}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold flex items-center gap-2"
-                >
-                  <RefreshCw size={16} /> Start over
-                </button>
-              )}
-              {lastOutcome === 'pass' && (
-                <button
-                  onClick={() => resetRun()}
-                  className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold flex items-center gap-2"
-                >
-                  <RefreshCw size={16} /> Practice again
-                </button>
-              )}
+      {phase === 'quiz' && (
+        <PhasePanel key="quiz">
+          <div className="space-y-2.5">
+            <div className="num flex items-baseline justify-between gap-3">
+              <p className="text-[13px] font-semibold text-slate-300">Question {idx + 1} of {total}</p>
+              <p className="text-[13px] text-slate-400">Score: {score}/{total}</p>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <QuizMeter value={idx + 1} total={total} tone="pink" />
+          </div>
+
+          <QuizStep stepKey={current.id} className="mt-5 grid gap-5 lg:grid-cols-2">
+            <div>
+              <SceneImage src={current.image} alt="EQ question" />
+              <p className="mt-4 text-[15px] leading-relaxed text-slate-300">{current.scenario}</p>
+              <p className="mt-2 text-[19px] font-semibold leading-[1.35] tracking-[-0.015em] text-white">{current.question}</p>
+            </div>
+
+            <div className="space-y-2.5">
+              {current.options.map((opt, i) => {
+                const isCorrect = answered && i === current.correctIndex;
+                const isWrong = answered && selected === i && i !== current.correctIndex;
+                const state: QuizOptionState = isCorrect ? 'correct' : isWrong ? 'wrong' : answered ? 'muted' : 'idle';
+                return (
+                  <QuizOption key={i} letter={String.fromCharCode(65 + i)} state={state} onClick={() => onSelect(i)} disabled={answered}>
+                    {opt}
+                  </QuizOption>
+                );
+              })}
+
+              <QuizFeedback
+                show={answered}
+                correct={selected === current.correctIndex}
+                title={<>{selected === current.correctIndex ? 'Nice.' : 'Oof.'} <span className="font-medium text-slate-400">{current.skill}</span></>}
+                footer={(
+                  <div className="mt-4 flex gap-2.5">
+                    <button
+                      onClick={onNext}
+                      className="btn-primary ds-button--md min-w-[104px]"
+                    >
+                      {idx === total - 1 ? 'Finish' : 'Next'}
+                    </button>
+                    <button
+                      onClick={() => { setPhase('intro'); }}
+                      className="btn-secondary ds-button--md"
+                    >
+                      Quit
+                    </button>
+                  </div>
+                )}
+              >
+                {current.explanation}
+              </QuizFeedback>
+            </div>
+          </QuizStep>
+        </PhasePanel>
+      )}
+
+      {phase === 'results' && (
+        <PhasePanel key="results">
+          <div className="flex flex-wrap items-center justify-between gap-5">
+            <div className="flex items-center gap-5">
+              <QuizScoreRing
+                score={score}
+                total={total}
+                passed={passedRun}
+                size={104}
+                centre={passedRun ? <Check size={34} strokeWidth={3} className="text-emerald-300" /> : <X size={34} strokeWidth={3} className="text-rose-300" />}
+              />
+              <div>
+                <p className="eyebrow">Result</p>
+                <p className="num t-title-1 text-white">{percent}%</p>
+                <p className="num text-[15px] text-slate-400">Score: {score}/{total}</p>
+              </div>
+            </div>
+            <div className={`rounded-[18px] px-4 py-3 ${passedRun ? 'bg-emerald-500/[0.14] text-emerald-100' : 'bg-rose-500/[0.14] text-rose-100'}`}>
+              <p className="text-[15px] font-semibold">
+                {passedRun ? 'Certified ✅' : 'Not certified ❌'}
+              </p>
+              <p className="text-[12px] opacity-80">{passedRun ? 'Rewards applied (if eligible)' : 'You must restart to retry'}</p>
+            </div>
+          </div>
+
+          {passedRun ? (
+            <div className="mt-5 rounded-[18px] bg-emerald-500/[0.08] p-4">
+              <p className="text-[15px] font-semibold text-white">Rewards</p>
+              <BulletList tone="green" items={[
+                `A ${RAISE_PCT}% raise that stays through promotions and job changes (once per save)`,
+                'Career experience builds 1.5× faster (earlier promotions)',
+                'Networking +12, Happiness +6, Stress −10, Energy +4, Fulfillment +5'
+              ]} />
+            </div>
+          ) : (
+            <div className="mt-5 flex items-start gap-3 rounded-[18px] bg-orange-500/[0.08] p-4">
+              <ShieldAlert className="mt-0.5 shrink-0 text-orange-300" size={18} />
+              <div>
+                <p className="text-[15px] font-semibold text-orange-200">Certification requires 100%</p>
+                <p className="mt-1 text-[14px] text-slate-300">Retakes must start from Question 1.</p>
+                {!certified && lastMiss > 0 && (
+                  <p className="num mt-2 text-[12px] text-slate-400">Miss {lastMiss} of {COURSE_ATTEMPTS}</p>
+                )}
+                {penaltyApplied && !certified && (
+                  <p className="num mt-2 text-[14px] font-semibold text-rose-300">Retake fee: −${COURSE_RETAKE_FEE}. You have {COURSE_ATTEMPTS} more tries.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-5 flex flex-wrap gap-2.5">
+            <button
+              onClick={() => { setPhase('intro'); }}
+              className="btn-secondary ds-button--md"
+            >
+              Back
+            </button>
+
+            {lastOutcome === 'fail' && (
+              <button
+                onClick={() => resetRun()}
+                className="btn-primary ds-button--md"
+              >
+                <RefreshCw size={16} /> Start over
+              </button>
+            )}
+            {lastOutcome === 'pass' && (
+              <button
+                onClick={() => resetRun()}
+                className="btn-secondary ds-button--md"
+              >
+                <RefreshCw size={16} /> Practice again
+              </button>
+            )}
+          </div>
+        </PhasePanel>
+      )}
     </div>
   );
 }

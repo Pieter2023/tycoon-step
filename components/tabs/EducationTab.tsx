@@ -1,8 +1,11 @@
 import React from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { AlertTriangle, BookOpen, Check, GraduationCap } from 'lucide-react';
 import { CAREER_PATHS, EDUCATION_OPTIONS } from '../../constants';
 import { calculateEffectiveMonthlySalary } from '../../services/gameLogic';
 import { CareerPath, EducationOption } from '../../types';
+import { MOTION_DISABLED, riseIn, stagger } from '../ui/motion';
+import { useI18n } from '../../i18n';
 
 type EducationTabProps = {
   gameState: any;
@@ -13,6 +16,21 @@ type EducationTabProps = {
   coachHighlight: (target: string) => string;
 };
 
+const enter = MOTION_DISABLED ? {} : { initial: 'hidden', animate: 'show' };
+
+const Stat: React.FC<{ label: string; children: React.ReactNode; caption?: React.ReactNode; tone?: 'green' | 'muted' | 'plain' }> = ({
+  label,
+  children,
+  caption,
+  tone = 'plain'
+}) => (
+  <div className="rounded-[14px] bg-white/[0.04] px-3 py-2.5">
+    <p className="text-[12px] text-slate-500">{label}</p>
+    <p className={`num mt-0.5 text-[15px] font-semibold ${tone === 'green' ? 'text-emerald-300' : tone === 'muted' ? 'text-slate-500' : 'text-white'}`}>{children}</p>
+    {caption && <p className="num text-[11px] text-slate-500">{caption}</p>}
+  </div>
+);
+
 const EducationTab: React.FC<EducationTabProps> = (props) => {
   const {
     gameState,
@@ -22,65 +40,87 @@ const EducationTab: React.FC<EducationTabProps> = (props) => {
     coachLifestyleGridRef,
     coachHighlight
   } = props;
+  const { t } = useI18n();
+
+  const enrolledProgram = EDUCATION_OPTIONS.find(e => e.id === gameState.education.currentlyEnrolled?.educationId);
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-amber-900/10 border border-amber-700/30 glass-tile p-4 mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <AlertTriangle className="text-amber-400" size={18} />
-          <span className="font-bold text-amber-400">Education Relevance Warning</span>
+    <div className="mx-auto max-w-4xl space-y-6">
+      <header className="flex items-center gap-3 pr-12">
+        <span aria-hidden className="flex h-11 w-11 items-center justify-center rounded-[13px] bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3),0_8px_20px_-8px_rgb(48_209_88/0.7)]">
+          <GraduationCap size={21} strokeWidth={2.3} />
+        </span>
+        <div className="min-w-0">
+          <h2 className="t-title-2 text-white">{t('shell.learnPage.education_library')}</h2>
+          <p className="text-[13px] text-slate-400">{CAREER_PATHS[careerPath]?.name}</p>
         </div>
-        <p className="text-slate-300 text-sm">
-          Only education relevant to your career path (<strong>{CAREER_PATHS[careerPath]?.name}</strong>) will boost your salary.
-          Irrelevant degrees are a waste of time and money!
-        </p>
+      </header>
+
+      <div className="flex gap-3.5 rounded-[20px] bg-orange-500/[0.1] p-4">
+        <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-400/20 text-orange-300">
+          <AlertTriangle size={18} />
+        </span>
+        <div>
+          <p className="t-headline text-orange-200">Education Relevance Warning</p>
+          <p className="mt-1 text-[14px] leading-relaxed text-slate-300">
+            Only education relevant to your career path (<strong className="font-semibold text-white">{CAREER_PATHS[careerPath]?.name}</strong>) will boost your salary.
+            Irrelevant degrees are a waste of time and money!
+          </p>
+        </div>
       </div>
 
       {/* Currently Enrolled */}
       {gameState.education.currentlyEnrolled?.educationId && (
-        <div className="bg-blue-900/10 border border-blue-700/30 glass-tile p-4 mb-6">
-          <h4 className="font-bold text-blue-400 mb-2">📚 Currently Enrolled</h4>
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-white font-medium">
-                {EDUCATION_OPTIONS.find(e => e.id === gameState.education.currentlyEnrolled?.educationId)?.name}
-              </p>
-              <p className="text-slate-400 text-sm">
-                {gameState.education.currentlyEnrolled.monthsRemaining} months remaining
-              </p>
+        <div className="surface-card p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-3.5">
+              <span aria-hidden className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-blue-500/15 text-[26px]">
+                {enrolledProgram?.icon ?? <BookOpen size={20} className="text-sky-300" />}
+              </span>
+              <div className="min-w-0">
+                <p className="eyebrow text-sky-300">📚 Currently Enrolled</p>
+                <p className="t-headline truncate text-white">
+                  {enrolledProgram?.name}
+                </p>
+              </div>
             </div>
-            <div className="text-right">
+            <div className="shrink-0 text-right">
               {/* Show student loan info if exists */}
               {gameState.liabilities.find(l => l.name?.includes('Student Loan') && l.name?.includes(
                 EDUCATION_OPTIONS.find(e => e.id === gameState.education.currentlyEnrolled?.educationId)?.name || ''
               )) && (
-                  <p className="text-amber-400 text-sm">
+                  <p className="num text-[13px] font-semibold text-orange-300">
                     Loan: {formatMoney(gameState.liabilities.find(l => l.name?.includes('Student Loan'))?.monthlyPayment || 0)}/mo
                   </p>
                 )}
             </div>
           </div>
-          <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden mt-3">
-            <div className="h-full bg-blue-500 transition-all shadow-[0_0_10px_rgba(59,130,246,0.5)]" style={{
+          <div className="meter mt-4 h-2" aria-hidden>
+            <div className="meter-fill bg-gradient-to-r from-blue-500 to-sky-400" style={{
               width: `${100 - (gameState.education.currentlyEnrolled.monthsRemaining / (EDUCATION_OPTIONS.find(e => e.id === gameState.education.currentlyEnrolled?.educationId)?.duration || 1)) * 100}%`
             }} />
           </div>
+          <p className="num mt-2 text-[13px] text-slate-400">
+            {gameState.education.currentlyEnrolled.monthsRemaining} months remaining
+          </p>
         </div>
       )}
 
       {/* Completed Degrees */}
       {gameState.education.degrees.length > 0 && (
-        <div className="bg-emerald-900/10 border border-emerald-700/30 glass-tile p-4 mb-6">
-          <h4 className="font-bold text-emerald-400 mb-2">🎓 Completed Degrees</h4>
+        <div>
+          <h4 className="t-headline mb-2.5 text-white">🎓 Completed Degrees</h4>
           <div className="flex flex-wrap gap-2">
             {gameState.education.degrees.map(degId => {
               const deg = EDUCATION_OPTIONS.find(e => e.id === degId);
               const isRelevant = deg?.relevantCareers.includes(careerPath);
               return (
-                <span key={degId} className={`px-3 py-1 rounded-full text-sm font-medium border ${isRelevant
-                    ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
-                    : 'bg-slate-700/50 text-slate-400 border-slate-600/50'}`}>
-                  {deg?.icon} {deg?.name} {isRelevant ? '✓' : '(not relevant)'}
+                <span key={degId} className={`inline-flex items-center gap-2 rounded-full py-1 pl-1 pr-3 text-[13px] font-medium ${isRelevant
+                    ? 'bg-emerald-500/[0.14] text-emerald-200'
+                    : 'bg-white/[0.06] text-slate-400'}`}>
+                  <span aria-hidden className="flex h-6 w-6 items-center justify-center rounded-full bg-white/[0.08] text-[13px]">{deg?.icon}</span>
+                  {deg?.name}
+                  {isRelevant ? <Check size={14} strokeWidth={3} className="text-emerald-300" aria-label="✓" /> : '(not relevant)'}
                 </span>
               );
             })}
@@ -88,113 +128,113 @@ const EducationTab: React.FC<EducationTabProps> = (props) => {
         </div>
       )}
 
-      <h3 className="text-lg font-bold text-white mb-4">Available Programs</h3>
-      <div
-        ref={coachLifestyleGridRef}
-        className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${coachHighlight('lifestyle-grid')}`}
-      >
-        {EDUCATION_OPTIONS.map(edu => {
-          const isRelevant = edu.relevantCareers.includes(careerPath);
-          const alreadyHave = gameState.education.degrees.includes(edu.id);
-          const isEnrolled = !!(gameState.education.currentlyEnrolled?.educationId);
-          const isExpensive = edu.cost > 20000;
-          const deposit = isExpensive ? Math.round(edu.cost * 0.1) : edu.cost;
-          const canAfford = gameState.cash >= deposit;
-          const currentSalary = calculateEffectiveMonthlySalary(gameState);
-          const nextDegrees = alreadyHave ? gameState.education.degrees : [...gameState.education.degrees, edu.id];
-          const boostedSalary = isRelevant
-            ? calculateEffectiveMonthlySalary({
-                ...gameState,
-                education: {
-                  ...gameState.education,
-                  degrees: nextDegrees
-                }
+      <div>
+        <h3 className="t-title-3 mb-4 text-white">Available Programs</h3>
+        <motion.div
+          ref={coachLifestyleGridRef}
+          variants={stagger(0.035)}
+          {...enter}
+          className={`grid grid-cols-1 gap-4 md:grid-cols-2 rounded-[22px] ${coachHighlight('lifestyle-grid')}`}
+        >
+          {EDUCATION_OPTIONS.map(edu => {
+            const isRelevant = edu.relevantCareers.includes(careerPath);
+            const alreadyHave = gameState.education.degrees.includes(edu.id);
+            const isEnrolled = !!(gameState.education.currentlyEnrolled?.educationId);
+            const isExpensive = edu.cost > 20000;
+            const deposit = isExpensive ? Math.round(edu.cost * 0.1) : edu.cost;
+            const canAfford = gameState.cash >= deposit;
+            const currentSalary = calculateEffectiveMonthlySalary(gameState);
+            const nextDegrees = alreadyHave ? gameState.education.degrees : [...gameState.education.degrees, edu.id];
+            const boostedSalary = isRelevant
+              ? calculateEffectiveMonthlySalary({
+                  ...gameState,
+                  education: {
+                    ...gameState.education,
+                    degrees: nextDegrees
+                  }
+                })
+              : currentSalary;
+            const salaryDelta = isRelevant ? Math.max(0, boostedSalary - currentSalary) : 0;
+            const paybackMonths = salaryDelta > 0 ? Math.ceil(edu.cost / salaryDelta) : null;
+
+            // Check prerequisites
+            const hasPrerequisites = !edu.requirements || edu.requirements.some(req =>
+              gameState.education.degrees.some(d => {
+                const degree = EDUCATION_OPTIONS.find(e => e.id === d);
+                return degree && degree.level === req;
               })
-            : currentSalary;
-          const salaryDelta = isRelevant ? Math.max(0, boostedSalary - currentSalary) : 0;
-          const paybackMonths = salaryDelta > 0 ? Math.ceil(edu.cost / salaryDelta) : null;
+            );
 
-          // Check prerequisites
-          const hasPrerequisites = !edu.requirements || edu.requirements.some(req =>
-            gameState.education.degrees.some(d => {
-              const degree = EDUCATION_OPTIONS.find(e => e.id === d);
-              return degree && degree.level === req;
-            })
-          );
+            const blocked = alreadyHave || isEnrolled || !canAfford || !hasPrerequisites;
 
-          return (
-            <div key={edu.id} className={`glass-panel p-5 transition-all ${alreadyHave ? 'opacity-60 grayscale-[0.5]' :
-                !hasPrerequisites ? 'opacity-60' :
-                  isRelevant ? 'border-emerald-500/40 hover:border-emerald-400/60 shadow-[0_0_15px_rgba(16,185,129,0.1)]' :
-                    'hover:border-slate-500/50'}`}>
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">{edu.icon}</span>
-                  <div>
-                    <h4 className="text-white font-bold">{edu.name}</h4>
-                    <p className="text-slate-400 text-xs">{edu.category} • {edu.duration} months</p>
+            return (
+              <motion.div key={edu.id} variants={riseIn} className="flex">
+              {/* The entrance animates this wrapper's opacity, so the dimmed states live on the card inside. */}
+              <div
+                className={`surface-card flex w-full flex-col p-5 transition-opacity ${alreadyHave ? 'opacity-60' :
+                  !hasPrerequisites ? 'opacity-60' :
+                    isRelevant ? 'border-emerald-400/30 shadow-[0_18px_40px_-26px_rgb(48_209_88/0.6)]' : ''}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span aria-hidden className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] text-[26px] ${isRelevant ? 'bg-emerald-500/[0.14]' : 'bg-white/[0.06]'}`}>
+                      {edu.icon}
+                    </span>
+                    <div className="min-w-0">
+                      <h4 className="t-headline break-words text-white">{edu.name}</h4>
+                      <p className="num mt-0.5 text-[12px] text-slate-400">
+                        {edu.category} • {edu.duration} months
+                      </p>
+                    </div>
                   </div>
+                  {alreadyHave ? (
+                    <span className="ds-badge ds-badge--low shrink-0">✓ Completed</span>
+                  ) : isRelevant ? (
+                    <span className="ds-badge ds-badge--low shrink-0">✓ Relevant</span>
+                  ) : (
+                    <span className="ds-badge ds-badge--high shrink-0">✗ Not Relevant</span>
+                  )}
                 </div>
-                {alreadyHave ? (
-                  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[10px] font-bold uppercase tracking-wider">✓ Completed</span>
-                ) : isRelevant ? (
-                  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[10px] font-bold uppercase tracking-wider">✓ Relevant</span>
-                ) : (
-                  <span className="px-2 py-0.5 bg-red-500/20 text-red-400 rounded text-[10px] font-bold uppercase tracking-wider">✗ Not Relevant</span>
+
+                <p className="mt-3 text-[13px] leading-relaxed text-slate-300">{edu.description}</p>
+
+                {edu.requirements && (
+                  <p className={`mt-2 text-[12px] font-medium ${hasPrerequisites ? 'text-emerald-300' : 'text-rose-300'}`}>
+                    Requires: {edu.requirements.join(' or ')} degree {hasPrerequisites ? '✓' : '✗'}
+                  </p>
                 )}
-              </div>
 
-              <p className="text-slate-300 text-xs mb-3 leading-relaxed">{edu.description}</p>
-
-              {edu.requirements && (
-                <p className={`text-xs mb-3 font-medium ${hasPrerequisites ? 'text-emerald-400' : 'text-red-400'}`}>
-                  Requires: {edu.requirements.join(' or ')} degree {hasPrerequisites ? '✓' : '✗'}
-                </p>
-              )}
-
-              <div className="flex justify-between text-xs mb-3 p-2 bg-black/20 rounded-lg">
-                <span className="text-slate-400 font-medium">Cost: <span className="text-white">{formatMoney(edu.cost)}</span> <span className="text-slate-500">({formatMoney(deposit)} down)</span></span>
-                <span className={isRelevant ? 'text-emerald-400 font-bold' : 'text-slate-500'}>
-                  Boost: {isRelevant ? `+${((edu.salaryBoost - 1) * 100).toFixed(0)}%` : 'None'}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-xs mb-4">
-                <div className="glass-tile p-2">
-                  <p className="text-slate-500 text-[10px] uppercase">Time</p>
-                  <p className="text-white font-bold">{edu.duration} mo</p>
-                </div>
-                <div className="glass-tile p-2">
-                  <p className="text-slate-500 text-[10px] uppercase">Salary delta</p>
-                  <p className={isRelevant ? 'text-emerald-400 font-bold' : 'text-slate-500 font-bold'}>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <Stat label="Cost" caption={`(${formatMoney(deposit)} down)`}>{formatMoney(edu.cost)}</Stat>
+                  <Stat label="Boost" tone={isRelevant ? 'green' : 'muted'}>
+                    {isRelevant ? `+${((edu.salaryBoost - 1) * 100).toFixed(0)}%` : 'None'}
+                  </Stat>
+                  <Stat label="Salary delta" tone={isRelevant ? 'green' : 'muted'}>
                     {isRelevant ? `+${formatMoney(salaryDelta)}/mo` : '—'}
-                  </p>
-                </div>
-                <div className="glass-tile p-2 col-span-2">
-                  <p className="text-slate-500 text-[10px] uppercase">Est. payback</p>
-                  <p className={isRelevant && paybackMonths ? 'text-emerald-300 font-bold' : 'text-slate-500 font-bold'}>
+                  </Stat>
+                  <Stat label="Est. payback" tone={isRelevant && paybackMonths ? 'green' : 'muted'}>
                     {isRelevant && paybackMonths ? `${paybackMonths} months` : 'N/A'}
-                  </p>
+                  </Stat>
+                </div>
+
+                <div className="mt-auto pt-4">
+                  <button onClick={() => handleEnrollEducation(edu)}
+                    disabled={alreadyHave || isEnrolled || !canAfford || !hasPrerequisites}
+                    className={`w-full ds-button--md ${blocked ? 'btn-secondary' :
+                      isRelevant ? 'btn-primary' :
+                        'ds-button rounded-full bg-orange-500/[0.14] text-orange-300 hover:bg-orange-500/[0.22]'}`}>
+                    {alreadyHave ? '✓ Completed' :
+                      !hasPrerequisites ? `Need ${edu.requirements?.join(' or ')} first` :
+                        isEnrolled ? 'Already Enrolled' :
+                          !canAfford ? `Need ${formatMoney(deposit)} deposit` :
+                            isRelevant ? 'Enroll Now' : '⚠️ Enroll (Not Recommended)'}
+                  </button>
                 </div>
               </div>
-
-              <button onClick={() => handleEnrollEducation(edu)}
-                disabled={alreadyHave || isEnrolled || !canAfford || !hasPrerequisites}
-                className={`w-full py-2.5 rounded-lg text-sm font-bold transition-all shadow-lg ${alreadyHave ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' :
-                    !hasPrerequisites ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' :
-                      isEnrolled ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' :
-                        !canAfford ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' :
-                          isRelevant ? 'bg-emerald-600 hover:bg-emerald-500 text-emerald-50 neon-outline-green hover:-translate-y-0.5' :
-                            'bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 border border-amber-600/50'}`}>
-                {alreadyHave ? '✓ Completed' :
-                  !hasPrerequisites ? `Need ${edu.requirements?.join(' or ')} first` :
-                    isEnrolled ? 'Already Enrolled' :
-                      !canAfford ? `Need ${formatMoney(deposit)} deposit` :
-                        isRelevant ? 'Enroll Now' : '⚠️ Enroll (Not Recommended)'}
-              </button>
-            </div>
-          );
-        })}
+              </motion.div>
+            );
+          })}
+        </motion.div>
       </div>
     </div>
   );

@@ -1,9 +1,13 @@
 import { useI18n } from '../../i18n';
 import React from 'react';
-import { Briefcase, GraduationCap, HeartPulse, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { BriefcaseBusiness, ChevronRight, GraduationCap, Sparkles } from 'lucide-react';
 import { calculateEffectiveMonthlySalary } from '../../services/gameLogic';
 import { GameState } from '../../types';
 import SignalsStack from './SignalsStack';
+import AnimatedNumber from '../ui/AnimatedNumber';
+import { MOTION_DISABLED, riseIn, springs, stagger } from '../ui/motion';
+import { VitalGlyph, VitalMeter, formatStat, type VitalKey } from '../tabs/LifestyleTab';
 
 type ProfileScreenProps = {
   playerName: string;
@@ -21,17 +25,18 @@ type ProfileScreenProps = {
   onNavigate: (path: string) => void;
 };
 
-const StatRow: React.FC<{ label: string; value: number; tone?: string }> = ({ label, value, tone }) => {
-  const { t } = useI18n();
+/** A grouped-list row: glyph, name, value, and a meter that springs to it. */
+const StatRow: React.FC<{ label: string; value: number; tone: VitalKey }> = ({ label, value, tone }) => {
   const clamped = Math.max(0, Math.min(100, value));
   return (
-    <div>
-      <div className="flex items-center justify-between text-xs text-slate-400">
-        <span>{label}</span>
-        <span className="text-slate-200">{clamped}</span>
-      </div>
-      <div className="mt-1 h-2 rounded-full bg-slate-800/70">
-        <div className={`h-2 rounded-full ${tone || 'bg-emerald-400'}`} style={{ width: `${clamped}%` }} />
+    <div className="list-row">
+      <VitalGlyph tone={tone} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-[15px] font-medium tracking-[-0.01em] text-white">{label}</span>
+          <span className="num text-[15px] font-semibold text-slate-200">{formatStat(clamped)}</span>
+        </div>
+        <VitalMeter value={clamped} tone={tone} className="mt-1.5" />
       </div>
     </div>
   );
@@ -61,48 +66,52 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     energy: 0,
     stress: 0
   };
+  const enter = MOTION_DISABLED ? { initial: false as const, animate: 'show' } : { initial: 'hidden', animate: 'show' };
 
   return (
-    <div className="space-y-5">
-      <section className="glass-panel px-4 py-4">
-        <div className="flex items-center gap-4">
-          <div className={`h-14 w-14 rounded-full bg-gradient-to-br ${avatarColor || 'from-slate-500 to-slate-600'} flex items-center justify-center text-2xl overflow-hidden border border-white/10`}>
-            {avatarImage ? (
-              <img src={avatarImage} alt={playerName} className="h-full w-full object-cover" />
-            ) : (
-              avatarEmoji || '👤'
-            )}
-          </div>
-          <div>
-            <p className="text-lg font-semibold text-white">{playerName}</p>
-            <p className="text-xs text-slate-400">{jobTitle}</p>
-            <p className="text-xs text-emerald-200">{formatMoney(salary)} / mo</p>
-            <div className="mt-2 inline-flex items-center gap-1 rounded-full border border-slate-700/70 px-2 py-1 text-[10px] uppercase tracking-wide text-slate-300">
-              <Sparkles size={12} className="text-amber-300" /> {careerPath}
-            </div>
-          </div>
-        </div>
-      </section>
+    <motion.div className="space-y-7" variants={stagger(0.05)} {...enter}>
+      {/* Apple ID style header */}
+      <motion.section variants={riseIn} className="flex flex-col items-center px-4 pt-3 text-center">
+        <motion.div
+          initial={MOTION_DISABLED ? false : { scale: 0.86, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={springs.smooth}
+          className={`flex h-[92px] w-[92px] items-center justify-center overflow-hidden rounded-full bg-gradient-to-br ${avatarColor || 'from-slate-500 to-slate-600'} text-[46px] shadow-[0_16px_36px_-12px_rgb(0_0_0/0.7),inset_0_1px_0_rgb(255_255_255/0.18)] ring-1 ring-white/10`}
+        >
+          {avatarImage ? (
+            <img src={avatarImage} alt={playerName} className="h-full w-full object-cover" />
+          ) : (
+            avatarEmoji || '👤'
+          )}
+        </motion.div>
+        <p className="t-title-2 mt-3.5 text-white">{playerName}</p>
+        <p className="mt-0.5 text-[15px] text-slate-400">{jobTitle}</p>
+        <p className="mt-1 text-[15px] font-semibold text-emerald-300">
+          <AnimatedNumber value={salary} format={formatMoney} /> / mo
+        </p>
+        <span className="chip mt-3 text-slate-200">
+          <Sparkles size={13} className="text-amber-300" aria-hidden /> {careerPath}
+        </span>
+      </motion.section>
 
-      <section className="glass-panel px-4 py-4 space-y-3">
-        <div className="text-sm font-semibold text-white flex items-center gap-2">
-          <HeartPulse size={16} className="text-rose-300" />{t('shell.profileScreen.core_stats')}
-        </div>
-        <div className="space-y-3">
+      <motion.section variants={riseIn}>
+        <h3 className="mb-2 px-4 text-[13px] font-semibold text-slate-400">{t('shell.profileScreen.core_stats')}</h3>
+        <div className="list-group list-group--icons">
           {/* Phase 1 slice 5: energy and stress lead (they set this month's actions); the rest sit one tap away. */}
-          <StatRow label={t('shell.profileScreen.energy')} value={stats.energy ?? 0} tone="bg-cyan-400" />
-          <StatRow label={t('shell.profileScreen.stress')} value={stats.stress ?? 0} tone="bg-rose-400" />
-          <details>
-            <summary className="cursor-pointer text-xs font-semibold text-slate-400">{t('shell.profileScreen.more_about_you')}</summary>
-            <div className="mt-3 space-y-3">
-              <StatRow label={t('shell.profileScreen.happiness')} value={stats.happiness ?? 0} tone="bg-emerald-400" />
-              <StatRow label={t('shell.profileScreen.health')} value={stats.health ?? 0} tone="bg-amber-400" />
-            </div>
+          <StatRow label={t('shell.profileScreen.energy')} value={stats.energy ?? 0} tone="energy" />
+          <StatRow label={t('shell.profileScreen.stress')} value={stats.stress ?? 0} tone="stress" />
+          <details className="group">
+            <summary className="list-row relative cursor-pointer list-none text-[15px] font-medium text-[#0a84ff] before:absolute before:left-4 before:right-0 before:top-0 before:h-px before:origin-top before:scale-y-50 before:bg-[var(--separator)] before:content-[''] hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
+              <span className="flex-1">{t('shell.profileScreen.more_about_you')}</span>
+              <ChevronRight size={16} strokeWidth={2.4} aria-hidden className="text-slate-500 transition-transform duration-[530ms] ease-spring group-open:rotate-90" />
+            </summary>
+            <StatRow label={t('shell.profileScreen.happiness')} value={stats.happiness ?? 0} tone="happiness" />
+            <StatRow label={t('shell.profileScreen.health')} value={stats.health ?? 0} tone="health" />
           </details>
         </div>
-      </section>
+      </motion.section>
 
-      <section className="glass-panel px-4 py-4">
+      <motion.section variants={riseIn} className="[&_h3]:px-1">
         <SignalsStack
           gameState={gameState}
           creditScore={creditScore}
@@ -112,33 +121,33 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           careerPath={careerPath}
           getAIRiskColor={getAIRiskColor}
         />
-      </section>
+      </motion.section>
 
-      <section className="grid gap-3 md:grid-cols-2">
-        <button
-          type="button"
-          onClick={() => onNavigate('/career')}
-          className="glass-tile flex items-center justify-between px-4 py-3"
-        >
-          <div>
-            <p className="text-sm font-semibold text-white">{t('shell.profileScreen.career')}</p>
-            <p className="text-xs text-slate-400">{t('shell.profileScreen.promotions_milestones')}</p>
-          </div>
-          <Briefcase size={18} className="text-emerald-300" />
-        </button>
-        <button
-          type="button"
-          onClick={() => onNavigate('/learn')}
-          className="glass-tile flex items-center justify-between px-4 py-3"
-        >
-          <div>
-            <p className="text-sm font-semibold text-white">{t('shell.profileScreen.learning')}</p>
-            <p className="text-xs text-slate-400">{t('shell.profileScreen.certifications_rewards')}</p>
-          </div>
-          <GraduationCap size={18} className="text-amber-300" />
-        </button>
-      </section>
-    </div>
+      <motion.section variants={riseIn}>
+        <div className="list-group list-group--icons">
+          <button type="button" onClick={() => onNavigate('/career')} className="list-row w-full text-left">
+            <span aria-hidden className="flex h-[29px] w-[29px] shrink-0 items-center justify-center rounded-[8px] bg-[#ff9f0a] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.22)]">
+              <BriefcaseBusiness size={16} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-medium tracking-[-0.01em] text-white">{t('shell.profileScreen.career')}</span>
+              <span className="block text-[13px] text-slate-400">{t('shell.profileScreen.promotions_milestones')}</span>
+            </span>
+            <ChevronRight size={16} className="text-slate-600" aria-hidden />
+          </button>
+          <button type="button" onClick={() => onNavigate('/learn')} className="list-row w-full text-left">
+            <span aria-hidden className="flex h-[29px] w-[29px] shrink-0 items-center justify-center rounded-[8px] bg-[#bf5af2] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.22)]">
+              <GraduationCap size={16} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-medium tracking-[-0.01em] text-white">{t('shell.profileScreen.learning')}</span>
+              <span className="block text-[13px] text-slate-400">{t('shell.profileScreen.certifications_rewards')}</span>
+            </span>
+            <ChevronRight size={16} className="text-slate-600" aria-hidden />
+          </button>
+        </div>
+      </motion.section>
+    </motion.div>
   );
 };
 

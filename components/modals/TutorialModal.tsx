@@ -1,6 +1,9 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import Modal from '../Modal';
+import { MOTION_DISABLED, springs } from '../ui/motion';
 import { AUTO_INVEST_PRESETS, FINANCIAL_FREEDOM_TARGET_MULTIPLIER } from '../../constants';
+import { useSheetReducedMotion } from './sheet';
 
 // Step-through tips for new players. App owns the step counter and the
 // dismissed/seen bookkeeping; the auto-invest step offers one-click presets.
@@ -56,66 +59,94 @@ interface TutorialModalProps {
   onApplyAutoInvestPreset: (presetId: string) => void;
 }
 
+// A bottom sheet on phones (centred from md up). Each step's content slides in from the side it is
+// heading to; the page dots stretch into a capsule for the current step.
 const TutorialModal: React.FC<TutorialModalProps> = ({ step, onNext, onDismiss, onApplyAutoInvestPreset }) => {
+  const reduce = useSheetReducedMotion();
   const tip = TUTORIAL_TIPS[step];
   if (!tip) return null;
+  const Step = (MOTION_DISABLED ? 'div' : motion.div) as React.ElementType;
+  const stepMotion = MOTION_DISABLED
+    ? {}
+    : {
+        initial: reduce ? { opacity: 0 } : { opacity: 0, x: 18 },
+        animate: reduce ? { opacity: 1 } : { opacity: 1, x: 0 },
+        transition: reduce ? { duration: 0.2 } : springs.smooth
+      };
+  const isLast = step >= TUTORIAL_TIPS.length - 1;
   return (
     <Modal
       isOpen
       onClose={onDismiss}
       ariaLabel="Tutorial"
-      overlayClassName="bg-black/60 items-end md:items-center"
+      overlayClassName="bg-black/45 items-end md:items-center"
       closeOnOverlayClick
       closeOnEsc
-      contentClassName="bg-gradient-to-br from-blue-900/90 to-slate-900/90 border border-blue-500/50 rounded-2xl p-6 max-w-md w-full backdrop-blur-sm"
+      contentClassName="max-w-md overflow-hidden"
       contentStyle={{ marginTop: 0, marginBottom: 0 }}
     >
-      <div className="flex items-start gap-4">
-        <div className="text-4xl">{tip.title.split(' ')[0]}</div>
-        <div className="flex-1">
-          <h3 className="text-lg font-bold text-white mb-2">{tip.title.split(' ').slice(1).join(' ')}</h3>
-          <p className="text-slate-300 text-sm mb-4">{tip.message}</p>
-          {tip.id === 'auto-invest' && (
-            <div className="grid gap-2 sm:grid-cols-3">
-              {AUTO_INVEST_PRESETS.map((preset) => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => onApplyAutoInvestPreset(preset.id)}
-                  className="rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-100 hover:border-blue-400 hover:bg-blue-500/20"
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="flex items-center justify-between mt-4">
-        <div className="flex gap-1">
-          {TUTORIAL_TIPS.map((_, idx) => (
-            <div key={idx} className={`w-2 h-2 rounded-full transition-all ${idx === step ? 'bg-blue-400' : 'bg-slate-600'}`} />
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={onDismiss}
-            className="px-4 py-2 text-slate-400 hover:text-white text-sm transition-all"
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(100%_90%_at_15%_0%,rgb(10_132_255/0.2),transparent_70%)]" />
+      <div className="relative px-5 pb-5 pt-6 sm:px-6">
+        <Step key={tip.id} {...stepMotion} className="flex flex-col items-start gap-3 sm:flex-row sm:gap-4 sm:pr-8">
+          <span
+            aria-hidden
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#0a84ff]/[0.18] text-[26px] shadow-[inset_0_1px_0_rgb(255_255_255/0.1)] sm:h-14 sm:w-14 sm:rounded-[18px] sm:text-[30px]"
           >
-            Skip Tutorial
-          </button>
-          <button
-            onClick={() => {
-              if (step < TUTORIAL_TIPS.length - 1) {
-                onNext();
-              } else {
-                onDismiss();
-              }
-            }}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium transition-all"
-          >
-            {step < TUTORIAL_TIPS.length - 1 ? 'Next →' : 'Got it! 🎮'}
-          </button>
+            {tip.title.split(' ')[0]}
+          </span>
+          <div className="min-w-0 flex-1">
+            <h3 className="t-headline text-[19px] text-white">{tip.title.split(' ').slice(1).join(' ')}</h3>
+            <p className="mt-1.5 text-[15px] leading-[1.45] text-slate-300">{tip.message}</p>
+            {tip.id === 'auto-invest' && (
+              <div className="mt-3.5 grid gap-2 sm:grid-cols-3">
+                {AUTO_INVEST_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => onApplyAutoInvestPreset(preset.id)}
+                    className="pressable rounded-full bg-[#0a84ff]/[0.16] px-3 py-2 text-[13px] font-semibold text-sky-200 hover:bg-[#0a84ff]/[0.26]"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </Step>
+
+        <div className="mt-5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5" aria-hidden>
+            {TUTORIAL_TIPS.map((_, idx) => (
+              <span
+                key={idx}
+                className={`h-[7px] rounded-full transition-[width,background-color] duration-500 ease-spring ${
+                  idx === step ? 'w-5 bg-[#0a84ff]' : idx < step ? 'w-[7px] bg-slate-400' : 'w-[7px] bg-slate-600'
+                }`}
+              />
+            ))}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={onDismiss}
+              className="pressable rounded-full px-3.5 py-2 text-[14px] font-medium text-slate-400 hover:text-white"
+            >
+              Skip Tutorial
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (step < TUTORIAL_TIPS.length - 1) {
+                  onNext();
+                } else {
+                  onDismiss();
+                }
+              }}
+              className="pressable rounded-full bg-[#0a84ff] px-5 py-2 text-[14px] font-semibold text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_8px_22px_-10px_rgb(10_132_255/0.7)] hover:bg-[#2b95ff]"
+            >
+              {!isLast ? 'Next →' : 'Got it! 🎮'}
+            </button>
+          </div>
         </div>
       </div>
     </Modal>

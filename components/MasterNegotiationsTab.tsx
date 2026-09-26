@@ -1,9 +1,10 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import {
   Award,
   BookOpen,
+  Check,
   RefreshCw,
+  X,
   ShieldAlert,
   Users,
   TrendingUp,
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 import type { GameState } from '../types';
 import { COURSE_ATTEMPTS, COURSE_RAISE_PCT, COURSE_RETAKE_FEE, grantCourseRaise, recordMiss } from '../services/courseRewards';
+import { BulletList, CertifiedSeal, CourseMedallion, PhasePanel, QuizFeedback, QuizMeter, QuizOption, QuizOptionState, QuizScoreRing, QuizStep, SceneImage } from './SalesCertificationPanel';
 
 // --- Course tuning ---
 const RAISE_PCT = COURSE_RAISE_PCT.negotiations;
@@ -511,320 +513,266 @@ export default function MasterNegotiationsTab({
     }
   }
 
+  const passedRun = lastOutcome === 'pass';
+
   return (
     <div className="space-y-4">
-      <div className="bg-slate-900/50 border border-slate-700 rounded-2xl p-5">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h2 className="text-2xl font-bold text-white">Master Negotiations</h2>
-            <p className="text-sm text-slate-300 mt-1">
-              Learn a repeatable deal framework, then pass the certification quiz.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className={`px-3 py-2 rounded-xl border ${certified ? 'bg-emerald-600/10 border-emerald-500/30 text-emerald-100' : 'bg-slate-800/60 border-slate-700 text-slate-200'}`}>
-              <div className="flex items-center gap-2">
-                <Award size={16} />
-                <span className="text-sm font-semibold">{certified ? 'Certified' : 'Not certified'}</span>
-              </div>
+      <div className="surface p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 flex-1 items-start gap-4">
+            <CourseMedallion tone="blue" size="lg">
+              <Users size={26} strokeWidth={2.3} />
+            </CourseMedallion>
+            <div className="min-w-0">
+              <h2 className="t-title-2 text-white">Master Negotiations</h2>
+              <p className="mt-1 text-[15px] leading-relaxed text-slate-400">
+                Learn a repeatable deal framework, then pass the certification quiz.
+              </p>
             </div>
           </div>
+
+          {certified ? (
+            <CertifiedSeal label="Certified" />
+          ) : (
+            <span className="ds-badge ds-badge--neutral !text-[12px]"><Award size={13} /> Not certified</span>
+          )}
         </div>
 
-        <div className="mt-4 grid md:grid-cols-3 gap-3">
-          <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-4">
-            <div className="flex items-center gap-2 text-slate-200">
-              <DollarSign size={18} />
-              <p className="text-sm font-semibold">Pass reward</p>
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          <div className="rounded-[18px] bg-white/[0.045] p-4 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.06)]">
+            <div className="flex items-center gap-2.5 text-white">
+              <span aria-hidden className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400/15 text-emerald-300"><DollarSign size={16} /></span>
+              <p className="text-[15px] font-semibold">Pass reward</p>
             </div>
-            <p className="text-sm text-slate-300 mt-2">Get 100% and earn a <span className="text-emerald-200 font-semibold">{RAISE_PCT}% raise</span> that stays with you (once per save).</p>
+            <p className="mt-2.5 text-[14px] leading-snug text-slate-300">Get 100% and earn a <span className="font-semibold text-emerald-300">{RAISE_PCT}% raise</span> that stays with you (once per save).</p>
           </div>
 
-          <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-4">
-            <div className="flex items-center gap-2 text-slate-200">
-              <TrendingUp size={18} />
-              <p className="text-sm font-semibold">Permanent perks</p>
+          <div className="rounded-[18px] bg-white/[0.045] p-4 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.06)]">
+            <div className="flex items-center gap-2.5 text-white">
+              <span aria-hidden className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-400/15 text-sky-300"><TrendingUp size={16} /></span>
+              <p className="text-[15px] font-semibold">Permanent perks</p>
             </div>
-            <p className="text-sm text-slate-300 mt-2">
-              After certification: <span className="text-emerald-200 font-semibold">5% cheaper</span> property and business buys, <span className="text-emerald-200 font-semibold">3% higher</span> sale proceeds, and better yearly raises and promotion odds.
+            <p className="mt-2.5 text-[14px] leading-snug text-slate-300">
+              After certification: <span className="font-semibold text-emerald-300">5% cheaper</span> property and business buys, <span className="font-semibold text-emerald-300">3% higher</span> sale proceeds, and better yearly raises and promotion odds.
             </p>
           </div>
 
-          <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-4">
-            <div className="flex items-center gap-2 text-slate-200">
-              <ShieldAlert size={18} />
-              <p className="text-sm font-semibold">Retakes</p>
+          <div className="rounded-[18px] bg-white/[0.045] p-4 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.06)]">
+            <div className="flex items-center gap-2.5 text-white">
+              <span aria-hidden className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-400/15 text-orange-300"><ShieldAlert size={16} /></span>
+              <p className="text-[15px] font-semibold">Retakes</p>
             </div>
-            <p className="text-sm text-slate-300 mt-2"><span className="text-rose-200 font-semibold">{COURSE_ATTEMPTS} tries</span> included. After a third miss, a <span className="text-rose-200 font-semibold">${COURSE_RETAKE_FEE} retake fee</span> buys {COURSE_ATTEMPTS} more.</p>
+            <p className="mt-2.5 text-[14px] leading-snug text-slate-300"><span className="font-semibold text-rose-300">{COURSE_ATTEMPTS} tries</span> included. After a third miss, a <span className="num font-semibold text-rose-300">${COURSE_RETAKE_FEE} retake fee</span> buys {COURSE_ATTEMPTS} more.</p>
           </div>
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
-        {phase === 'intro' && (
-          <motion.div
-            key="intro"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5"
-          >
-            <div className="grid lg:grid-cols-2 gap-4">
-              <div className="bg-slate-900/40 border border-slate-700 rounded-2xl overflow-hidden">
-                <div className="aspect-video bg-slate-950/30">
-                  <img
-                    src="/event-images/salary_negotiation.webp"
-                    alt="Negotiation hero"
-                    className="w-full h-full object-contain"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="p-4">
-                  <p className="text-sm text-slate-200 leading-relaxed">
-                    Negotiation is a money skill. Mastering anchors, trades, and calm communication improves your deals across the entire game.
-                  </p>
-
-                  <div className="mt-4 bg-slate-950/30 border border-slate-700 rounded-2xl p-4">
-                    <div className="flex items-center gap-2">
-                      <Users size={18} className="text-slate-200" />
-                      <p className="text-sm font-semibold text-white">Quick checklist</p>
-                    </div>
-                    <ul className="text-sm text-slate-300 mt-2 space-y-1 list-disc list-inside">
-                      <li>Pass requires 100% correct</li>
-                      <li>Questions + answer letters shuffle each run</li>
-                      <li>After you’re certified: practice is free</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <BookOpen size={18} className="text-slate-200" />
-                  <p className="text-sm font-semibold text-white">What you’ll learn</p>
-                </div>
-
-                <div className="space-y-2">
-                  {MODULES.map((m) => (
-                    <div key={m.title} className="bg-slate-900/40 border border-slate-700 rounded-2xl p-4">
-                      <p className="text-sm font-semibold text-white">{m.title}</p>
-                      <ul className="text-sm text-slate-300 mt-2 space-y-1 list-disc list-inside">
-                        {m.bullets.map((b, i) => (
-                          <li key={i}>{b}</li>
-                        ))}
-                      </ul>
-                      <p className="text-xs text-slate-400 mt-3"><span className="text-slate-300 font-semibold">Micro-drill:</span> {m.microDrill}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <p className="text-xs text-slate-400">
-                  Tip: once you’re certified, practice is free — no fees, no extra rewards.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-5 flex flex-wrap gap-2">
-              <button
-                onClick={() => resetRun()}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold"
-              >
-                Start Negotiation Certification
-              </button>
-              {certified && (
-                <button
-                  onClick={() => resetRun()}
-                  className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold"
-                >
-                  Practice Mode
-                </button>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {phase === 'quiz' && (
-          <motion.div
-            key="quiz"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs text-slate-400">Question {idx + 1} of {total}</p>
-                <p className="text-sm font-semibold text-white">Score: {score}/{total}</p>
-              </div>
-              <div className="w-48 bg-slate-900/50 border border-slate-700 rounded-full overflow-hidden h-2">
-                <div
-                  className="h-2 bg-gradient-to-r from-emerald-600 to-emerald-400"
-                  style={{ width: `${((idx + 1) / total) * 100}%` }}
+      {phase === 'intro' && (
+        <PhasePanel key="intro">
+          <div className="grid gap-5 lg:grid-cols-2">
+            <div>
+              <div className="overflow-hidden rounded-[20px] bg-black/30 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.06)]">
+                <img
+                  src="/event-images/salary_negotiation.webp"
+                  alt="Negotiation hero"
+                  className="aspect-video w-full object-cover"
+                  loading="lazy"
                 />
               </div>
-            </div>
+              <p className="mt-4 text-[15px] leading-relaxed text-slate-300">
+                Negotiation is a money skill. Mastering anchors, trades, and calm communication improves your deals across the entire game.
+              </p>
 
-            <div className="mt-4 grid lg:grid-cols-2 gap-4">
-              <div className="bg-slate-900/40 border border-slate-700 rounded-2xl overflow-hidden">
-                <div className="aspect-video bg-slate-950/30">
-                  <img
-                    src={current.image}
-                    alt="Negotiation question"
-                    className="w-full h-full object-contain"
-                    loading="lazy"
-                  />
+              <div className="mt-4 rounded-[18px] bg-white/[0.045] p-4 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.06)]">
+                <div className="flex items-center gap-2">
+                  <Users size={17} className="text-sky-300" />
+                  <p className="text-[15px] font-semibold text-white">Quick checklist</p>
                 </div>
-                <div className="p-4">
-                  <p className="text-sm text-slate-200 leading-relaxed">{current.scenario}</p>
-                  <p className="text-base font-semibold text-white mt-3">{current.question}</p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {current.options.map((opt, i) => {
-                  const isCorrect = answered && i === current.correctIndex;
-                  const isWrong = answered && selected === i && i !== current.correctIndex;
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => onSelect(i)}
-                      disabled={answered}
-                      className={`w-full text-left px-4 py-3 rounded-2xl border transition-all ${
-                        isCorrect
-                          ? 'bg-emerald-600/15 border-emerald-500/40 text-emerald-100'
-                          : isWrong
-                            ? 'bg-rose-600/15 border-rose-500/40 text-rose-100'
-                            : 'bg-slate-900/40 border-slate-700 text-slate-200 hover:bg-slate-800/60'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${
-                          isCorrect ? 'bg-emerald-500/20 text-emerald-200' : isWrong ? 'bg-rose-500/20 text-rose-200' : 'bg-slate-800 text-slate-300'
-                        }`}>
-                          {String.fromCharCode(65 + i)}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm leading-relaxed">{opt}</p>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-
-                <AnimatePresence>
-                  {answered && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 8 }}
-                      className={`rounded-2xl border p-4 ${selected === current.correctIndex ? 'bg-emerald-600/10 border-emerald-500/30' : 'bg-rose-600/10 border-rose-500/30'}`}
-                    >
-                      <p className="text-sm font-semibold text-white">
-                        {selected === current.correctIndex ? 'Nice.' : 'Not quite.'} <span className="text-slate-300">{current.skill}</span>
-                      </p>
-                      <p className="text-sm text-slate-200 mt-2 leading-relaxed">{current.explanation}</p>
-                      <div className="mt-4 flex gap-2">
-                        <button
-                          onClick={onNext}
-                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold"
-                        >
-                          {idx === total - 1 ? 'Finish' : 'Next'}
-                        </button>
-                        <button
-                          onClick={() => { setPhase('intro'); }}
-                          className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold"
-                        >
-                          Quit
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {phase === 'results' && (
-          <motion.div
-            key="results"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5"
-          >
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div>
-                <p className="text-sm text-slate-400">Result</p>
-                <p className="text-2xl font-bold text-white mt-1">{percent}%</p>
-                <p className="text-sm text-slate-300 mt-1">Score: {score}/{total}</p>
-              </div>
-              <div className={`px-4 py-2 rounded-2xl border ${lastOutcome === 'pass' ? 'bg-emerald-600/15 border-emerald-500/30 text-emerald-100' : 'bg-rose-600/15 border-rose-500/30 text-rose-100'}`}>
-                <p className="text-sm font-semibold">
-                  {lastOutcome === 'pass' ? 'Certified ✅' : 'Not certified ❌'}
-                </p>
-                <p className="text-xs opacity-90">{lastOutcome === 'pass' ? 'Rewards applied (if eligible)' : 'You must restart to retry'}</p>
+                <BulletList tone="green" items={[
+                  'Pass requires 100% correct',
+                  'Questions + answer letters shuffle each run',
+                  'After you’re certified: practice is free'
+                ]} />
               </div>
             </div>
 
-            {lastOutcome === 'pass' ? (
-              <div className="mt-4 bg-slate-900/40 border border-emerald-700/30 rounded-2xl p-4">
-                <p className="text-sm font-semibold text-white">Rewards & perks</p>
-                <ul className="text-sm text-slate-300 mt-2 space-y-1 list-disc list-inside">
-                  <li>A {RAISE_PCT}% raise that stays through promotions and job changes (once per save)</li>
-                  <li>Permanent: better yearly raises and promotion odds</li>
-                  <li>Permanent: 5% cheaper property and business buys</li>
-                  <li>Permanent: 3% higher property and business sale proceeds</li>
-                  <li>Networking +10, Happiness +4, Stress −6, Energy +2, Fulfillment +4</li>
-                </ul>
+            <div>
+              <div className="flex items-center gap-2">
+                <BookOpen size={17} className="text-sky-300" />
+                <p className="text-[15px] font-semibold text-white">What you’ll learn</p>
               </div>
-            ) : (
-              <div className="mt-4 bg-slate-900/40 border border-amber-700/40 rounded-2xl p-4">
-                <div className="flex items-start gap-2">
-                  <ShieldAlert className="text-amber-200 mt-0.5" size={18} />
-                  <div>
-                    <p className="text-sm font-semibold text-amber-200">Certification requires 100%</p>
-                    <p className="text-sm text-slate-300 mt-1">Retakes must start from Question 1.</p>
-                    {!certified && lastMiss > 0 && (
-                      <p className="text-xs text-slate-400 mt-2">Miss {lastMiss} of {COURSE_ATTEMPTS}</p>
-                    )}
-                    {penaltyApplied && !certified && (
-                      <p className="text-sm text-rose-200 mt-2 font-semibold">Retake fee: −${COURSE_RETAKE_FEE}. You have {COURSE_ATTEMPTS} more tries.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
 
-            <div className="mt-5 flex flex-wrap gap-2">
+              <ol className="list-group mt-3">
+                {MODULES.map((m) => (
+                  <li key={m.title} className="list-row block py-3.5">
+                    <p className="text-[15px] font-semibold text-white">{m.title}</p>
+                    <BulletList items={m.bullets} className="mt-2" />
+                    <p className="mt-2.5 text-[13px] leading-snug text-slate-400"><span className="font-semibold text-sky-300">Micro-drill:</span> {m.microDrill}</p>
+                  </li>
+                ))}
+              </ol>
+
+              <p className="mt-3 text-[13px] text-slate-400">
+                Tip: once you’re certified, practice is free — no fees, no extra rewards.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-2.5">
+            <button
+              onClick={() => resetRun()}
+              className="btn-primary ds-button--lg"
+            >
+              Start Negotiation Certification
+            </button>
+            {certified && (
               <button
-                onClick={() => { setPhase('intro'); }}
-                className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold"
+                onClick={() => resetRun()}
+                className="btn-secondary ds-button--lg"
               >
-                Back
+                Practice Mode
               </button>
+            )}
+          </div>
+        </PhasePanel>
+      )}
 
-              {lastOutcome === 'fail' && (
-                <button
-                  onClick={() => resetRun()}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold flex items-center gap-2"
-                >
-                  <RefreshCw size={16} /> Start over
-                </button>
-              )}
-              {lastOutcome === 'pass' && (
-                <button
-                  onClick={() => resetRun()}
-                  className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold flex items-center gap-2"
-                >
-                  <RefreshCw size={16} /> Practice again
-                </button>
-              )}
+      {phase === 'quiz' && (
+        <PhasePanel key="quiz">
+          <div className="space-y-2.5">
+            <div className="num flex items-baseline justify-between gap-3">
+              <p className="text-[13px] font-semibold text-slate-300">Question {idx + 1} of {total}</p>
+              <p className="text-[13px] text-slate-400">Score: {score}/{total}</p>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <QuizMeter value={idx + 1} total={total} tone="blue" />
+          </div>
+
+          <QuizStep stepKey={current.id} className="mt-5 grid gap-5 lg:grid-cols-2">
+            <div>
+              <SceneImage src={current.image} alt="Negotiation question" aspect="aspect-video" />
+              <p className="mt-4 text-[15px] leading-relaxed text-slate-300">{current.scenario}</p>
+              <p className="mt-2 text-[19px] font-semibold leading-[1.35] tracking-[-0.015em] text-white">{current.question}</p>
+            </div>
+
+            <div className="space-y-2.5">
+              {current.options.map((opt, i) => {
+                const isCorrect = answered && i === current.correctIndex;
+                const isWrong = answered && selected === i && i !== current.correctIndex;
+                const state: QuizOptionState = isCorrect ? 'correct' : isWrong ? 'wrong' : answered ? 'muted' : 'idle';
+                return (
+                  <QuizOption key={i} letter={String.fromCharCode(65 + i)} state={state} onClick={() => onSelect(i)} disabled={answered}>
+                    {opt}
+                  </QuizOption>
+                );
+              })}
+
+              <QuizFeedback
+                show={answered}
+                correct={selected === current.correctIndex}
+                title={<>{selected === current.correctIndex ? 'Nice.' : 'Not quite.'} <span className="font-medium text-slate-400">{current.skill}</span></>}
+                footer={(
+                  <div className="mt-4 flex gap-2.5">
+                    <button
+                      onClick={onNext}
+                      className="btn-primary ds-button--md min-w-[104px]"
+                    >
+                      {idx === total - 1 ? 'Finish' : 'Next'}
+                    </button>
+                    <button
+                      onClick={() => { setPhase('intro'); }}
+                      className="btn-secondary ds-button--md"
+                    >
+                      Quit
+                    </button>
+                  </div>
+                )}
+              >
+                {current.explanation}
+              </QuizFeedback>
+            </div>
+          </QuizStep>
+        </PhasePanel>
+      )}
+
+      {phase === 'results' && (
+        <PhasePanel key="results">
+          <div className="flex flex-wrap items-center justify-between gap-5">
+            <div className="flex items-center gap-5">
+              <QuizScoreRing
+                score={score}
+                total={total}
+                passed={passedRun}
+                size={104}
+                centre={passedRun ? <Check size={34} strokeWidth={3} className="text-emerald-300" /> : <X size={34} strokeWidth={3} className="text-rose-300" />}
+              />
+              <div>
+                <p className="eyebrow">Result</p>
+                <p className="num t-title-1 text-white">{percent}%</p>
+                <p className="num text-[15px] text-slate-400">Score: {score}/{total}</p>
+              </div>
+            </div>
+            <div className={`rounded-[18px] px-4 py-3 ${passedRun ? 'bg-emerald-500/[0.14] text-emerald-100' : 'bg-rose-500/[0.14] text-rose-100'}`}>
+              <p className="text-[15px] font-semibold">
+                {passedRun ? 'Certified ✅' : 'Not certified ❌'}
+              </p>
+              <p className="text-[12px] opacity-80">{passedRun ? 'Rewards applied (if eligible)' : 'You must restart to retry'}</p>
+            </div>
+          </div>
+
+          {passedRun ? (
+            <div className="mt-5 rounded-[18px] bg-emerald-500/[0.08] p-4">
+              <p className="text-[15px] font-semibold text-white">Rewards & perks</p>
+              <BulletList tone="green" items={[
+                `A ${RAISE_PCT}% raise that stays through promotions and job changes (once per save)`,
+                'Permanent: better yearly raises and promotion odds',
+                'Permanent: 5% cheaper property and business buys',
+                'Permanent: 3% higher property and business sale proceeds',
+                'Networking +10, Happiness +4, Stress −6, Energy +2, Fulfillment +4'
+              ]} />
+            </div>
+          ) : (
+            <div className="mt-5 flex items-start gap-3 rounded-[18px] bg-orange-500/[0.08] p-4">
+              <ShieldAlert className="mt-0.5 shrink-0 text-orange-300" size={18} />
+              <div>
+                <p className="text-[15px] font-semibold text-orange-200">Certification requires 100%</p>
+                <p className="mt-1 text-[14px] text-slate-300">Retakes must start from Question 1.</p>
+                {!certified && lastMiss > 0 && (
+                  <p className="num mt-2 text-[12px] text-slate-400">Miss {lastMiss} of {COURSE_ATTEMPTS}</p>
+                )}
+                {penaltyApplied && !certified && (
+                  <p className="num mt-2 text-[14px] font-semibold text-rose-300">Retake fee: −${COURSE_RETAKE_FEE}. You have {COURSE_ATTEMPTS} more tries.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-5 flex flex-wrap gap-2.5">
+            <button
+              onClick={() => { setPhase('intro'); }}
+              className="btn-secondary ds-button--md"
+            >
+              Back
+            </button>
+
+            {lastOutcome === 'fail' && (
+              <button
+                onClick={() => resetRun()}
+                className="btn-primary ds-button--md"
+              >
+                <RefreshCw size={16} /> Start over
+              </button>
+            )}
+            {lastOutcome === 'pass' && (
+              <button
+                onClick={() => resetRun()}
+                className="btn-secondary ds-button--md"
+              >
+                <RefreshCw size={16} /> Practice again
+              </button>
+            )}
+          </div>
+        </PhasePanel>
+      )}
     </div>
   );
 }
