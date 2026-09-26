@@ -33,7 +33,7 @@ Done as planned; the time-lapse shows outside (rooms keep fixed light), so going
 
 ## Slice 3: events happen in the world ✅ (build 47)
 
-Done: cards open over the city with a place line (`services/townEvents.ts`). Not yet: a world moment staged at the place (the car at the garage bay, a letter prop on the doormat); the card's place line is the first step.
+Done: cards open over the city with a place line (`services/townEvents.ts`). Build 54 stages the waiting event at its place: a marker, a letter on the doorstep, and hazard lights on the parked car (`components/town/townEventStage.ts`, `docs/verification/event-stage-2026-09-25/`).
 
 - Today a life event forces the player back to the 2D shell. Instead, the event card opens inside the city, framed by a world moment:
   - the car's breakdown at the garage bay;

@@ -24,12 +24,13 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
     - the goals log, the dashboard card, the notice board and the city strip all read it;
     - month-close milestones are celebrated (App's `seenReady` ref);
     - energy and stress lead the Life tab and Profile.
-  - Builds 52–53 are on the branch only; releasing them needs Pieter's word.
-- **Validation:** 463 tests / 83 files and the production build pass on the branch.
+  - events staged at their place in 3D (build 54, `components/town/townEventStage.ts`): a marker, a letter on the doorstep, hazard lights on the parked car.
+  - Builds 52–54 are on the branch only; releasing them needs Pieter's word.
+- **Validation:** 468 tests / 84 files and the production build pass on the branch.
 - **Waiting on Pieter:**
   - pacing after the economy fix (about 14–20 game years to freedom for a careful index investor);
   - Phase 1 slice 4: try the "Start in the 3D city" setting, then decide whether the city becomes the default screen (and the dashboard a ledger drawer);
-  - whether to release builds 52–53 (pacing + the Freedom Track).
+  - whether to release builds 52–54 (pacing, the Freedom Track, event staging).
 - **Visual QA:** the town scene is a code-split chunk, so verify town deploys by grepping `TownModal-*.js`/`createTownScene-*.js`, not `index-*.js`. When the browser pane is hidden, use the dev handle `__town.advance(frames)` with `scripts/qa/capture-receiver.py` (HANDOVER §5).
 - **Ports and saves:** the user preview is `127.0.0.1:5187`; isolate QA on 5188 (5189 and 5191 were also used on 2026-09-25; see HANDOVER §5). Preserve the user's save and all tracked and untracked work.
 - **Pushing:** pushing the backup branch is fine. Merging to `main`, which deploys, needs Pieter's go-ahead; earlier deploys were authorised case by case. The release recipe (fast-forward only, verify the live bundle and a real save) is in `docs/verification/release-2026-09-25/`.
@@ -46,7 +47,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (83 files / 463 tests on `town-lighting-pass`, 2026-09-25; integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (84 files / 468 tests on `town-lighting-pass`, 2026-09-25; integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)
