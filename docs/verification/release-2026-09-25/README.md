@@ -190,3 +190,50 @@ netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb
 - **Functions and pages:** `validate-access`, `/educators` and `/teacher-packet` answer.
 - **The pre-release Alex save on the live site** (month 8, $10,091): it continues, and the city opens with every model at its new version. The header reads "Freedom 13% · free in about 18 years". No console errors.
 - **Not done live:** close-ups of the wave, the seated clip and the AO. The pane was hidden, and production has no frame-stepping handle. They were checked on the branch (`characters-polish-2026-09-25/`, `city-ao-2026-09-25/`).
+
+# Release 5: build 60 (2026-09-26, 06:45 PDT = 13:45 UTC)
+
+Pieter's word: "ship it, release 60".
+
+## What shipped
+
+`origin/main` was fast-forwarded from `e3097cae` to `e8e1d160` (pushed 13:45:47 UTC). That was 3 commits: the release-4 receipt, the 06:00 handover and build 60, with no config, function or dependency changes. The Netlify production deploy is `6ab7cc8da1c1eb000829f51d`, published 13:46:19 UTC, 32 s after the push.
+
+**Build 60, dialogs fit a phone** (found by the phone check, `docs/verification/phone-2026-09-26/`):
+- The shared `Modal`'s overlay scrolls, and the dialog has auto top/bottom margins.
+- Before, on a phone, the Sales quiz and Save and load had their close and action buttons off-screen, so a phone player couldn't take the Sales certification.
+
+**Rollback** to builds 40–59:
+
+```sh
+netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb9907db","deploy_id":"6ab757c433f3d00009919574"}'
+```
+
+## Checks
+
+- **Before the push:**
+  - a fast-forward, with the branch equal to `origin` and nothing on `main` missing from it;
+  - `netlify.toml`, `netlify/`, `package.json`, `package-lock.json`, `vite.config.ts` and `index.html` unchanged;
+  - 484 tests / 85 files.
+- **The live bundle:**
+  - the HTML serves `main-BmetnChC.js`, which holds the Modal's `marginTop:"auto",marginBottom:"auto"`;
+  - `main-ClrqlwwZ.css` has `.overflow-y-auto` and `.overscroll-contain`;
+  - the city chunk `TownModal-C2l7kCz_.js` passes `padding:0,overflow:"hidden"`;
+  - `createTownScene-35GZteHb.js` is unchanged and answers 200.
+- **Dialogs on the live site, iPhone 15 Pro WebKit (393×659):**
+
+  | Dialog | Build 60 live | Before (build 59) |
+  |---|---|---|
+  | Sales quiz | top 16, scrolls | top −73 |
+  | Save and load | top 16, scrolls | top −488 |
+  | Run summary, Glossary, Tutorial videos | fit, centred | fit, centred |
+
+  Measured with `docs/verification/phone-2026-09-26/modal-sweep.cjs` pointed at the live site.
+- **Functions and pages:** `validate-access`, `/educators` and `/teacher-packet` answer 200.
+- **The pre-release Alex save on the live site** (month 8, $10,091), at 393×660:
+  - it continues;
+  - Save and load opens at the top, with its close button at 29 px and the overlay scrolling;
+  - the city opens full-screen (0–660, overlay not scrollable) with the header "Freedom 13%";
+  - all eight models load with 200 at their current versions;
+  - no console errors.
+- **Not done live:** a visual capture of the city canvas (the pane was hidden) and the iPhone itself on production. The iPhone check of this code ran on the LAN build before the release.
