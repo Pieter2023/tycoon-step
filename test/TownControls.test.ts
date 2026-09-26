@@ -43,6 +43,11 @@ describe('third-person controls and Blender assets', () => {
     const city='public/models/town/freedom-square.glb';
     expect(read(city).extensionsUsed).toContain('KHR_draco_mesh_compression');
     expect(statSync(city).size).toBeLessThan(2_000_000);
+    // Baked ambient occlusion (scripts/build-town-assets.py): one shared 1024 atlas on the second UV set for every material.
+    const town = read(city);
+    expect(town.images).toHaveLength(1);
+    for (const m of town.materials) { expect(m.occlusionTexture.texCoord).toBe(1); expect(town.textures[m.occlusionTexture.index].source).toBe(0); }
+    for (const p of town.meshes.flatMap((m:any)=>m.primitives)) expect(Object.keys(p.attributes)).toContain('TEXCOORD_1');
   });
   it('ships the AI-modelled Alex on the townspeople rig', () => {
     // scripts/build-town-hero.py: same joint names, identity rest rotations and seven clips, so the player's

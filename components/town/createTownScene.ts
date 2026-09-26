@@ -264,7 +264,10 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   }
   // Vehicles are optional: the square still opens if only their file fails.
   // Bump when any model in public/models/town changes: the files keep their names, so browsers would otherwise reuse a cached copy.
-  const MODEL_VERSION = '20260925a', PEOPLE_VERSION = '20260925e', HERO_VERSION = '20260925g';
+  // The city's baked ambient occlusion (scripts/build-town-assets.py) scales only sky and ambient light, a modest share of
+  // the total, so it is strengthened to read at the follow camera's distance.
+  const TOWN_AO_STRENGTH = 1.4;
+  const MODEL_VERSION = '20260925d', PEOPLE_VERSION = '20260925e', HERO_VERSION = '20260925g';
   // The player's own model: the AI-modelled hero (scripts/build-town-hero.py) or the retired Sept-13 atelier Alex.
   const heroFile = options.hero ? `/models/town/town-hero-${options.hero}.glb?v=${HERO_VERSION}` : options.characterAtelier ? '/models/town/alex-atelier.glb?v=alex1' : null;
   Promise.all([load(`/models/town/freedom-square.glb?v=${MODEL_VERSION}`), load(`/models/town/town-people.glb?v=${PEOPLE_VERSION}`), load(`/models/town/town-vehicles.glb?v=${MODEL_VERSION}`).catch(() => null),heroFile?load(heroFile).catch(()=>null):Promise.resolve(null)]).then(([town, character, vehicles, hero]) => {
@@ -274,6 +277,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     character.scene.add(createContactShadow(1.1, 1.1, .55));
     outdoors.add(town.scene);if(library)dressTown(town.scene,library); player.add(character.scene); playerActor = addActor(character.scene, character.animations);
     palette = createSeasonPalette(town.scene); palette.apply(seasonOverride ?? season);
+    town.scene.traverse(o => { if (o instanceof THREE.Mesh && o.material instanceof THREE.MeshStandardMaterial && o.material.aoMap) o.material.aoMapIntensity = TOWN_AO_STRENGTH; });
     town.scene.traverse(o => { if (o instanceof THREE.Mesh && !Array.isArray(o.material) && o.material.name === 'glass' && o.material instanceof THREE.MeshStandardMaterial) { glassMaterial = o.material; glassMaterial.emissive.set('#ffc985'); glassMaterial.emissiveIntensity = 0; } });
     const playerSex = options.playerSex ?? 'm';
     styleCharacter(character.scene, { sex: playerSex, hair: playerSex === 'f' ? 'long' : 'short' });

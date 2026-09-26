@@ -128,8 +128,49 @@ for m in list(M.values()):
     if not objects: continue
     for o in objects:o.select_set(True)
     bpy.context.view_layer.objects.active=objects[0]; bpy.ops.object.join(); bpy.context.object.name='Town_'+m.name; bpy.ops.object.select_all(action='DESELECT')
+
+# Ambient occlusion baked into a second UV set: every merged mesh shares one lightmap atlas (UV map 'AO', exported as
+# TEXCOORD_1) and the glTF occlusion texture, which three.js applies to the sky and ambient light only, so corners,
+# the ground under benches and trees, and the feet of walls darken the way the sun's shadows alone cannot. It bakes at
+# 2048 and ships at 1024 (occlusion is soft, and the smaller map costs a quarter of the download and GPU memory);
+# the game strengthens it (TOWN_AO_STRENGTH in createTownScene.ts), because sky and ambient are a modest share of the light.
+AO_SIZE, AO_EXPORT, AO_DISTANCE, AO_SAMPLES = 2048, 1024, .6, 64
+def bake_ambient_occlusion():
+    scene=bpy.context.scene; meshes=[o for o in scene.objects if o.type=='MESH' and o.name.startswith('Town_')]
+    for o in meshes: o.data.uv_layers.active=o.data.uv_layers.new(name='AO')
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in meshes: o.select_set(True)
+    bpy.context.view_layer.objects.active=meshes[0]
+    bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.uv.smart_project(angle_limit=math.radians(66),island_margin=.003,area_weight=0,correct_aspect=True,scale_to_bounds=False)
+    bpy.ops.uv.pack_islands(margin=.003,rotate=True)     # all selected meshes in edit mode pack into one shared atlas
+    bpy.ops.object.mode_set(mode='OBJECT')
+    image=bpy.data.images.new('town-ao',AO_SIZE,AO_SIZE,alpha=False); image.generated_color=(1,1,1,1)
+    group=bpy.data.node_groups.new('glTF Material Output','ShaderNodeTree')   # the exporter's hook for occlusion
+    group.interface.new_socket('Occlusion',in_out='INPUT',socket_type='NodeSocketFloat')
+    for o in meshes:
+        tree=o.data.materials[0].node_tree; nodes=tree.nodes
+        uv=nodes.new('ShaderNodeUVMap'); uv.uv_map='AO'; uv.name='AO uv'
+        tex=nodes.new('ShaderNodeTexImage'); tex.image=image; tex.name='AO bake'; tree.links.new(uv.outputs['UV'],tex.inputs['Vector'])
+        sep=nodes.new('ShaderNodeSeparateColor'); sep.name='AO split'; tree.links.new(tex.outputs['Color'],sep.inputs['Color'])
+        out=nodes.new('ShaderNodeGroup'); out.node_tree=group; out.name='AO output'; tree.links.new(sep.outputs['Red'],out.inputs['Occlusion'])
+        nodes.active=tex
+    scene.render.engine='CYCLES'; scene.cycles.samples=AO_SAMPLES; scene.cycles.seed=0
+    if scene.world is None: scene.world=bpy.data.worlds.new('World')
+    scene.world.light_settings.distance=AO_DISTANCE
+    bpy.ops.object.bake(type='AO',margin=6,margin_type='EXTEND',use_clear=False)
+    image.scale(AO_EXPORT,AO_EXPORT); image.pack()
+    bpy.ops.object.select_all(action='DESELECT')
+    return meshes, image, group
+ao_meshes, ao_image, ao_group = bake_ambient_occlusion()
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(SOURCE,'freedom-square.blend'))
-bpy.ops.export_scene.gltf(filepath=os.path.join(OUT,'freedom-square.glb'),export_format='GLB',export_animations=False,export_yup=True,export_draco_mesh_compression_enable=True,export_draco_mesh_compression_level=6)
+bpy.ops.export_scene.gltf(filepath=os.path.join(OUT,'freedom-square.glb'),export_format='GLB',export_animations=False,export_yup=True,export_draco_mesh_compression_enable=True,export_draco_mesh_compression_level=6,export_image_format='JPEG',export_jpeg_quality=85)
+# The character below reuses these materials: take the bake nodes back out.
+for o in ao_meshes:
+    nodes=o.data.materials[0].node_tree.nodes
+    for name in ('AO uv','AO bake','AO split','AO output'):
+        if name in nodes: nodes.remove(nodes[name])
+bpy.data.node_groups.remove(ao_group)
 
 # Character: shaped face, shoes and clothing; articulated limbs with named clips.
 bpy.ops.object.select_all(action='SELECT'); bpy.ops.object.delete(use_global=False)
