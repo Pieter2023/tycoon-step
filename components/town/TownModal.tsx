@@ -14,6 +14,7 @@ import { incomeLabel, incomeYield } from '../../services/investmentModel';
 import { calculateMonthlyCashFlowEstimate, financialFreedom } from '../../services/gameLogic';
 import { freedomPace } from '../../services/freedomPace';
 import { freedomTrack } from '../../services/freedomTrack';
+import { eventPlace } from '../../services/townEvents';
 import { windowDisplays, fountainLevel } from '../../services/townWealth';
 import { newMilestones, type MilestoneId } from '../../services/townMilestones';
 import { createTownScene, TownController } from './createTownScene';
@@ -282,6 +283,8 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
   // Wealth you can see: the shop windows show the player's own money, the fountain runs fuller near freedom.
   useEffect(()=>{controller.current?.setWindows?.(windowDisplays(state));},[state.assets,state.cafe,state.month,loading]);
   useEffect(()=>{controller.current?.setFountain?.(fountainLevel(state));},[state.assets,state.month,state.hasWon,state.lifestyle,loading]);
+  // Events happen in the world: a waiting life event is staged at its place (a marker, a letter on the doorstep, hazard lights in the bay).
+  useEffect(()=>{controller.current?.stageEvent?.(state.pendingScenario?eventPlace(state.pendingScenario.category).place:null);},[state.pendingScenario,loading]);
   // Milestone moments: the biggest new one is celebrated in the world once, and all new ones are recorded.
   const celebratedMilestones=useRef(new Set<MilestoneId>());
   useEffect(()=>{

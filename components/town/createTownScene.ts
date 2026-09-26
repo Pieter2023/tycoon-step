@@ -38,6 +38,8 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { clampTownPoint, nearbyPlace, routeToPlace, TOWN_PLACES, TownPlaceId, TownPoint } from './townWorld';
+import { createEventStage } from './townEventStage';
+import type { EventPlace } from '../../services/townEvents';
 import { cameraRelativeMovement, normalizeStick, cameraPreset, cameraFov, CameraPreset, turnTowards, isWalkTap, WALK_SPEED, JOG_SPEED } from './townControls';
 
 export type TownController = {
@@ -50,7 +52,10 @@ export type TownController = {
   /** Wealth you can see: the Main Street window displays, the Freedom Fountain (0–1) and a milestone moment. */
   setWindows?: (rows: Record<TownPlaceId, WindowDisplay>) => void; setFountain?: (level: number) => void; moment?: (kind: 'ribbon' | 'coins' | 'fireworks') => void;
   /** Sleep through the night: the sky runs to the next sunrise, and the day continues from there. */
-  timeLapse?: () => void; setSound:(enabled:boolean)=>void; visitCart:()=>void; pause:(paused:boolean)=>void; dispose: () => void;
+  timeLapse?: () => void;
+  /** Stage a waiting life event where it happens (components/town/townEventStage.ts), or clear it with null. */
+  stageEvent?: (place: EventPlace | null) => void;
+  setSound:(enabled:boolean)=>void; visitCart:()=>void; pause:(paused:boolean)=>void; dispose: () => void;
 };
 type Actor = { root: THREE.Object3D; mixer: THREE.AnimationMixer; actions: Record<string, THREE.AnimationAction>; current: string };
 const disposeTree = (root: THREE.Object3D) => {
@@ -195,6 +200,9 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   const life=createTownLife(reducedMotion);outdoors.add(life.root);
   const fireworks=createFireworks(reducedMotion);outdoors.add(fireworks.root);let celebrating=false,momentUntil=-1;
   const windows=createWindowDisplays();outdoors.add(windows.root);
+  // A waiting life event, staged where it happens: a marker, a letter on the doorstep, the parked car's hazard lights.
+  const eventStage=createEventStage(reducedMotion);outdoors.add(eventStage.root);
+  const garageLamps=()=>{const out:THREE.MeshStandardMaterial[]=[];parking.traverse(o=>{if(o instanceof THREE.Mesh&&!Array.isArray(o.material)&&['lamp','tail'].includes((o.material as THREE.MeshStandardMaterial).name))out.push(o.material as THREE.MeshStandardMaterial);});return out;};
   // A milestone moment in the world: a short fireworks show, a ribbon-cutting burst at the business row, or a coin burst at the Exchange door.
   const controllerMoment=(kind:'ribbon'|'coins'|'fireworks')=>{
     if(reducedMotion)return;ambience?.chime('celebrate');
@@ -270,13 +278,13 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     if (vehicles) {
       traffic = createTownTraffic(vehicles.scene, reducedMotion); outdoors.add(traffic.root);
       for (const vehicle of traffic.fleet) vehicle.root.add(createContactShadow(vehicle.length + .5, 2.4, .5, -.16));
-      carPrototype = vehicles.scene.getObjectByName('Car') ?? undefined; applyGarage();
+      carPrototype = vehicles.scene.getObjectByName('Car') ?? undefined; applyGarage(); if (eventStage.place === 'garage') eventStage.set('garage', garageLamps());
       const bike = vehicles.scene.getObjectByName('Bike'), dog = vehicles.scene.getObjectByName('Dog');
       if (bike) { const rider = cloneSkinned(character.scene); styleCharacter(rider, residentStyle(12)); const riderShadow = rider.getObjectByName(CONTACT_SHADOW_NAME); if (riderShadow) riderShadow.visible = false; cyclist = createCyclist(bike, rider, reducedMotion); outdoors.add(cyclist.root); }
       if (dog) { dogWalker = createDogWalker(dog, reducedMotion); outdoors.add(dogWalker.root, dogWalker.leash); }
     }
     // Dev-only QA handle for inspecting traffic and pigeons from the console; stripped from production builds.
-    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { fountain: (level: number) => { fountainFill = Math.max(0, Math.min(1, level)); shapeJet(); }, moment: (kind: 'ribbon' | 'coins' | 'fireworks') => controllerMoment(kind), traffic, life, cyclist, dogWalker, player: () => ({ x: player.position.x, z: player.position.z }), view: () => ({ yaw, pitch, distance, goal: yawGoal, camera: { x: camera.position.x, y: camera.position.y, z: camera.position.z } }), setPhase: (p?: number) => { phaseOverride = p; }, celebrate: (won: boolean) => { celebrating = won; }, fireworks, walk: (x: number, z: number) => { if (!inside) { clearMovement(); path = findTownPath(player.position, { x, z }); } }, setView: (v: { x?: number; z?: number; yaw?: number; pitch?: number; distance?: number }) => { clearMovement(); stopPath(); if (!inside && v.x !== undefined && v.z !== undefined && isWalkable({ x: v.x, z: v.z })) { player.position.x = v.x; player.position.z = v.z; cameraTarget.set(v.x, 1.65, v.z); } if (v.yaw !== undefined) { yaw = v.yaw; yawGoal = undefined; } if (v.pitch !== undefined) pitch = v.pitch; if (v.distance !== undefined) zoomDistance = distance = v.distance; }, residents: () => pedestrians.map(p => ({ x: p.root.position.x, z: p.root.position.z, visible: p.root.visible, seated: p.seat !== undefined })), quality: () => quality, setQuality: (mode: QualityMode) => { governor.set(initialQuality(mode, deviceHints()), mode === 'auto'); applyQuality(governor.level); }, governor, setSeason: (s?: Season) => { seasonOverride = s; palette?.apply(s ?? season); }, lighting: LIGHT_BALANCE, info: () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }), toneMapping: (curve: 'aces' | 'neutral') => { renderer.toneMapping = curve === 'aces' ? THREE.ACESFilmicToneMapping : THREE.NeutralToneMapping; }, advance: (frames = 1) => { if (!contextAvailable) return; for (let i = 0; i < frames; i++) step(performance.now(), 1000 / 60, 1 / 60); } };
+    if (import.meta.env.DEV) (window as unknown as { __town?: unknown }).__town = { stageEvent: (place: EventPlace | null) => eventStage.set(place, place === 'garage' ? garageLamps() : []), fountain: (level: number) => { fountainFill = Math.max(0, Math.min(1, level)); shapeJet(); }, moment: (kind: 'ribbon' | 'coins' | 'fireworks') => controllerMoment(kind), traffic, life, cyclist, dogWalker, player: () => ({ x: player.position.x, z: player.position.z }), view: () => ({ yaw, pitch, distance, goal: yawGoal, camera: { x: camera.position.x, y: camera.position.y, z: camera.position.z } }), setPhase: (p?: number) => { phaseOverride = p; }, celebrate: (won: boolean) => { celebrating = won; }, fireworks, walk: (x: number, z: number) => { if (!inside) { clearMovement(); path = findTownPath(player.position, { x, z }); } }, setView: (v: { x?: number; z?: number; yaw?: number; pitch?: number; distance?: number }) => { clearMovement(); stopPath(); if (!inside && v.x !== undefined && v.z !== undefined && isWalkable({ x: v.x, z: v.z })) { player.position.x = v.x; player.position.z = v.z; cameraTarget.set(v.x, 1.65, v.z); } if (v.yaw !== undefined) { yaw = v.yaw; yawGoal = undefined; } if (v.pitch !== undefined) pitch = v.pitch; if (v.distance !== undefined) zoomDistance = distance = v.distance; }, residents: () => pedestrians.map(p => ({ x: p.root.position.x, z: p.root.position.z, visible: p.root.visible, seated: p.seat !== undefined })), quality: () => quality, setQuality: (mode: QualityMode) => { governor.set(initialQuality(mode, deviceHints()), mode === 'auto'); applyQuality(governor.level); }, governor, setSeason: (s?: Season) => { seasonOverride = s; palette?.apply(s ?? season); }, lighting: LIGHT_BALANCE, info: () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }), toneMapping: (curve: 'aces' | 'neutral') => { renderer.toneMapping = curve === 'aces' ? THREE.ACESFilmicToneMapping : THREE.NeutralToneMapping; }, advance: (frames = 1) => { if (!contextAvailable) return; for (let i = 0; i < frames; i++) step(performance.now(), 1000 / 60, 1 / 60); } };
     if(library)void load('/models/town/bistro-furniture.glb?v=atelier1').then(asset=>{if(alive)cafeRoom.installFurniture(asset.scene);}).catch(()=>{});
     if(library)void load('/models/town/cafe-espresso.glb?v=atelier1').then(asset=>{if(alive){cart.installMachine(asset.scene);cafeRoom.installMachine(asset.scene.clone(true));}}).catch(()=>{});
     // Twelve neighbours: walkers on both pavements plus two resting on the promenade benches.
@@ -459,7 +467,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       if(!inside){
         const here={x:player.position.x,z:player.position.z};
         for(const pass of traffic?.update(dt,here,rainy||dayPhaseDark(),true)??[])ambience?.carPass(pass.pan,pass.closeness);
-        life.update(dt,elapsed,here,true);cyclist?.update(dt,elapsed);if(fireworks.update(dt,elapsed,celebrating||elapsed<momentUntil)&&fireworks.launched%3===1)ambience?.chime('celebrate');
+        life.update(dt,elapsed,here,true);cyclist?.update(dt,elapsed);eventStage.update(elapsed);if(fireworks.update(dt,elapsed,celebrating||elapsed<momentUntil)&&fireworks.launched%3===1)ambience?.chime('celebrate');
         if(dogWalker&&pedestrians[10])dogWalker.update(dt,elapsed,pedestrians[10].root,pedestrians[10].root.visible);
         ambience?.tick(Math.hypot(here.x,here.z-12));
       }
@@ -620,7 +628,8 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     setHustles(count){home.setHustles(count);},
     setFamily(figures){familyFigures=figures;applyFamily();},
     setNotices(notice){drawNotices(notice);},
-    setGarage(cars){garageCars=cars;applyGarage();},
+    setGarage(cars){garageCars=cars;applyGarage();if(eventStage.place==='garage')eventStage.set('garage',garageLamps());},
+    stageEvent(place){eventStage.set(place,place==='garage'?garageLamps():[]);},
     walkToGarage(){if(inside)transition(false);clearMovement();path=findTownPath(player.position,{x:GARAGE.x,z:GARAGE.z});const end=path.at(-1);if(end){destinationRing.position.set(end.x,.235,end.z);destinationRing.visible=true;}},
     setAdvice(headline){adviceHeadline=headline;},
     walkToCafeCounter(){if(cafeInside){clearMovement();path=[{x:0,z:.8}];}},
