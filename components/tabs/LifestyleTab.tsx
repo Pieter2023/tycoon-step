@@ -168,27 +168,12 @@ const LifestyleTab: React.FC<LifestyleTabProps> = (props) => {
         ))}
       </div>
 
-      {/* Stats Overview */}
+      {/* Stats Overview. Phase 1 slice 5: energy and stress lead, because they set this month's actions and the
+          burnout risk; the other four sit under "More about you" with what each one actually changes. */}
       <div className="mt-8 glass-panel p-5">
         <h3 className="font-bold text-white mb-4">Your Stats</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {[
-            {
-              label: 'Happiness',
-              value: gameState.stats.happiness,
-              color: 'emerald',
-              tipId: 'stat-happiness',
-              tipText:
-                'Happiness affects promotions: above ~50 increases promotion chance, below ~50 reduces it.',
-            },
-            {
-              label: 'Health',
-              value: gameState.stats.health,
-              color: 'red',
-              tipId: 'stat-health',
-              tipText:
-                'Health affects productivity: Health < 30 reduces Monthly Actions by 1. Low health also increases the chance of costly medical events.',
-            },
+        {(() => {
+          const stats = [
             {
               label: 'Energy',
               value: gameState.stats.energy,
@@ -207,6 +192,22 @@ const LifestyleTab: React.FC<LifestyleTabProps> = (props) => {
                 'Stress reduces promotions and productivity: above ~30 lowers promotion chance; Stress ≥ 85 reduces Monthly Actions by 1. High stress drains health over time.',
             },
             {
+              label: 'Happiness',
+              value: gameState.stats.happiness,
+              color: 'emerald',
+              tipId: 'stat-happiness',
+              tipText:
+                'Happiness affects promotions: above ~50 increases promotion chance, below ~50 reduces it.',
+            },
+            {
+              label: 'Health',
+              value: gameState.stats.health,
+              color: 'red',
+              tipId: 'stat-health',
+              tipText:
+                'Health affects productivity: Health < 30 reduces Monthly Actions by 1. Low health also increases the chance of costly medical events.',
+            },
+            {
               label: 'Networking',
               value: gameState.stats.networking,
               color: 'blue',
@@ -220,9 +221,10 @@ const LifestyleTab: React.FC<LifestyleTabProps> = (props) => {
               color: 'cyan',
               tipId: 'stat-financialiq',
               tipText:
-                'Financial IQ boosts passive income (up to ~5%) and helps you make better investment decisions over time.',
+                'Financial IQ grows as you learn and make informed choices. At 60 or more it adds a few points to your yearly performance review.',
             },
-          ].map(stat => (
+          ];
+          const tile = (stat: typeof stats[number]) => (
             <div key={stat.label} className="glass-tile p-3">
               <p className="text-slate-400 text-xs mb-2 flex items-center gap-1 font-medium uppercase">
                 <span>{stat.label}</span>
@@ -236,8 +238,15 @@ const LifestyleTab: React.FC<LifestyleTabProps> = (props) => {
                 <span className="text-white text-sm font-bold w-6 text-right">{stat.value}</span>
               </div>
             </div>
-          ))}
-        </div>
+          );
+          return <>
+            <div className="grid grid-cols-2 gap-4" aria-label="Energy and stress">{stats.slice(0, 2).map(tile)}</div>
+            <details className="mt-4" aria-label="More about you">
+              <summary className="cursor-pointer text-sm font-semibold text-slate-300">More about you (happiness, health, networking, financial IQ)</summary>
+              <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4">{stats.slice(2).map(tile)}</div>
+            </details>
+          </>;
+        })()}
 
         {/* Quick feedback on impact */}
         <div className="mt-4 glass-tile p-4 border-l-4 border-l-purple-500">

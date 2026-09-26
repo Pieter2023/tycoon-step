@@ -1,5 +1,5 @@
 import type { GameState, QuestDefinition, QuestReward, QuestTrack } from '../types';
-import { QUEST_DEFINITIONS, getQuestById, getInitialQuestState } from '../constants';
+import { QUEST_DEFINITIONS, getQuestById, getInitialQuestState, FREEDOM_TRACK } from '../constants';
 import { getQuestProgress } from './gameLogic';
 import { monthlyChallenges, challengeProgress, currentSnapshot } from './townChallenges';
 import { tl } from '../i18n/town';
@@ -11,11 +11,11 @@ import { tl } from '../i18n/town';
 // callers translate them with the app's `t`.
 export const money = (n: number) => (n < 0 ? '-' : '') + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
 export type QuestStatus = 'ready' | 'active' | 'locked' | 'completed';
-export type QuestCard = { id: string; titleKey: string; descriptionKey: string; hintKey?: string; status: QuestStatus; progress: number; current: number; target: number; unit: 'money' | 'count' | 'months' | 'score'; expenseBasis?: number; reward: QuestReward; unlockAfter: string[]; difficulty: QuestDefinition['difficulty'] };
+export type QuestCard = { id: string; titleKey: string; descriptionKey: string; hintKey?: string; status: QuestStatus; progress: number; current: number; target: number; unit: 'money' | 'count' | 'months' | 'score' | 'percent'; expenseBasis?: number; reward: QuestReward; unlockAfter: string[]; difficulty: QuestDefinition['difficulty'] };
 export type QuestBoard = { track?: QuestTrack; trackKey?: string; ready: QuestCard[]; active: QuestCard[]; upNext: QuestCard[]; completed: number; total: number };
 
 export const trackKey = (track?: QuestTrack) => track ? `quests.track.${track}` : undefined;
-export const progressText = (card: Pick<QuestCard, 'current' | 'target' | 'unit'>) => card.unit === 'money' ? `${money(card.current)} ${tl('of','de')} ${money(card.target)}` : card.unit === 'months' ? `${card.current.toFixed(1)} ${tl('of','de')} ${card.target.toFixed(1)} ${tl('months','meses')}` : `${Math.round(card.current)} ${tl('of','de')} ${Math.round(card.target)}`;
+export const progressText = (card: Pick<QuestCard, 'current' | 'target' | 'unit'>) => card.unit === 'money' ? `${money(card.current)} ${tl('of','de')} ${money(card.target)}` : card.unit === 'percent' ? `${Math.floor(card.current)}% ${tl('of','de')} ${card.target}%` : card.unit === 'months' ? `${card.current.toFixed(1)} ${tl('of','de')} ${card.target.toFixed(1)} ${tl('months','meses')}` : `${Math.round(card.current)} ${tl('of','de')} ${Math.round(card.target)}`;
 const STAT_NAMES: Record<string, [string, string]> = { financialIQ: ['financial IQ', 'IQ financiero'], happiness: ['happiness', 'felicidad'], health: ['health', 'salud'], energy: ['energy', 'energía'], stress: ['stress', 'estrés'], networking: ['networking', 'contactos'], fulfillment: ['fulfillment', 'realización'] };
 export function rewardText(reward: QuestReward): string {
   const parts: string[] = [];
@@ -29,6 +29,9 @@ const card = (state: GameState, quest: QuestDefinition, status: QuestStatus): Qu
   const info = getQuestProgress(state, quest.id);
   return { id: quest.id, titleKey: quest.title, descriptionKey: quest.description, hintKey: quest.hint, status, progress: status === 'completed' || status === 'ready' ? 1 : info?.progress ?? 0, current: info?.current ?? 0, target: info?.target ?? quest.target, unit: info?.unit ?? 'count', expenseBasis: info?.expenseBasis, reward: quest.reward, unlockAfter: (quest.unlockAfter ?? []).map(id => getQuestById(id)?.title ?? id), difficulty: quest.difficulty };
 };
+// Freedom Track milestones come first, in chapter order (services/freedomTrack.ts), then story and side goals.
+const TRACK_ORDER = FREEDOM_TRACK.flatMap(c => c.milestones);
+const trackRank = (id: string) => { const i = TRACK_ORDER.indexOf(id); return i < 0 ? TRACK_ORDER.length : i; };
 export function questBoard(state: GameState): QuestBoard {
   const characterId = state.character?.id, quests = state.quests ?? getInitialQuestState(characterId);
   const mine = QUEST_DEFINITIONS.filter(q => !q.characterId || q.characterId === characterId);
@@ -40,7 +43,7 @@ export function questBoard(state: GameState): QuestBoard {
   return {
     track: quests.track, trackKey: trackKey(quests.track),
     ready: mine.filter(q => ready.has(q.id)).map(q => card(state, q, 'ready')),
-    active: mine.filter(q => active.has(q.id)).map(q => card(state, q, 'active')),
+    active: mine.filter(q => active.has(q.id)).sort((a, b) => trackRank(a.id) - trackRank(b.id)).map(q => card(state, q, 'active')),
     upNext: upNext.map(q => card(state, q, 'locked')),
     completed: mine.filter(q => completed.has(q.id)).length, total: mine.length,
   };

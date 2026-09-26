@@ -40,6 +40,7 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 19. `15c4812`: unique asset ids and a real production save as a migration test (build 51). **Released: `main` = `15c4812`.**
 20. `5c3c0a9`: release receipt; the harness runs any difficulty.
 21. `388c9bc`: pacing (build 52): "free in about N years at this pace", Maria's student budget, and each difficulty's description states its pace. Receipt: `docs/verification/pacing-2026-09-25/`. Not released yet.
+22. `feat(track): Phase 1 slice 5, the Freedom Track (build 53)`: one milestone track in four chapters, with story and side goals alongside and energy and stress leading the meters. Receipt: `docs/verification/phase1-slice5-2026-09-25/`. Not released yet.
 
 ## 1b. Where the last session stopped (2026-09-25, evening PDT)
 
@@ -53,7 +54,13 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
    - the slow meter gets a countdown, "Free in about N years at this pace" (`services/freedomPace.ts`), on the dashboard, the city header and the demo wall;
    - Maria starts on a student budget (she was $93 a month short on Normal and went bankrupt on Hard);
    - each difficulty's description states its measured pace.
-2. **Slice 5, one milestone track.** Merge quests, notice-board challenges and the guided journeys into one track, and cut the meters on screen down to what matters.
+2. ✅ **Slice 5, build 53, the Freedom Track** (`docs/verification/phase1-slice5-2026-09-25/`):
+   - the core quests in four chapters (Safety first → Build the base → Money that works → Freedom), run inside the quest engine, with new coast / 25 / 50 / 75% milestones;
+   - story and side goals share two slots;
+   - shown on the dashboard, in the goals log (retitled), on the notice board and in the city strip;
+   - month-close milestones and finished chapters are celebrated (a gap the old sync had);
+   - energy and stress lead the Life tab and Profile.
+3. **Release builds 52–53: waiting for Pieter's word.** His go-ahead covered the 40–51 release; these two change the goal screens and pacing copy, so they wait for a fresh yes. The recipe is in `docs/verification/release-2026-09-25/`: fast-forward `main`, then check the live bundle and a real save.
 
 Then continue §3 in order: stage events at their place in 3D, the visual list, and a Chromebook check.
 
@@ -73,9 +80,10 @@ Then continue §3 in order: stage events at their place in 3D, the visual list, 
 2. **The economy fix is done** (build 44, approved 2026-09-25): see `docs/verification/economy-2026-09-25/`. **Pacing was delegated to Claude on 2026-09-25** ("decide whatever you think works best overall"); the decision and its numbers go in §3.
 3. **Still open from June:** whether the Daily Challenge should stay demo-gated (see the GTM section of CLAUDE.md).
 4. **Walk bob:** fixed in build 43 (approved).
-5. **Phase 1, slices 4–5** (`docs/phase1-plan.md`):
-   - Slice 4: try the "Start in the 3D city" setting (Quick actions, build 50), then decide whether the city becomes the default screen for everyone and whether the dashboard becomes a "ledger" drawer.
-   - Slice 5: decide what to keep when quests, notice-board challenges and journeys merge into one milestone track.
+5. **Phase 1:**
+   - **Slice 4:** try the "Start in the 3D city" setting (Quick actions, build 50), then decide whether the city becomes the default screen for everyone and whether the dashboard becomes a "ledger" drawer. Claude kept it opt-in because the Chromebook, the classroom device, is untested.
+   - **Slice 5:** built as the Freedom Track (build 53). Say what to change.
+6. **Ship builds 52–53?** Pacing and the Freedom Track are verified on the branch. Say the word to fast-forward `main`.
 
 Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the AI Alex cost 38 (receipt: `docs/verification/hero-alex-2026-09-25/`). Still: never spend credits without a fresh yes.
 
@@ -87,7 +95,7 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
    - ✅ slice 1, wealth you can see: freedom meter in the city header, window displays, the Freedom Fountain, milestone moments (build 46);
    - ✅ slices 2–3: sleep at home to end the month with morning mail; events open over the city with a place line (build 47);
    - 🔨 slice 4 as an opt-in setting, "Start in the 3D city" (build 50, `docs/verification/phase1-slice4-2026-09-25/`). Making it the default and the ledger drawer need Pieter's call;
-   - 🗳 slice 5, one milestone track: needs Pieter's call;
+   - ✅ slice 5, one milestone track: the Freedom Track (build 53);
    - not yet: staging events at their place in 3D (the car at the garage bay, a letter prop).
 4. **More visuals:**
    - ✅ lighter sign lettering (build 48: −125k triangles; kept 3D, dropped the bevel and curve resolution);

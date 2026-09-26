@@ -18,7 +18,7 @@ import {
 import { 
   CAREER_PATHS, LIFESTYLE_OPTS, DIFFICULTY_SETTINGS, AI_CAREER_IMPACT,
   EDUCATION_OPTIONS, MORTGAGE_OPTIONS, ALL_LIFE_EVENTS, getFinancialFreedomTarget, MARKET_ITEMS,
-  QUEST_DEFINITIONS, getInitialQuestState, getQuestById
+  QUEST_DEFINITIONS, getInitialQuestState, getQuestById, FREEDOM_TRACK, FREEDOM_TRACK_IDS, SIDE_GOAL_SLOTS, MAX_ACTIVE_QUESTS
 } from '../constants';
 import { formatCurrencyValue } from '../i18n';
 
@@ -305,7 +305,7 @@ const normalizeQuestState = (qs: any, characterId?: string): QuestState => {
       const quest = getQuestById(id);
       return quest && (!quest.characterId || quest.characterId === characterId);
     }))
-    .slice(0, 3);
+    .slice(0, MAX_ACTIVE_QUESTS);
 
   return {
     active,
@@ -321,7 +321,7 @@ export type QuestProgressInfo = {
   target: number;
   progress: number; // 0..1
   complete: boolean;
-  unit: 'money' | 'count' | 'months' | 'score';
+  unit: 'money' | 'count' | 'months' | 'score' | 'percent';
   // For CASH_RESERVE_MONTHS we expose the monthly expense used for the calculation.
   expenseBasis?: number;
 };
@@ -390,11 +390,18 @@ export const getQuestProgress = (state: GameState, questId: string): QuestProgre
       // IMPORTANT: avoid calling random side-hustle variance in UI-driven helpers.
       const expenses = calculateMonthlyCashFlowEstimate(state).expenses;
       expenseBasis = expenses;
+      // Cash and savings deposits both count: a high-yield savings account is where an emergency fund belongs.
+      const liquid = (state.cash || 0) + (state.assets || []).filter(a => a.type === AssetType.SAVINGS).reduce((n, a) => n + a.value * (a.quantity ?? 1), 0);
       if (expenses <= 0) {
-        current = state.cash > 0 ? target : 0;
+        current = liquid > 0 ? target : 0;
       } else {
-        current = (state.cash || 0) / expenses;
+        current = liquid / expenses;
       }
+      break;
+    }
+    case 'FREEDOM_COVERAGE': {
+      unit = 'percent';
+      current = Math.round(financialFreedom(state).coverage * 1000) / 10;
       break;
     }
     case 'CREDIT_RATING': {
@@ -483,6 +490,8 @@ const isQuestEligible = (
   characterId?: string
 ): boolean => {
   if (completedSet.has(q.id) || readySet.has(q.id) || activeSet.has(q.id)) return false;
+  // Freedom Track milestones open by chapter (updateQuests), never as side goals.
+  if (FREEDOM_TRACK_IDS.has(q.id)) return false;
   if (q.characterId && q.characterId !== characterId) return false;
   if (!q.characterId && characterId === undefined && mode === 'TRACK') {
     // No special handling needed, but keep for clarity.
@@ -562,23 +571,40 @@ export const updateQuests = (state: GameState): GameState => {
     }
   }
 
-  // 3) Fill active slots (max 3), preferring track quests when a track exists
-  const activeSet = new Set<string>(active);
-  while (active.length < 3) {
-    let next: QuestDefinition | undefined;
+  // 3) The Freedom Track: the current chapter's milestones are active together, and story and side quests share
+  //    SIDE_GOAL_SLOTS beside them (the character's story first, then the inferred branch, then the rest). A
+  //    milestone that is already met when its chapter opens moves straight to ready, so passes repeat until settled.
+  for (let pass = 0; pass < FREEDOM_TRACK.length + 2; pass++) {
+    const chapter = FREEDOM_TRACK.find(c => c.milestones.some(id => !doneSet.has(id)));
+    const inChapter = new Set(chapter?.milestones ?? []);
+    // Older saves may hold a later chapter's milestone as active; it waits for its chapter.
+    active = active.filter(id => !FREEDOM_TRACK_IDS.has(id) || inChapter.has(id));
+    for (const id of chapter?.milestones ?? []) if (!doneSet.has(id) && !active.includes(id)) active.push(id);
 
-    if (quests.track) {
-      next = QUEST_DEFINITIONS.find(q => isQuestEligible(q, doneSet, completedSet, readySet, activeSet, quests.track as InferredTrack, 'TRACK', characterId));
+    const activeSet = new Set<string>(active);
+    let sideCount = active.filter(id => !FREEDOM_TRACK_IDS.has(id)).length;
+    while (sideCount < SIDE_GOAL_SLOTS) {
+      const eligible = (q: QuestDefinition, mode: 'TRACK' | 'GLOBAL') => isQuestEligible(q, doneSet, completedSet, readySet, activeSet, quests.track as InferredTrack, mode, characterId);
+      const next = QUEST_DEFINITIONS.find(q => q.characterId && q.characterId === characterId && eligible(q, 'GLOBAL'))
+        ?? (quests.track ? QUEST_DEFINITIONS.find(q => eligible(q, 'TRACK')) : undefined)
+        ?? QUEST_DEFINITIONS.find(q => eligible(q, 'GLOBAL'));
+      if (!next) break;
+      active.push(next.id);
+      activeSet.add(next.id);
+      sideCount++;
     }
 
-    if (!next) {
-      next = QUEST_DEFINITIONS.find(q => isQuestEligible(q, doneSet, completedSet, readySet, activeSet, quests.track as InferredTrack, 'GLOBAL', characterId));
+    let moved = false;
+    for (const id of [...active]) {
+      const info = getQuestProgress(newState, id);
+      if (!info?.complete) continue;
+      active = active.filter(a => a !== id);
+      quests.readyToClaim.push(id);
+      readySet.add(id);
+      doneSet.add(id);
+      moved = true;
     }
-
-    if (!next) break;
-
-    active.push(next.id);
-    activeSet.add(next.id);
+    if (!moved) break;
   }
 
   newState.quests = {

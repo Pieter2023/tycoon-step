@@ -602,7 +602,7 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
           <strong className="text-sm text-white">{action.title}</strong><span className="block text-xs leading-5 text-slate-300">{action.subtitle}</span><span className="block text-xs text-slate-400">{action.disabledReason || action.details}</span>
         </button>)}</div>
     </section>
-    {gameState.firstSteps?.reviewed && <section className="tycoon-panel p-4"><h2 className="mb-3 text-lg font-bold">{t('shell.commandDashboard.your_next_milestone')}</h2><NextBestStep gameState={gameState} isProcessing={isProcessing} onClaimQuest={onClaimQuest} onOpenGoals={onOpenGoals} /></section>}
+    {gameState.firstSteps?.reviewed && <section className="tycoon-panel p-4"><h2 className="mb-3 text-lg font-bold">{t('track.title')}</h2><NextBestStep gameState={gameState} isProcessing={isProcessing} onClaimQuest={onClaimQuest} onOpenGoals={onOpenGoals} /></section>}
     <details className="tycoon-panel p-4"><summary className="cursor-pointer text-sm font-semibold">{t('shell.commandDashboard.recent_decisions_and_events')}</summary><div className="mt-3"><EventFeed events={events} limit={3} /></div></details>
     <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs text-slate-400">{t('shell.commandDashboard.freedom_target', { target: formatMoney(targetPassive), ratio: ratioLabel })}</p>{props.pace && <FreedomPaceLine pace={props.pace} className="mt-0.5 text-xs font-semibold" />}</div>{viewToggle}</div>
   </div>;
@@ -921,17 +921,9 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
           </div>
 
           <div className="tycoon-panel p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <p className="tycoon-kicker">{t('shell.commandDashboard.goals')}</p>
-                <h3 className="mt-1 text-lg font-semibold text-white">{t('shell.commandDashboard.next_best_step')}</h3>
-              </div>
-              <button
-                type="button"
-                onClick={onOpenGoals}
-                className="rounded-md border border-slate-700 px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:border-emerald-400/50"
-              >{t('shell.commandDashboard.open')}
-              </button>
+            <div className="mb-4">
+              <p className="tycoon-kicker">{t('shell.commandDashboard.goals')}</p>
+              <h3 className="mt-1 text-lg font-semibold text-white">{t('track.title')}</h3>
             </div>
             <NextBestStep
               gameState={gameState}

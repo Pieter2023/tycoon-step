@@ -2284,7 +2284,6 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
     metric: 'TOTAL_INVESTED',
     target: 10000,
     reward: { stats: { financialIQ: 4 }, creditRating: 10 },
-    unlockAfter: ['Q_FIRST_INVESTMENT'],
     hint: 'quests.Q_INVESTED_10K.hint'
   },
   {
@@ -2296,7 +2295,6 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
     metric: 'DIVERSIFY_ASSET_TYPES',
     target: 3,
     reward: { stats: { financialIQ: 4, happiness: 2 } },
-    unlockAfter: ['Q_INVESTED_10K'],
     hint: 'quests.Q_DIVERSIFY_3.hint'
   },
   {
@@ -2308,7 +2306,6 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
     metric: 'PASSIVE_INCOME',
     target: 500,
     reward: { cash: 500, stats: { happiness: 5 } },
-    unlockAfter: ['Q_DIVERSIFY_3'],
     hint: 'quests.Q_PASSIVE_500.hint'
   },
   {
@@ -2320,7 +2317,6 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
     metric: 'CASH_RESERVE_MONTHS',
     target: 3,
     reward: { creditRating: 25, stats: { financialIQ: 3, stress: -8, happiness: 3 } },
-    unlockAfter: ['Q_PASSIVE_500'],
     hint: 'quests.Q_EMERGENCY_3MO.hint'
   },
   {
@@ -2344,8 +2340,55 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
     metric: 'CREDIT_RATING',
     target: 720,
     reward: { cash: 700, stats: { networking: 5, happiness: 3 } },
-    unlockAfter: ['Q_EMERGENCY_3MO'],
     hint: 'quests.Q_CREDIT_720.hint'
+  },
+
+  // ---- Freedom Track milestones (Phase 1 slice 5): freedom coverage, the win check's own figure ----
+  // The coast point: at 6% a year after inflation, what is invested today grows to the freedom target in
+  // 30 years without another deposit (1.06^30 ≈ 5.7, so about 17% of the way).
+  {
+    id: 'Q_COAST',
+    title: 'quests.Q_COAST.title',
+    description: 'quests.Q_COAST.description',
+    category: 'INVESTING',
+    difficulty: 'HARD',
+    metric: 'FREEDOM_COVERAGE',
+    target: 17,
+    reward: { stats: { happiness: 5, stress: -5 } },
+    hint: 'quests.Q_COAST.hint'
+  },
+  {
+    id: 'Q_FREEDOM_25',
+    title: 'quests.Q_FREEDOM_25.title',
+    description: 'quests.Q_FREEDOM_25.description',
+    category: 'INVESTING',
+    difficulty: 'HARD',
+    metric: 'FREEDOM_COVERAGE',
+    target: 25,
+    reward: { stats: { happiness: 5 } },
+    hint: 'quests.Q_FREEDOM_25.hint'
+  },
+  {
+    id: 'Q_FREEDOM_50',
+    title: 'quests.Q_FREEDOM_50.title',
+    description: 'quests.Q_FREEDOM_50.description',
+    category: 'INVESTING',
+    difficulty: 'HARD',
+    metric: 'FREEDOM_COVERAGE',
+    target: 50,
+    reward: { stats: { happiness: 6, stress: -5 } },
+    hint: 'quests.Q_FREEDOM_50.hint'
+  },
+  {
+    id: 'Q_FREEDOM_75',
+    title: 'quests.Q_FREEDOM_75.title',
+    description: 'quests.Q_FREEDOM_75.description',
+    category: 'INVESTING',
+    difficulty: 'HARD',
+    metric: 'FREEDOM_COVERAGE',
+    target: 75,
+    reward: { stats: { happiness: 8, stress: -5 } },
+    hint: 'quests.Q_FREEDOM_75.hint'
   },
 
   // ==============================
@@ -2672,15 +2715,28 @@ export const getQuestById = (id: string): QuestDefinition | undefined => {
   return QUEST_DEFINITIONS.find(q => q.id === id);
 };
 
+// The Freedom Track (Phase 1 slice 5): the core goals in the order personal finance takes them, in four chapters.
+// A chapter's milestones are active together, and the next chapter opens once each is done (ready or
+// claimed). Freedom Day, the win itself, closes chapter four. The character's story quests and the side goals
+// (hustles, career, the inferred Investor / Entrepreneur / Debt Crusher branch) run alongside in their own slots.
+// The emergency fund waits for chapter two: every character's starting cash already covers three months, so it
+// only means something once money has gone into investments. Nothing in chapter one is met before a decision.
+export const FREEDOM_TRACK: { id: 'safety' | 'base' | 'working' | 'freedom'; milestones: string[] }[] = [
+  { id: 'safety', milestones: ['Q_BUFFER_2K', 'Q_FIRST_INVESTMENT'] },
+  { id: 'base', milestones: ['Q_INVESTED_10K', 'Q_EMERGENCY_3MO', 'Q_DIVERSIFY_3'] },
+  { id: 'working', milestones: ['Q_CREDIT_720', 'Q_PASSIVE_500', 'Q_COAST'] },
+  { id: 'freedom', milestones: ['Q_FREEDOM_25', 'Q_FREEDOM_50', 'Q_FREEDOM_75'] },
+];
+export const FREEDOM_TRACK_IDS = new Set(FREEDOM_TRACK.flatMap(c => c.milestones));
+/** Story and side quests active beside the track's chapter. */
+export const SIDE_GOAL_SLOTS = 2;
+export const MAX_ACTIVE_QUESTS = 3 + SIDE_GOAL_SLOTS;
+
 const getStartingQuestIds = (characterId?: string): string[] => {
-  const starters = QUEST_DEFINITIONS.filter(q => !q.unlockAfter || q.unlockAfter.length === 0);
-  const characterStarters = characterId ? starters.filter(q => q.characterId === characterId) : [];
-  const globalStarters = starters.filter(q => !q.characterId);
-  const selected = [
-    ...characterStarters.slice(0, 1),
-    ...globalStarters.slice(0, Math.max(0, 3 - characterStarters.length))
-  ];
-  return selected.slice(0, 3).map(q => q.id);
+  const starters = QUEST_DEFINITIONS.filter(q => !FREEDOM_TRACK_IDS.has(q.id) && !q.track && (!q.unlockAfter || q.unlockAfter.length === 0));
+  const story = characterId ? starters.filter(q => q.characterId === characterId).slice(0, 1) : [];
+  const side = starters.filter(q => !q.characterId).slice(0, SIDE_GOAL_SLOTS - story.length);
+  return [...FREEDOM_TRACK[0].milestones, ...story.map(q => q.id), ...side.map(q => q.id)];
 };
 
 export const getInitialQuestState = (characterId?: string): QuestState => ({

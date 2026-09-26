@@ -83,7 +83,9 @@ export type QuestMetric =
   | 'CREDIT_RATING'
   | 'DEBT_REPAID_TOTAL'
   | 'OWN_BUSINESS_COUNT'
-  | 'OWN_REAL_ESTATE_COUNT';
+  | 'OWN_REAL_ESTATE_COUNT'
+  // Freedom coverage in percent: financialFreedom().coverage × 100, the win check's own figure.
+  | 'FREEDOM_COVERAGE';
 
 export interface QuestReward {
   cash?: number;

@@ -50,7 +50,16 @@ Done as a setting: Quick actions → "Start in the 3D city" (off by default) ope
 - The dashboard becomes a "ledger" drawer (a half-height sheet on phones).
 - This changes the whole game's first impression, so it ships first as a setting ("Start in the city") for Pieter to try.
 
-## Slice 5: one milestone track 🗳
+## Slice 5: one milestone track ✅ (build 53)
+
+Done as the Freedom Track, a design Pieter delegated on 2026-09-25:
+- the core goals in four chapters (Safety first, Build the base, Money that works, Freedom), inside the quest engine, with story and side goals alongside;
+- on the dashboard, in the goals log, on the notice board and in the city strip;
+- milestones reached at the month's close now celebrated;
+- energy and stress lead the life meters.
+
+Receipt: `docs/verification/phase1-slice5-2026-09-25/`.
+
 
 - Merge quests, notice-board challenges and the guided journeys into one track.
 - Cut the ~20 meters down to energy and stress.
@@ -58,4 +67,12 @@ Done as a setting: Quick actions → "Start in the 3D city" (off by default) ope
 
 ## Pacing note
 
-After the economy fix, a careful index investor needs about 14–20 game years to reach freedom. A month becoming a day (slice 2's sleep, plus the existing ten-minute day cycle) is the natural pace. Autoplay remains for players who want the years to fly.
+After the economy fix, a careful index investor needs about 14–20 game years to reach freedom. A month becoming a day (slice 2's sleep, plus the existing ten-minute day cycle) is the natural pace. Autoplay remains for players who want the years to fly (about 150 months a minute at 4x).
+
+Decided in build 52 (`docs/verification/pacing-2026-09-25/`):
+- the honest arc stays;
+- the meter gets a countdown, "free in about N years at this pace";
+- Maria starts on a student budget;
+- the difficulty descriptions state the measured pace.
+
+The Freedom Track (slice 5) spaces goals through the long middle: the coast point at about 17%, then 25%, 50% and 75%.

@@ -17,7 +17,7 @@ import { incomeYield, nominalPrice, migrateInvestmentAssets } from './services/i
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { GameState, AssetType, MarketItem, Lifestyle, Character, Asset, SideHustle, EducationOption, Liability, PlayerConfig, MonthlyActionId, TABS, TabId, EducationLevel, PlayerStats } from './types';
-import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, AUTO_INVEST_PRESETS } from './constants';
+import { INITIAL_GAME_STATE, CHARACTERS, DIFFICULTY_SETTINGS, CAREER_PATHS, LIFESTYLE_OPTS, MARKET_ITEMS, EDUCATION_OPTIONS, SIDE_HUSTLES, MORTGAGE_OPTIONS, AI_CAREER_IMPACT, FINANCIAL_FREEDOM_TARGET_MULTIPLIER, getInitialQuestState, getQuestById, AUTO_INVEST_PRESETS, FREEDOM_TRACK, FREEDOM_TRACK_IDS } from './constants';
 import { recordMilestones } from './services/townMilestones';
 import { approvalDraw, closingCosts, ownershipCostMonthly, pmiMonthly } from './services/propertyCosts';
 import { eventPlace } from './services/townEvents';
@@ -25,6 +25,7 @@ import { calculateMonthlyActionsMax, processTurn, calculateMonthlyCashFlowEstima
 import { playMoneyGain, playMoneyLoss, playClick, playPurchase, playSell, playAchievement, playLevelUp, playVictory, playWarning, playTick, playNotification, playError, setMuted } from './services/audioService';
 import { SaveSlotId } from './services/storageService';
 import { freedomPace, paceLabel } from './services/freedomPace';
+import { freedomTrack } from './services/freedomTrack';
 import confetti from 'canvas-confetti';
 import { useI18n, formatCurrencyCompactValue, formatCurrencyValue, formatPercentValue } from './i18n';
 import { GLOSSARY_ENTRIES, QUIZ_DEFINITIONS, getQuizDefinition } from './data/learning';
@@ -1588,24 +1589,44 @@ const [gameState, setGameState] = useState<GameState>(() => {
     }
   }, [isProcessing, maybeConfetti, recordAutosave, showNotif, t]);
 
+  // What the quest sync below has already announced (ready rewards and the Freedom Track chapter).
+  const seenReady = useRef<Set<string> | null>(null);
+  const seenChapter = useRef<number | null>(null);
   useEffect(() => {
     // Only sync quests once the run has started
     if (!gameStarted || !gameState.character || gameState.hasWon) return;
 
     const synced = updateQuests(gameState);
 
-    // Detect newly-ready rewards (quest completed but not claimed yet)
+    // Detect newly-ready rewards (quest completed but not claimed yet). Compared with what the player has already been
+    // told, not with the current state: the month's close (processTurn) moves milestones to ready before this effect
+    // runs, and those deserve the moment too. The first run takes the loaded save's ready list as already seen.
     try {
-      const prevReady = new Set(gameState.quests?.readyToClaim || []);
-      const nextReady = new Set(synced.quests?.readyToClaim || []);
-      const newlyReady = Array.from(nextReady).filter(id => !prevReady.has(id));
+      if (!seenReady.current) seenReady.current = new Set(gameState.quests?.readyToClaim || []);
+      const seen = seenReady.current;
+      const nextReady = synced.quests?.readyToClaim || [];
+      const newlyReady = nextReady.filter(id => !seen.has(id));
+      nextReady.forEach(id => seen.add(id));
+      const chapterBefore = seenChapter.current ?? freedomTrack(gameState).current?.number ?? FREEDOM_TRACK.length + 1;
+      const chapterNow = freedomTrack(synced).current?.number ?? FREEDOM_TRACK.length + 1;
+      seenChapter.current = chapterNow;
 
-      if (newlyReady.length > 0) {
+      if (chapterNow > chapterBefore) {
+        // A whole chapter of the Freedom Track is done: one bigger moment instead of a toast per milestone.
+        maybeConfetti({ particleCount: 140, spread: 90, origin: { y: 0.6 } });
+        const done = FREEDOM_TRACK[chapterBefore - 1], next = FREEDOM_TRACK[chapterNow - 1];
+        showNotif(t('track.chapterDoneTitle', { n: chapterBefore, title: t(`track.chapter.${done.id}`) }),
+          next ? t('track.chapterDoneBody', { title: t(`track.chapter.${next.id}`) }) : t('track.freedomDayBody'), 'success', {
+            actionLabel: t('track.seeAll'),
+            onAction: () => setShowQuestLog(true),
+            durationMs: 8000
+          });
+      } else if (newlyReady.length > 0) {
         maybeConfetti({ particleCount: 70, spread: 70, origin: { y: 0.65 } });
         newlyReady.slice(0, 3).forEach(id => {
           const q = getQuestById(id);
           if (q) {
-            showNotif(t('quests.completeTitle', { title: t(q.title) }), t('quests.rewardReady'), 'success', {
+            showNotif(FREEDOM_TRACK_IDS.has(id) ? t('track.milestoneTitle', { title: t(q.title) }) : t('quests.completeTitle', { title: t(q.title) }), t('quests.rewardReady'), 'success', {
               actionLabel: t('quests.claim'),
               onAction: () => handleClaimQuest(id),
               durationMs: 6000

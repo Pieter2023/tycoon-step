@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { INITIAL_GAME_STATE, CHARACTERS, QUEST_DEFINITIONS, getInitialQuestState } from '../constants';
+import { INITIAL_GAME_STATE, CHARACTERS, QUEST_DEFINITIONS, getInitialQuestState, MAX_ACTIVE_QUESTS } from '../constants';
 import { AssetType, GameState } from '../types';
 import { questBoard, noticeSheet, progressText, rewardText } from '../services/townQuests';
 import { updateQuests, claimQuestReward } from '../services/gameLogic';
@@ -17,7 +17,7 @@ describe('the quest log on the notice board', () => {
   it('reads the dashboard quest state: active with live progress, ready to claim, completed, up next', () => {
     const s = base();
     const board = questBoard(s);
-    expect(board.active.length).toBeGreaterThan(0); expect(board.active.length).toBeLessThanOrEqual(3); expect(board.ready).toEqual([]); expect(board.completed).toBe(0);
+    expect(board.active.length).toBeGreaterThan(0); expect(board.active.length).toBeLessThanOrEqual(MAX_ACTIVE_QUESTS); expect(board.ready).toEqual([]); expect(board.completed).toBe(0);
     expect(board.total).toBe(QUEST_DEFINITIONS.filter(q => !q.characterId || q.characterId === CHARACTERS[0].id).length);
     const buffer = board.active.find(q => q.id === 'Q_BUFFER_2K')!;
     expect(buffer.unit).toBe('money'); expect(buffer.target).toBe(2000); expect(buffer.progress).toBeGreaterThan(0); expect(buffer.progress).toBeLessThan(1);
@@ -43,11 +43,12 @@ describe('the quest log on the notice board', () => {
     const onClaimQuest = vi.fn(), onOpenQuests = vi.fn();
     const s = updateQuests(base({ cash: 9000, assets: [{ id: 'a', marketItemId: 'hysa', name: 'High-Yield Savings', type: AssetType.SAVINGS, value: 1000, costBasis: 1000, quantity: 1, cashFlow: 3, volatility: 0, appreciationRate: 0, priceHistory: [] }] }));
     render(<I18nProvider><NoticeBoardPanel state={s} disabled={false} onNextMonth={() => {}} onClaimQuest={onClaimQuest} onOpenQuests={onOpenQuests} /></I18nProvider>);
-    const log = screen.getByLabelText('Quest log');
-    expect(log.textContent).toMatch(/Quest log · 0\//); expect(log.textContent).toMatch(/Reward ready/);
+    // Since Phase 1 slice 5 the board shows the Freedom Track: the chapter, its milestones, then story and side goals.
+    const log = screen.getByLabelText('Freedom track');
+    expect(log.textContent).toMatch(/Freedom track · Chapter 1: Safety first · \d+\/12/); expect(log.textContent).toMatch(/Reward ready/);
     fireEvent.click(log.querySelector('.town-quest-ready button.town-primary')!);
     expect(onClaimQuest).toHaveBeenCalledWith(expect.stringMatching(/^Q_/));
-    fireEvent.click(screen.getByText('Open the full quest log →'));
+    fireEvent.click(screen.getByText('See the whole track →'));
     expect(onOpenQuests).toHaveBeenCalled();
     expect(log.querySelectorAll('.town-reputation-bar').length).toBeGreaterThan(0);
   });

@@ -89,10 +89,16 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <HeartPulse size={16} className="text-rose-300" />{t('shell.profileScreen.core_stats')}
         </div>
         <div className="space-y-3">
+          {/* Phase 1 slice 5: energy and stress lead (they set this month's actions); the rest sit one tap away. */}
           <StatRow label={t('shell.profileScreen.energy')} value={stats.energy ?? 0} tone="bg-cyan-400" />
           <StatRow label={t('shell.profileScreen.stress')} value={stats.stress ?? 0} tone="bg-rose-400" />
-          <StatRow label={t('shell.profileScreen.happiness')} value={stats.happiness ?? 0} tone="bg-emerald-400" />
-          <StatRow label={t('shell.profileScreen.health')} value={stats.health ?? 0} tone="bg-amber-400" />
+          <details>
+            <summary className="cursor-pointer text-xs font-semibold text-slate-400">{t('shell.profileScreen.more_about_you')}</summary>
+            <div className="mt-3 space-y-3">
+              <StatRow label={t('shell.profileScreen.happiness')} value={stats.happiness ?? 0} tone="bg-emerald-400" />
+              <StatRow label={t('shell.profileScreen.health')} value={stats.health ?? 0} tone="bg-amber-400" />
+            </div>
+          </details>
         </div>
       </section>
 

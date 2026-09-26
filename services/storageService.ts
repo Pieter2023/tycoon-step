@@ -2,7 +2,7 @@ import { Asset, GameState, PrestigeData } from '../types';
 import { KidsGameState } from '../kidsTypes';
 import { calculateMonthlyCashFlowEstimate, calculateNetWorth, calculateMonthlyActionsMax } from './gameLogic';
 import { migrateInvestmentAssets } from './investmentModel';
-import { MARKET_ITEMS, CHARACTERS, getInitialQuestState, SIDE_HUSTLES } from '../constants';
+import { MARKET_ITEMS, CHARACTERS, getInitialQuestState, SIDE_HUSTLES, MAX_ACTIVE_QUESTS } from '../constants';
 
 // Two purchases in the same millisecond used to share an asset id, and selling one then removed both. Later copies
 // get their own id; the first copy and any mortgaged asset keep theirs, so mortgage links still hold.
@@ -28,7 +28,7 @@ const normalizeAdultState = (state: GameState): GameState => {
   // Goals / quests (Step 5+)
   const rawQuests = (state as any).quests;
   const quests = {
-    active: (Array.isArray(rawQuests?.active) ? rawQuests.active.filter((id: any) => typeof id === 'string') : [...getInitialQuestState(state.character?.id).active]).slice(0, 3),
+    active: (Array.isArray(rawQuests?.active) ? rawQuests.active.filter((id: any) => typeof id === 'string') : [...getInitialQuestState(state.character?.id).active]).slice(0, MAX_ACTIVE_QUESTS),
     readyToClaim: Array.isArray(rawQuests?.readyToClaim) ? rawQuests.readyToClaim.filter((id: any) => typeof id === 'string') : [],
     completed: Array.isArray(rawQuests?.completed) ? rawQuests.completed.filter((id: any) => typeof id === 'string') : [],
     track: typeof rawQuests?.track === 'string' ? rawQuests.track : undefined
