@@ -597,8 +597,9 @@ const App: React.FC<AppProps> = ({ onBackToMenu, initialGameState, playerConfig,
   const [tier, setTier] = useState<AccessTier>(accessTier ?? getAccessTier());
   const [showDemoLimitModal, setShowDemoLimitModal] = useState(false);
   const [showTown, setShowTown] = useState(false);
-  // Phase 1, slice 4 (opt-in): open the 3D city whenever a game loads; the dashboard stays one tap away.
-  const [startInCity, setStartInCity] = useState(() => { try { return localStorage.getItem('tycoon_start_in_city') === '1'; } catch { return false; } });
+  // Phase 1, slice 4: open the 3D city whenever a game loads; the dashboard stays one tap away. On by default since
+  // build 63 (Pieter, 2026-09-26); only an explicit Off ('0') in Quick actions keeps the dashboard.
+  const [startInCity, setStartInCity] = useState(() => { try { return localStorage.getItem('tycoon_start_in_city') !== '0'; } catch { return true; } });
   const autoOpenedCity = useRef(false);
   // Takes effect from the next load: switching it on mid-game must not throw the player into the city.
   const toggleStartInCity = () => { autoOpenedCity.current = true; setStartInCity(on => { const next = !on; try { localStorage.setItem('tycoon_start_in_city', next ? '1' : '0'); } catch { /* private mode */ } return next; }); };
@@ -695,7 +696,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
   const [monthlyReport, setMonthlyReport] = useState<any>(null);
   const [dashboardModal, setDashboardModal] = useState<null | 'netWorth' | 'cashFlow' | 'credit' | 'ai'>(null);
   const [showCharacterSelect, setShowCharacterSelect] = useState(!isMultiplayer && !isResumingFromSave);
-  // Start in the city (opt-in): once per load, as soon as a game is running with nothing waiting in the 2D shell.
+  // Start in the city: once per load, as soon as a game is running with nothing waiting in the 2D shell.
   useEffect(() => {
     if (!startInCity || autoOpenedCity.current) return;
     if (!gameStarted || showCharacterSelect || isMultiplayer || gameState.challenge || !gameState.character) return;

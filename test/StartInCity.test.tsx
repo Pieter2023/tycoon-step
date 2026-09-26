@@ -8,7 +8,7 @@ import { CHARACTERS, INITIAL_GAME_STATE } from '../constants';
 import { GameState } from '../types';
 vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
 vi.mock('../components/town/createTownScene', () => ({ createTownScene: () => { throw new Error('No WebGL in this test'); } }));
-// Phase 1 slice 4 as an opt-in setting: "Start in the 3D city" (localStorage tycoon_start_in_city).
+// Phase 1 slice 4: "Start in the 3D city" (localStorage tycoon_start_in_city), on by default since build 63; '0' is Off.
 const CITY = 'Freedom Square 3D neighbourhood';
 // A returning player whose first-steps mission is done.
 const saved = (extra: Partial<GameState> = {}): GameState => ({ ...structuredClone(INITIAL_GAME_STATE), character: CHARACTERS[0], firstSteps: { repairChoice: 'cash', repairMonth: 0, reviewed: true }, cash: 10000, ...extra });
@@ -24,7 +24,13 @@ it('opens the city by itself when a game loads with the setting on', async () =>
   expect(await screen.findByRole('dialog', { name: CITY }, { timeout: 5000 })).toBeVisible();
 });
 
-it('keeps the dashboard when the setting is off', () => {
+it('opens the city by default for a returning player who never touched the setting', async () => {
+  load();
+  expect(await screen.findByRole('dialog', { name: CITY }, { timeout: 5000 })).toBeVisible();
+});
+
+it('keeps the dashboard when the player switched it off', () => {
+  localStorage.setItem('tycoon_start_in_city', '0');
   load();
   expect(screen.getByRole('button', { name: /Enter 3D city/ })).toBeVisible();
   expect(cityShown()).toBeNull();
@@ -32,6 +38,7 @@ it('keeps the dashboard when the setting is off', () => {
 
 it('applies a mid-game switch from the next load, not at once', async () => {
   const user = userEvent.setup();
+  localStorage.setItem('tycoon_start_in_city', '0');
   load();
   await user.click(screen.getByRole('button', { name: 'More options' }));
   const toggle = within(screen.getByRole('dialog', { name: 'Quick actions' })).getByRole('button', { name: /Start in the 3D city/ });
@@ -43,6 +50,19 @@ it('applies a mid-game switch from the next load, not at once', async () => {
   cleanup();
   load();
   expect(await screen.findByRole('dialog', { name: CITY }, { timeout: 5000 })).toBeVisible();
+});
+
+it('lets a player who starts in the city switch it off for the next load', async () => {
+  const user = userEvent.setup();
+  localStorage.setItem('tycoon_start_in_city', '0');   // start on the dashboard so the menu is reachable
+  load();
+  await user.click(screen.getByRole('button', { name: 'More options' }));
+  const toggle = within(screen.getByRole('dialog', { name: 'Quick actions' })).getByRole('button', { name: /Start in the 3D city/ });
+  await user.click(toggle); await user.click(toggle);
+  expect(localStorage.getItem('tycoon_start_in_city')).toBe('0');
+  cleanup();
+  load();
+  expect(cityShown()).toBeNull();
 });
 
 it('leaves a new player on the dashboard for the first-steps mission, even once it is finished', async () => {
