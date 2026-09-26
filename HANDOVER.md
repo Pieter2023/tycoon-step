@@ -1,11 +1,11 @@
 # Start here — Tycoon handover
 
-Updated **September 26, 2026, 08:05 PDT**. Pieter said "yes to all 3" of his open calls. Two new builds are **on the branch, not released**:
+Updated **September 26, 2026, 08:10 PDT**. **Builds 40–64 are live.** Builds 63–64 were released at 08:02 PDT ("ship it, release 63-64"): `main` = `cc2df03`, deploy `6ab7de71`. The receipt is release 8 in `docs/verification/release-2026-09-25/`. Pieter had said "yes to all 3" of his open calls:
 - **Build 63:** the 3D city is the default screen. "Start in the 3D city" is on unless a player switched it off (`docs/verification/phase1-slice4-default-2026-09-26/`). The ledger drawer is not built.
 - **Build 64:** the hero's cheek. The face's shading normals are relaxed at build time (custom normals; no vertex moves), so the hard cheek-and-jaw line is gone (`docs/verification/hero-cheek-2026-09-26/`).
 - **The daily challenge:** read literally ("whether it stays demo-only": yes), so the demo gate stays and there is no code change. **Confirm with Pieter that he didn't mean to open it to the free demo.**
 
-Earlier, at 07:50 PDT: **builds 40–62 are live.** Build 62, the phone check's findings, was released at 07:41 PDT ("ship it, release 62"): `main` = `7a4d644`, deploy `6ab7d981`. The receipt is release 7 in `docs/verification/release-2026-09-25/`. Build 62 (`docs/verification/phone-findings-2026-09-26/`):
+Earlier, at 07:50 PDT: builds 40–62 went live. Build 62, the phone check's findings, was released at 07:41 PDT ("ship it, release 62"): `main` = `7a4d644`, deploy `6ab7d981`. The receipt is release 7 in `docs/verification/release-2026-09-25/`. Build 62 (`docs/verification/phone-findings-2026-09-26/`):
 - events are framed where they happen: office, doormat, Main Street, home, square, and a new Property & Co. place for rentals;
 - the destination row gets ‹ › buttons when it overflows;
 - on phones, rooms trade the destination row for a one-row room bar, and the journey strip is one row. The bank's 3D view goes from 305 to 467 px. Build 61, tileable paving, brick and asphalt (`docs/verification/surfaces-2026-09-26/`), was released at 07:13 PDT ("ship it, release 61"): `main` = `1bc4d4e`, deploy `6ab7d2f2`. The receipt is release 6 in `docs/verification/release-2026-09-25/`.
@@ -25,12 +25,12 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 
 | What | State |
 |---|---|
-| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | **Builds 40–62 are live** after seven releases, each with Pieter's go-ahead:<br>• 40–51 at 17:21 PDT, deploy `6ab70fda`;<br>• 52–54 at 18:19 PDT ("ship it"), deploy `6ab71d6d`;<br>• 55–57 at 21:01 PDT ("ship it, release 55-57"), deploy `6ab743ad`;<br>• 58–59 at 22:27 PDT ("ship it, release 58-59"), deploy `6ab757c4`;<br>• 60 on 2026-09-26 at 06:45 PDT ("ship it, release 60"), deploy `6ab7cc8d`;<br>• 61 on 2026-09-26 at 07:13 PDT ("ship it, release 61"), deploy `6ab7d2f2`;<br>• **62 on 2026-09-26 at 07:41 PDT** ("ship it, release 62"): `origin/main` = `7a4d644`, deploy `6ab7d981`.<br>Before that, production was a Sept-13 **CLI** deploy (`6aa6c7fa`), not `origin/main` (`073f397`). Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`. |
+| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | **Builds 40–64 are live** after eight releases, each with Pieter's go-ahead:<br>• 40–51 at 17:21 PDT, deploy `6ab70fda`;<br>• 52–54 at 18:19 PDT ("ship it"), deploy `6ab71d6d`;<br>• 55–57 at 21:01 PDT ("ship it, release 55-57"), deploy `6ab743ad`;<br>• 58–59 at 22:27 PDT ("ship it, release 58-59"), deploy `6ab757c4`;<br>• 60 on 2026-09-26 at 06:45 PDT ("ship it, release 60"), deploy `6ab7cc8d`;<br>• 61 on 2026-09-26 at 07:13 PDT ("ship it, release 61"), deploy `6ab7d2f2`;<br>• 62 on 2026-09-26 at 07:41 PDT ("ship it, release 62"), deploy `6ab7d981`;<br>• **63–64 on 2026-09-26 at 08:02 PDT** ("ship it, release 63-64"): `origin/main` = `cc2df03`, deploy `6ab7de71`.<br>Before that, production was a Sept-13 **CLI** deploy (`6aa6c7fa`), not `origin/main` (`073f397`). Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`. |
 | Branch `codex/game-overhaul-20260503-223748` | The old release branch at `073f397` (build 39); now behind `main`. |
-| **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `7a4d644` (release 7, build 62). Later commits, such as the release-7 receipt, stay ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
+| **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `cc2df03` (release 8, builds 63–64). Later commits, such as the release-8 receipt, stay ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
-| Validation on the branch | 498 tests / 88 files, TypeScript and the production build (builds 63–64, not released; build 62 is live). |
+| Validation on the branch | 498 tests / 88 files, TypeScript and the production build (builds 63–64, live). |
 | Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
@@ -79,12 +79,13 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 39. `c079952`: the release-6 receipt.
 40. Build 62: the phone check's findings (`services/townEvents.ts` `EVENT_PLACES`, the `property` stage, the destination scroll buttons and the phone room bar in `TownModal`/`town.css`). Receipt: `docs/verification/phone-findings-2026-09-26/`. **Released: `main` = `7a4d644`** (deploy `6ab7d981`).
 41. `f9a6d40`: the release-7 receipt.
-42. `9f3cdf1`: build 63, the 3D city is the default screen (`App.tsx` `startInCity`, `test/StartInCity.test.tsx`). **Not released.**
-43. Build 64: the hero's cheek (`smooth_face_normals()` in `scripts/build-town-hero.py`, `HERO_VERSION` `20260926a`). Receipt: `docs/verification/hero-cheek-2026-09-26/`. **Not released.**
+42. `9f3cdf1`: build 63, the 3D city is the default screen (`App.tsx` `startInCity`, `test/StartInCity.test.tsx`).
+43. `cc2df03`: build 64, the hero's cheek (`smooth_face_normals()` in `scripts/build-town-hero.py`, `HERO_VERSION` `20260926a`). Receipt: `docs/verification/hero-cheek-2026-09-26/`. **Released with build 63: `main` = `cc2df03`** (deploy `6ab7de71`).
+44. The release-8 receipt and this handover.
 
 ## 1b. Where the last session stopped (2026-09-26, 06:00 PDT)
 
-**Live: builds 40–62**, in four releases on 2026-09-25 and three on 2026-09-26. Each has a receipt, live checks and a one-line rollback in `docs/verification/release-2026-09-25/`:
+**Live: builds 40–64**, in four releases on 2026-09-25 and four on 2026-09-26. Each has a receipt, live checks and a one-line rollback in `docs/verification/release-2026-09-25/`:
 
 | Release | Builds | Time (PDT) | `main` | Netlify deploy |
 |---|---|---|---|---|
@@ -94,7 +95,8 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 | 4 | 58–59 | 22:27 | `e3097ca` | `6ab757c4` |
 | 5 | 60 | 06:45 (Sept 26) | `e8e1d16` | `6ab7cc8d` |
 | 6 | 61 | 07:13 (Sept 26) | `1bc4d4e` | `6ab7d2f2` |
-| 7 | 62 | 07:41 (Sept 26) | `7a4d644` | `6ab7d981` (current) |
+| 7 | 62 | 07:41 (Sept 26) | `7a4d644` | `6ab7d981` |
+| 8 | 63–64 | 08:02 (Sept 26) | `cc2df03` | `6ab7de71` (current) |
 
 **What the last session built (details in each receipt):**
 - **55, course rewards** (`course-rewards-2026-09-25/`):
@@ -121,9 +123,9 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 
    That closes assessment §3's visual list, apart from the bigger items it never started: a modular building kit, splitting the city for culling, and the male hip/waist ratio.
 6. **Pieter's calls, answered "yes to all 3" on 2026-09-26:**
-   - ✅ the city as the default screen: build 63, not released. The ledger drawer is not built; ask before building it.
+   - ✅ the city as the default screen: build 63, live since 08:02 PDT. The ledger drawer is not built; ask before building it.
    - ✅ the daily challenge's demo gate stays (the literal reading of "yes" to "whether it stays demo-only"). **Confirm with Pieter.**
-   - ✅ the hero's cheek: build 64, not released. It is done in code, by relaxing the shading normals; moving the vertices was tried and slid the painted eyes.
+   - ✅ the hero's cheek: build 64, live since 08:02 PDT. It is done in code, by relaxing the shading normals; moving the vertices was tried and slid the painted eyes.
 7. **Analytics: Pieter will do it himself once all the phases are completed** (he said so on 2026-09-26). Don't prompt him before then; when the phases are done, remind him.
    - The code is ready: `services/analytics.ts` tracks the whole funnel, and the snippet is commented out in `index.html`.
    - The plan is Umami Cloud **Hobby**: $0, 100K events a month, 1 website, 6-month retention, no cookie banner.
@@ -149,12 +151,12 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 3. **The Daily Challenge demo gate:** kept. Pieter said "yes" on 2026-09-26 to "whether the daily challenge stays demo-only". **Confirm this reading with him**: if he meant to open it to the free demo, that is the GTM analysis's recommendation (CLAUDE.md, GTM section).
 4. **Walk bob:** fixed in build 43 (approved).
 5. **Phase 1:**
-   - **Slice 4:** ✅ the city is the default screen (Pieter's yes on 2026-09-26; build 63, not released). The "ledger" drawer is not built. The Chromebook, the classroom device, is still untested.
+   - **Slice 4:** ✅ the city is the default screen (Pieter's yes on 2026-09-26; build 63, live since 08:02 PDT). The "ledger" drawer is not built. The Chromebook, the classroom device, is still untested.
    - **Slice 5:** built as the Freedom Track (build 53). Say what to change.
 6. ✅ **Builds 52–54 shipped** on 2026-09-25 at 18:19 PDT ("ship it"; `docs/verification/release-2026-09-25/`).
 7. ✅ **Course rewards: live** (build 55, release 3 at 21:01 PDT; receipt `docs/verification/course-rewards-2026-09-25/`). Certified negotiators on existing saves now get the corrected, slower growth.
 8. ✅ **Builds 56–59 shipped** (releases 3 and 4). Pieter saw the AO before-and-after and said "ship it".
-9. ✅ **The hero's cheek shading step:** Pieter said yes on 2026-09-26; fixed in build 64 (`docs/verification/hero-cheek-2026-09-26/`), not released.
+9. ✅ **The hero's cheek shading step:** Pieter said yes on 2026-09-26; fixed in build 64 (`docs/verification/hero-cheek-2026-09-26/`), live since 08:02 PDT.
 10. **Analytics: deferred by Pieter until all the phases are completed.** He will sign up for Umami (free Hobby plan) and send the Website ID; §1b item 5 has the steps.
 
 Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the AI Alex cost 38 (receipt: `docs/verification/hero-alex-2026-09-25/`). Still: never spend credits without a fresh yes.

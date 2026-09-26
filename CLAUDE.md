@@ -1,17 +1,18 @@
 # Tycoon: Financial Freedom Simulator
 
-## Current handover — September 26, 2026 (08:05 PDT)
+## Current handover — September 26, 2026 (08:10 PDT)
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
-- **Production:** builds 40–62 are live after seven releases. Four were on 2026-09-25, and builds 60–62 followed on 2026-09-26:
+- **Production:** builds 40–64 are live after eight releases. Four were on 2026-09-25, and builds 60–64 followed on 2026-09-26:
   - 40–51 at 17:21 PDT, deploy `6ab70fda`;
   - 52–54 at 18:19 PDT, deploy `6ab71d6d`;
   - 55–57 at 21:01 PDT, deploy `6ab743ad`;
   - 58–59 at 22:27 PDT, deploy `6ab757c4`;
   - 60 on 2026-09-26 at 06:45 PDT, deploy `6ab7cc8d`;
   - 61 on 2026-09-26 at 07:13 PDT, deploy `6ab7d2f2`;
-  - **62 on 2026-09-26 at 07:41 PDT, `origin/main` = `7a4d644`, deploy `6ab7d981`** ("ship it, release 62").
+  - 62 on 2026-09-26 at 07:41 PDT, deploy `6ab7d981`;
+  - **63–64 on 2026-09-26 at 08:02 PDT, `origin/main` = `cc2df03`, deploy `6ab7de71`** ("ship it, release 63-64").
 
   Both were fast-forwards from the branch. Receipts and rollbacks: `docs/verification/release-2026-09-25/`. (Before that, production was a Sept-13 CLI deploy, not `origin/main`.)
 - **Work branch `town-lighting-pass`:** checked out and pushed to `origin`. `main` is fast-forwarded to it for each release, and later commits wait here for the next one. It holds, all now live:
@@ -61,15 +62,14 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - The destination row gets ‹ › buttons when it overflows.
   - On phones, rooms swap the destination row for a one-row room bar ("?", walk-to, "Exit ↗"), and the journey strip is one row. The bank's 3D view goes from 305 to 467 px at 393×659.
 - **Pieter's three calls, "yes to all 3" (2026-09-26):**
-  - **Build 63, not released:** the 3D city is the default screen. `tycoon_start_in_city` is on unless it is `'0'`; `docs/verification/phase1-slice4-default-2026-09-26/`. The ledger drawer is not built.
-  - **Build 64, not released:** the hero's cheek. `smooth_face_normals()` in `scripts/build-town-hero.py` relaxes the skin's shading normals (custom normals; no vertex moves), and `HERO_VERSION` is `20260926a`; `docs/verification/hero-cheek-2026-09-26/`.
+  - **Build 63, live:** the 3D city is the default screen. `tycoon_start_in_city` is on unless it is `'0'`; `docs/verification/phase1-slice4-default-2026-09-26/`. The ledger drawer is not built.
+  - **Build 64, live:** the hero's cheek. `smooth_face_normals()` in `scripts/build-town-hero.py` relaxes the skin's shading normals (custom normals; no vertex moves), and `HERO_VERSION` is `20260926a`; `docs/verification/hero-cheek-2026-09-26/`.
   - **The daily challenge's demo gate stays**, reading "yes" to "whether it stays demo-only" literally. Confirm with Pieter.
 - **Validation:** 498 tests / 88 files and the production build pass on the branch.
-- **Next session, first:** release builds 63–64 when Pieter says so, and confirm the daily-challenge reading. Then:
+- **Next session, first:** confirm the daily-challenge reading with Pieter. Then:
   - a Chromebook check (needs a Chromebook), which matters more now that the city is the default screen;
   - the ledger drawer, if Pieter wants it.
 - **Waiting on Pieter:**
-  - releasing builds 63–64;
   - confirming that the daily challenge stays demo-gated;
   - whether to build the ledger drawer.
 - **Analytics: deferred by Pieter until all the phases are completed** (2026-09-26).

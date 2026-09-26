@@ -2,7 +2,7 @@
 
 ## Current priorities — September 26, 2026
 
-Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). **Production is builds 40–62**: `origin/main` = `7a4d644`, seven releases (four on 2026-09-25, builds 60–62 on 2026-09-26) with receipts in `docs/verification/release-2026-09-25/`. Builds 63 (the city as the default screen) and 64 (the hero's cheek) are on the branch, not released. 498 tests / 88 files pass.
+Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). **Production is builds 40–64**: `origin/main` = `cc2df03`, eight releases (four on 2026-09-25, builds 60–64 on 2026-09-26) with receipts in `docs/verification/release-2026-09-25/`. 498 tests / 88 files pass.
 
 1. ✅ **Live: the course rewards** (build 55, `3364c54`, release 3).
    - A pass pays a lasting raise instead of cash; a third miss costs a $150 retake fee.
@@ -16,9 +16,9 @@ Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](
 3. ✅ **The real-phone check of builds 52–59** (2026-09-26, `docs/verification/phone-2026-09-26/`): 56–60 fps. It found **build 60**: on a phone, tall dialogs (the Sales quiz, Save and load) hid their close and action buttons. The fix is in `components/Modal.tsx`, **live since 06:45 PDT on 2026-09-26** (deploy `6ab7cc8d`). **A Chromebook check** is still open. ✅ The check's smaller findings are fixed in build 62 (`docs/verification/phone-findings-2026-09-26/`), live since 07:41 PDT on 2026-09-26.
 4. ✅ **Tileable textures** for pavement, brick and road (build 61, `docs/verification/surfaces-2026-09-26/`), **live since 07:13 PDT on 2026-09-26** (deploy `6ab7d2f2`).
 5. **Pieter's calls, "yes to all 3" (2026-09-26):**
-   - ✅ the city is the default screen (build 63, not released);
+   - ✅ the city is the default screen (build 63, live);
    - ✅ the daily challenge stays demo-gated (literal reading; confirm);
-   - ✅ the hero's cheek, fixed in code (build 64, not released).
+   - ✅ the hero's cheek, fixed in code (build 64, live).
 6. **Analytics: after all the phases are completed** (Pieter's decision, 2026-09-26). He signs up for Umami (free Hobby) and sends the Website ID; then it's a one-line release. Steps: HANDOVER §1b.
 7. **Done on 2026-09-25:**
    - ✅ the economy fix (44, 49);

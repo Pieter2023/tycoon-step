@@ -316,3 +316,40 @@ netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb
   - the city opens with "Freedom 13%" and the new destination wrapper;
   - all eight models load with 200;
   - no console errors.
+
+# Release 8: builds 63–64 (2026-09-26, 08:02 PDT = 15:02 UTC)
+
+Pieter's word: "ship it, release 63-64".
+
+## What shipped
+
+`origin/main` was fast-forwarded from `7a4d644a` to `cc2df03b` (pushed 15:02:07 UTC). That was 3 commits: the release-7 receipt, build 63 and build 64, with no config, function or dependency changes. The Netlify production deploy is `6ab7de7106a8a700086c9cfb`, published 15:02:43 UTC, 36 s after the push.
+
+- **Build 63, the 3D city is the default screen** (`docs/verification/phase1-slice4-default-2026-09-26/`). "Start in the 3D city" is on unless a player switched it off. The build-50 rules stay: once per load, waiting cards first, a new player's first-steps load on the dashboard, and never in multiplayer or the daily challenge.
+- **Build 64, the hero's cheek** (`docs/verification/hero-cheek-2026-09-26/`): the face's shading normals are relaxed at build time, and no vertex moves. `HERO_VERSION` is `20260926a`.
+
+**Rollback** to builds 40–62:
+
+```sh
+netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb9907db","deploy_id":"6ab7d981fbace400085c96ec"}'
+```
+
+A player who wants the old start screen can switch it off: Quick actions → "Start in the 3D city" → Off.
+
+## Checks
+
+- **Before the push:**
+  - a fast-forward, with the branch equal to `origin` and nothing on `main` missing from it;
+  - config, functions, dependencies, `vite.config.ts` and `index.html` unchanged;
+  - a clean tree;
+  - 498 tests / 88 files.
+- **The live bundle:**
+  - `main-DBQmsiEg.js` reads `tycoon_start_in_city !== "0"`;
+  - `createTownScene-CXecrUHR.js` loads the hero at `20260926a`;
+  - `town-hero-alex.glb?v=20260926a` answers 200 at 523,744 bytes, byte-identical to the local build.
+- **Functions and pages:** `validate-access`, `/educators` and `/teacher-packet` answer 200.
+- **The pre-release Alex save on the live site** (month 8, $10,091), which had never touched the setting:
+  - Continue opened the city by itself (the new default), with the header "Freedom 13%";
+  - all eight models load with 200, including the hero at `20260926a`;
+  - no console errors.
+- **Not done live:** a close-up of the face (the pane was hidden, and production has no frame-stepping handle). It was checked in game on the branch (`hero-cheek-2026-09-26/face-before-after.jpg`), with the same file.
