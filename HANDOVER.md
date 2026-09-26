@@ -1,17 +1,17 @@
 # Start here — Tycoon handover
 
-Updated **September 25, 2026 (late evening PDT)**. That day produced: a full game assessment, a lighting pass, new skinned characters, the AI-modelled Alex (build 42), the walk-bob fix (43), the first real-phone check, the economy fix Phase 0 (44), the traffic-deadlock fix (45), Phase 1 slices 1–3 (46–47: wealth you can see, sleep to end the month, events in the world), lighter sign lettering (48: the city drops from 246k to 122k triangles), the smaller economy issues (49: property tax, insurance, closing costs, PMI, one FHA loan, no lender re-roll, a slower credit climb) Phase 1 slice 4 as an opt-in setting (50: "Start in the 3D city"), unique asset ids with a real production save as a migration test (51), pacing (52: "free in about N years at this pace"), Phase 1 slice 5 (53: the Freedom Track) and events staged in 3D (54). **Builds 40–54 are live** after two releases that evening. Later that night builds 55–57 followed: 55 the course rewards, 56 the hero blink, 57 a cleaner face texture. **They went live at 21:01 PDT** on Pieter's "ship it, release 55-57" (`main` = `21f7771`, deploy `6ab743ad`). Then builds 58–59 were built on the branch, **not released**: 58 is a real wave, a Sit clip and tapered hair; 59 is baked ambient occlusion for the city. Making the city the default screen (slice 4) still waits for Pieter (`docs/phase1-plan.md`). Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
+Updated **September 25, 2026 (late evening PDT)**. That day produced: a full game assessment, a lighting pass, new skinned characters, the AI-modelled Alex (build 42), the walk-bob fix (43), the first real-phone check, the economy fix Phase 0 (44), the traffic-deadlock fix (45), Phase 1 slices 1–3 (46–47: wealth you can see, sleep to end the month, events in the world), lighter sign lettering (48: the city drops from 246k to 122k triangles), the smaller economy issues (49: property tax, insurance, closing costs, PMI, one FHA loan, no lender re-roll, a slower credit climb) Phase 1 slice 4 as an opt-in setting (50: "Start in the 3D city"), unique asset ids with a real production save as a migration test (51), pacing (52: "free in about N years at this pace"), Phase 1 slice 5 (53: the Freedom Track) and events staged in 3D (54). **Builds 40–54 are live** after two releases that evening. Later that night builds 55–57 followed: 55 the course rewards, 56 the hero blink, 57 a cleaner face texture. **They went live at 21:01 PDT** on Pieter's "ship it, release 55-57" (`main` = `21f7771`, deploy `6ab743ad`). Then builds 58–59 followed (58: a real wave, a Sit clip and tapered hair; 59: baked ambient occlusion for the city). **They went live at 22:27 PDT** on "ship it, release 58-59" (`main` = `e3097ca`, deploy `6ab757c4`). Making the city the default screen (slice 4) still waits for Pieter (`docs/phase1-plan.md`). Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
 
 ## 1. Where things stand
 
 | What | State |
 |---|---|
-| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | **Builds 40–57 are live** after three releases, each with Pieter's go-ahead:<br>• 40–51 at 17:21 PDT, deploy `6ab70fda`;<br>• 52–54 at 18:19 PDT ("ship it"), deploy `6ab71d6d`;<br>• 55–57 at 21:01 PDT ("ship it, release 55-57"): `origin/main` = `21f7771`, deploy `6ab743ad`.<br>Before that, production was a Sept-13 **CLI** deploy (`6aa6c7fa`), not `origin/main` (`073f397`). Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`. |
+| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | **Builds 40–59 are live** after four releases, each with Pieter's go-ahead:<br>• 40–51 at 17:21 PDT, deploy `6ab70fda`;<br>• 52–54 at 18:19 PDT ("ship it"), deploy `6ab71d6d`;<br>• 55–57 at 21:01 PDT ("ship it, release 55-57"), deploy `6ab743ad`;<br>• 58–59 at 22:27 PDT ("ship it, release 58-59"): `origin/main` = `e3097ca`, deploy `6ab757c4`.<br>Before that, production was a Sept-13 **CLI** deploy (`6aa6c7fa`), not `origin/main` (`073f397`). Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`. |
 | Branch `codex/game-overhaul-20260503-223748` | The old release branch at `073f397` (build 39); now behind `main`. |
 | **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `4436196`. Later commits here are ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
-| Validation on the branch | 483 tests / 85 files, TypeScript and the production build (build 59; 58–59 not released). |
+| Validation on the branch | 483 tests / 85 files, TypeScript and the production build (build 59, live). |
 | Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
@@ -50,12 +50,15 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 29. `e09ec4b`: cleaner face texture for the hero (build 57): Meshy's seam lines replaced with the local 3D skin tone. Receipt: `docs/verification/hero-face-2026-09-25/`.
 30. `21f7771`: builds 56–57 docs. **Released: `main` = `21f7771`** (builds 55–57, deploy `6ab743ad`; receipt in `docs/verification/release-2026-09-25/`).
 31. `8c9961c`: release-3 docs.
-32. `a36d1b8`: a real wave, a Sit clip and tapered hair (build 58). Receipt: `docs/verification/characters-polish-2026-09-25/`. **Not released.**
-33. `6bde70f`: baked ambient occlusion for the city (build 59). Receipt: `docs/verification/city-ao-2026-09-25/`. **Not released.**
+32. `a36d1b8`: a real wave, a Sit clip and tapered hair (build 58). Receipt: `docs/verification/characters-polish-2026-09-25/`.
+33. `6bde70f`: baked ambient occlusion for the city (build 59). Receipt: `docs/verification/city-ao-2026-09-25/`.
+34. `e3097ca`: builds 58–59 docs. **Released: `main` = `e3097ca`** (builds 58–59, deploy `6ab757c4`).
 
-## 1b. Where the last session stopped (2026-09-25, ~21:45 PDT)
+## 1b. Where the last session stopped (2026-09-25, ~22:35 PDT)
 
-**Builds 58–59, the rest of the visual list: built, NOT released.**
+**Live: builds 40–59.** Release 4 (builds 58–59) went out at 22:27 PDT; receipt and rollback in `docs/verification/release-2026-09-25/`.
+
+**Builds 58–59, the rest of the visual list: live since release 4.**
 - **58, characters** (`docs/verification/characters-polish-2026-09-25/`):
   - **Wave:** the arm is aimed (upper arm out, forward and a little down; forearm up beside the head, sweeping). The old sideways raise read as scratching the neck and webbed the jacket; `tether_torso_sides()` keeps the torso's sides on the Torso.
   - **Sit, a seventh clip** (hands on the thighs, breathing), played by `seatedClip()` wherever someone sits.
@@ -65,9 +68,8 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 - **59, city AO** (`docs/verification/city-ao-2026-09-25/`): a Cycles AO bake into a shared lightmap on `TEXCOORD_1`, shipped as the glTF occlusion texture (1024 px), strength `TOWN_AO_STRENGTH` 1.4.
   - Cost: +481 KB on the city file (1.38 MB), +4% vertices, one texture. MODEL_VERSION d.
   - It's a look change (darker, more grounded): worth Pieter's eye and the phone/Chromebook check.
-- **To release:** ask Pieter.
 
-**Live: builds 40–57.** Release 3 (builds 55–57) went out at 21:01 PDT. A pre-release save on the live site passed Sales for the 3% raise, and its pace went from 19 to 18 years. Receipt and rollback: `docs/verification/release-2026-09-25/`.
+**Earlier that night: builds 40–57.** Release 3 (builds 55–57) went out at 21:01 PDT. A pre-release save on the live site passed Sales for the 3% raise, and its pace went from 19 to 18 years. Receipt and rollback: `docs/verification/release-2026-09-25/`.
 
 **Live: builds 40–54.** There were two releases that evening, each with Pieter's word; see `docs/verification/release-2026-09-25/` for both, with live checks and one-line rollbacks.
 - **40–51** at 17:21 PDT (deploy `6ab70fda`). Production had been a Sept-13 CLI deploy, not `origin/main`.
@@ -100,7 +102,7 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 1. **Visuals (§3.4).** Blender work that benefits from Pieter's eye on the result:
    - ✅ the hero blink (build 56);
    - ✅ hero face skin evenness (build 57; the cheek's shading step remains, see above);
-   - ✅ the Wave armpit crease (build 58);
+   - ✅ the Wave armpit crease (build 58, live);
    - ✅ a Sit clip (build 58);
    - ✅ hair polish (build 58);
    - ✅ an AO bake (build 59).
@@ -143,8 +145,8 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
    - ✅ course rewards (build 55, live): a lasting raise instead of cash, a $150 retake fee, and two course bugs fixed.
 4. **More visuals:**
    - ✅ lighter sign lettering (build 48: −125k triangles; kept 3D, dropped the bevel and curve resolution);
-   - ✅ AO bake (build 59, not released); tileable textures for pavement, brick and road remain (assessment §3);
-   - ✅ hair polish, the armpit crease in Wave and a Sit clip (build 58, not released);
+   - ✅ AO bake (build 59, live); tileable textures for pavement, brick and road remain (assessment §3);
+   - ✅ hair polish, the armpit crease in Wave and a Sit clip (build 58, live);
    - ✅ a blink for the hero Alex (build 56, live);
    - ✅ an even skin tone on the hero's face texture (build 57, live; the shading step on one cheek is geometry and remains).
 5. **Phone**: first iPhone check passed at build 43 (60 fps). Repeat after Phase 1 layout changes; a Chromebook is still untested.
@@ -374,7 +376,7 @@ These are last-observed snapshots, not values to restore over newer play:
 
 ## Validation and evidence
 
-Latest validation (2026-09-25, build 59 on the branch; live is build 57, `main` = `21f7771`): **483 tests / 85 files**, TypeScript and production build. The latest receipts are:
+Latest validation (2026-09-25, build 59, released as `main` = `e3097ca`): **483 tests / 85 files**, TypeScript and production build. The latest receipts are:
 - `docs/verification/city-ao-2026-09-25/` (build 59);
 - `docs/verification/characters-polish-2026-09-25/` (build 58);
 - `docs/verification/hero-face-2026-09-25/` (build 57);

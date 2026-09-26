@@ -155,3 +155,38 @@ netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb
 - **The city on the live site:** the header reads "Freedom 13% · free in about 18 years", and every model loaded with 200, including the new hero.
 - **Console:** no errors.
 - **Not done live:** a close-up of the blink. The pane was hidden, and production has no frame-stepping handle. It was checked on the branch (`hero-blink-2026-09-25/`).
+
+# Release 4: builds 58–59 (2026-09-25, 22:27 PDT = 2026-09-26 05:27 UTC)
+
+Pieter's word: "ship it, release 58-59".
+
+## What shipped
+
+`origin/main` was fast-forwarded from `21f77713` to `e3097cae` (05:27:30 UTC). That was 4 commits, with no config, function or dependency changes. The Netlify production deploy is `6ab757c433f3d00009919574` (published 05:28:03 UTC, 33 s after the push). It contains:
+- **Build 58:**
+  - a real wave, with the townspeople's torso tethered so the jacket no longer webs;
+  - the Sit clip for everyone seated;
+  - the `sitHips` fix (seated people sank under still clips and at dt 0);
+  - short hair that tapers to the nape.
+- **Build 59:** baked ambient occlusion for the city, at 1.4 strength.
+
+**Rollback** to builds 40–57:
+
+```sh
+netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb9907db","deploy_id":"6ab743ad80c17b0008c7ee24"}'
+```
+
+## Checks
+
+- **Before the push:** a fast-forward, with the branch equal to `origin`; 483 tests / 85 files.
+- **The live bundle:** `createTownScene-35GZteHb.js` loads the city at `20260925d`, the people at `20260925e` and the hero at `20260925g`, and holds the Sit clip code.
+- **Models on the live site, all 200:**
+  - `freedom-square.glb`: 1,375,692 bytes;
+  - `town-people.glb`: 525,924 bytes;
+  - `town-hero-alex.glb`: 523,348 bytes;
+  - `town-vehicles.glb`: 153,800 bytes.
+
+  All four are exactly the local builds.
+- **Functions and pages:** `validate-access`, `/educators` and `/teacher-packet` answer.
+- **The pre-release Alex save on the live site** (month 8, $10,091): it continues, and the city opens with every model at its new version. The header reads "Freedom 13% · free in about 18 years". No console errors.
+- **Not done live:** close-ups of the wave, the seated clip and the AO. The pane was hidden, and production has no frame-stepping handle. They were checked on the branch (`characters-polish-2026-09-25/`, `city-ao-2026-09-25/`).

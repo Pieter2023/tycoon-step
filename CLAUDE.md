@@ -4,10 +4,11 @@
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
-- **Production:** builds 40–57 are live after three releases on 2026-09-25:
+- **Production:** builds 40–59 are live after four releases on 2026-09-25:
   - 40–51 at 17:21 PDT, deploy `6ab70fda`;
   - 52–54 at 18:19 PDT, deploy `6ab71d6d`;
-  - 55–57 at 21:01 PDT, `origin/main` = `21f7771`, deploy `6ab743ad`.
+  - 55–57 at 21:01 PDT, deploy `6ab743ad`;
+  - 58–59 at 22:27 PDT, `origin/main` = `e3097ca`, deploy `6ab757c4`.
 
   Both were fast-forwards from the branch. Receipts and rollbacks: `docs/verification/release-2026-09-25/`. (Before that, production was a Sept-13 CLI deploy, not `origin/main`.)
 - **Work branch `town-lighting-pass`:** checked out and pushed to `origin`. `main` is fast-forwarded to it for each release, and later commits wait here for the next one. It holds, all now live:
@@ -39,11 +40,11 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - the hero Alex blinks (`e135de3`): eyelid meshes on the Head joint from `build_eyelids()` in `scripts/build-town-hero.py`, driven by `createBlink`; dev handle `__town.blink(amount)`;
   - a cleaner face texture (`e09ec4b`): `repair_face()` replaces Meshy's seam lines with the local 3D skin tone.
   - Receipts: `docs/verification/hero-blink-2026-09-25/`, `docs/verification/hero-face-2026-09-25/`.
-- **Builds 58–59, on the branch and NOT released:**
+- **Builds 58–59, live:**
   - a real wave, a Sit clip, tapered hair and a `sitHips` fix (`a36d1b8`, `docs/verification/characters-polish-2026-09-25/`);
   - baked ambient occlusion for the city (`6bde70f`, `docs/verification/city-ao-2026-09-25/`). The AO step is in `scripts/build-town-assets.py`; the strength is `TOWN_AO_STRENGTH` in `createTownScene.ts`.
 - **Validation:** 483 tests / 85 files and the production build pass on the branch.
-- **Next session, first:** ask Pieter to release builds 58–59 (the AO is a look change and adds about 0.5 MB). Then a real-phone and Chromebook check.
+- **Next session, first:** a real-phone and Chromebook check of builds 52–59 (the AO adds about 0.5 MB and one texture). Then tileable textures for pavement, brick and road (assessment §3).
 - **Waiting on Pieter:**
   - whether the hero's cheek shading step is worth hand re-topology in Blender (build 57 receipt);
   - Phase 1 slice 4: try the "Start in the 3D city" setting, then decide whether the city becomes the default screen (and the dashboard a ledger drawer);
