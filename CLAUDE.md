@@ -29,9 +29,15 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
     - month-close milestones are celebrated (App's `seenReady` ref);
     - energy and stress lead the Life tab and Profile.
   - events staged at their place in 3D (build 54, `components/town/townEventStage.ts`): a marker, a letter on the doorstep, hazard lights on the parked car.
-- **Validation:** 468 tests / 84 files and the production build pass on the branch.
-- **Next session, first:** the course rewards, approved by Pieter on 2026-09-25. Turn the Self Learn certifications' cash ($50k negotiations, $25k sales, $25k EQ) into a salary raise on top of the perks, and cut the failure penalties to a small retake fee. File map and test plan: HANDOVER §1b. Ask before releasing it.
+- **Build 55, on the branch and NOT released** (`3364c54`): the course rewards. Receipt: `docs/verification/course-rewards-2026-09-25/`.
+  - A pass pays a lasting raise instead of cash: Negotiations +5%, Sales +3%, EQ +3% (`services/courseRewards.ts`). It is stored as `GameState.courseRaises` and applied after the education premium by `getCourseRaiseMultiplier`, so promotions keep it. Saves that claimed the old cash get no raise.
+  - A third miss costs a $150 retake fee and buys three more tries.
+  - Also fixed: the negotiation growth bonus was monthly (~27% a year) and is now yearly; the EQ 1.5× XP perk now applies; Finish counts once per quiz run.
+  - Test: `test/CourseRewards.test.tsx`.
+- **Validation:** 481 tests / 85 files and the production build pass on the branch.
+- **Next session, first:** ask Pieter to release build 55. Warn him that saves already certified in Negotiations lose the ~27%-a-year growth going forward. Then the visuals (HANDOVER §1b "Then, in order").
 - **Waiting on Pieter:**
+  - the build-55 release (course rewards);
   - Phase 1 slice 4: try the "Start in the 3D city" setting, then decide whether the city becomes the default screen (and the dashboard a ledger drawer);
   - the daily challenge's demo gate (from June).
 - **Visual QA:** the town scene is a code-split chunk, so verify town deploys by grepping `TownModal-*.js`/`createTownScene-*.js`, not `index-*.js`. When the browser pane is hidden, use the dev handle `__town.advance(frames)` with `scripts/qa/capture-receiver.py` (HANDOVER §5).

@@ -1,6 +1,6 @@
 # Start here — Tycoon handover
 
-Updated **September 25, 2026 (late evening PDT)**. That day produced: a full game assessment, a lighting pass, new skinned characters, the AI-modelled Alex (build 42), the walk-bob fix (43), the first real-phone check, the economy fix Phase 0 (44), the traffic-deadlock fix (45), Phase 1 slices 1–3 (46–47: wealth you can see, sleep to end the month, events in the world), lighter sign lettering (48: the city drops from 246k to 122k triangles), the smaller economy issues (49: property tax, insurance, closing costs, PMI, one FHA loan, no lender re-roll, a slower credit climb) Phase 1 slice 4 as an opt-in setting (50: "Start in the 3D city"), unique asset ids with a real production save as a migration test (51), pacing (52: "free in about N years at this pace"), Phase 1 slice 5 (53: the Freedom Track) and events staged in 3D (54). **Builds 40–54 are live** after two releases that evening. Making the city the default screen (slice 4) still waits for Pieter (`docs/phase1-plan.md`). Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
+Updated **September 25, 2026 (late evening PDT)**. That day produced: a full game assessment, a lighting pass, new skinned characters, the AI-modelled Alex (build 42), the walk-bob fix (43), the first real-phone check, the economy fix Phase 0 (44), the traffic-deadlock fix (45), Phase 1 slices 1–3 (46–47: wealth you can see, sleep to end the month, events in the world), lighter sign lettering (48: the city drops from 246k to 122k triangles), the smaller economy issues (49: property tax, insurance, closing costs, PMI, one FHA loan, no lender re-roll, a slower credit climb) Phase 1 slice 4 as an opt-in setting (50: "Start in the 3D city"), unique asset ids with a real production save as a migration test (51), pacing (52: "free in about N years at this pace"), Phase 1 slice 5 (53: the Freedom Track) and events staged in 3D (54). **Builds 40–54 are live** after two releases that evening. Later that night, **build 55 (the course rewards) was built and verified on the branch but is not released**: it changes live rewards, so it waits for Pieter's go-ahead. Making the city the default screen (slice 4) still waits for Pieter (`docs/phase1-plan.md`). Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
 
 ## 1. Where things stand
 
@@ -11,7 +11,7 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 | **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `4436196`. Later commits here are ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
-| Validation on the branch | 468 tests / 84 files, TypeScript and the production build. `dist/` currently holds the release build (build 54). |
+| Validation on the branch | 481 tests / 85 files, TypeScript and the production build (build 55). `dist/` now holds a build-55 build, not what is live. |
 | Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
@@ -43,8 +43,10 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 22. `736a0a7`: Phase 1 slice 5, the Freedom Track (build 53): one milestone track in four chapters, with story and side goals alongside and energy and stress leading the meters. Receipt: `docs/verification/phase1-slice5-2026-09-25/`.
 23. `2c462a7`: events staged at their place in 3D (build 54): a marker at the event's place, a letter on the doorstep, hazard lights on the parked car. Receipt: `docs/verification/event-stage-2026-09-25/`.
 24. `a2d6207`, `4436196`: handover docs. **Released: `main` = `4436196`** (builds 52–54, Netlify deploy `6ab71d6d`).
+25. `61a80be`: release-2 docs.
+26. `3364c54`: the course rewards (build 55): a lasting raise instead of cash and a $150 retake fee. Receipt: `docs/verification/course-rewards-2026-09-25/`. **Not released.**
 
-## 1b. Where the last session stopped (2026-09-25, ~18:30 PDT)
+## 1b. Where the last session stopped (2026-09-25, ~19:15 PDT)
 
 **Live: builds 40–54.** There were two releases that evening, each with Pieter's word; see `docs/verification/release-2026-09-25/` for both, with live checks and one-line rollbacks.
 - **40–51** at 17:21 PDT (deploy `6ab70fda`). Production had been a Sept-13 CLI deploy, not `origin/main`.
@@ -54,25 +56,19 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
   - events staged in 3D (`docs/verification/event-stage-2026-09-25/`).
 - **Checks:** a save made on the live site before either release plays on the new code: the pace line, the track card, claiming, the log and the city header.
 
-**Next session, first: the course rewards, approved.** Pieter on 2026-09-25: "I will do the course rewards as you recommended in next session". Turn the Self Learn certifications' one-time cash into what the skill really earns: a salary raise on top of the existing perks. Scale the failure penalties down to a small retake fee too.
-
-| Course | Cash today | Where |
-|---|---|---|
-| Master Negotiations | +$50,000 on pass; −$25,000 after three fails | `components/MasterNegotiationsTab.tsx:15-16` (`PASS_BONUS`, `FAIL_3X_PENALTY`), applied at `:387`, copy at `:403` and `:771` |
-| Sales Accelerator | +$25,000 on pass; `cashPenalty` $25,000 | `data/salesAcceleratorQuiz.ts:69`, `:77-78`, applied in `components/SalesCertificationPanel.tsx:124-128` |
-| EQ | +$25,000 on pass (the 1.5× career XP perk stays); a $10,000 fee on the fail path | `components/UpgradeEQTab.tsx:345`, `:418` |
-| Compound Interest | +$1,500 and +15 credit | `components/CompoundInterestCoursePanel.tsx:144` |
-
-- **The raise.** Suggested default: +5% base salary on the first pass, once per save.
-  - Reuse `salaryChangePct`, which scenario outcomes already support (build 27, the raise negotiation), so the pay stub and the pace pick it up.
-  - Keep the perks: deal discounts, 1.5× XP, credit.
-- **Existing saves** keep what they already claimed (the `rewardClaimed` flags); there is no claw-back.
-- **Copy.** Update the course copy that promises cash, in English and Spanish where it exists.
-- **Tests:**
-  - a pass raises salary once, and a retake costs little;
-  - rerun `test/StrategyRanking.test.ts`, `test/FreedomPace.test.ts` and `test/ProductionSaveMigration.test.tsx`;
-  - check in the browser that "free in about N years" drops after the raise.
-- **Release.** It changes live rewards, so ask Pieter before releasing.
+**Build 55, the course rewards: built, verified, NOT released.** Pieter approved the design on 2026-09-25 ("I will do the course rewards as you recommended"). Commit `3364c54`; receipt `docs/verification/course-rewards-2026-09-25/`.
+- **Pass:** a lasting raise instead of cash. Negotiations +5%, Sales +3%, EQ +3%.
+  - It is applied after the education premium (`getCourseRaiseMultiplier`), so promotions keep it; a one-off `salaryChangePct` would vanish at the next promotion.
+  - Saves that claimed the old cash keep it and get no raise.
+- **Miss:** 3 tries included; a third miss costs $150 (cash, then the card) and buys 3 more.
+  - EQ no longer demotes.
+  - Sales no longer charges $25k per miss.
+  - The loader reopens Sales courses that three misses had locked.
+- **Two bugs found and fixed:**
+  - The negotiation bonus added up to 2% a *month* to salary growth (~27% a year). It is now a yearly figure. Certified negotiators: median freedom 109 → 158 months (no courses: 191).
+  - The EQ "1.5× career XP" perk was never applied; now it is.
+- **One UI fix:** Finish counts once per quiz run (a double click during the fade-out counted two misses).
+- **To release:** ask Pieter. Tell him that saves already certified in Negotiations lose that ~27%-a-year growth going forward (past raises stay). Then use the release recipe in `docs/verification/release-2026-09-25/`: fast-forward `main`, then check the live bundle and a real save.
 
 **Then, in order:**
 1. **Visuals (§3.4).** Blender work that benefits from Pieter's eye on the result:
@@ -87,7 +83,7 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 4. **Still Pieter's calls:** slice 4 as the default (kept opt-in because the Chromebook, the classroom device, is untested), and the daily challenge's demo gate (from June).
 
 **QA state:**
-- `localhost:5191` (`tycoon-qa-5191`, stopped) holds the production fixture save at month 8, with first steps reviewed and `tycoon_start_in_city=1`, so Continue opens the city.
+- `localhost:5191` (`tycoon-qa-5191`) holds the production fixture save at month 8, with first steps reviewed and `tycoon_start_in_city=1`, so Continue opens the city. The build-55 check left it with Sales certified (the 3% raise), one Negotiations miss, and $150 less cash after a retake fee.
 - The production origin in the browser pane holds a throwaway Alex save at month 8 (First Investment claimed).
 - Production saves were copied out of the live page with a SHA-256 check. A public page cannot post to a local receiver, even with `Access-Control-Allow-Private-Network`.
 
@@ -104,7 +100,7 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
    - **Slice 4:** try the "Start in the 3D city" setting (Quick actions, build 50), then decide whether the city becomes the default screen for everyone and whether the dashboard becomes a "ledger" drawer. Claude kept it opt-in because the Chromebook, the classroom device, is untested.
    - **Slice 5:** built as the Freedom Track (build 53). Say what to change.
 6. ✅ **Builds 52–54 shipped** on 2026-09-25 at 18:19 PDT ("ship it"; `docs/verification/release-2026-09-25/`).
-7. ✅ **Course rewards: approved** (2026-09-25) as recommended: a salary raise instead of cash, and small retake fees. It is the first task next session; §1b has the file map. Ask before releasing it.
+7. **Course rewards: built as build 55** (`3364c54`, receipt `docs/verification/course-rewards-2026-09-25/`), **waiting on Pieter's go-ahead to release.** The approved design is a raise instead of cash and a $150 retake fee. Also fixed: the negotiation growth bug (~27% a year) and the unapplied EQ perk. Certified negotiators on existing saves will feel the growth fix.
 
 Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the AI Alex cost 38 (receipt: `docs/verification/hero-alex-2026-09-25/`). Still: never spend credits without a fresh yes.
 
@@ -118,6 +114,7 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
    - 🔨 slice 4 as an opt-in setting, "Start in the 3D city" (build 50, `docs/verification/phase1-slice4-2026-09-25/`). Making it the default and the ledger drawer need Pieter's call;
    - ✅ slice 5, one milestone track: the Freedom Track (build 53);
    - ✅ events staged at their place in 3D (build 54): the marker, the doorstep letter and the car's hazard lights.
+   - ✅ course rewards (build 55, not released): a lasting raise instead of cash, a $150 retake fee, and two course bugs fixed.
 4. **More visuals:**
    - ✅ lighter sign lettering (build 48: −125k triangles; kept 3D, dropped the bevel and curve resolution);
    - AO bake and textures;
@@ -353,7 +350,8 @@ These are last-observed snapshots, not values to restore over newer play:
 
 ## Validation and evidence
 
-Latest validation (2026-09-25, build 54, released as `main` = `4436196`): **468 tests / 84 files**, TypeScript and production build. The latest receipts are:
+Latest validation (2026-09-25, build 55 on the branch, not released): **481 tests / 85 files**, TypeScript and production build. Live is build 54 (`main` = `4436196`). The latest receipts are:
+- `docs/verification/course-rewards-2026-09-25/` (build 55);
 - `docs/verification/release-2026-09-25/` (both releases);
 - `pacing-2026-09-25/`;
 - `phase1-slice5-2026-09-25/`;

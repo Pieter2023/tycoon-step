@@ -2,9 +2,12 @@
 
 ## Current priorities — September 25, 2026 (evening)
 
-Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). **Production is builds 40–54**: `origin/main` = `4436196`, two releases on 2026-09-25 with receipts in `docs/verification/release-2026-09-25/`. 468 tests / 84 files pass.
+Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). **Production is builds 40–54**: `origin/main` = `4436196`, two releases on 2026-09-25 with receipts in `docs/verification/release-2026-09-25/`. Build 55 is on the branch, not released. 481 tests / 85 files pass.
 
-1. **Next: the course rewards** (approved by Pieter): the Self Learn certifications' cash ($50k / $25k / $25k) becomes a salary raise on top of the perks, and the failure penalties become a small retake fee. File map: HANDOVER §1b.
+1. **Built, waiting on Pieter's release call: the course rewards** (build 55, `3364c54`).
+   - A pass pays a lasting raise instead of cash; a third miss costs a $150 retake fee.
+   - Also fixed: the ~27%-a-year negotiation growth bug and the unapplied EQ perk.
+   - Receipt: `docs/verification/course-rewards-2026-09-25/`.
 2. **Visuals (Blender):**
    - a hero blink (eyelid meshes, because the eyes are painted into the texture);
    - hero face skin evenness;
