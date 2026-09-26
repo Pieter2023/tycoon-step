@@ -1,6 +1,6 @@
 # Start here — Tycoon handover
 
-Updated **September 26, 2026, ~11:00 PDT**, at the end of the standard-UI session. **Build 67, the Apple-style UI upgrade, is built but NOT released** (§1d; receipt `docs/verification/ui-apple-2026-09-26/`). It needs Pieter's look and a separate "ship it". **Build 66, the sound audit and upgrade, went live at 09:16 PDT** (release 10, `main` = `6bb25f1`, deploy `6ab7efe0`; §1c). **Builds 40–65 were live** after nine releases (four on Sept 25, five on Sept 26), each with Pieter's go-ahead. **Analytics are on** (build 65, release 9): Umami Cloud Hobby, Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`. Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`.
+Updated **September 26, 2026, 14:20 PDT**, at the end of the standard-UI session. **Build 67, the Apple-style UI upgrade, went live at 14:15 PDT** (release 11 on Pieter's "ship it", `main` = `21d94d7`, deploy `6ab835d1`; §1d; receipt `docs/verification/ui-apple-2026-09-26/`). **Build 66, the sound audit and upgrade, went live at 09:16 PDT** (release 10, deploy `6ab7efe0`; §1c). **Builds 40–65 were live before that**, after nine releases (four on Sept 25, five on Sept 26), each with Pieter's go-ahead. **Analytics are on** (build 65, release 9): Umami Cloud Hobby, Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`. Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`.
 
 **This session** (Sept 26, 06:00–08:20 PDT) ran the real-phone check of builds 52–59 (56–60 fps on the iPhone), then built and released builds 60–64:
 
@@ -160,7 +160,7 @@ Pieter switched the city's sound on at the bank teller, and it "tweeted loudly l
 - **Not done:** an ear test. Pieter should listen to `audio/bank-before-then-after.m4a` (turn the volume down for the first 3 s) and the `after-*` files, then say what to change.
 - **Released** on Pieter's "ship it, release 66": deploy `6ab7efe0`. On the live site, at the teller with sound switched off and on, the output measured −52.9 dBFS RMS with nothing at 4.3 kHz. The receipt and a one-line rollback are under release 10 in `docs/verification/release-2026-09-25/`. The engine ships in the shared `investmentModel-*.js` chunk, not `main-*.js`.
 
-## 1d. Build 67: the Apple-style UI upgrade (2026-09-26, built, not released)
+## 1d. Build 67: the Apple-style UI upgrade (2026-09-26, live since 14:15 PDT, release 11)
 
 Pieter asked for "a significant overall UI upgrade of the standard UI using apple design skill … look and feel absolutely incredible … don't change back end functionality … the absolute best animations". He later allowed restyling the 3D city's panels "if you think it must be restyled". The 3D scene is untouched. Receipt with before/after shots: `docs/verification/ui-apple-2026-09-26/`. **Read `docs/ui-design-system.md` before touching any 2D UI.**
 
@@ -194,10 +194,9 @@ Pieter asked for "a significant overall UI upgrade of the standard UI using appl
 
 **Checks:** `tsc` clean; 90 files / 524 tests (+ `test/UiPrimitives.test.tsx`); `npm run build` passes; shots at 1280×800, 1366×768, iPhone 393×659 (WebKit) and with reduced motion. In real Chrome (the preview pane), a month advance showed the preview sheet materialising over a blurred page, the odometer month, figures counting with a red tint and the glass money capsule.
 
-**Before releasing:**
-- Look on the iPhone: headless WebKit does not draw `backdrop-filter` and ghosts even 96%-opaque layers, so the glass could only be judged in Chrome.
-- Check the Chromebook's frame rate with the glass bars over scrolling content.
-- Use the fast-forward recipe in `docs/verification/release-2026-09-25/`.
+**Released** on Pieter's "ship it" as release 11: deploy `6ab835d1`, with the live checks and a one-line rollback in `docs/verification/release-2026-09-25/`. The pre-release Alex save on the live site opened in the new city chrome and dashboard with no errors.
+
+**Still to check:** the glass on a real iPhone (headless WebKit can't draw `backdrop-filter`) and the Chromebook's frame rate with glass bars over scrolling content.
 
 **Open, not changed:**
 - MortgageModal's "reduce cash to X" leaves out closing costs, while App's confirm dialog includes them. That was already the case before this build.
@@ -232,7 +231,7 @@ Pieter asked for "a significant overall UI upgrade of the standard UI using appl
 8. ✅ **Builds 56–59 shipped** (releases 3 and 4). Pieter saw the AO before-and-after and said "ship it".
 9. ✅ **The hero's cheek shading step:** Pieter said yes on 2026-09-26; fixed in build 64 (`docs/verification/hero-cheek-2026-09-26/`), live since 08:02 PDT.
 10. ✅ **Analytics: on** since 2026-09-26 (build 65; §1b item 5).
-11. **Build 67, the Apple-style UI upgrade: review, then "ship it" or not** (§1d). Look at `docs/verification/ui-apple-2026-09-26/compare-*.jpg`, or play the branch on 127.0.0.1:5192. Before releasing, check the glass on the iPhone and the Chromebook's frame rate.
+11. ✅ **Build 67, the Apple-style UI upgrade: live** (release 11, 14:15 PDT on 2026-09-26, "ship it"). Pieter's feedback on the new look is welcome. Still open: an iPhone look at the glass and a Chromebook frame-rate check.
 
 Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the AI Alex cost 38 (receipt: `docs/verification/hero-alex-2026-09-25/`). Still: never spend credits without a fresh yes.
 

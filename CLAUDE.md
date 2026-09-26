@@ -1,14 +1,14 @@
 # Tycoon: Financial Freedom Simulator
 
-## Current handover — September 26, 2026 (~11:00 PDT, end of the standard-UI session)
+## Current handover — September 26, 2026 (14:20 PDT, end of the standard-UI session)
 
-**Build 67, the Apple-style UI upgrade, is built on the branch and NOT released.** It is waiting for Pieter's look and a "ship it"; see HANDOVER.md §1d and `docs/verification/ui-apple-2026-09-26/` (before/after shots). **Any 2D UI work starts with [docs/ui-design-system.md](docs/ui-design-system.md)**:
+**Build 67, the Apple-style UI upgrade, is live** (release 11, 14:15 PDT, `main` = `21d94d7`, deploy `6ab835d1`). See HANDOVER.md §1d and `docs/verification/ui-apple-2026-09-26/` (before/after shots). **Any 2D UI work starts with [docs/ui-design-system.md](docs/ui-design-system.md)**:
 - the re-derived palette, type, materials and motion primitives;
 - the contracts: accessible names, `Modal`, sound handlers, money figures read from `financialFreedom`/`freedomPace`, and copy in English and Spanish.
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
-- **Production:** builds 40–66 are live after ten releases. Four were on 2026-09-25, and builds 60–65 followed on 2026-09-26:
+- **Production:** builds 40–67 are live after eleven releases. Four were on 2026-09-25, and builds 60–65 followed on 2026-09-26:
   - 40–51 at 17:21 PDT, deploy `6ab70fda`;
   - 52–54 at 18:19 PDT, deploy `6ab71d6d`;
   - 55–57 at 21:01 PDT, deploy `6ab743ad`;
@@ -18,7 +18,8 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - 62 on 2026-09-26 at 07:41 PDT, deploy `6ab7d981`;
   - 63–64 on 2026-09-26 at 08:02 PDT, deploy `6ab7de71`;
   - 65, analytics on, on 2026-09-26 at 08:40 PDT, deploy `6ab7e74f`;
-  - **66, the sound audit and upgrade, on 2026-09-26 at 09:16 PDT: `origin/main` = `6bb25f1`, deploy `6ab7efe0`.**
+  - 66, the sound audit and upgrade, on 2026-09-26 at 09:16 PDT, deploy `6ab7efe0`;
+  - **67, the Apple-style UI upgrade, on 2026-09-26 at 14:15 PDT: `origin/main` = `21d94d7`, deploy `6ab835d1`.**
 
   Both were fast-forwards from the branch. Receipts and rollbacks: `docs/verification/release-2026-09-25/`. (Before that, production was a Sept-13 CLI deploy, not `origin/main`.)
 - **Work branch `town-lighting-pass`:** checked out and pushed to `origin`. `main` is fast-forwarded to it for each release, and later commits wait here for the next one. It holds, all now live:
@@ -81,14 +82,14 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - Dev meter: `window.__audio.output`.
   - **Not ear-tested:** the listening files are in the receipt's `audio/`.
 - **Validation:** 524 tests / 90 files, `tsc` and the production build pass on the branch.
-- **The branch is ahead of `main` by build 67 (unreleased UI code)** plus docs.
+- **The branch is ahead of `main` only by docs** (the release-11 receipt). There is no unreleased code.
 - **Next session, first:**
-  - build 67: Pieter's review, an iPhone check of the glass (headless WebKit can't draw `backdrop-filter`) and a Chromebook frame-rate check, then release on his "ship it";
+  - build 67 is live: check the glass on a real iPhone (headless WebKit can't draw `backdrop-filter`) and the Chromebook frame rate, and act on Pieter's feedback;
   - tune build 66's sounds once Pieter has listened;
   - a Chromebook check (needs a Chromebook), which matters more now that the city is the first screen;
   - the ledger drawer, only if Pieter wants it;
   - the visual items never started (assessment §3): a modular building kit, splitting the city for culling, the male hip/waist ratio, and the hero's remaining texture lines.
-- **Waiting on Pieter:** a look at build 67 (the UI upgrade) and whether to ship it; his ear on build 66's sounds (live, or the receipt's `audio/`): what to change; whether to build the ledger drawer.
+- **Waiting on Pieter:** his feedback on build 67's new look; his ear on build 66's sounds (live, or the receipt's `audio/`): what to change; whether to build the ledger drawer.
 - **Analytics: ON since 2026-09-26** (build 65, release 9).
   - Umami Cloud, Hobby plan ($0), in Pieter's account. Site "Tycoon", Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`.
   - Dashboard: https://cloud.umami.is/analytics/us/websites/a8297643-15e9-4122-95b8-0b49cf4a7f98

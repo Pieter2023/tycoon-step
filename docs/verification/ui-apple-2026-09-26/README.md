@@ -1,4 +1,6 @@
-# Build 67: the Apple-style UI upgrade (2026-09-26, not released)
+# Build 67: the Apple-style UI upgrade (2026-09-26, live since 14:15 PDT)
+
+Released as release 11 (`main` = `21d94d7`, deploy `6ab835d1`). The live checks and a one-line rollback are under release 11 in `docs/verification/release-2026-09-25/`.
 
 Pieter asked for "a significant overall UI upgrade of the standard UI using apple design skill … it must really look and feel absolutely incredible. Don't change back end functionality. Also ensure the absolute best animations." He later allowed the 3D city's panels to be restyled where needed; the 3D scene itself is unchanged.
 

@@ -432,3 +432,38 @@ A player who wants silence can switch it off with the city's Sound button or Qui
   - **At the bank teller, Pieter's steps** (sound off, then on): "Sound off" suspended the context. "Sound on" gave **−52.9 dBFS RMS, peak −41.2, and the 4.2–4.4 kHz band at −127 dB**.
   - All eight city models load with 200, and there were no console errors.
 - **Not done:** an ear test on a real device. The pane was hidden, and Claude can't hear. The listening files are in `docs/verification/sound-2026-09-26/audio/`.
+
+# Release 11: build 67, the Apple-style UI upgrade (2026-09-26, 14:15 PDT = 21:15 UTC)
+
+Pieter's word: "ship it".
+
+## What shipped
+
+`origin/main` was fast-forwarded from `6bb25f10` to `21d94d70` (pushed 21:14:54 UTC). That was 3 commits: the release-10 receipt, the sound session's handover and build 67. The only config-level change is `index.html`: the font link moved from Sora to Inter (the system font leads the stack), and `theme-color` became `#000000`. The analytics snippet, functions, redirects, dependencies and `vite.config.ts` are unchanged. The Netlify production deploy is `6ab835d19ea480000863ba87`, published 21:15:29 UTC, 35 s after the push.
+
+- **Build 67, the Apple-style UI upgrade** (`docs/verification/ui-apple-2026-09-26/`): the whole 2D UI (shell, pages, dialogs and landing) and the 3D city's chrome are rebuilt on an Apple design system, with spring motion throughout. No game logic, save format, handler or money figure changed.
+
+**Rollback** to builds 40–66:
+
+```sh
+netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb9907db","deploy_id":"6ab7efe0cd54cb0008c0534f"}'
+```
+
+## Checks
+
+- **Before the push:**
+  - a fast-forward, with the branch equal to `origin` and nothing on `main` missing from it;
+  - a clean tracked tree;
+  - `index.html` was the only config-level file, and its diff was just the font link and theme colour;
+  - 524 tests / 90 files, `tsc` and the production build.
+- **The live bundle:**
+  - `main-l-3UlIn3.js` contains the new shell (`desktop-nav-selection`, `mobile-tab-selection`, `seg-thumb`, `autoplay-speed-thumb`, `shell.mobileShell.open_profile`).
+  - `main-8jkOQhhF.css` has the new tokens (`--tint-green`, `ease-spring`, `mat-sheet`) and no Sora. Its name differs from the local build's: Tailwind also scans untracked files on the dev machine, and Netlify's clean checkout doesn't have them.
+  - `town-D6vHWMLB.css` matches the local build's name, uses the green accent and has none of the old gold `#eac778`.
+- **Functions and pages:** `/`, `/educators`, `/teacher-packet` and `validate-access` answer 200.
+- **The pre-release Alex save on the live site** (browser pane, analytics opt-out set; the save was not advanced):
+  - The new landing showed, and "Continue Adult" opened the city with the new chrome at Month 8, summer, $10,091, Freedom 13%.
+  - All eight city models loaded with 200, and the scene rendered.
+  - Closing the city showed the new dashboard: the 13% freedom ring and Cash $10.1K, Net Worth $41.5K, Passive $556/mo.
+  - There were no console errors.
+- **Not done:** a check on a real iPhone. Headless WebKit can't draw `backdrop-filter`; the glass renders correctly in Chrome. A Chromebook frame-rate check is also still open.
