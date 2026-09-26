@@ -1,6 +1,6 @@
 # Tycoon: Financial Freedom Simulator
 
-## Current handover — September 26, 2026 (06:55 PDT)
+## Current handover — September 26, 2026 (07:15 PDT)
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
@@ -49,10 +49,14 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - The overlay now scrolls, and the dialog has auto top/bottom margins (centred when it fits, top-aligned when it doesn't).
   - `TutorialModal` keeps its bottom sheet (margins 0). The city modals pass `overflow: 'hidden'`.
   - Test: `test/Modal.test.tsx`. Checked on the iPhone.
-- **Validation:** 484 tests / 85 files and the production build pass on the branch.
-- **Next session, first:**
+- **Build 61, on the branch, not released:** tileable paving, brick and asphalt (`components/town/townSurfaces.ts`, applied by `dressTown`).
+  - Painted at runtime with normal maps; no download.
+  - The city model gives the building walls their own `wall*` materials, and `MODEL_VERSION` is `20260926b`.
+  - iPhone: 58–60 fps on Detailed.
+  - Receipt: `docs/verification/surfaces-2026-09-26/`. Test: `test/TownSurfaces.test.ts`.
+- **Validation:** 491 tests / 86 files and the production build pass on the branch.
+- **Next session, first:** release build 61 when Pieter says so. Then:
   - a Chromebook check (needs a Chromebook);
-  - tileable textures for pavement, brick and road (assessment §3);
   - the phone check's small findings (HANDOVER §1b item 4).
 - **Waiting on Pieter:**
   - whether the hero's cheek shading step is worth hand re-topology in Blender (build 57 receipt);
@@ -79,7 +83,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (85 files / 484 tests on `town-lighting-pass`, 2026-09-26; integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (86 files / 491 tests on `town-lighting-pass`, 2026-09-26; integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)

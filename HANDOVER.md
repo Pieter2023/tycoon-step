@@ -1,6 +1,8 @@
 # Start here — Tycoon handover
 
-Updated **September 26, 2026, 06:55 PDT**. **Builds 40–60 are live.** The real-phone check of builds 52–59 passed (56–60 fps, `docs/verification/phone-2026-09-26/`). It found one phone bug: dialogs taller than the screen, such as the Sales quiz and Save and load, had their close and action buttons out of reach. The fix, **build 60**, was **released at 06:45 PDT** ("ship it, release 60"): `main` = `e8e1d16`, deploy `6ab7cc8d`. The receipt is release 5 in `docs/verification/release-2026-09-25/`.
+Updated **September 26, 2026, 07:15 PDT**. **Build 61, tileable paving, brick and asphalt, is on the branch, not released** (`docs/verification/surfaces-2026-09-26/`). Builds 40–60 are live.
+
+Earlier the same morning (06:55 PDT): **builds 40–60 went live.** The real-phone check of builds 52–59 passed (56–60 fps, `docs/verification/phone-2026-09-26/`). It found one phone bug: dialogs taller than the screen, such as the Sales quiz and Save and load, had their close and action buttons out of reach. The fix, **build 60**, was **released at 06:45 PDT** ("ship it, release 60"): `main` = `e8e1d16`, deploy `6ab7cc8d`. The receipt is release 5 in `docs/verification/release-2026-09-25/`.
 
 Before that, updated **September 26, 2026, 06:00 PDT**. Builds 40–59 went live in four releases on the evening of September 25 (all with Pieter's go-ahead; receipts and rollbacks in `docs/verification/release-2026-09-25/`). That day produced a full game assessment, then:
 - the art upgrade: the lighting pass (40), skinned townspeople (41), the AI-modelled Alex (42), the walk-bob fix (43) and lighter sign lettering (48);
@@ -20,7 +22,7 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 | **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `e8e1d16` (release 5, build 60). Later commits, such as the release-5 receipt, stay ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
-| Validation on the branch | 484 tests / 85 files, TypeScript and the production build (build 60, live). |
+| Validation on the branch | 491 tests / 86 files, TypeScript and the production build (build 61, not released; build 60 is live). |
 | Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
@@ -64,7 +66,8 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 34. `e3097ca`: builds 58–59 docs. **Released: `main` = `e3097ca`** (builds 58–59, deploy `6ab757c4`).
 35. `b689c41`: release-4 receipt; then `e010f24`, the 06:00 handover.
 36. `e8e1d16`: build 60, dialogs fit a phone (`components/Modal.tsx`), found by the phone check of builds 52–59. Receipt: `docs/verification/phone-2026-09-26/`. **Released: `main` = `e8e1d16`** (deploy `6ab7cc8d`).
-37. The release-5 receipt and this handover.
+37. `9bed375`: the release-5 receipt.
+38. Build 61: tileable paving, brick and asphalt (`components/town/townSurfaces.ts`, `dressTown`, wall materials in `scripts/build-town-assets.py`, `MODEL_VERSION` `20260926b`). Receipt: `docs/verification/surfaces-2026-09-26/`. **Not released.**
 
 ## 1b. Where the last session stopped (2026-09-26, 06:00 PDT)
 
@@ -97,7 +100,11 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 2. ✅ **Build 60 released** (2026-09-26, 06:45 PDT, deploy `6ab7cc8d`; release 5 in `docs/verification/release-2026-09-25/`). On a phone, dialogs taller than the screen (the Sales quiz, Save and load) had their close and action buttons out of reach, so a phone player couldn't take the Sales certification. The shared `Modal` now scrolls. Code: `components/Modal.tsx`, plus one line each in `TutorialModal`, `TownModal` and `KidsSquareModal`.
 3. **A Chromebook check**, the classroom device. It has never been done, and it needs Pieter or a Chromebook on the network.
 4. **Small findings from the phone check** (receipt, "Other findings"): all `SOCIAL` events are framed as "Rosa knocks on your door", including the office birthday collection; rooms leave the 3D view about a third of a portrait screen.
-5. **Tileable textures** for pavement, brick and road: the last open item of assessment §3's visual list.
+5. ✅ **Tileable textures** (build 61, on the branch, **awaiting Pieter's release go-ahead**; `docs/verification/surfaces-2026-09-26/`):
+   - sandstone paving, painted brick walls and asphalt, painted at runtime with normal maps;
+   - iPhone 58–60 fps on Detailed.
+
+   That closes assessment §3's visual list, apart from the bigger items it never started: a modular building kit, splitting the city for culling, and the male hip/waist ratio.
 6. **Pieter's calls:**
    - slice 4 as the default screen, and the ledger drawer;
    - the daily challenge's demo gate (from June);
@@ -150,7 +157,7 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
    - ✅ course rewards (build 55, live): a lasting raise instead of cash, a $150 retake fee, and two course bugs fixed.
 4. **More visuals:**
    - ✅ lighter sign lettering (build 48: −125k triangles; kept 3D, dropped the bevel and curve resolution);
-   - ✅ AO bake (build 59, live); tileable textures for pavement, brick and road remain (assessment §3);
+   - ✅ AO bake (build 59, live); ✅ tileable textures for pavement, brick and road (build 61, not released; `docs/verification/surfaces-2026-09-26/`);
    - ✅ hair polish, the armpit crease in Wave and a Sit clip (build 58, live);
    - ✅ a blink for the hero Alex (build 56, live);
    - ✅ an even skin tone on the hero's face texture (build 57, live; the shading step on one cheek is geometry and remains).
@@ -169,7 +176,7 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
 ```sh
 cd '/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2'
 git status --short && git log --oneline -8
-npm run test:run          # 484 tests / 85 files on the branch
+npm run test:run          # 491 tests / 86 files on the branch
 npm run build
 npx vite --host 127.0.0.1 --port 5188 --strictPort   # or preview_start "tycoon-qa-5188" (.claude/launch.json)
 '/Applications/Blender.app/Contents/MacOS/Blender' --background --factory-startup --python scripts/build-town-people.py   # then bump PEOPLE_VERSION
@@ -281,6 +288,13 @@ To enter a room while the pane is hidden:
 **Hero texture and blink (builds 56–57)**
 - The painted eyes were measured once from an unlit orthographic Workbench render (`color_type='TEXTURE'`, `light='FLAT'`). Workbench shows untextured meshes as plain white, so an open lid sliver appears as a white line in those QA renders only.
 - Meshy's face lines sit mostly on chart borders but some inside charts; the rules in `repair_face()` cover both.
+
+**Tileable surfaces (build 61)**
+- The textures are painted at runtime in `townSurfaces.ts`: pure pixel arrays uploaded as `DataTexture`s, so tests run them without a canvas. `DataTexture`s aren't flipped, so rows run with v, and `normalsFromRelief` follows that.
+- The maps are light and nearly neutral; the material colour sets the hue. Walls and road divide their colour by the map's mean; paving doesn't, because the season palette sets it outright.
+- UVs are world-space (`projectSurfaceUVs`) and replace `TEXCOORD_0`. The AO stays on `TEXCOORD_1`.
+- A new material for a wall needs a name starting with `wall` and an entry in `dressTown`'s `colors`.
+- Anything buried inside another box shows up in the AO bake as a dark line. The centre-line dash under the crosswalk did.
 
 **City AO (build 59)**
 - three.js applies `aoMap` to indirect light only (hemisphere, environment), so it needs strength above 1 here. At strength 1 the difference image was black.

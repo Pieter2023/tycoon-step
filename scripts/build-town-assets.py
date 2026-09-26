@@ -14,7 +14,10 @@ def material(name, color, rough=.75, metal=0):
     m=bpy.data.materials.new(name); m.diffuse_color=(*color,1); m.use_nodes=True
     p=m.node_tree.nodes.get('Principled BSDF'); p.inputs['Base Color'].default_value=(*color,1); p.inputs['Roughness'].default_value=rough; p.inputs['Metallic'].default_value=metal
     M[name]=m; return m
-for name,color in {'ivory':(.88,.82,.67),'cream':(.98,.92,.76),'stone':(.63,.64,.58),'paving':(.74,.70,.59),'mint':(.34,.61,.51),'mintDark':(.13,.31,.29),'blue':(.30,.48,.62),'clay':(.75,.36,.25),'peach':(.95,.64,.43),'pink':(.68,.45,.44),'slate':(.13,.22,.27),'roof':(.26,.32,.36),'glass':(.11,.28,.34),'wood':(.40,.23,.13),'leaf':(.22,.42,.21),'leafLight':(.38,.57,.24),'leafGold':(.63,.66,.27),'flower':(.88,.39,.46),'road':(.24,.29,.31),'grass':(.36,.49,.29),'gold':(.91,.68,.28),'white':(.96,.97,.91),'skin':(.59,.34,.20),'hair':(.12,.075,.05),'shirt':(.91,.65,.24),'trousers':(.10,.19,.26),'shoe':(.85,.86,.76)}.items(): material(name,color,.26 if name=='glass' else .75,.25 if name=='gold' else 0)
+for name,color in {'ivory':(.88,.82,.67),'cream':(.98,.92,.76),'stone':(.63,.64,.58),'paving':(.74,.70,.59),'mint':(.34,.61,.51),'mintDark':(.13,.31,.29),'blue':(.30,.48,.62),'clay':(.75,.36,.25),'peach':(.95,.64,.43),'pink':(.68,.45,.44),'slate':(.13,.22,.27),'roof':(.26,.32,.36),'glass':(.11,.28,.34),'wood':(.40,.23,.13),'leaf':(.22,.42,.21),'leafLight':(.38,.57,.24),'leafGold':(.63,.66,.27),'flower':(.88,.39,.46),'road':(.24,.29,.31),'grass':(.36,.49,.29),'gold':(.91,.68,.28),'white':(.96,.97,.91),'skin':(.59,.34,.20),'hair':(.12,.075,.05),'shirt':(.91,.65,.24),'trousers':(.10,.19,.26),'shoe':(.85,.86,.76),
+    # Building walls get their own materials (same colours as their paint) so the game can give them a brick
+    # texture without touching the window reflections and fountain water that share 'blue' (build 61).
+    'wallMint':(.34,.61,.51),'wallBlue':(.30,.48,.62),'wallPeach':(.95,.64,.43),'wallPink':(.68,.45,.44)}.items(): material(name,color,.26 if name=='glass' else .75,.25 if name=='gold' else 0)
 def finish(o,name,mat,bevel=0):
     o.name=name; o.data.materials.append(M[mat])
     if bevel:
@@ -62,15 +65,15 @@ box('Main Street',(0,-3,.015),(100,5,.07),'road',0)
 box('North pavement',(0,0,.10),(38,1.5,.2),'paving',.05)
 box('Park promenade',(0,-7,.10),(38,2.5,.2),'paving',.05)
 box('Square',(0,-11,.12),(15,6,.22),'paving',.06)
-for x in range(-19,20):
-    box('Pavement seam',(x,0,.207),(.025,1.4,.008),'stone',0)
-    for y in [-6,-7,-8]: box('Paving joint',(x,y,.213),(.02,.95,.008),'stone',0)
-for x in range(-40,41,4): box('Road marking',(x,-3,.06),(1.5,.06,.018),'cream',0)
+# Paving joints come from the game's tileable paving texture (townSurfaces.ts); modelled seams no longer line up with it.
+for x in range(-40,41,4):
+    if abs(x)<2: continue   # the crosswalk covers the centre line here (a dash buried in a stripe baked a dark AO line)
+    box('Road marking',(x,-3,.06),(1.5,.06,.018),'cream',0)
 for y in [-1.2,-1.8,-2.4,-3,-3.6,-4.2,-4.8]: box('Crosswalk',(0,y,.065),(2.2,.27,.015),'cream',0)
 for x in [-10.5,-3.5,3.5,10.5]:
     before=set(bpy.context.scene.objects)
     idx=[-10.5,-3.5,3.5,10.5].index(x); body=['mint','blue','peach','pink'][idx]; h=[7.3,9.5,6.6,7.8][idx]
-    box('Building '+str(idx),(x,4,h/2+.2),(6.4,5.5,h),body,.14)
+    box('Building '+str(idx),(x,4,h/2+.2),(6.4,5.5,h),'wall'+body[0].upper()+body[1:],.14)
     box('Foundation',(x,4,.3),(6.65,5.8,.5),'ivory',.10)
     for z in [2.85,5.45,h+.15]: box('Facade cornice',(x,4,z),(6.7,5.8,.23),'cream',.06)
     box('Inset rooftop',(x,4,h+.30),(6.1,5.1,.25),'slate',.05)
@@ -118,7 +121,7 @@ for x in [4.7,7.2]:
     for dx in [-.7,.7]: box('Cafe stool',(x+dx,-.55,.5),(.34,.34,.1),'wood',.08); cylinder('Stool stem',(x+dx,-.55,.27),.04,.4,'slate')
 for x in [-22,22]:
     for y in [7,17,-20]:
-        h=random.uniform(7,13); box('Neighbourhood backdrop',(x,y,h/2),(8,7,h),'peach' if x>0 else 'mint',.18)
+        h=random.uniform(7,13); box('Neighbourhood backdrop',(x,y,h/2),(8,7,h),'wallPeach' if x>0 else 'wallMint',.18)
         for z in range(2,int(h),3):
             for dx in [-2,0,2]: window(x+dx,y-3.52,z,1.1,1.5)
 # Merge the static architecture by material to keep draw calls small.

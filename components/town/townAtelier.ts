@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { isSkinnedRig } from './townResidents';
+import { createSurfaceTextures, projectSurfaceUVs } from './townSurfaces';
 
 // Local, deterministic material library. No network assets or generation services.
 export function createAtelierMaterials() {
@@ -33,31 +34,36 @@ export function createAtelierMaterials() {
     for (let i = 0; i < 18000; i++) { ctx.fillStyle = `rgba(52,49,39,${rand() * .10})`; ctx.fillRect(rand() * 512, rand() * 512, 1, 1); }
   });
   const mapped = (color: string, map: THREE.Texture, roughness = .8) => new THREE.MeshStandardMaterial({ color, map, roughness });
-  return { stone, wood, grain,
+  const surfaces = { paving: createSurfaceTextures('paving'), brick: createSurfaceTextures('brick'), asphalt: createSurfaceTextures('asphalt') };
+  return { stone, wood, grain, surfaces,
     walnut: mapped('#936846', wood, .58), brass: new THREE.MeshStandardMaterial({ color: '#ba955d', metalness: .72, roughness: .32 }),
     enamel: new THREE.MeshStandardMaterial({ color: '#254e43', roughness: .32 }),
     linen: mapped('#f4e5c6', grain, .92),
-    dispose() { stone.dispose(); wood.dispose(); grain.dispose(); }
+    dispose() { stone.dispose(); wood.dispose(); grain.dispose(); for (const s of Object.values(surfaces)) { s.map.dispose(); s.normalMap.dispose(); } }
   };
 }
 export type AtelierMaterials = ReturnType<typeof createAtelierMaterials>;
 
 export function dressTown(root: THREE.Object3D, library: AtelierMaterials) {
-  const colors: Record<string, string> = { ivory: '#d9cbb0', cream: '#f0e2c8', stone: '#958f7e', mint: '#80a496', mintDark: '#244d43', blue: '#7c9aab', clay: '#ad5c41', peach: '#d6a478', pink: '#b18778', slate: '#293b3b', glass: '#264a4e', wood: '#946b47', gold: '#bb995b', road: '#515959', roof: '#4b5a59' };
+  const colors: Record<string, string> = { ivory: '#d9cbb0', cream: '#f0e2c8', stone: '#958f7e', mint: '#80a496', mintDark: '#244d43', blue: '#7c9aab', clay: '#ad5c41', peach: '#d6a478', pink: '#b18778', slate: '#293b3b', glass: '#264a4e', wood: '#946b47', gold: '#bb995b', road: '#515959', roof: '#4b5a59',
+    wallMint: '#80a496', wallBlue: '#7c9aab', wallPeach: '#d6a478', wallPink: '#b18778' };
   root.updateMatrixWorld(true);
   root.traverse(o => {
     if (!(o instanceof THREE.Mesh) || Array.isArray(o.material) || !(o.material instanceof THREE.MeshStandardMaterial)) return;
     const m = o.material, name = m.name;
     if (colors[name]) m.color.set(colors[name]);
+    // Tileable surfaces (build 61). Walls and the road divide by the texture's mean so their paint keeps its brightness;
+    // the paving is left to the season palette, which sets its colour outright.
+    const surface = (s: AtelierMaterials['surfaces'][keyof AtelierMaterials['surfaces']], relief: number, compensate: boolean) => {
+      m.map = s.map; m.normalMap = s.normalMap; m.normalScale.set(relief, relief); if (compensate) m.color.multiplyScalar(1 / s.mean);
+    };
     if (name === 'glass') { m.roughness = .18; m.metalness = .25; }
     else if (name === 'gold') { m.roughness = .32; m.metalness = .65; }
     else if (name === 'wood') { m.map = library.wood; m.roughness = .68; }
-    else if (name === 'paving') {
-      m.map = library.stone; m.roughness = .92;
-      const pos = o.geometry.attributes.position, uv = new Float32Array(pos.count * 2), v = new THREE.Vector3();
-      for (let i = 0; i < pos.count; i++) { v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld); uv[i * 2] = v.x / 3.2; uv[i * 2 + 1] = v.z / 3.2; }
-      o.geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-    } else if (['ivory', 'cream', 'stone', 'peach'].includes(name)) { m.map = library.grain; m.roughness = .87; }
+    else if (name === 'paving') { surface(library.surfaces.paving, .9, false); m.roughness = .9; projectSurfaceUVs(o, 'paving'); }
+    else if (name === 'road') { surface(library.surfaces.asphalt, .7, true); m.roughness = .94; projectSurfaceUVs(o, 'asphalt', 'road'); }
+    else if (name.startsWith('wall')) { surface(library.surfaces.brick, .8, true); m.roughness = .88; projectSurfaceUVs(o, 'brick'); }
+    else if (['ivory', 'cream', 'stone', 'peach'].includes(name)) { m.map = library.grain; m.roughness = .87; }
     m.needsUpdate = true;
   });
 }

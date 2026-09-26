@@ -73,7 +73,7 @@ Method: a cold first-time playthrough on the QA origin (5188) at desktop and pho
 - ⬜ **Remaining visual work, roughly by impact per effort:**
   - Replace the 3D sign lettering with textured decals (about −130k triangles; headless Blender edit of `scripts/build-town-assets.py`).
   - Bake ambient occlusion into a second UV set and lightmap atlas, and split the city into blocks for culling.
-  - Tileable textures for pavement, brick and road (a Blender procedural bake or AI 2D textures).
+  - ✅ Tileable textures for pavement, brick and road (build 61): painted at runtime with normal maps (`townSurfaces.ts`); receipt `docs/verification/surfaces-2026-09-26/`.
   - A modular building kit to replace the box shopfronts.
   - Character polish: hair that tapers at the nape instead of a helmet, the armpit crease in the Wave clip, the male hip/waist ratio, and a Sit clip.
 
