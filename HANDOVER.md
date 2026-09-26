@@ -1,6 +1,6 @@
 # Start here — Tycoon handover
 
-Updated **September 25, 2026 (late evening PDT)**. That day produced: a full game assessment, a lighting pass, new skinned characters, the AI-modelled Alex (build 42), the walk-bob fix (43), the first real-phone check, the economy fix Phase 0 (44), the traffic-deadlock fix (45), Phase 1 slices 1–3 (46–47: wealth you can see, sleep to end the month, events in the world), lighter sign lettering (48: the city drops from 246k to 122k triangles), the smaller economy issues (49: property tax, insurance, closing costs, PMI, one FHA loan, no lender re-roll, a slower credit climb) Phase 1 slice 4 as an opt-in setting (50: "Start in the 3D city"), unique asset ids with a real production save as a migration test (51), pacing (52: "free in about N years at this pace"), Phase 1 slice 5 (53: the Freedom Track) and events staged in 3D (54). **Builds 40–54 are live** after two releases that evening. Later that night, **build 55 (the course rewards) was built and verified on the branch but is not released**: it changes live rewards, so it waits for Pieter's go-ahead. Making the city the default screen (slice 4) still waits for Pieter (`docs/phase1-plan.md`). Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
+Updated **September 25, 2026 (late evening PDT)**. That day produced: a full game assessment, a lighting pass, new skinned characters, the AI-modelled Alex (build 42), the walk-bob fix (43), the first real-phone check, the economy fix Phase 0 (44), the traffic-deadlock fix (45), Phase 1 slices 1–3 (46–47: wealth you can see, sleep to end the month, events in the world), lighter sign lettering (48: the city drops from 246k to 122k triangles), the smaller economy issues (49: property tax, insurance, closing costs, PMI, one FHA loan, no lender re-roll, a slower credit climb) Phase 1 slice 4 as an opt-in setting (50: "Start in the 3D city"), unique asset ids with a real production save as a migration test (51), pacing (52: "free in about N years at this pace"), Phase 1 slice 5 (53: the Freedom Track) and events staged in 3D (54). **Builds 40–54 are live** after two releases that evening. Later that night, **builds 55–57 were built and verified on the branch but are not released**: 55 is the course rewards, which change live rewards and wait for Pieter's go-ahead; 56 is the hero blink; 57 is a cleaner face texture. Making the city the default screen (slice 4) still waits for Pieter (`docs/phase1-plan.md`). Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
 
 ## 1. Where things stand
 
@@ -11,7 +11,7 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 | **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `4436196`. Later commits here are ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
-| Validation on the branch | 481 tests / 85 files, TypeScript and the production build (build 55). `dist/` now holds a build-55 build, not what is live. |
+| Validation on the branch | 482 tests / 85 files, TypeScript and the production build (build 57). `dist/` holds a build-57 build, not what is live. |
 | Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
@@ -45,8 +45,11 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 24. `a2d6207`, `4436196`: handover docs. **Released: `main` = `4436196`** (builds 52–54, Netlify deploy `6ab71d6d`).
 25. `61a80be`: release-2 docs.
 26. `3364c54`: the course rewards (build 55): a lasting raise instead of cash and a $150 retake fee. Receipt: `docs/verification/course-rewards-2026-09-25/`. **Not released.**
+27. `b9e41a6`: build-55 docs.
+28. `e135de3`: the hero Alex blinks (build 56): eyelid meshes on the Head joint, stored open. Receipt: `docs/verification/hero-blink-2026-09-25/`. **Not released.**
+29. `e09ec4b`: cleaner face texture for the hero (build 57): Meshy's seam lines replaced with the local 3D skin tone. Receipt: `docs/verification/hero-face-2026-09-25/`. **Not released.**
 
-## 1b. Where the last session stopped (2026-09-25, ~19:15 PDT)
+## 1b. Where the last session stopped (2026-09-25, ~21:00 PDT)
 
 **Live: builds 40–54.** There were two releases that evening, each with Pieter's word; see `docs/verification/release-2026-09-25/` for both, with live checks and one-line rollbacks.
 - **40–51** at 17:21 PDT (deploy `6ab70fda`). Production had been a Sept-13 CLI deploy, not `origin/main`.
@@ -70,10 +73,16 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 - **One UI fix:** Finish counts once per quiz run (a double click during the fade-out counted two misses).
 - **To release:** ask Pieter. Tell him that saves already certified in Negotiations lose that ~27%-a-year growth going forward (past raises stay). Then use the release recipe in `docs/verification/release-2026-09-25/`: fast-forward `main`, then check the live bundle and a real save.
 
+**Builds 56–57, visuals: built, NOT released.** They ship with whatever release Pieter approves next.
+- **56, the hero blinks.** `build_eyelids()` in `scripts/build-town-hero.py` raycasts a skin-coloured lid over each painted eye, with a vertex-colour lash line. It hangs on the Head joint as `Eyelids`, stored open. `createBlink` lowers it. `__town.blink(amount)` holds a closure for stills. Receipt: `docs/verification/hero-blink-2026-09-25/`.
+- **57, a cleaner face.** `repair_face()` replaces Meshy's grey seam lines with the local 3D skin tone. The lower face is clean. Receipt: `docs/verification/hero-face-2026-09-25/`.
+  - Still visible: a few forehead lines near the brows, and a shading step down one cheek. The step is the face geometry: normal smoothing was tried and reverted.
+  - The real fix is subdividing or re-topologising the face by hand in Blender. Ask Pieter whether it's worth it.
+
 **Then, in order:**
 1. **Visuals (§3.4).** Blender work that benefits from Pieter's eye on the result:
-   - a hero blink: his eyes are painted into the texture, so it needs eyelid meshes over the eyes, since a morph can't close painted eyes;
-   - hero face skin evenness;
+   - ✅ the hero blink (build 56);
+   - ✅ hero face skin evenness (build 57; the cheek's shading step remains, see above);
    - the Wave armpit crease;
    - a Sit clip;
    - hair polish;
@@ -350,7 +359,9 @@ These are last-observed snapshots, not values to restore over newer play:
 
 ## Validation and evidence
 
-Latest validation (2026-09-25, build 55 on the branch, not released): **481 tests / 85 files**, TypeScript and production build. Live is build 54 (`main` = `4436196`). The latest receipts are:
+Latest validation (2026-09-25, build 57 on the branch, not released): **482 tests / 85 files**, TypeScript and production build. Live is build 54 (`main` = `4436196`). The latest receipts are:
+- `docs/verification/hero-face-2026-09-25/` (build 57);
+- `docs/verification/hero-blink-2026-09-25/` (build 56);
 - `docs/verification/course-rewards-2026-09-25/` (build 55);
 - `docs/verification/release-2026-09-25/` (both releases);
 - `pacing-2026-09-25/`;

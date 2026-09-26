@@ -34,8 +34,12 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - A third miss costs a $150 retake fee and buys three more tries.
   - Also fixed: the negotiation growth bonus was monthly (~27% a year) and is now yearly; the EQ 1.5× XP perk now applies; Finish counts once per quiz run.
   - Test: `test/CourseRewards.test.tsx`.
-- **Validation:** 481 tests / 85 files and the production build pass on the branch.
-- **Next session, first:** ask Pieter to release build 55. Warn him that saves already certified in Negotiations lose the ~27%-a-year growth going forward. Then the visuals (HANDOVER §1b "Then, in order").
+- **Builds 56–57, on the branch and NOT released:**
+  - the hero Alex blinks (`e135de3`): eyelid meshes on the Head joint from `build_eyelids()` in `scripts/build-town-hero.py`, driven by `createBlink`; dev handle `__town.blink(amount)`;
+  - a cleaner face texture (`e09ec4b`): `repair_face()` replaces Meshy's seam lines with the local 3D skin tone.
+  - Receipts: `docs/verification/hero-blink-2026-09-25/`, `docs/verification/hero-face-2026-09-25/`.
+- **Validation:** 482 tests / 85 files and the production build pass on the branch.
+- **Next session, first:** ask Pieter to release build 55. Warn him that saves already certified in Negotiations lose the ~27%-a-year growth going forward. Builds 56–57 ride along with that release. Then the rest of the visuals (HANDOVER §1b "Then, in order"): the Wave crease, a Sit clip, hair polish, an AO bake.
 - **Waiting on Pieter:**
   - the build-55 release (course rewards);
   - Phase 1 slice 4: try the "Start in the 3D city" setting, then decide whether the city becomes the default screen (and the dashboard a ledger drawer);

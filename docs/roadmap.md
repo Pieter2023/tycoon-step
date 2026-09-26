@@ -2,15 +2,15 @@
 
 ## Current priorities — September 25, 2026 (evening)
 
-Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). **Production is builds 40–54**: `origin/main` = `4436196`, two releases on 2026-09-25 with receipts in `docs/verification/release-2026-09-25/`. Build 55 is on the branch, not released. 481 tests / 85 files pass.
+Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). **Production is builds 40–54**: `origin/main` = `4436196`, two releases on 2026-09-25 with receipts in `docs/verification/release-2026-09-25/`. Builds 55–57 are on the branch, not released. 482 tests / 85 files pass.
 
 1. **Built, waiting on Pieter's release call: the course rewards** (build 55, `3364c54`).
    - A pass pays a lasting raise instead of cash; a third miss costs a $150 retake fee.
    - Also fixed: the ~27%-a-year negotiation growth bug and the unapplied EQ perk.
    - Receipt: `docs/verification/course-rewards-2026-09-25/`.
 2. **Visuals (Blender):**
-   - a hero blink (eyelid meshes, because the eyes are painted into the texture);
-   - hero face skin evenness;
+   - ✅ a hero blink (build 56, not released);
+   - ✅ hero face skin evenness (build 57, not released; the shading step on one cheek is geometry and remains);
    - the Wave crease;
    - a Sit clip;
    - hair polish;
