@@ -1,6 +1,6 @@
 # Tycoon: Financial Freedom Simulator
 
-## Current handover — September 26, 2026 (08:45 PDT, end of session)
+## Current handover — September 26, 2026 (09:20 PDT)
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
@@ -66,13 +66,22 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - **Build 63, live:** the 3D city is the default screen. `tycoon_start_in_city` is on unless it is `'0'`; `docs/verification/phase1-slice4-default-2026-09-26/`. The ledger drawer is not built.
   - **Build 64, live:** the hero's cheek. `smooth_face_normals()` in `scripts/build-town-hero.py` relaxes the skin's shading normals (custom normals; no vertex moves), and `HERO_VERSION` is `20260926a`; `docs/verification/hero-cheek-2026-09-26/`.
   - **The daily challenge's demo gate stays.** Pieter confirmed on 2026-09-26.
-- **Validation:** 498 tests / 88 files and the production build pass on the branch.
-- **The branch is ahead of `main` only by docs.** There is no unreleased code.
+- **Build 66, on the branch, NOT released: the sound audit and upgrade** (`docs/verification/sound-2026-09-26/`). Pieter heard the city "tweet loudly like a broken speaker" at the bank teller.
+  - The cause: the night-cricket layer in `townAtmosphere.ts` fed a 27 Hz square LFO straight into its volume, so a 4.3 kHz whine played at −10.5 dBFS RMS everywhere whenever city sound was on. It is fixed and guarded by `test/Sound.test.ts`, which fails on the old code.
+  - A second bug: an envelope's gain started at 1.0 before its first event, which could let a full-scale one-sample crack through. `envelope()` now zeroes it first.
+  - There is one engine (`services/audioService.ts`): one AudioContext, a limiter, a room reverb, `ui` and `world` buses, and no audio before the first click. It pauses when the tab is hidden and when muted, and the toast chime no longer doubles an action sound.
+  - Every UI sound is redesigned (`services/soundDesign.ts`: ka-ching, a coin that grows with the amount, a fanfare…).
+  - The city soundscape is rebuilt (`townSfx`): gusting wind, rain, a babbling fountain, real cricket rhythms, three birds, varied footsteps, Doppler car passes, firework booms, café bells.
+  - **The city's Sound button is now the game's sound setting** (the same as Quick actions → Mute), so the city soundscape plays by default when sound is on, from the first click. Pieter can reverse this default.
+  - Dev meter: `window.__audio.output`.
+  - **Not ear-tested:** the listening files are in the receipt's `audio/`.
+- **Validation:** 518 tests / 89 files, `tsc` and the production build pass on the branch.
+- **The branch is ahead of `main` by build 66 (sound).** Releasing it needs Pieter's go-ahead.
 - **Next session, first:**
   - a Chromebook check (needs a Chromebook), which matters more now that the city is the first screen;
   - the ledger drawer, only if Pieter wants it;
   - the visual items never started (assessment §3): a modular building kit, splitting the city for culling, the male hip/waist ratio, and the hero's remaining texture lines.
-- **Waiting on Pieter:** whether to build the ledger drawer.
+- **Waiting on Pieter:** a listen to build 66's sounds (the receipt's `audio/`) and a yes to release it; whether to build the ledger drawer.
 - **Analytics: ON since 2026-09-26** (build 65, release 9).
   - Umami Cloud, Hobby plan ($0), in Pieter's account. Site "Tycoon", Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`.
   - Dashboard: https://cloud.umami.is/analytics/us/websites/a8297643-15e9-4122-95b8-0b49cf4a7f98
@@ -100,7 +109,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (88 files / 498 tests on `town-lighting-pass`, 2026-09-26; integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (89 files / 518 tests on `town-lighting-pass`, 2026-09-26 build 66; integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)

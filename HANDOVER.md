@@ -1,6 +1,6 @@
 # Start here — Tycoon handover
 
-Updated **September 26, 2026, 08:45 PDT**, at the end of the session. **Builds 40–65 are live** after nine releases (four on Sept 25, five on Sept 26), each with Pieter's go-ahead. **Analytics are on** (build 65, release 9): Umami Cloud Hobby, Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`. Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`.
+Updated **September 26, 2026, 09:20 PDT**. **Build 66, the sound audit and upgrade, is on the branch and not released** (§1c). **Builds 40–65 are live** after nine releases (four on Sept 25, five on Sept 26), each with Pieter's go-ahead. **Analytics are on** (build 65, release 9): Umami Cloud Hobby, Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`. Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`.
 
 **This session** (Sept 26, 06:00–08:20 PDT) ran the real-phone check of builds 52–59 (56–60 fps on the iPhone), then built and released builds 60–64:
 
@@ -31,7 +31,7 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 | **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `5ab30ca` (release 9, build 65). Later commits, such as the release-9 receipt, stay ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
-| Validation on the branch | 498 tests / 88 files, TypeScript and the production build (builds 63–64, live). |
+| Validation on the branch | 518 tests / 89 files, TypeScript and the production build (build 66, not released). |
 | Servers | Left running at the end of this session:<br>• `tycoon-lan-preview` on `0.0.0.0:5190`, serving the builds 63–64 `dist/` for the phone (`http://192.168.1.80:5190/?stats`);<br>• `tycoon-qa-5191` (a Vite dev server) on `localhost:5191`.<br>Older chats' Vite dev servers from Sept 25 may still hold 5188 and 5189; don't rely on them. The capture receivers were stopped. Pieter's own save lives on `127.0.0.1:5187` and was never touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
@@ -102,7 +102,7 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 | 8 | 63–64 | 08:02 | `cc2df03` | `6ab7de71` |
 | 9 | 65 (analytics) | 08:40 | `5ab30ca` | `6ab7e74f` (current) |
 
-The branch is ahead of `main` only by docs (the release-9 receipt). There is no unreleased code.
+At 08:45 the branch was ahead of `main` only by docs. Since then, build 66 (sound, §1c) is on the branch and not released.
 
 **Pieter's calls this session:** "ship it" for each release, and "yes to all 3" on his open decisions:
 - **The city as the default screen:** done (build 63). The ledger drawer, the plan's other half of slice 4, is **not built**. Ask before building it.
@@ -132,6 +132,28 @@ The branch is ahead of `main` only by docs (the release-9 receipt). There is no 
 - **`localhost:5191`** (`tycoon-qa-5191`) holds the production fixture save at month 8, with first steps reviewed and `tycoon_start_in_city=1`. To reload the fixture: see §5.
 - **The phone's LAN origin** (`192.168.1.80:5190`) holds an Alex save at month 2, with graphics on Auto.
 - **Blender's live session** was not touched; every build ran headless. The capture receivers are stopped.
+
+## 1c. Build 66: the sound audit and upgrade (2026-09-26, 09:20 PDT, not released)
+
+Pieter switched the city's sound on at the bank teller, and it "tweeted loudly like a broken speaker". Receipt, measurements and listening files: `docs/verification/sound-2026-09-26/`.
+
+- **The cause:** the night-cricket layer (`components/town/townAtmosphere.ts`) connected a 27 Hz square LFO straight into its gain. An audio-rate input adds to a gain's value, so a 4.3 kHz whine played at −10.5 dBFS RMS in every place and at every hour whenever city sound was on, about 15 dB louder than anything else. It is fixed, and `test/Sound.test.ts` guards it (the test fails on the old file).
+- **A second bug:** a new gain sits at 1.0 until its first event, so a sound starting a hair after a sample boundary let one full-scale sample through, a crack up to −0.4 dBFS after a high-pass. `envelope()` in `services/soundDesign.ts` zeroes it first.
+- **One engine** (`services/audioService.ts`): one AudioContext instead of two, a limiter (the master trims the compressor's automatic +5.7 dB), a generated room reverb, and `ui` and `world` buses. It:
+  - creates no audio before the first click;
+  - pauses when the tab is hidden and when muted;
+  - drops a toast chime that follows an action sound;
+  - plays repeated month sounds quieter during fast autoplay.
+- **Every sound redesigned:**
+  - the UI sounds in `playUiSound`, all in C major: a ka-ching, a coin that gains notes with the amount, a fanfare;
+  - the city in `townSfx`: gusting wind, rain with drops, a babbling fountain, crickets with real rhythms, three birds, varied footsteps, Doppler car passes panned by the camera, firework booms, café bells.
+- **One sound switch:** the city's Sound button now shows and sets the game's sound (`soundOn`/`onToggleSound` from App). So the city soundscape plays by default when sound is on, starting at the first click. Before, the city started muted on every visit, and its "Sound off" still let purchase beeps play. Pieter can reverse this default.
+  - Money Quest's square keeps its own switch.
+- **Checked:** 518 tests / 89 files, `tsc` and the build. Live in the dev build with an `AnalyserNode` on the output (`window.__audio.output`, dev only):
+  - at the teller, sound off and on again: −54 dBFS RMS and no 4.3 kHz;
+  - walking the street with traffic: peak −29.
+- **Not done:** an ear test. Pieter should listen to `audio/bank-before-then-after.m4a` (turn the volume down for the first 3 s) and the `after-*` files, then say what to change.
+- **Release:** it needs Pieter's go-ahead, using the usual fast-forward recipe (`docs/verification/release-2026-09-25/`). Verify the live `main-*.js` and `createTownScene-*.js`.
 
 ## 2. Decisions waiting on Pieter
 
@@ -468,10 +490,11 @@ These are last-observed snapshots, not values to restore over newer play:
 
 ## Validation and evidence
 
-Latest validation (2026-09-26, build 64, released as `main` = `cc2df03`): **498 tests / 88 files**, TypeScript and the production build. The latest receipts:
+Latest validation (2026-09-26, build 66 on the branch, not released): **518 tests / 89 files**, TypeScript and the production build. The latest receipts:
 
 | Build(s) | Receipt |
 |---|---|
+| 66 (sound, not released) | `docs/verification/sound-2026-09-26/` |
 | 64 | `docs/verification/hero-cheek-2026-09-26/` |
 | 63 | `docs/verification/phase1-slice4-default-2026-09-26/` |
 | 62 | `docs/verification/phone-findings-2026-09-26/` |

@@ -104,9 +104,12 @@ type Props = {
   onMilestones?: (ids: MilestoneId[]) => void;
   /** Close the month from the bed at home, staying in the city (unless an event needs the 2D shell). */
   onSleep?: () => void;
+  /** The game's sound setting, shared with Quick actions → Mute. Without it the city keeps its own switch. */
+  soundOn?: boolean;
+  onToggleSound?: () => void;
 };
 const money = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
-export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell, onMortgage, onChangeLifestyle, onPromote, onOpenLife, onAskRaise, onSwitchCareer, onJobSearch, onAcceptPlan, onStartHustle, onStopHustle, onChooseUpgrade, onFileClaim, workActions, onMonthlyAction, onEnroll, onCollegeFund, onBuyPolicy, onCancelPolicy, onClaimQuest, onOpenQuests, onBuyVehicle, onSellVehicle, onClose, onOpenMoney, onNextMonth, saveError, onBackup, onAction, onRememberView, onTransfer, onRunShift, loans=[], onFinishJourney, onCafeAction, onCafeServiceAction, onMilestones, onSleep }: Props) {
+export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell, onMortgage, onChangeLifestyle, onPromote, onOpenLife, onAskRaise, onSwitchCareer, onJobSearch, onAcceptPlan, onStartHustle, onStopHustle, onChooseUpgrade, onFileClaim, workActions, onMonthlyAction, onEnroll, onCollegeFund, onBuyPolicy, onCancelPolicy, onClaimQuest, onOpenQuests, onBuyVehicle, onSellVehicle, onClose, onOpenMoney, onNextMonth, saveError, onBackup, onAction, onRememberView, onTransfer, onRunShift, loans=[], onFinishJourney, onCafeAction, onCafeServiceAction, onMilestones, onSleep, soundOn, onToggleSound }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const details = useRef<HTMLDivElement>(null);
   const controller = useRef<TownController | null>(null);
@@ -134,7 +137,9 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
   const { t } = useI18n(); // subscribe so a language change re-renders the city copy (tl reads the live locale); t translates quest titles
   const [showDetails, setShowDetails] = useState(false);
   const [journal,setJournal]=useState(false);
-  const [sound,setSound]=useState(false);
+  const [localSound,setLocalSound]=useState(false);
+  const sound=onToggleSound?!!soundOn:localSound;
+  const soundRef=useRef(sound);soundRef.current=sound;
   const [cameraTools,setCameraTools]=useState(false);
   const [cameraMode,setCameraMode]=useState<CameraPreset>(state.townView?.mode??'follow');
   const [qualityMode,setQualityMode]=useState<QualityMode>(()=>readQualityMode());
@@ -245,8 +250,10 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
     // characterAtelier (the Sept-13 rigid Alex) stays off.
     try { controller.current = createTownScene(host.current, id => { setNear(id); if(!id)setShowDetails(false); }, () => inspectRef.current(), () => { setUnavailable(true); setLoading(false); setShowDetails(true); }, reduceMotion, () => setLoading(false), {art:'atelier',autoDoors:true,characterAtelier:false,hero:state.character?.id==='alex'?'alex':undefined,onStats:statsOn?setStats:undefined,view:state.townView,onView:onRememberView,onRoom:value=>{setRoom(value);setDestination(null);setRoomBrief(value!=='city'&&!guided.current);setShowDetails(value!=='city'&&!guided.current);setJournal(false);setBoard(false);setRosa(false);setGarageOpen(false);},onSpot:setSpot,onPlayerPoint:setPlayerPoint,onManual:cancelGuide,playerSex:characterSex(state.character),quality:readQualityMode(),onProgress:setProgress,onQuality:(level,automatic)=>{setQualityLevel(level);if(automatic)setQualityNote(`${tl('Graphics switched to','Gráficos cambiados a')} ${qualityName(level)} ${tl('for a steadier frame rate. Change it under Camera.','para una tasa de cuadros más estable. Cámbialo en Cámara.')}`);},onTimeOfDay:setTimeOfDay}); }
     catch { setUnavailable(true); setLoading(false); setShowDetails(true); }
+    controller.current?.setSound?.(soundRef.current);
     return () => { controller.current?.dispose(); controller.current = null; };
   }, [reduceMotion]);
+  useEffect(()=>{controller.current?.setSound?.(sound);},[sound]);
   useEffect(()=>{controller.current?.pause?.(showDetails||(room==='cafe'&&serviceActive&&(servicePaused||(!practice&&disabled))));if(showDetails&&details.current)details.current.scrollTop=0;},[showDetails,journal,room,servicePaused,serviceActive,practice,disabled]);
   // When the mission advances (cart bought, permit paid, shift run) the panel content changes under the
   // player's finger; jump back to the top so the new step is the first thing they see, not the last button's neighbour.
@@ -465,7 +472,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
     <div className="town-journey-strip">
       <button className="town-journey-summary" disabled={serving} onClick={()=>{setRoomBrief(false);setJournal(true);setShowDetails(true);}}><span>{journey.completed&&journey.stage===3?(track.current?tl('FREEDOM TRACK','CAMINO A LA LIBERTAD')+' · '+tl('CHAPTER','CAPÍTULO')+' '+track.current.number+'/'+track.chapters.length:tl('FREEDOM TRACK','CAMINO A LA LIBERTAD')+' · '+track.done+'/'+track.total):journey.completed?tl('BADGES EARNED','INSIGNIAS GANADAS'):journey.stage===3?tl('NEIGHBOURHOOD TOUR','RECORRIDO DEL BARRIO')+' · '+(journey.step+1)+'/5':journey.stage===2?tl('INVESTOR JOURNEY','RECORRIDO DEL INVERSOR')+' · '+(journey.step+1)+'/4':tl('YOUR FIRST BUSINESS','TU PRIMER NEGOCIO')+' · '+(journey.step+1)+'/5'}</span><strong>{journey.completed&&journey.stage===3?(trackNext?t(trackNext.quest.title):t('track.freedomDay')):journey.title}</strong><small>{journey.completed?tl('Journey & monthly recap →','Recorrido y resumen mensual →'):tl('Steps & monthly recap →','Pasos y resumen mensual →')}</small></button>
       <button className="town-guide-next" disabled={guideDisabled} onClick={followJourney}>{guideText} →</button>
-      <button className="town-sound" aria-pressed={sound} onClick={()=>{const enabled=!sound;controller.current?.setSound?.(enabled);setSound(enabled);}}>{tl('Sound','Sonido')} {sound?tl('on','sí'):tl('off','no')}</button>
+      <button className="town-sound" aria-pressed={sound} onClick={()=>{if(onToggleSound)onToggleSound();else setLocalSound(on=>!on);}}>{tl('Sound','Sonido')} {sound?tl('on','sí'):tl('off','no')}</button>
     </div>
     <div className={`town-body${showDetails ? ' town-details-open' : ''}${serving?' town-serving-active':''}`}>
       <section className="town-viewport" aria-label={tl(tl('Neighbourhood','Vecindario'),'Vecindario')}>

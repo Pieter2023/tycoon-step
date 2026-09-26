@@ -3464,7 +3464,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white pb-24 md:pb-4">
       {showTown && <TabErrorBoundary tabName="3D neighbourhood"><React.Suspense fallback={<Modal isOpen onClose={() => setShowTown(false)} ariaLabel="Loading neighbourhood"><p className="p-8">Opening Freedom Square…</p></Modal>}>
-        <TownModal state={gameState} disabled={isProcessing || !!gameState.pendingScenario || gameState.hasWon || gameState.isBankrupt} reduceMotion={!!reduceMotion}
+        <TownModal state={gameState} disabled={isProcessing || !!gameState.pendingScenario || gameState.hasWon || gameState.isBankrupt} reduceMotion={!!reduceMotion} soundOn={soundEnabled} onToggleSound={toggleSound}
           onBuy={(item,quantity)=>handleBuyAsset(item,undefined,quantity)} onClose={() => setShowTown(false)} saveError={saveError} onBackup={downloadCurrentProgress}
           onFinishJourney={()=>setGameState(prev=>isProcessing?prev:completeActiveJourney(prev))}
           onPromote={handleManualPromotion} onOpenLife={(tab)=>{setShowTown(false);navigateToTab(tab);}}

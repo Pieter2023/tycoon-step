@@ -4,6 +4,7 @@ import Modal from '../Modal';
 import type { KidsGameState, KidsCollectible } from '../../kidsTypes';
 import { KIDS_COLLECTIBLES, KIDS_SAVINGS_GOALS } from '../../kidsConstants';
 import { createTownScene, type TownController } from './createTownScene';
+import { setMuted } from '../../services/audioService';
 import type { TownPlaceId } from './townWorld';
 import { characterSex } from './townResidents';
 import { readQualityMode } from './townQuality';
@@ -42,7 +43,7 @@ export default function KidsSquareModal({ state, onClose, onStartHustle, onBuy, 
     <nav className="town-destinations" aria-label={tl('Walk to a stop', 'Caminar a una parada')}>
       {(['piggy', 'lemonade', 'toys', 'goal'] as KidsStop[]).map(s => <button key={s} aria-pressed={stop === s} onClick={() => go(s)}><span className="town-dot" />{stopEmoji(s)} {stopName(s)}</button>)}
       <button className="town-guide-next" disabled={processing || !!state.pendingEvent} onClick={onNextWeek}>▶️ {tl('Next week', 'Próxima semana')}</button>
-      <button className="town-sound" aria-pressed={sound} onClick={() => { const on = !sound; controller.current?.setSound(on); setSound(on); }}>{tl('Sound', 'Sonido')} {sound ? tl('on', 'sí') : tl('off', 'no')}</button>
+      <button className="town-sound" aria-pressed={sound} onClick={() => { const on = !sound; if (on) setMuted(false); controller.current?.setSound(on); setSound(on); }}>{tl('Sound', 'Sonido')} {sound ? tl('on', 'sí') : tl('off', 'no')}</button>
     </nav>
     <div className={`town-body${open ? ' town-details-open' : ''}`}>
       <section className="town-viewport" aria-label={tl('Square', 'Plaza')}>
