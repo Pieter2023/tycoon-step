@@ -173,6 +173,29 @@ def ring_fit(obj, z, reach=.2, band=.012):
 activate(arm); body.select_set(True); bpy.context.view_layer.objects.active = arm
 bpy.ops.object.parent_set(type='ARMATURE_AUTO')
 
+# Keep the torso's sides on the torso: automatic weights let the shoulder pull the ribs below the armpit, which
+# stretched the jacket into a web from the ribs to the elbow whenever an arm rose (Wave, Celebrate). Torso vertices
+# below the armpit give most of their shoulder weight to the Torso bone, fading out toward the armpit and the arm.
+def tether_torso_sides():
+    groups = {g.name: g for g in body.vertex_groups}; torso = groups['Torso']
+    for v in body.data.vertices:
+        c = v.co; side = 1 if c.x >= 0 else -1; S, E, W, P, T, d = arm_points(side)
+        t = along_arm(c, side)
+        if t > -.01 and (c - S - d * t).length < .075: continue       # the arm itself (within reach of its axis)
+        keep = min(1, max(0, (c.z - 1.30) / .14))                     # 0 below the armpit, 1 at the shoulder
+        if keep >= 1: continue
+        moved = 0.
+        for name in ('Shoulder-1', 'Shoulder1'):
+            g = groups[name]
+            try: w = g.weight(v.index)
+            except RuntimeError: continue
+            g.add([v.index], w * keep, 'REPLACE'); moved += w * (1 - keep)
+        if moved:
+            try: base = torso.weight(v.index)
+            except RuntimeError: base = 0.
+            torso.add([v.index], base + moved, 'REPLACE')
+tether_torso_sides()
+
 # ---------------------------------------------------------------- generic mesh builders
 def new_obj(name, bm, mat, group=None):
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free(); o = link(bpy.data.objects.new(name, me))
@@ -284,6 +307,9 @@ def cap_of_hair(mb, back=.0):
     hell(mb, (0, .03, 1.965), (.142, .15, .1))
     hell(mb, (0, .05 + back, 1.905), (.135, .112, .105))
     for s in (-1, 1): hell(mb, (s * .118, .03, 1.915), (.04, .085, .07))
+    # the back tapers down to the nape instead of stopping in a flat helmet edge at mid-head
+    hell(mb, (0, .084 + back, 1.832), (.11, .068, .062))
+    hell(mb, (0, .076 + back, 1.788), (.072, .046, .04))
 def short(mb):
     cap_of_hair(mb)
     for x, y, z, rx in [(-.06, -.118, 2.0, -.3), (.0, -.126, 2.008, 0), (.06, -.113, 2.003, .35), (.1, -.07, 2.006, .6)]:

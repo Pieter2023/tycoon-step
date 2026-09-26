@@ -3,7 +3,7 @@
 Both scripts/build-town-people.py and scripts/build-town-hero.py build an armature with the same
 joint names (Hips, Torso, Head, Shoulder/Elbow/Grip/Thigh/Knee/Ankle with suffix -1 or 1), every
 bone pointing straight up with no roll, so each joint has an identity rest rotation. add_clips()
-keys the six clips on such an armature as NLA tracks.
+keys the seven clips on such an armature as NLA tracks.
 
 Leg geometry comes from the rig (LEGS below is the townspeople's). A hero with longer legs gets the
 same motion scaled to its legs: the stride (travel) and timing never change, so the ground speed
@@ -12,10 +12,11 @@ same motion scaled to its legs: the stride (travel) and timing never change, so 
 import bpy, math
 from mathutils import Vector, Euler
 
-CLIPS = [('Idle', 90), ('Walk', 32), ('Run', 32), ('Serve', 120), ('Wave', 72), ('Celebrate', 90)]
+CLIPS = [('Idle', 90), ('Walk', 32), ('Run', 32), ('Serve', 120), ('Wave', 72), ('Celebrate', 90), ('Sit', 120)]
 # hips: rest height of the Hips bone head; pelvis: Hips head above the thigh joints;
 # thigh/shin: vertical joint spans hip-knee and knee-ankle; ankle: ankle joint height.
 LEGS = {'hips': .96, 'pelvis': .03, 'thigh': .43, 'shin': .41, 'ankle': .09}
+ABDUCT_REST = math.radians(12)   # both rigs hang the arms 12 degrees from the body in the rest pose
 
 def clear_clips():
     for a in [a for a in bpy.data.actions if a.name.split('.')[0] in dict(CLIPS)]: bpy.data.actions.remove(a)
@@ -24,6 +25,10 @@ def add_clips(arm, names, legs=LEGS):
     pose = arm.pose.bones
     def set_joint(name, rx=0., ry=0., rz=0.):
         pb = pose[name]; B = pb.bone.matrix_local.to_3x3(); R = Euler((rx, ry, rz), 'XYZ').to_matrix()
+        pb.rotation_mode = 'QUATERNION'; pb.rotation_quaternion = (B.inverted() @ R @ B).to_quaternion()
+    def aim(name, R):
+        # an armature-space rotation matrix R for a joint (see set_joint)
+        pb = pose[name]; B = pb.bone.matrix_local.to_3x3()
         pb.rotation_mode = 'QUATERNION'; pb.rotation_quaternion = (B.inverted() @ R @ B).to_quaternion()
     def set_offset(name, v):
         pb = pose[name]; pb.location = pb.bone.matrix_local.to_3x3().inverted() @ Vector(v)
@@ -62,13 +67,34 @@ def add_clips(arm, names, legs=LEGS):
                 rot['Shoulder1'][0] = -.1 - reach * 1.0; rot['Elbow1'][0] = -.22 - reach * .45; rot['Torso'][0] = -.035 * reach; rot['Head'][0] = .08 * reach
             elif clip == 'Wave':
                 env = math.sin(math.pi * t) ** .6
-                rot['Shoulder1'][1] = -1.1 * env; rot['Shoulder1'][0] = -.45 * env; rot['Elbow1'][0] = -.25 - 1.45 * env; rot['Elbow1'][1] = .22 * math.sin(phase * 3) * env
+                rot['Torso'][2] += -.03 * env; rot['Head'][2] = .06 * env
             elif clip == 'Celebrate':
                 env = math.sin(math.pi * t) ** .6
                 for side in (-1, 1): rot['Shoulder' + str(side)][1] = -side * 2.15 * env; rot['Elbow' + str(side)][0] = -.3 - .4 * env
                 rot['Head'][0] = -.12 * env
+            if clip == 'Sit':
+                # Seated at rest: hands on the thighs, a slight lean back, slow breathing. The game sets the legs for each
+                # seat (seatActor, the café chairs) and lowers the hips (sitHips); these legs are the bench default.
+                hips_z = rest - .015 * k
+                rot['Torso'][0] = .05 + .012 * math.sin(phase); rot['Torso'][2] = 0; rot['Head'][0] = .05 - .008 * math.sin(phase)
+                for side in (-1, 1):
+                    s = str(side)
+                    rot['Thigh' + s][0] = -1.05; rot['Knee' + s][0] = .35; rot['Ankle' + s][0] = .7
+                    rot['Shoulder' + s][0] = -.45; rot['Shoulder' + s][1] = side * .28; rot['Elbow' + s][0] = -.5
             for n in names:
-                set_joint(n, *rot[n]); pose[n].keyframe_insert('rotation_quaternion', frame=frame)
+                set_joint(n, *rot[n])
+            if clip == 'Wave':
+                # Aimed, not angled: the upper arm points out, forward and a little down (about 60 degrees from hanging, so
+                # the armpit opens far less than a sideways raise, which stretched the jacket into a web from the ribs to the
+                # elbow), the forearm stands up beside the head with the hand clear of the face, and it sweeps side to side.
+                down = Vector((math.sin(ABDUCT_REST), 0, -math.cos(ABDUCT_REST)))
+                upper = down.lerp(Vector((.66, -.52, -.42)).normalized(), env).normalized()
+                sweep = .28 * math.sin(phase * 3) * env
+                fore = down.lerp(Vector((.16 + sweep, -.12, 1)).normalized(), env).normalized()
+                R_sh = down.rotation_difference(upper).to_matrix()
+                aim('Shoulder1', R_sh); aim('Elbow1', down.rotation_difference(R_sh.inverted() @ fore).to_matrix())
+            for n in names:
+                pose[n].keyframe_insert('rotation_quaternion', frame=frame)
             set_offset('Hips', (0, 0, hips_z - rest)); pose['Hips'].keyframe_insert('location', frame=frame)
         track = arm.animation_data.nla_tracks.new(); track.name = clip; track.strips.new(clip, 1, action); arm.animation_data.action = None
     for pb in pose: pb.rotation_quaternion = (1, 0, 0, 0); pb.location = (0, 0, 0)

@@ -344,7 +344,7 @@ if PREVIEW:
         arm.animation_data.use_nla = clip is not None
         for t in arm.animation_data.nla_tracks: t.is_solo = False; t.mute = (t.name != clip)
     shots = [('rest-front', None, 1, 0), ('rest-side', None, 1, 90), ('rest-70', None, 1, 70), ('idle', 'Idle', 30, 25), ('walk', 'Walk', 9, 70),
-             ('run', 'Run', 9, 70), ('wave', 'Wave', 36, 20), ('serve', 'Serve', 60, 40), ('celebrate', 'Celebrate', 45, 0)]
+             ('run', 'Run', 9, 70), ('wave', 'Wave', 36, 20), ('serve', 'Serve', 60, 40), ('celebrate', 'Celebrate', 45, 0), ('sit', 'Sit', 30, 55)]
     for name, clip, frame, angle in shots:
         only(clip); scene.frame_set(frame); place(angle)
         scene.render.filepath = os.path.join(PREVIEW, name + '.png'); bpy.ops.render.render(write_still=True)

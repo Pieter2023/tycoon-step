@@ -84,10 +84,13 @@ function styleSkinned(root: THREE.Object3D, style: ResidentStyle) {
 // articulated model, whose clips held the hips at .82. The skinned townspeople stand with the
 // hips at .945, so a seated pose lowers them by the difference after the mixer has run.
 export const SIT_DROP = .125;
+// It runs every frame after the mixer, and the mixer only writes a joint when its value changes (a still clip such
+// as Sit, or any clip at dt 0 under reduced motion, writes nothing), so the drop is applied once per written value.
 export function sitHips(root: THREE.Object3D) {
   const hips = root.getObjectByName('Hips'); if (!hips) return;
   if (hips.userData.sitDrop === undefined) hips.userData.sitDrop = isSkinnedRig(root) ? SIT_DROP : 0;
-  hips.position.y -= hips.userData.sitDrop;
+  if (hips.position.y === hips.userData.sitApplied) return;
+  hips.position.y -= hips.userData.sitDrop; hips.userData.sitApplied = hips.position.y;
 }
 
 export function styleCharacter(root: THREE.Object3D, style: ResidentStyle) {

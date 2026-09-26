@@ -243,6 +243,8 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     for (const clip of clips){const action=mixer.clipAction(clip);if(['Serve','Wave','Celebrate'].includes(clip.name)){action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;}actions[clip.name]=action;}
     return { root, mixer, actions, current: '' };
   };
+  // Seated people play the Sit clip (hands on the thighs, breathing); the legs are set per seat afterwards. Older models have no Sit.
+  const seatedClip = (actor: Actor) => actor.actions.Sit ? 'Sit' : 'Idle';
   const animateActor = (actor: Actor, name: string, dt: number, speed = 1) => {
     if (actor.current !== name) { const old=actor.actions[actor.current], next=actor.actions[name]; const stride=['Walk','Run'].includes(actor.current)&&['Walk','Run'].includes(name); const phase=old?old.time/old.getClip().duration:0; old?.fadeOut(.2); if(next){next.reset();if(stride)next.time=(phase%1)*next.getClip().duration;next.fadeIn(.24).play();} actor.current = name; }
     if (actor.actions[name]) actor.actions[name].timeScale = Math.max(.08,speed);
@@ -262,7 +264,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
   }
   // Vehicles are optional: the square still opens if only their file fails.
   // Bump when any model in public/models/town changes: the files keep their names, so browsers would otherwise reuse a cached copy.
-  const MODEL_VERSION = '20260925a', PEOPLE_VERSION = '20260925d', HERO_VERSION = '20260925f';
+  const MODEL_VERSION = '20260925a', PEOPLE_VERSION = '20260925e', HERO_VERSION = '20260925g';
   // The player's own model: the AI-modelled hero (scripts/build-town-hero.py) or the retired Sept-13 atelier Alex.
   const heroFile = options.hero ? `/models/town/town-hero-${options.hero}.glb?v=${HERO_VERSION}` : options.characterAtelier ? '/models/town/alex-atelier.glb?v=alex1' : null;
   Promise.all([load(`/models/town/freedom-square.glb?v=${MODEL_VERSION}`), load(`/models/town/town-people.glb?v=${PEOPLE_VERSION}`), load(`/models/town/town-vehicles.glb?v=${MODEL_VERSION}`).catch(() => null),heroFile?load(heroFile).catch(()=>null):Promise.resolve(null)]).then(([town, character, vehicles, hero]) => {
@@ -449,7 +451,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
         if(npc.seat!==undefined){
           // Resting on a promenade bench, facing the fountain; feet reach the pavement.
           npc.root.visible=true;npc.root.position.set(npc.seat+.15,-.09,7.22);npc.root.rotation.y=0;
-          animateActor(npc,'Idle',reducedMotion?0:dt);seatActor(npc.root);continue;
+          animateActor(npc,seatedClip(npc),reducedMotion?0:dt);seatActor(npc.root);continue;
         }
         const t=((reducedMotion?0:(elapsed-npc.yield.wait)*.8)+npc.offset)%64,forward=t<32;
         // One customer browses at the licensed cart, away from the walking lanes.
@@ -535,7 +537,7 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
       const seated=motion.seated&&!motion.path.length&&!departing;
       actor.root.position.y=THREE.MathUtils.lerp(actor.root.position.y,seated?-.03:.22,1-Math.exp(-dt*10));
       if(!moving)actor.root.rotation.y=turnTowards(actor.root.rotation.y,seated?0:Math.PI,dt);
-      animateActor(actor,moving?'Walk':guest.status==='served'&&!seated?'Wave':'Idle',paused||reducedMotion?0:dt,moving?2.2/CLIP_GROUND_SPEED.Walk:1);
+      animateActor(actor,moving?'Walk':guest.status==='served'&&!seated?'Wave':seated?seatedClip(actor):'Idle',paused||reducedMotion?0:dt,moving?2.2/CLIP_GROUND_SPEED.Walk:1);
       if(seated){for(const side of ['-1','1']){const leg=actor.root.getObjectByName('Thigh'+side),knee=actor.root.getObjectByName('Knee'+side),ankle=actor.root.getObjectByName('Ankle'+side);if(leg)leg.rotation.x=-Math.PI/2;if(knee)knee.rotation.x=Math.PI/2;if(ankle)ankle.rotation.x=0;}sitHips(actor.root);}
       const label=guestLabels[guest.id];
       if(label){const text=guest.status==='served'?(guest.tip?'Thanks! +$'+guest.tip+' tip':'Thanks!'):guest.status==='left'?'Too slow…':guest.status==='ordered'?guest.name+' · '+guest.drink:guest.name+' · Order please';if(label.text!==text){label.text=text;const ctx=label.canvas.getContext('2d')!;ctx.clearRect(0,0,512,100);ctx.fillStyle=guest.status==='left'?'#a45c50':guest.status==='served'?'#4c8265':'#294d43';ctx.fillRect(0,0,512,100);ctx.fillStyle='#fff1cc';ctx.font='600 39px sans-serif';ctx.textAlign='center';ctx.fillText(text,256,64);label.texture.needsUpdate=true;}label.sprite.visible=actor.root.visible;label.sprite.position.set(actor.root.position.x,actor.root.position.y+2.15,actor.root.position.z);}
@@ -546,9 +548,9 @@ export function createTownScene(host: HTMLDivElement, onNear: (id: TownPlaceId |
     }
     if(!inside&&pedestrians[8]){if(spot==='rosa'&&adviceHeadline)rosaSpeech.say(adviceHeadline,ROSA.x+.15,2.55,ROSA.z);else rosaSpeech.hide();}
     if(agent&&officeInside){animateActor(agent,spot==='agent'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='agent'&&agentHeadline)agentSpeech.say(agentHeadline,0,2.45,-1.5);else agentSpeech.hide();}
-    if(workInside)for(const actor of workActors){animateActor(actor,'Idle',reducedMotion?0:dt);seatActor(actor.root);}
+    if(workInside)for(const actor of workActors){animateActor(actor,seatedClip(actor),reducedMotion?0:dt);seatActor(actor.root);}
     if(homeInside){if(spouse?.root.visible)animateActor(spouse,'Idle',reducedMotion?0:dt);for(const kid of kids)if(kid.root.visible)animateActor(kid,'Idle',reducedMotion?0:dt);}
-    if(collegeInside)for(const actor of collegeActors){animateActor(actor,'Idle',reducedMotion?0:dt);seatActor(actor.root);}
+    if(collegeInside)for(const actor of collegeActors){animateActor(actor,seatedClip(actor),reducedMotion?0:dt);seatActor(actor.root);}
     if(registrar&&collegeInside){animateActor(registrar,spot==='registrar'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='registrar'&&registrarHeadline)registrarSpeech.say(registrarHeadline,0,2.45,-1.5);else registrarSpeech.hide();}
     if(manager&&workInside){animateActor(manager,spot==='manager'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='manager'&&managerHeadline)managerSpeech.say(managerHeadline,0,2.45,-1.5);else managerSpeech.hide();}
     if(teller&&inside&&!cafeInside&&!exchangeInside&&!officeInside&&!homeInside&&!workInside&&!collegeInside){animateActor(teller,spot==='teller'&&!reducedMotion?'Wave':'Idle',reducedMotion?0:dt);if(spot==='teller'){const line=TELLER_LINES[Math.floor(elapsed/6)%TELLER_LINES.length];tellerSpeech.say(tl(line[0],line[1]),0,2.45,-1.5);}else tellerSpeech.hide();}

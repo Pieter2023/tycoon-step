@@ -97,7 +97,7 @@ describe('exported extras', () => {
     const character = readGlb('public/models/town/town-people.glb');
     const names = character.nodes.map((n: { name: string }) => n.name);
     for (const part of ['Hair', 'Fem_HairLong', 'Fem_Ponytail', 'Fem_Lashes', 'Fem_Earrings', 'Masc_Beard', 'Masc_Cap']) expect(names).toContain(part);
-    expect(character.animations.map((a: { name: string }) => a.name).sort()).toEqual(['Celebrate', 'Idle', 'Run', 'Serve', 'Walk', 'Wave']);
+    expect(character.animations.map((a: { name: string }) => a.name).sort()).toEqual(['Celebrate', 'Idle', 'Run', 'Serve', 'Sit', 'Walk', 'Wave']);
     expect(statSync('public/models/town/town-people.glb').size).toBeLessThan(700_000);
     const vehicles = readGlb('public/models/town/town-vehicles.glb');
     const vehicleNames = vehicles.nodes.map((n: { name: string }) => n.name);

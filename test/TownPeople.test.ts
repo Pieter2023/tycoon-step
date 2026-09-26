@@ -38,6 +38,13 @@ describe('skinned townspeople', () => {
     const rigid = new THREE.Group(), hips = new THREE.Object3D(); hips.name = 'Hips'; hips.position.y = .82; rigid.add(hips);
     sitHips(rigid); expect(hips.position.y).toBeCloseTo(.82);
   });
+  it('drops the hips once per value the mixer writes, not once per frame', () => {
+    // The mixer skips joints whose value did not change (the still Sit clip, or dt 0 under reduced motion).
+    const p = townsperson(); for (let frame = 0; frame < 5; frame++) sitHips(p.root);
+    expect(p.hips.position.y).toBeCloseTo(.945 - SIT_DROP);
+    p.hips.position.y = .95; sitHips(p.root); sitHips(p.root);   // a new value from the clip is lowered once
+    expect(p.hips.position.y).toBeCloseTo(.95 - SIT_DROP);
+  });
   it('blinks now and then through the Blink morph, never under reduced motion', () => {
     const p = townsperson(), blink = createBlink(p.root, 3); let closed = 0;
     for (let t = 0; t < 12; t += .02) { blink(t); closed = Math.max(closed, p.shirt.morphTargetInfluences![1]); }
