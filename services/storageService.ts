@@ -1,8 +1,21 @@
-import { GameState, PrestigeData } from '../types';
+import { Asset, GameState, PrestigeData } from '../types';
 import { KidsGameState } from '../kidsTypes';
 import { calculateMonthlyCashFlowEstimate, calculateNetWorth, calculateMonthlyActionsMax } from './gameLogic';
 import { migrateInvestmentAssets } from './investmentModel';
 import { MARKET_ITEMS, CHARACTERS, getInitialQuestState, SIDE_HUSTLES } from '../constants';
+
+// Two purchases in the same millisecond used to share an asset id, and selling one then removed both. Later copies
+// get their own id; the first copy and any mortgaged asset keep theirs, so mortgage links still hold.
+export const uniqueAssetIds = (assets: Asset[]): Asset[] => {
+  const seen = new Set<string>();
+  return assets.map((a, i) => {
+    if (!seen.has(a.id) || a.mortgageId) { seen.add(a.id); return a; }
+    let id = `${a.id}-${i}`;
+    while (seen.has(id)) id += 'b';
+    seen.add(id);
+    return { ...a, id };
+  });
+};
 
 const normalizeAdultState = (state: GameState): GameState => {
   // Add defaults for newer fields so older saves keep working.
@@ -132,7 +145,7 @@ const normalizeAdultState = (state: GameState): GameState => {
   return {
     ...state,
     character,
-    assets: migrateInvestmentAssets(state.assets || [], MARKET_ITEMS),
+    assets: uniqueAssetIds(migrateInvestmentAssets(state.assets || [], MARKET_ITEMS)),
     reserveBaseline: state.reserveBaseline ?? (state.cash + (state.assets || []).filter(a => a.type === 'SAVINGS').reduce((n, a) => n + a.value * a.quantity, 0) - state.liabilities.reduce((n, l) => n + l.balance, 0)),
     monthlyActionsMax,
     monthlyActionsRemaining,

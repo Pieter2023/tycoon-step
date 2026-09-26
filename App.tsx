@@ -2165,7 +2165,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
         } : a);
       } else {
         const newAsset: Asset = {
-          id: 'asset-' + Date.now().toString(),
+          id: 'asset-' + Date.now().toString() + '-' + item.id,
           name: item.name,
           type: item.type,
           // Market value vs what you paid
@@ -2449,7 +2449,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
     const price = isNegotiableDeal && negotiationDiscountPct > 0 ? Math.round(listPrice * (1 - negotiationDiscountPct)) : listPrice;
     
     if (mortgageOptionId && item.canMortgage) {
-      const assetId = 'asset-' + Date.now().toString();
+      const assetId = 'asset-' + Date.now().toString() + '-' + item.id;
       const mortgageOpt = MORTGAGE_OPTIONS.find(o => o.id === mortgageOptionId);
       if (!mortgageOpt) { playError(); return; }
       const creditAdjust = getMortgageCreditAdjustments(creditScore, mortgageOptionId, dti);
@@ -2557,7 +2557,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
         } else {
           const baseMonthly = (incomeYield(item) * price) / 12;
           newAssets.push({
-            id: 'asset-' + Date.now(),
+            id: 'asset-' + Date.now() + '-' + item.id,
             name: item.name,
             type: item.type,
             value: price,
