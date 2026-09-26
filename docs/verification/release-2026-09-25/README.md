@@ -106,3 +106,52 @@ netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb
 - **Functions and pages:** `validate-access` refuses a fake code (`{"valid":false}`), and `/educators`, `/teacher-packet` and the city models answer 200.
 - **Requests and console.** Every request on the page load was 200. The console has only the two `ERR_BLOCKED_BY_CLIENT` lines from the earlier save-export attempt.
 - **Not done live:** walking to the notice board and seeing a staged event. The pane was hidden, and production has no frame-stepping handle. Both were checked on the branch (`phase1-slice5-2026-09-25/`, `event-stage-2026-09-25/`).
+
+# Release 3: builds 55–57 (2026-09-25, 21:01 PDT = 2026-09-26 04:01 UTC)
+
+Pieter's word: "ship it, release 55-57".
+
+## What shipped
+
+`origin/main` was fast-forwarded from `4436196f` to `21f77713` (`git push origin town-lighting-pass:main`, 04:01:47 UTC). That was 6 commits: builds 55–57 and their docs, with no config, function or dependency changes. The Netlify production deploy is `6ab743ad80c17b0008c7ee24` (commit `21f77713`, published 04:02:21 UTC, 34 s after the push). It contains:
+- **Build 55, the course rewards:**
+  - passing a course pays a lasting raise (Negotiations +5%, Sales +3%, EQ +3%) instead of cash;
+  - a third miss costs a $150 retake fee;
+  - the negotiation salary-growth bonus counts per year, not per month (it compounded ~27% a year);
+  - the EQ 1.5× career-experience perk now applies;
+  - Finish counts once per quiz run.
+- **Build 56:** the hero Alex blinks (eyelid meshes).
+- **Build 57:** a cleaner face texture for the hero.
+
+**Players will notice:**
+- New course passes raise pay instead of paying cash. Saves that already took the cash keep it.
+- Saves already certified in Negotiations get slower raises from now on (past raises stay).
+- Sales courses that three misses had locked reopen on load.
+
+**Rollback** to builds 40–54:
+
+```sh
+netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb9907db","deploy_id":"6ab71d6d65da9100074af02a"}'
+```
+
+## Checks
+
+- **Before the push:**
+  - a fast-forward, with the branch equal to `origin`;
+  - `netlify.toml`, `netlify/`, `package.json`, `vite.config.ts` and `index.html` unchanged;
+  - 482 tests / 85 files, including `ProductionSaveMigration`, `StrategyRanking` and `CourseRewards`.
+- **The live bundle:**
+  - `main-BcxYqiVC.js` holds the course copy and the pay stub's "Certification raise";
+  - `createTownScene-BzU3AMKH.js` loads the hero at `20260925f`;
+  - the blink code sits in the shared `GLTFLoader-jGzc39J8.js` chunk, the same chunk as the local build;
+  - `town-hero-alex.glb?v=20260925f` answers 200 at 509,388 bytes.
+- **Functions and pages:** `validate-access` answers, and `/educators` and `/teacher-packet` answer 200.
+- **The pre-release Alex save on the live site** (month 8, $10,091, no courses; made on builds 52–54):
+  - it loads, and the dashboard shows "Free in about 19 years at this pace";
+  - the Sales intro shows "Pass for a 3% raise that stays with you. 3 tries included; after a third miss, a $150 retake fee buys 3 more";
+  - passing gives "Reward earned: a 3% raise that stays with you, +10 FIQ, +5 happiness";
+  - the save stores `courseRaises: {sales: 3}` with cash still $10,091;
+  - the dashboard now reads "Free in about 18 years".
+- **The city on the live site:** the header reads "Freedom 13% · free in about 18 years", and every model loaded with 200, including the new hero.
+- **Console:** no errors.
+- **Not done live:** a close-up of the blink. The pane was hidden, and production has no frame-stepping handle. It was checked on the branch (`hero-blink-2026-09-25/`).

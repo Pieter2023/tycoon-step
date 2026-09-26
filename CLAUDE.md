@@ -4,9 +4,10 @@
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
-- **Production:** builds 40–54 are live after two releases on 2026-09-25:
+- **Production:** builds 40–57 are live after three releases on 2026-09-25:
   - 40–51 at 17:21 PDT, deploy `6ab70fda`;
-  - 52–54 at 18:19 PDT, `origin/main` = `4436196`, deploy `6ab71d6d`.
+  - 52–54 at 18:19 PDT, deploy `6ab71d6d`;
+  - 55–57 at 21:01 PDT, `origin/main` = `21f7771`, deploy `6ab743ad`.
 
   Both were fast-forwards from the branch. Receipts and rollbacks: `docs/verification/release-2026-09-25/`. (Before that, production was a Sept-13 CLI deploy, not `origin/main`.)
 - **Work branch `town-lighting-pass`:** checked out and pushed to `origin`. `main` is fast-forwarded to it for each release, and later commits wait here for the next one. It holds, all now live:
@@ -29,19 +30,19 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
     - month-close milestones are celebrated (App's `seenReady` ref);
     - energy and stress lead the Life tab and Profile.
   - events staged at their place in 3D (build 54, `components/town/townEventStage.ts`): a marker, a letter on the doorstep, hazard lights on the parked car.
-- **Build 55, on the branch and NOT released** (`3364c54`): the course rewards. Receipt: `docs/verification/course-rewards-2026-09-25/`.
+- **Build 55, live** (`3364c54`): the course rewards. Receipt: `docs/verification/course-rewards-2026-09-25/`.
   - A pass pays a lasting raise instead of cash: Negotiations +5%, Sales +3%, EQ +3% (`services/courseRewards.ts`). It is stored as `GameState.courseRaises` and applied after the education premium by `getCourseRaiseMultiplier`, so promotions keep it. Saves that claimed the old cash get no raise.
   - A third miss costs a $150 retake fee and buys three more tries.
   - Also fixed: the negotiation growth bonus was monthly (~27% a year) and is now yearly; the EQ 1.5× XP perk now applies; Finish counts once per quiz run.
   - Test: `test/CourseRewards.test.tsx`.
-- **Builds 56–57, on the branch and NOT released:**
+- **Builds 56–57, live:**
   - the hero Alex blinks (`e135de3`): eyelid meshes on the Head joint from `build_eyelids()` in `scripts/build-town-hero.py`, driven by `createBlink`; dev handle `__town.blink(amount)`;
   - a cleaner face texture (`e09ec4b`): `repair_face()` replaces Meshy's seam lines with the local 3D skin tone.
   - Receipts: `docs/verification/hero-blink-2026-09-25/`, `docs/verification/hero-face-2026-09-25/`.
 - **Validation:** 482 tests / 85 files and the production build pass on the branch.
-- **Next session, first:** ask Pieter to release build 55. Warn him that saves already certified in Negotiations lose the ~27%-a-year growth going forward. Builds 56–57 ride along with that release. Then the rest of the visuals (HANDOVER §1b "Then, in order"): the Wave crease, a Sit clip, hair polish, an AO bake.
+- **Next session, first:** the rest of the visuals (HANDOVER §1b "Then, in order"): the Wave crease, a Sit clip, hair polish, an AO bake.
 - **Waiting on Pieter:**
-  - the build-55 release (course rewards);
+  - whether the hero's cheek shading step is worth hand re-topology in Blender (build 57 receipt);
   - Phase 1 slice 4: try the "Start in the 3D city" setting, then decide whether the city becomes the default screen (and the dashboard a ledger drawer);
   - the daily challenge's demo gate (from June).
 - **Visual QA:** the town scene is a code-split chunk, so verify town deploys by grepping `TownModal-*.js`/`createTownScene-*.js`, not `index-*.js`. When the browser pane is hidden, use the dev handle `__town.advance(frames)` with `scripts/qa/capture-receiver.py` (HANDOVER §5).
