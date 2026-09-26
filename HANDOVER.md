@@ -1,6 +1,8 @@
 # Start here — Tycoon handover
 
-Updated **September 26, 2026, 06:00 PDT**. **Builds 40–59 are live** after four releases on the evening of September 25 (all with Pieter's go-ahead; receipts and rollbacks in `docs/verification/release-2026-09-25/`). That day produced a full game assessment, then:
+Updated **September 26, 2026, 06:45 PDT**: the real-phone check of builds 52–59 passed (56–60 fps, `docs/verification/phone-2026-09-26/`) and found one phone bug, fixed as **build 60 on the branch, not released**: dialogs taller than the screen had their close and action buttons out of reach (the Sales quiz, Save and load).
+
+Before that, updated **September 26, 2026, 06:00 PDT**. **Builds 40–59 are live** after four releases on the evening of September 25 (all with Pieter's go-ahead; receipts and rollbacks in `docs/verification/release-2026-09-25/`). That day produced a full game assessment, then:
 - the art upgrade: the lighting pass (40), skinned townspeople (41), the AI-modelled Alex (42), the walk-bob fix (43) and lighter sign lettering (48);
 - the economy: Phase 0 (44), property costs and loans (49), pacing (52) and course rewards that pay a raise (55);
 - fixes and plumbing: the traffic deadlock (45), unique asset ids with a production-save migration test (51);
@@ -18,12 +20,12 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 | **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `e3097ca` (release 4). The branch is one docs commit ahead (`b689c41`, release-4 receipt), and later commits stay ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
-| Validation on the branch | 483 tests / 85 files, TypeScript and the production build (build 59, live). |
+| Validation on the branch | 484 tests / 85 files, TypeScript and the production build (build 60, not released; build 59 is live). |
 | Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
 | QA servers | Another chat's Vite server held `127.0.0.1:5188`, so builds 42–45 were checked on `localhost:5189` (`tycoon-qa-5189` in `.claude/launch.json`) with a fresh Alex save. `tycoon-lan-preview` serves `dist/` on `0.0.0.0:5190` for the phone (`http://192.168.1.80:5190/?stats`). Builds 50–59 were checked on `localhost:5191` (`tycoon-qa-5191`), because 5189 was still held by the previous chat's server. An older chat's capture receiver holds port 5199, so builds 56–59 used one on 5198. |
-| Phone | Pieter's iPhone is reachable through macOS iPhone Mirroring (computer-use app `iPhone Mirroring`; clicks need full-screen control, background clicks do nothing). First check passed: 60 fps (`docs/verification/phone-2026-09-25/`). |
+| Phone | Pieter's iPhone is reachable through macOS iPhone Mirroring (computer-use app `iPhone Mirroring`; clicks need full-screen control, background clicks do nothing). Checks passed: build 43 at 60 fps (`docs/verification/phone-2026-09-25/`); builds 52–59 at 56–60 fps on Detailed for 3 minutes, 60 on Auto (`docs/verification/phone-2026-09-26/`). |
 
 **Commits on `town-lighting-pass`, oldest first:**
 1. `263aeeb`: snapshot of the Sept-13 atelier work, which was uncommitted until then.
@@ -60,7 +62,8 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 32. `a36d1b8`: a real wave, a Sit clip and tapered hair (build 58). Receipt: `docs/verification/characters-polish-2026-09-25/`.
 33. `6bde70f`: baked ambient occlusion for the city (build 59). Receipt: `docs/verification/city-ao-2026-09-25/`.
 34. `e3097ca`: builds 58–59 docs. **Released: `main` = `e3097ca`** (builds 58–59, deploy `6ab757c4`).
-35. `b689c41`: release-4 receipt; then this handover.
+35. `b689c41`: release-4 receipt; then `e010f24`, the 06:00 handover.
+36. Build 60: dialogs fit a phone (`components/Modal.tsx`), found by the phone check of builds 52–59. Receipt: `docs/verification/phone-2026-09-26/`. **Not released.**
 
 ## 1b. Where the last session stopped (2026-09-26, 06:00 PDT)
 
@@ -88,20 +91,23 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 - **59, city AO** (`city-ao-2026-09-25/`): a Cycles AO lightmap on `TEXCOORD_1` (1024 px) at strength `TOWN_AO_STRENGTH` 1.4. It adds 481 KB (the city file is 1.38 MB) and one texture.
 
 **Next, in order:**
-1. **A real-phone check of builds 52–59.** Use iPhone Mirroring (computer-use app `iPhone Mirroring`; clicks need full-screen control). Watch fps with the AO texture and the heavier models; the last phone check was build 43 (60 fps) and build 47 (55 fps on Detailed).
-2. **A Chromebook check**, the classroom device. It has never been done.
-3. **Tileable textures** for pavement, brick and road: the last open item of assessment §3's visual list.
-4. **Pieter's calls:**
+1. ✅ **The real-phone check of builds 52–59** (2026-09-26, `docs/verification/phone-2026-09-26/`): 56–60 fps on Detailed over 3 minutes, 60 on Auto, the café shift and sleep-at-home work on the phone. It found build 60 (below).
+2. **Release build 60 when Pieter says so.** On a phone, dialogs taller than the screen (the Sales quiz, Save and load) had their close and action buttons out of reach, so a phone player couldn't take the Sales certification. The shared `Modal` now scrolls. Code: `components/Modal.tsx`, plus one line each in `TutorialModal`, `TownModal` and `KidsSquareModal`. Release recipe: `docs/verification/release-2026-09-25/`.
+3. **A Chromebook check**, the classroom device. It has never been done, and it needs Pieter or a Chromebook on the network.
+4. **Small findings from the phone check** (receipt, "Other findings"): all `SOCIAL` events are framed as "Rosa knocks on your door", including the office birthday collection; rooms leave the 3D view about a third of a portrait screen.
+5. **Tileable textures** for pavement, brick and road: the last open item of assessment §3's visual list.
+6. **Pieter's calls:**
    - slice 4 as the default screen, and the ledger drawer;
    - the daily challenge's demo gate (from June);
    - whether the hero's cheek shading step is worth hand re-topology in Blender.
-5. **Analytics: Pieter will do it himself once all the phases are completed** (he said so on 2026-09-26). Don't prompt him before then; when the phases are done, remind him.
+7. **Analytics: Pieter will do it himself once all the phases are completed** (he said so on 2026-09-26). Don't prompt him before then; when the phases are done, remind him.
    - The code is ready: `services/analytics.ts` tracks the whole funnel, and the snippet is commented out in `index.html`.
    - The plan is Umami Cloud **Hobby**: $0, 100K events a month, 1 website, 6-month retention, no cookie banner.
    - His part: sign up at https://cloud.umami.is, add the website `tycoonjan22026.netlify.app`, and send the Website ID.
    - Then: uncomment the snippet with that ID plus `data-domains="tycoonjan22026.netlify.app"` (so local QA doesn't count), check it locally and release it.
 
 **QA state:**
+- Phone (2026-09-26): the LAN preview on port 5190 serves the build-60 `dist/`. The phone's `192.168.1.80:5190` origin holds an Alex save at month 2, with graphics back on Auto.
 - `localhost:5191` (`tycoon-qa-5191`) holds the production fixture save at month 8, with first steps reviewed and `tycoon_start_in_city=1`, so Continue opens the city.
   - Sales is certified there (the 3% raise), with one Negotiations miss after a retake fee.
   - To reload the fixture: see §5.
@@ -145,7 +151,7 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
    - ✅ hair polish, the armpit crease in Wave and a Sit clip (build 58, live);
    - ✅ a blink for the hero Alex (build 56, live);
    - ✅ an even skin tone on the hero's face texture (build 57, live; the shading step on one cheek is geometry and remains).
-5. **Phone**: first iPhone check passed at build 43 (60 fps). Repeat for builds 52–59 (the AO texture and heavier models are new); a Chromebook is still untested.
+5. **Phone**: ✅ iPhone checks passed at build 43 (60 fps) and builds 52–59 (56–60 fps; `docs/verification/phone-2026-09-26/`), which found build 60 (tall dialogs, not released). A Chromebook is still untested.
 6. **Analytics, after all the phases:** Pieter's step (Umami sign-up and Website ID), then a one-line release. See §1b item 5.
 
 ## 4. What Pieter wants (standing)
@@ -160,7 +166,7 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
 ```sh
 cd '/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2'
 git status --short && git log --oneline -8
-npm run test:run          # 483 tests / 85 files on the branch
+npm run test:run          # 484 tests / 85 files on the branch
 npm run build
 npx vite --host 127.0.0.1 --port 5188 --strictPort   # or preview_start "tycoon-qa-5188" (.claude/launch.json)
 '/Applications/Blender.app/Contents/MacOS/Blender' --background --factory-startup --python scripts/build-town-people.py   # then bump PEOPLE_VERSION
@@ -227,6 +233,15 @@ To enter a room while the pane is hidden:
   4. Switch the window back to Pieter's `Scene` when done.
 
 ## 6. Gotchas learned on 2026-09-25 and 26
+
+**Phone check (2026-09-26)**
+- iPhone Mirroring:
+  - Taps need full-screen control.
+  - The page scrolls only with `scroll` at amount 100, repeated. A mouse drag selects text instead.
+  - `left_click_drag` does work on the joystick.
+  - View → Zoom In makes the window large enough to read the `?stats` line.
+- The Bash shell can't `screencapture` the mirroring window, and `save_to_disk` gave no file path. For receipt images, use headless WebKit with the iPhone 15 Pro profile: `docs/verification/phone-2026-09-26/quiz-shots.cjs` uses the cached Playwright 1.63 (`~/.npm/_npx/420ff84f11983ee5`, WebKit 2359 already installed).
+- The shared `Modal` scrolls its overlay and gives the dialog auto top/bottom margins. A dialog that wants another placement sets its own margins through `contentStyle`, as `TutorialModal` does. The 3D city modals pass `overflow: 'hidden'`.
 
 **Lighting**
 - Neutral tone mapping has none of ACES's hidden ~1.7× exposure boost, so night has its own lift (`LIGHT_BALANCE.nightExposure`).

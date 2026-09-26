@@ -84,3 +84,29 @@ it('closes on overlay click', async () => {
   await user.click(overlay);
   expect(screen.queryByRole('dialog', { name: 'Test modal' })).toBeNull();
 });
+
+// Phone check 2026-09-26: the Sales quiz was taller than an iPhone screen, so its close and start
+// buttons sat off-screen with the page scroll-locked. The overlay scrolls and the dialog's auto
+// margins keep its top reachable; a consumer can still set its own margins (the tutorial's bottom sheet).
+it('lets a dialog taller than the screen scroll inside the overlay', () => {
+  const { rerender } = render(
+    <I18nProvider>
+      <Modal isOpen onClose={() => undefined} ariaLabel="Tall modal">
+        <p>Content</p>
+      </Modal>
+    </I18nProvider>
+  );
+  const dialog = screen.getByRole('dialog', { name: 'Tall modal' });
+  expect(dialog.parentElement).toHaveClass('overflow-y-auto');
+  expect(dialog.style.marginTop).toBe('auto');
+  expect(dialog.style.marginBottom).toBe('auto');
+
+  rerender(
+    <I18nProvider>
+      <Modal isOpen onClose={() => undefined} ariaLabel="Tall modal" contentStyle={{ marginTop: 0, marginBottom: 0 }}>
+        <p>Content</p>
+      </Modal>
+    </I18nProvider>
+  );
+  expect(screen.getByRole('dialog', { name: 'Tall modal' }).style.marginTop).toBe('0px');
+});

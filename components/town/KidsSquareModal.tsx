@@ -33,7 +33,7 @@ export default function KidsSquareModal({ state, onClose, onStartHustle, onBuy, 
   const moveStick = (e: React.PointerEvent<HTMLDivElement>) => { if (stick.current !== e.pointerId) return; const r = e.currentTarget.getBoundingClientRect(); const dx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2), dz = (e.clientY - (r.top + r.height / 2)) / (r.height / 2); const len = Math.hypot(dx, dz) || 1, k = Math.min(1, len); setThumb({ x: dx / len * k, z: dz / len * k }); controller.current?.move(dx / len * k, dz / len * k); };
   const releaseStick = () => { stick.current = null; setThumb({ x: 0, z: 0 }); controller.current?.move(0, 0); };
   const allowance = weeklyAllowance(state), progress = goalProgress(state);
-  return <Modal isOpen onClose={onClose} ariaLabel={tl('Your square', 'Tu plaza')} showCloseButton={false} overlayStyle={{ padding: 0 }} contentStyle={{ maxWidth: 1500, width: '100%' }} contentClassName="town-modal town-kids">
+  return <Modal isOpen onClose={onClose} ariaLabel={tl('Your square', 'Tu plaza')} showCloseButton={false} overlayStyle={{ padding: 0, overflow: 'hidden' }} contentStyle={{ maxWidth: 1500, width: '100%' }} contentClassName="town-modal town-kids">
     <header className="town-header">
       <div><p className="town-eyebrow">{tl('Money Quest', 'Money Quest')} · {tl('week', 'semana')} {state.week}</p><h2>{state.character?.emoji} {tl('Your square', 'Tu plaza')}</h2></div>
       <div className="town-balance"><span>{tl('Coins', 'Monedas')} · {energyHearts(state)}</span><strong>{money(state.cash)}</strong></div>

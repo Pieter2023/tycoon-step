@@ -1,6 +1,6 @@
 # Tycoon: Financial Freedom Simulator
 
-## Current handover — September 26, 2026 (06:00 PDT)
+## Current handover — September 26, 2026 (06:45 PDT)
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
@@ -43,8 +43,16 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
 - **Builds 58–59, live:**
   - a real wave, a Sit clip, tapered hair and a `sitHips` fix (`a36d1b8`, `docs/verification/characters-polish-2026-09-25/`);
   - baked ambient occlusion for the city (`6bde70f`, `docs/verification/city-ao-2026-09-25/`). The AO step is in `scripts/build-town-assets.py`; the strength is `TOWN_AO_STRENGTH` in `createTownScene.ts`.
-- **Validation:** 483 tests / 85 files and the production build pass on the branch.
-- **Next session, first:** a real-phone and Chromebook check of builds 52–59 (the AO adds about 0.5 MB and one texture). Then tileable textures for pavement, brick and road (assessment §3).
+- **Phone check of builds 52–59: passed** (2026-09-26, `docs/verification/phone-2026-09-26/`). 56–60 fps on Detailed over 3 minutes, 60 on Auto; the café shift and sleep-at-home work on the iPhone.
+- **Build 60, on the branch, not released:** dialogs fit a phone. The shared `components/Modal.tsx` centred every dialog in a fixed, non-scrolling overlay, so on a phone the Sales quiz and Save and load lost their close and action buttons off-screen. A phone player couldn't take the certification.
+  - The overlay now scrolls, and the dialog has auto top/bottom margins (centred when it fits, top-aligned when it doesn't).
+  - `TutorialModal` keeps its bottom sheet (margins 0). The city modals pass `overflow: 'hidden'`.
+  - Test: `test/Modal.test.tsx`. Checked on the iPhone.
+- **Validation:** 484 tests / 85 files and the production build pass on the branch.
+- **Next session, first:** release build 60 when Pieter says so. Then:
+  - a Chromebook check (needs a Chromebook);
+  - tileable textures for pavement, brick and road (assessment §3);
+  - the phone check's small findings (HANDOVER §1b item 4).
 - **Waiting on Pieter:**
   - whether the hero's cheek shading step is worth hand re-topology in Blender (build 57 receipt);
   - Phase 1 slice 4: try the "Start in the 3D city" setting, then decide whether the city becomes the default screen (and the dashboard a ledger drawer);
@@ -53,7 +61,7 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - Don't prompt him before then; remind him when the phases are done.
   - His part: a free Umami Cloud Hobby site for `tycoonjan22026.netlify.app`, and the Website ID.
   - Ours: uncomment the snippet in `index.html` with that ID and `data-domains="tycoonjan22026.netlify.app"`, check it and release it.
-  - Steps: HANDOVER §1b item 5.
+  - Steps: HANDOVER §1b item 7.
 - **Visual QA:** the town scene is a code-split chunk, so verify town deploys by grepping `TownModal-*.js`/`createTownScene-*.js`, not `index-*.js`. When the browser pane is hidden, use the dev handle `__town.advance(frames)` with `scripts/qa/capture-receiver.py` (HANDOVER §5).
 - **Ports and saves:** the user preview is `127.0.0.1:5187`; isolate QA on 5188 (5189 and 5191 were also used on 2026-09-25; the capture receiver ran on 5198 because 5199 was held; see HANDOVER §5). Preserve the user's save and all tracked and untracked work.
 - **Pushing:** pushing the backup branch is fine. Merging to `main`, which deploys, needs Pieter's go-ahead; earlier deploys were authorised case by case. The release recipe (fast-forward only, verify the live bundle and a real save) is in `docs/verification/release-2026-09-25/`.
@@ -70,7 +78,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (84 files / 468 tests on `town-lighting-pass`, 2026-09-25; integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (85 files / 484 tests on `town-lighting-pass`, 2026-09-26; integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)

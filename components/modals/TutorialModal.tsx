@@ -68,6 +68,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ step, onNext, onDismiss, 
       closeOnOverlayClick
       closeOnEsc
       contentClassName="bg-gradient-to-br from-blue-900/90 to-slate-900/90 border border-blue-500/50 rounded-2xl p-6 max-w-md w-full backdrop-blur-sm"
+      contentStyle={{ marginTop: 0, marginBottom: 0 }}
     >
       <div className="flex items-start gap-4">
         <div className="text-4xl">{tip.title.split(' ')[0]}</div>

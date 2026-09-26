@@ -187,10 +187,13 @@ const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
   if (typeof document === 'undefined') return null;
 
+  // A dialog taller than the screen (the Sales quiz on a phone) must stay reachable: the page is
+  // scroll-locked, so the overlay scrolls instead. Auto margins centre the dialog while it fits and
+  // pin it to the top when it doesn't (plain centring would push its close button off the top).
   return createPortal(
     <div
       className={joinClassNames(
-        'fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4',
+        'fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto overscroll-contain',
         overlayClassName
       )}
       style={{ zIndex, ...overlayStyle }}
@@ -208,7 +211,7 @@ const Modal: React.FC<ModalProps> = ({
           'relative w-full max-w-lg bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl outline-none',
           contentClassName
         )}
-        style={contentStyle}
+        style={{ marginTop: 'auto', marginBottom: 'auto', ...contentStyle }}
         tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
       >
