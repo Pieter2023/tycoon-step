@@ -1,6 +1,11 @@
 # Start here — Tycoon handover
 
-Updated **September 26, 2026, 07:50 PDT**. **Builds 40–62 are live.** Build 62, the phone check's findings, was released at 07:41 PDT ("ship it, release 62"): `main` = `7a4d644`, deploy `6ab7d981`. The receipt is release 7 in `docs/verification/release-2026-09-25/`. Build 62 (`docs/verification/phone-findings-2026-09-26/`):
+Updated **September 26, 2026, 08:05 PDT**. Pieter said "yes to all 3" of his open calls. Two new builds are **on the branch, not released**:
+- **Build 63:** the 3D city is the default screen. "Start in the 3D city" is on unless a player switched it off (`docs/verification/phase1-slice4-default-2026-09-26/`). The ledger drawer is not built.
+- **Build 64:** the hero's cheek. The face's shading normals are relaxed at build time (custom normals; no vertex moves), so the hard cheek-and-jaw line is gone (`docs/verification/hero-cheek-2026-09-26/`).
+- **The daily challenge:** read literally ("whether it stays demo-only": yes), so the demo gate stays and there is no code change. **Confirm with Pieter that he didn't mean to open it to the free demo.**
+
+Earlier, at 07:50 PDT: **builds 40–62 are live.** Build 62, the phone check's findings, was released at 07:41 PDT ("ship it, release 62"): `main` = `7a4d644`, deploy `6ab7d981`. The receipt is release 7 in `docs/verification/release-2026-09-25/`. Build 62 (`docs/verification/phone-findings-2026-09-26/`):
 - events are framed where they happen: office, doormat, Main Street, home, square, and a new Property & Co. place for rentals;
 - the destination row gets ‹ › buttons when it overflows;
 - on phones, rooms trade the destination row for a one-row room bar, and the journey strip is one row. The bank's 3D view goes from 305 to 467 px. Build 61, tileable paving, brick and asphalt (`docs/verification/surfaces-2026-09-26/`), was released at 07:13 PDT ("ship it, release 61"): `main` = `1bc4d4e`, deploy `6ab7d2f2`. The receipt is release 6 in `docs/verification/release-2026-09-25/`.
@@ -25,7 +30,7 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 | **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `7a4d644` (release 7, build 62). Later commits, such as the release-7 receipt, stay ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
-| Validation on the branch | 496 tests / 88 files, TypeScript and the production build (build 62, live). |
+| Validation on the branch | 498 tests / 88 files, TypeScript and the production build (builds 63–64, not released; build 62 is live). |
 | Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
@@ -73,7 +78,9 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 38. `1bc4d4e`: build 61, tileable paving, brick and asphalt (`components/town/townSurfaces.ts`, `dressTown`, wall materials in `scripts/build-town-assets.py`, `MODEL_VERSION` `20260926b`). Receipt: `docs/verification/surfaces-2026-09-26/`. **Released: `main` = `1bc4d4e`** (deploy `6ab7d2f2`).
 39. `c079952`: the release-6 receipt.
 40. Build 62: the phone check's findings (`services/townEvents.ts` `EVENT_PLACES`, the `property` stage, the destination scroll buttons and the phone room bar in `TownModal`/`town.css`). Receipt: `docs/verification/phone-findings-2026-09-26/`. **Released: `main` = `7a4d644`** (deploy `6ab7d981`).
-41. The release-7 receipt and this handover.
+41. `f9a6d40`: the release-7 receipt.
+42. `9f3cdf1`: build 63, the 3D city is the default screen (`App.tsx` `startInCity`, `test/StartInCity.test.tsx`). **Not released.**
+43. Build 64: the hero's cheek (`smooth_face_normals()` in `scripts/build-town-hero.py`, `HERO_VERSION` `20260926a`). Receipt: `docs/verification/hero-cheek-2026-09-26/`. **Not released.**
 
 ## 1b. Where the last session stopped (2026-09-26, 06:00 PDT)
 
@@ -113,10 +120,10 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
    - iPhone 58–60 fps on Detailed.
 
    That closes assessment §3's visual list, apart from the bigger items it never started: a modular building kit, splitting the city for culling, and the male hip/waist ratio.
-6. **Pieter's calls:**
-   - slice 4 as the default screen, and the ledger drawer;
-   - the daily challenge's demo gate (from June);
-   - whether the hero's cheek shading step is worth hand re-topology in Blender.
+6. **Pieter's calls, answered "yes to all 3" on 2026-09-26:**
+   - ✅ the city as the default screen: build 63, not released. The ledger drawer is not built; ask before building it.
+   - ✅ the daily challenge's demo gate stays (the literal reading of "yes" to "whether it stays demo-only"). **Confirm with Pieter.**
+   - ✅ the hero's cheek: build 64, not released. It is done in code, by relaxing the shading normals; moving the vertices was tried and slid the painted eyes.
 7. **Analytics: Pieter will do it himself once all the phases are completed** (he said so on 2026-09-26). Don't prompt him before then; when the phases are done, remind him.
    - The code is ready: `services/analytics.ts` tracks the whole funnel, and the snippet is commented out in `index.html`.
    - The plan is Umami Cloud **Hobby**: $0, 100K events a month, 1 website, 6-month retention, no cookie banner.
@@ -139,15 +146,15 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
    - Then merge into the release branch and push `main`, which auto-deploys.
    - Do a real-phone check first. The new costs are the skinned people, the sky recapture and the 502 KB hero download.
 2. **The economy fix is done** (build 44, approved 2026-09-25): see `docs/verification/economy-2026-09-25/`. **Pacing was delegated to Claude on 2026-09-25** ("decide whatever you think works best overall"); the decision and its numbers go in §3.
-3. **Still open from June:** whether the Daily Challenge should stay demo-gated (see the GTM section of CLAUDE.md).
+3. **The Daily Challenge demo gate:** kept. Pieter said "yes" on 2026-09-26 to "whether the daily challenge stays demo-only". **Confirm this reading with him**: if he meant to open it to the free demo, that is the GTM analysis's recommendation (CLAUDE.md, GTM section).
 4. **Walk bob:** fixed in build 43 (approved).
 5. **Phase 1:**
-   - **Slice 4:** try the "Start in the 3D city" setting (Quick actions, build 50), then decide whether the city becomes the default screen for everyone and whether the dashboard becomes a "ledger" drawer. Claude kept it opt-in because the Chromebook, the classroom device, is untested.
+   - **Slice 4:** ✅ the city is the default screen (Pieter's yes on 2026-09-26; build 63, not released). The "ledger" drawer is not built. The Chromebook, the classroom device, is still untested.
    - **Slice 5:** built as the Freedom Track (build 53). Say what to change.
 6. ✅ **Builds 52–54 shipped** on 2026-09-25 at 18:19 PDT ("ship it"; `docs/verification/release-2026-09-25/`).
 7. ✅ **Course rewards: live** (build 55, release 3 at 21:01 PDT; receipt `docs/verification/course-rewards-2026-09-25/`). Certified negotiators on existing saves now get the corrected, slower growth.
 8. ✅ **Builds 56–59 shipped** (releases 3 and 4). Pieter saw the AO before-and-after and said "ship it".
-9. **The hero's cheek shading step** (build 57 receipt): leave it, or re-topologise the face by hand in Blender?
+9. ✅ **The hero's cheek shading step:** Pieter said yes on 2026-09-26; fixed in build 64 (`docs/verification/hero-cheek-2026-09-26/`), not released.
 10. **Analytics: deferred by Pieter until all the phases are completed.** He will sign up for Umami (free Hobby plan) and send the Website ID; §1b item 5 has the steps.
 
 Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the AI Alex cost 38 (receipt: `docs/verification/hero-alex-2026-09-25/`). Still: never spend credits without a fresh yes.
@@ -184,7 +191,7 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
 ```sh
 cd '/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2'
 git status --short && git log --oneline -8
-npm run test:run          # 496 tests / 88 files on the branch
+npm run test:run          # 498 tests / 88 files on the branch
 npm run build
 npx vite --host 127.0.0.1 --port 5188 --strictPort   # or preview_start "tycoon-qa-5188" (.claude/launch.json)
 '/Applications/Blender.app/Contents/MacOS/Blender' --background --factory-startup --python scripts/build-town-people.py   # then bump PEOPLE_VERSION
@@ -296,6 +303,11 @@ To enter a room while the pane is hidden:
 **Hero texture and blink (builds 56–57)**
 - The painted eyes were measured once from an unlit orthographic Workbench render (`color_type='TEXTURE'`, `light='FLAT'`). Workbench shows untextured meshes as plain white, so an open lid sliver appears as a white line in those QA renders only.
 - Meshy's face lines sit mostly on chart borders but some inside charts; the rules in `repair_face()` cover both.
+
+**Hero face shading (build 64)**
+- The face's custom normals come from `smooth_face_normals()`, the last step before export. Anything that changes the head's geometry must run before it.
+- The held boxes and the region (`FACE_*`) are in built-hero coordinates.
+- Don't move face vertices to smooth the light: the eyelids are placed at fixed 3D eye outlines, so the painted eyes slide out from under them.
 
 **Phone layout and event places (build 62)**
 - **Event places:** an event's place comes from `EVENT_PLACES` by id first, then its category. A new place needs a label in `eventPlace` and a spot in `EVENT_STAGE`. `test/TownEventPlaces.test.ts` fails on an unknown id or an unwalkable ring.

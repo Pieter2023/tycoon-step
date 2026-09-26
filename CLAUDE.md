@@ -1,6 +1,6 @@
 # Tycoon: Financial Freedom Simulator
 
-## Current handover — September 26, 2026 (07:50 PDT)
+## Current handover — September 26, 2026 (08:05 PDT)
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
@@ -60,14 +60,18 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - Events take their place by id first (`EVENT_PLACES` in `services/townEvents.ts`), with a new Property & Co. place for rentals.
   - The destination row gets ‹ › buttons when it overflows.
   - On phones, rooms swap the destination row for a one-row room bar ("?", walk-to, "Exit ↗"), and the journey strip is one row. The bank's 3D view goes from 305 to 467 px at 393×659.
-- **Validation:** 496 tests / 88 files and the production build pass on the branch.
-- **Next session, first:**
-  - a Chromebook check (needs a Chromebook);
-  - Pieter's open calls (HANDOVER §1b item 6).
+- **Pieter's three calls, "yes to all 3" (2026-09-26):**
+  - **Build 63, not released:** the 3D city is the default screen. `tycoon_start_in_city` is on unless it is `'0'`; `docs/verification/phase1-slice4-default-2026-09-26/`. The ledger drawer is not built.
+  - **Build 64, not released:** the hero's cheek. `smooth_face_normals()` in `scripts/build-town-hero.py` relaxes the skin's shading normals (custom normals; no vertex moves), and `HERO_VERSION` is `20260926a`; `docs/verification/hero-cheek-2026-09-26/`.
+  - **The daily challenge's demo gate stays**, reading "yes" to "whether it stays demo-only" literally. Confirm with Pieter.
+- **Validation:** 498 tests / 88 files and the production build pass on the branch.
+- **Next session, first:** release builds 63–64 when Pieter says so, and confirm the daily-challenge reading. Then:
+  - a Chromebook check (needs a Chromebook), which matters more now that the city is the default screen;
+  - the ledger drawer, if Pieter wants it.
 - **Waiting on Pieter:**
-  - whether the hero's cheek shading step is worth hand re-topology in Blender (build 57 receipt);
-  - Phase 1 slice 4: try the "Start in the 3D city" setting, then decide whether the city becomes the default screen (and the dashboard a ledger drawer);
-  - the daily challenge's demo gate (from June).
+  - releasing builds 63–64;
+  - confirming that the daily challenge stays demo-gated;
+  - whether to build the ledger drawer.
 - **Analytics: deferred by Pieter until all the phases are completed** (2026-09-26).
   - Don't prompt him before then; remind him when the phases are done.
   - His part: a free Umami Cloud Hobby site for `tycoonjan22026.netlify.app`, and the Website ID.
@@ -89,7 +93,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (88 files / 496 tests on `town-lighting-pass`, 2026-09-26; integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (88 files / 498 tests on `town-lighting-pass`, 2026-09-26; integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)
@@ -318,7 +322,7 @@ New marketing assets:
   is merchant-of-record, so a SA solo seller sidesteps W-9/PO/DPA — make
   "buy → expense the receipt" the only paid path; don't chase district POs.
 
-⚠️ **Open decision flagged for Pieter**: the GTM analysis recommends making the
+⚠️ **Decision (2026-09-26): kept demo-gated**, reading Pieter's "yes" to "whether the daily challenge stays demo-only" literally (confirm with him). History: the GTM analysis recommends making the
 Daily Challenge completable in the free demo (to feed the viral loop + pass
 daily-game directory rules), but CLAUDE.md records the demo-gating as Pieter's
 deliberate call ("challenge is demo-gated; card doubles as upsell"). **Left

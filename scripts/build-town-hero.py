@@ -314,6 +314,41 @@ def repair_face():
     return {'skin texels': int(skin.sum()), 'border texels fixed': int(fix.sum()), 'padding': grown}
 print('HERO face', repair_face())
 
+# ---------------------------------------------------------------- face shading (build 64)
+# Meshy decimated the face into coarse facets (a median crease of 24 degrees between neighbouring triangles), and smooth
+# shading across them drew a hard line down the face in the city's light (build 57 receipt). It stays with shadows off,
+# so it is the surface, not the shadow map. Moving the vertices (split, flip, relax) was tried first: it smoothed the
+# light but slid the painted eyes out from under the eyelids and smeared the mouth. So the vertices and the texture stay
+# exactly where they are, and only the shading normals of the skin are relaxed over their neighbours and stored as
+# custom normals. The eyes, brows, nose and mouth keep their own shading, and the relaxation fades out over 1.5 cm
+# towards the hairline, ears and neck, so there is no band where it stops (the earlier normal-smoothing try left one).
+# Coordinates are the built hero's (feet at 0, crown at 2.0, facing -y), measured from its midline profile.
+FACE_Z, FACE_X, FACE_Y, FACE_FADE = (1.672, 1.866), .116, -.04, .015
+FACE_HELD = [(-.074, -.019, 1.812, 1.887), (.017, .070, 1.812, 1.887),   # eyes and brows
+             (-.022, .022, 1.770, 1.836),                                   # nose, bridge to tip
+             (-.036, .036, 1.738, 1.764)]                                   # lips
+FACE_HELD_FADE, FACE_PASSES, FACE_RATE = .006, 20, .5
+def smooth_face_normals():
+    me = body.data; n = len(me.vertices)
+    co = np.empty(n * 3); me.vertices.foreach_get('co', co); co = co.reshape(-1, 3)
+    nv = np.empty(n * 3); me.vertex_normals.foreach_get('vector', nv); nv = nv.reshape(-1, 3)
+    x, y, z = co[:, 0], co[:, 1], co[:, 2]
+    edge = np.minimum.reduce([z - FACE_Z[0], FACE_Z[1] - z, FACE_X - np.abs(x), FACE_Y - y])
+    free = np.clip(edge / FACE_FADE, 0, 1)
+    for x0, x1, z0, z1 in FACE_HELD:
+        gap = np.hypot(np.maximum.reduce([x0 - x, np.zeros(n), x - x1]), np.maximum.reduce([z0 - z, np.zeros(n), z - z1]))
+        free = np.minimum(free, np.clip(gap / FACE_HELD_FADE, 0, 1))
+    ev = np.empty(len(me.edges) * 2, dtype=np.int64); me.edges.foreach_get('vertices', ev); ev = ev.reshape(-1, 2)
+    count = np.bincount(ev.ravel(), minlength=n).astype(float)
+    for _ in range(FACE_PASSES):
+        ring = np.zeros_like(nv); np.add.at(ring, ev[:, 0], nv[ev[:, 1]]); np.add.at(ring, ev[:, 1], nv[ev[:, 0]])
+        ring /= np.maximum(count, 1)[:, None]
+        nv = nv + (ring - nv) * (FACE_RATE * free)[:, None]
+        nv /= np.linalg.norm(nv, axis=1)[:, None]
+    me.normals_split_custom_set_from_vertices([tuple(v) for v in nv])
+    return {'relaxed vertices': int((free > 0).sum()), 'fully free': int((free >= 1).sum())}
+print('HERO face shading', smooth_face_normals())
+
 # ---------------------------------------------------------------- export
 for o in scene.objects: o.select_set(o in (arm, body, lids))
 os.makedirs(os.path.dirname(OUT_GLB), exist_ok=True)

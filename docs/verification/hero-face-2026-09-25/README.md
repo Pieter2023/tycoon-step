@@ -28,7 +28,7 @@ It touches about 4,600 face texels and 27,000 padding texels, and nothing outsid
 ## Left for Pieter's eye
 
 - **Forehead lines.** A few forehead lines (near the brows and the hairline) and the nose-bridge line survive. They fail the "mostly skin around it" test near the brows, and loosening it would start eating brow and hair edges.
-- **The shading step on one cheek.** A side light draws a hard terminator down the left third of the face. It is the decimated face geometry, not the texture: the unlit texture is even across the face (0.75–0.81).
+- **The shading step on one cheek** (fixed in build 64, `docs/verification/hero-cheek-2026-09-26/`). A side light draws a hard terminator down the left third of the face. It is the decimated face geometry, not the texture: the unlit texture is even across the face (0.75–0.81).
   - Smoothing the face normals was tried. It looked worse (a hard band where the Head weights end), so it was reverted.
   - The real fix is re-topologising or subdividing the face in Blender by hand.
 
