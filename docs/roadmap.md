@@ -2,7 +2,7 @@
 
 ## Current priorities — September 25, 2026 (evening)
 
-Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). **Production is builds 40–57**: `origin/main` = `21f7771`, three releases on 2026-09-25 with receipts in `docs/verification/release-2026-09-25/`. 482 tests / 85 files pass.
+Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). **Production is builds 40–57**: `origin/main` = `21f7771`, three releases on 2026-09-25 with receipts in `docs/verification/release-2026-09-25/`. Builds 58–59 are on the branch, not released. 483 tests / 85 files pass.
 
 1. ✅ **Live: the course rewards** (build 55, `3364c54`, release 3).
    - A pass pays a lasting raise instead of cash; a third miss costs a $150 retake fee.
@@ -11,10 +11,8 @@ Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](
 2. **Visuals (Blender):**
    - ✅ a hero blink (build 56, live);
    - ✅ hero face skin evenness (build 57, live; the shading step on one cheek is geometry and remains);
-   - the Wave crease;
-   - a Sit clip;
-   - hair polish;
-   - an AO bake.
+   - ✅ the Wave crease, a Sit clip and hair polish (build 58, not released);
+   - ✅ an AO bake (build 59, not released).
 3. **A real-phone check of builds 52–54, then a Chromebook check.**
 4. **Pieter's calls:** slice 4 as the default screen; the daily challenge's demo gate.
 5. **Done on 2026-09-25:**

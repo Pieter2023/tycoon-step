@@ -39,8 +39,11 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - the hero Alex blinks (`e135de3`): eyelid meshes on the Head joint from `build_eyelids()` in `scripts/build-town-hero.py`, driven by `createBlink`; dev handle `__town.blink(amount)`;
   - a cleaner face texture (`e09ec4b`): `repair_face()` replaces Meshy's seam lines with the local 3D skin tone.
   - Receipts: `docs/verification/hero-blink-2026-09-25/`, `docs/verification/hero-face-2026-09-25/`.
-- **Validation:** 482 tests / 85 files and the production build pass on the branch.
-- **Next session, first:** the rest of the visuals (HANDOVER §1b "Then, in order"): the Wave crease, a Sit clip, hair polish, an AO bake.
+- **Builds 58–59, on the branch and NOT released:**
+  - a real wave, a Sit clip, tapered hair and a `sitHips` fix (`a36d1b8`, `docs/verification/characters-polish-2026-09-25/`);
+  - baked ambient occlusion for the city (`6bde70f`, `docs/verification/city-ao-2026-09-25/`). The AO step is in `scripts/build-town-assets.py`; the strength is `TOWN_AO_STRENGTH` in `createTownScene.ts`.
+- **Validation:** 483 tests / 85 files and the production build pass on the branch.
+- **Next session, first:** ask Pieter to release builds 58–59 (the AO is a look change and adds about 0.5 MB). Then a real-phone and Chromebook check.
 - **Waiting on Pieter:**
   - whether the hero's cheek shading step is worth hand re-topology in Blender (build 57 receipt);
   - Phase 1 slice 4: try the "Start in the 3D city" setting, then decide whether the city becomes the default screen (and the dashboard a ledger drawer);
