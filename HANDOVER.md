@@ -1,6 +1,6 @@
 # Start here — Tycoon handover
 
-Updated **September 26, 2026, 09:20 PDT**. **Build 66, the sound audit and upgrade, is on the branch and not released** (§1c). **Builds 40–65 are live** after nine releases (four on Sept 25, five on Sept 26), each with Pieter's go-ahead. **Analytics are on** (build 65, release 9): Umami Cloud Hobby, Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`. Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`.
+Updated **September 26, 2026, 09:25 PDT**. **Build 66, the sound audit and upgrade, went live at 09:16 PDT** (release 10, `main` = `6bb25f1`, deploy `6ab7efe0`; §1c). **Builds 40–65 were live** after nine releases (four on Sept 25, five on Sept 26), each with Pieter's go-ahead. **Analytics are on** (build 65, release 9): Umami Cloud Hobby, Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`. Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`.
 
 **This session** (Sept 26, 06:00–08:20 PDT) ran the real-phone check of builds 52–59 (56–60 fps on the iPhone), then built and released builds 60–64:
 
@@ -26,12 +26,12 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 
 | What | State |
 |---|---|
-| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | **Builds 40–65 are live** after nine releases, each with Pieter's go-ahead:<br>• 40–51 at 17:21 PDT, deploy `6ab70fda`;<br>• 52–54 at 18:19 PDT ("ship it"), deploy `6ab71d6d`;<br>• 55–57 at 21:01 PDT ("ship it, release 55-57"), deploy `6ab743ad`;<br>• 58–59 at 22:27 PDT ("ship it, release 58-59"), deploy `6ab757c4`;<br>• 60 on 2026-09-26 at 06:45 PDT ("ship it, release 60"), deploy `6ab7cc8d`;<br>• 61 on 2026-09-26 at 07:13 PDT ("ship it, release 61"), deploy `6ab7d2f2`;<br>• 62 on 2026-09-26 at 07:41 PDT ("ship it, release 62"), deploy `6ab7d981`;<br>• 63–64 on 2026-09-26 at 08:02 PDT ("ship it, release 63-64"), deploy `6ab7de71`;<br>• **65 (analytics) on 2026-09-26 at 08:40 PDT** ("drive this"): `origin/main` = `5ab30ca`, deploy `6ab7e74f`.<br>Before that, production was a Sept-13 **CLI** deploy (`6aa6c7fa`), not `origin/main` (`073f397`). Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`. |
+| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | **Builds 40–66 are live** after ten releases, each with Pieter's go-ahead:<br>• 40–51 at 17:21 PDT, deploy `6ab70fda`;<br>• 52–54 at 18:19 PDT ("ship it"), deploy `6ab71d6d`;<br>• 55–57 at 21:01 PDT ("ship it, release 55-57"), deploy `6ab743ad`;<br>• 58–59 at 22:27 PDT ("ship it, release 58-59"), deploy `6ab757c4`;<br>• 60 on 2026-09-26 at 06:45 PDT ("ship it, release 60"), deploy `6ab7cc8d`;<br>• 61 on 2026-09-26 at 07:13 PDT ("ship it, release 61"), deploy `6ab7d2f2`;<br>• 62 on 2026-09-26 at 07:41 PDT ("ship it, release 62"), deploy `6ab7d981`;<br>• 63–64 on 2026-09-26 at 08:02 PDT ("ship it, release 63-64"), deploy `6ab7de71`;<br>• 65 (analytics) on 2026-09-26 at 08:40 PDT ("drive this"), deploy `6ab7e74f`;<br>• **66 (sound) on 2026-09-26 at 09:16 PDT** ("ship it, release 66"): `origin/main` = `6bb25f1`, deploy `6ab7efe0`.<br>Before that, production was a Sept-13 **CLI** deploy (`6aa6c7fa`), not `origin/main` (`073f397`). Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`. |
 | Branch `codex/game-overhaul-20260503-223748` | The old release branch at `073f397` (build 39); now behind `main`. |
 | **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `5ab30ca` (release 9, build 65). Later commits, such as the release-9 receipt, stay ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
-| Validation on the branch | 518 tests / 89 files, TypeScript and the production build (build 66, not released). |
+| Validation on the branch | 518 tests / 89 files, TypeScript and the production build (build 66, live). |
 | Servers | Left running at the end of this session:<br>• `tycoon-lan-preview` on `0.0.0.0:5190`, serving the builds 63–64 `dist/` for the phone (`http://192.168.1.80:5190/?stats`);<br>• `tycoon-qa-5191` (a Vite dev server) on `localhost:5191`.<br>Older chats' Vite dev servers from Sept 25 may still hold 5188 and 5189; don't rely on them. The capture receivers were stopped. Pieter's own save lives on `127.0.0.1:5187` and was never touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
@@ -100,9 +100,10 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 | 6 | 61 | 07:13 | `1bc4d4e` | `6ab7d2f2` |
 | 7 | 62 | 07:41 | `7a4d644` | `6ab7d981` |
 | 8 | 63–64 | 08:02 | `cc2df03` | `6ab7de71` |
-| 9 | 65 (analytics) | 08:40 | `5ab30ca` | `6ab7e74f` (current) |
+| 9 | 65 (analytics) | 08:40 | `5ab30ca` | `6ab7e74f` |
+| 10 | 66 (sound) | 09:16 | `6bb25f1` | `6ab7efe0` (current) |
 
-At 08:45 the branch was ahead of `main` only by docs. Since then, build 66 (sound, §1c) is on the branch and not released.
+Build 66 (sound, §1c) went live in release 10. The branch is ahead of `main` only by docs (the release-10 receipt). There is no unreleased code.
 
 **Pieter's calls this session:** "ship it" for each release, and "yes to all 3" on his open decisions:
 - **The city as the default screen:** done (build 63). The ledger drawer, the plan's other half of slice 4, is **not built**. Ask before building it.
@@ -133,7 +134,7 @@ At 08:45 the branch was ahead of `main` only by docs. Since then, build 66 (soun
 - **The phone's LAN origin** (`192.168.1.80:5190`) holds an Alex save at month 2, with graphics on Auto.
 - **Blender's live session** was not touched; every build ran headless. The capture receivers are stopped.
 
-## 1c. Build 66: the sound audit and upgrade (2026-09-26, 09:20 PDT, not released)
+## 1c. Build 66: the sound audit and upgrade (live since 2026-09-26, 09:16 PDT, release 10)
 
 Pieter switched the city's sound on at the bank teller, and it "tweeted loudly like a broken speaker". Receipt, measurements and listening files: `docs/verification/sound-2026-09-26/`.
 
@@ -153,7 +154,7 @@ Pieter switched the city's sound on at the bank teller, and it "tweeted loudly l
   - at the teller, sound off and on again: −54 dBFS RMS and no 4.3 kHz;
   - walking the street with traffic: peak −29.
 - **Not done:** an ear test. Pieter should listen to `audio/bank-before-then-after.m4a` (turn the volume down for the first 3 s) and the `after-*` files, then say what to change.
-- **Release:** it needs Pieter's go-ahead, using the usual fast-forward recipe (`docs/verification/release-2026-09-25/`). Verify the live `main-*.js` and `createTownScene-*.js`.
+- **Released** on Pieter's "ship it, release 66": deploy `6ab7efe0`. On the live site, at the teller with sound switched off and on, the output measured −52.9 dBFS RMS with nothing at 4.3 kHz. The receipt and a one-line rollback are under release 10 in `docs/verification/release-2026-09-25/`. The engine ships in the shared `investmentModel-*.js` chunk, not `main-*.js`.
 
 ## 2. Decisions waiting on Pieter
 
@@ -490,17 +491,17 @@ These are last-observed snapshots, not values to restore over newer play:
 
 ## Validation and evidence
 
-Latest validation (2026-09-26, build 66 on the branch, not released): **518 tests / 89 files**, TypeScript and the production build. The latest receipts:
+Latest validation (2026-09-26, build 66, released as `main` = `6bb25f1`): **518 tests / 89 files**, TypeScript and the production build. The latest receipts:
 
 | Build(s) | Receipt |
 |---|---|
-| 66 (sound, not released) | `docs/verification/sound-2026-09-26/` |
+| 66 (sound) | `docs/verification/sound-2026-09-26/` |
 | 64 | `docs/verification/hero-cheek-2026-09-26/` |
 | 63 | `docs/verification/phase1-slice4-default-2026-09-26/` |
 | 62 | `docs/verification/phone-findings-2026-09-26/` |
 | 61 | `docs/verification/surfaces-2026-09-26/` |
 | 60, and the phone check of 52–59 | `docs/verification/phone-2026-09-26/` |
-| All eight releases | `docs/verification/release-2026-09-25/` |
+| All ten releases | `docs/verification/release-2026-09-25/` |
 | 59 | `city-ao-2026-09-25/` |
 | 58 | `characters-polish-2026-09-25/` |
 | 57 | `hero-face-2026-09-25/` |

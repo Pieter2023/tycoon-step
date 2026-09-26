@@ -1,4 +1,6 @@
-# Build 66: the sound audit and upgrade (2026-09-26)
+# Build 66: the sound audit and upgrade (2026-09-26, live since 09:16 PDT)
+
+Released as release 10 (`main` = `6bb25f1`, deploy `6ab7efe0`). The live checks are under release 10 in `docs/verification/release-2026-09-25/`.
 
 Pieter turned the city's sound on at the bank teller and it "tweeted loudly like a broken speaker". This build fixes that and redoes every sound in the game. All of it is still synthesized in the browser: there are no downloads, no files to license and no paid service.
 

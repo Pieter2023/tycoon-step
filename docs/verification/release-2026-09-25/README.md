@@ -391,3 +391,44 @@ netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb
   - loading the site sent two events to `gateway.umami.is/api/send`, both answered 200;
   - Umami's realtime view showed the visit at 8:40:45 AM: "Visitor from Canada using Chrome on macOS", the `/` pageview and **`app_loaded on /`**.
 - **Excluding QA:** that test visit was from Claude's browser pane. The pane's production origin now has `localStorage['umami.disabled'] = '1'`, Umami's own opt-out, so later QA there is not counted. Pieter can run the same line in his own browsers' consoles on the live site to exclude himself.
+
+# Release 10: build 66, the sound audit and upgrade (2026-09-26, 09:16 PDT = 16:16 UTC)
+
+Pieter's word: "ship it, release 66".
+
+## What shipped
+
+`origin/main` was fast-forwarded from `5ab30cab` to `6bb25f10` (pushed 16:16:30 UTC). That was 2 commits: the release-9 receipt and build 66. There were no config, function, dependency, `vite.config.ts` or `index.html` changes. The Netlify production deploy is `6ab7efe0cd54cb0008c0534f`, published 16:17:04 UTC, 34 s after the push.
+
+- **Build 66, the sound audit and upgrade** (`docs/verification/sound-2026-09-26/`):
+  - It fixes the city's 4.3 kHz "broken speaker" whine: the cricket layer's LFO drove its volume, so the whine played everywhere at −10.5 dBFS RMS whenever city sound was on.
+  - It fixes one-sample cracks at the start of sounds.
+  - It adds one audio engine with a limiter and room reverb, and redesigns every interface sound and the whole city soundscape.
+  - The city's Sound button is now the game's sound setting. So the city soundscape plays by default when sound is on, starting from the player's first click.
+
+**Rollback** to builds 40–65:
+
+```sh
+netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb9907db","deploy_id":"6ab7e74f80c17b0008470a81"}'
+```
+
+A player who wants silence can switch it off with the city's Sound button or Quick actions → Mute. Both are the same setting now.
+
+## Checks
+
+- **Before the push:**
+  - a fast-forward, with the branch equal to `origin` and nothing on `main` missing from it;
+  - no config-level file changed;
+  - a clean tree;
+  - 518 tests / 89 files.
+- **The live bundle:**
+  - the engine is in the shared chunk `investmentModel-Kzaut2LP.js`, which has the same name as the local build's. It contains the limiter (`threshold.value=-10`) and the touch unlock (`pointerup`);
+  - `createTownScene-DT59Vl3q.js` also matches the local build's name. It has the new birds, and the old cricket LFO (`frequency.value=27`) is gone;
+  - the dev-only `__audio` handle is absent.
+- **Functions and pages:** `validate-access`, `/educators` and `/teacher-packet` answer 200.
+- **The pre-release Alex save on the live site** (month 8, $10,091). The production build has no meter handle, so a test-only hook in the pane tapped the connection into the speakers with an `AnalyserNode`. The save was not advanced.
+  - Continue opened the city by itself with "Sound on", and there was one audio context, running after the click.
+  - **Freedom Square:** −41.3 dBFS RMS, peak −29.3, and the 4.2–4.4 kHz band at −67 dB (the old whine measured −11 there).
+  - **At the bank teller, Pieter's steps** (sound off, then on): "Sound off" suspended the context. "Sound on" gave **−52.9 dBFS RMS, peak −41.2, and the 4.2–4.4 kHz band at −127 dB**.
+  - All eight city models load with 200, and there were no console errors.
+- **Not done:** an ear test on a real device. The pane was hidden, and Claude can't hear. The listening files are in `docs/verification/sound-2026-09-26/audio/`.

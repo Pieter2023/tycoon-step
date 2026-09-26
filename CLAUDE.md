@@ -1,10 +1,10 @@
 # Tycoon: Financial Freedom Simulator
 
-## Current handover — September 26, 2026 (09:20 PDT)
+## Current handover — September 26, 2026 (09:25 PDT)
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
-- **Production:** builds 40–65 are live after nine releases. Four were on 2026-09-25, and builds 60–65 followed on 2026-09-26:
+- **Production:** builds 40–66 are live after ten releases. Four were on 2026-09-25, and builds 60–65 followed on 2026-09-26:
   - 40–51 at 17:21 PDT, deploy `6ab70fda`;
   - 52–54 at 18:19 PDT, deploy `6ab71d6d`;
   - 55–57 at 21:01 PDT, deploy `6ab743ad`;
@@ -13,7 +13,8 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - 61 on 2026-09-26 at 07:13 PDT, deploy `6ab7d2f2`;
   - 62 on 2026-09-26 at 07:41 PDT, deploy `6ab7d981`;
   - 63–64 on 2026-09-26 at 08:02 PDT, deploy `6ab7de71`;
-  - **65, analytics on, on 2026-09-26 at 08:40 PDT: `origin/main` = `5ab30ca`, deploy `6ab7e74f`.**
+  - 65, analytics on, on 2026-09-26 at 08:40 PDT, deploy `6ab7e74f`;
+  - **66, the sound audit and upgrade, on 2026-09-26 at 09:16 PDT: `origin/main` = `6bb25f1`, deploy `6ab7efe0`.**
 
   Both were fast-forwards from the branch. Receipts and rollbacks: `docs/verification/release-2026-09-25/`. (Before that, production was a Sept-13 CLI deploy, not `origin/main`.)
 - **Work branch `town-lighting-pass`:** checked out and pushed to `origin`. `main` is fast-forwarded to it for each release, and later commits wait here for the next one. It holds, all now live:
@@ -66,7 +67,7 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - **Build 63, live:** the 3D city is the default screen. `tycoon_start_in_city` is on unless it is `'0'`; `docs/verification/phase1-slice4-default-2026-09-26/`. The ledger drawer is not built.
   - **Build 64, live:** the hero's cheek. `smooth_face_normals()` in `scripts/build-town-hero.py` relaxes the skin's shading normals (custom normals; no vertex moves), and `HERO_VERSION` is `20260926a`; `docs/verification/hero-cheek-2026-09-26/`.
   - **The daily challenge's demo gate stays.** Pieter confirmed on 2026-09-26.
-- **Build 66, on the branch, NOT released: the sound audit and upgrade** (`docs/verification/sound-2026-09-26/`). Pieter heard the city "tweet loudly like a broken speaker" at the bank teller.
+- **Build 66, live since 2026-09-26 09:16 PDT (release 10): the sound audit and upgrade** (`docs/verification/sound-2026-09-26/`). Pieter heard the city "tweet loudly like a broken speaker" at the bank teller.
   - The cause: the night-cricket layer in `townAtmosphere.ts` fed a 27 Hz square LFO straight into its volume, so a 4.3 kHz whine played at −10.5 dBFS RMS everywhere whenever city sound was on. It is fixed and guarded by `test/Sound.test.ts`, which fails on the old code.
   - A second bug: an envelope's gain started at 1.0 before its first event, which could let a full-scale one-sample crack through. `envelope()` now zeroes it first.
   - There is one engine (`services/audioService.ts`): one AudioContext, a limiter, a room reverb, `ui` and `world` buses, and no audio before the first click. It pauses when the tab is hidden and when muted, and the toast chime no longer doubles an action sound.
@@ -76,12 +77,12 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - Dev meter: `window.__audio.output`.
   - **Not ear-tested:** the listening files are in the receipt's `audio/`.
 - **Validation:** 518 tests / 89 files, `tsc` and the production build pass on the branch.
-- **The branch is ahead of `main` by build 66 (sound).** Releasing it needs Pieter's go-ahead.
+- **The branch is ahead of `main` only by docs** (the release-10 receipt). There is no unreleased code.
 - **Next session, first:**
   - a Chromebook check (needs a Chromebook), which matters more now that the city is the first screen;
   - the ledger drawer, only if Pieter wants it;
   - the visual items never started (assessment §3): a modular building kit, splitting the city for culling, the male hip/waist ratio, and the hero's remaining texture lines.
-- **Waiting on Pieter:** a listen to build 66's sounds (the receipt's `audio/`) and a yes to release it; whether to build the ledger drawer.
+- **Waiting on Pieter:** his ear on build 66's sounds (live, or the receipt's `audio/`): what to change; whether to build the ledger drawer.
 - **Analytics: ON since 2026-09-26** (build 65, release 9).
   - Umami Cloud, Hobby plan ($0), in Pieter's account. Site "Tycoon", Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`.
   - Dashboard: https://cloud.umami.is/analytics/us/websites/a8297643-15e9-4122-95b8-0b49cf4a7f98
