@@ -103,10 +103,10 @@ The branch is ahead of `main` only by docs (the release-8 receipt and this hando
 **Pieter's calls this session:** "ship it" for each release, and "yes to all 3" on his open decisions:
 - **The city as the default screen:** done (build 63). The ledger drawer, the plan's other half of slice 4, is **not built**. Ask before building it.
 - **The hero's cheek:** done (build 64). It is done in code, by relaxing the shading normals. Moving the vertices was tried first and slid the painted eyes out from under the eyelids.
-- **The daily challenge's demo gate:** **kept**, reading "yes" to "whether it stays demo-only" literally. There was no code change. **Confirm this with Pieter first thing.** If he meant to open it, let demo players finish the 120-month challenge (the demo wall is in `advanceMonth`; see the GTM section of CLAUDE.md).
+- **The daily challenge's demo gate:** **kept**. Pieter confirmed on 2026-09-26: "keep the daily challenge demo-gated". There was no code change.
 
 **Next, in order:**
-1. **Confirm the daily-challenge reading** with Pieter (above).
+1. ✅ The daily challenge stays demo-gated (Pieter confirmed).
 2. **A Chromebook check**, the classroom device. It has never been done, and it matters more now that the city is the first screen. It needs Pieter or a Chromebook on the network.
    - Use the LAN preview and `?stats`, like the iPhone.
    - Watch the load time, the fps on Auto, and whether the graphics governor steps down.
@@ -134,7 +134,7 @@ The branch is ahead of `main` only by docs (the release-8 receipt and this hando
    - Then merge into the release branch and push `main`, which auto-deploys.
    - Do a real-phone check first. The new costs are the skinned people, the sky recapture and the 502 KB hero download.
 2. **The economy fix is done** (build 44, approved 2026-09-25): see `docs/verification/economy-2026-09-25/`. **Pacing was delegated to Claude on 2026-09-25** ("decide whatever you think works best overall"); the decision and its numbers go in §3.
-3. **The Daily Challenge demo gate:** kept. Pieter said "yes" on 2026-09-26 to "whether the daily challenge stays demo-only". **Confirm this reading with him**: if he meant to open it to the free demo, that is the GTM analysis's recommendation (CLAUDE.md, GTM section).
+3. ✅ **The Daily Challenge demo gate: kept.** Pieter confirmed on 2026-09-26 ("keep the daily challenge demo-gated"). The GTM analysis had recommended opening it to the free demo (CLAUDE.md, GTM section); he decided against that.
 4. **Walk bob:** fixed in build 43 (approved).
 5. **Phase 1:**
    - **Slice 4:** ✅ the city is the default screen (Pieter's yes on 2026-09-26; build 63, live since 08:02 PDT). The "ledger" drawer is not built. The Chromebook, the classroom device, is still untested.

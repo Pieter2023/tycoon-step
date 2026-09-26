@@ -17,9 +17,9 @@ Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](
 4. ✅ **Tileable textures** for pavement, brick and road (build 61, `docs/verification/surfaces-2026-09-26/`), **live since 07:13 PDT on 2026-09-26** (deploy `6ab7d2f2`).
 5. **Pieter's calls, "yes to all 3" (2026-09-26):**
    - ✅ the city is the default screen (build 63, live);
-   - ✅ the daily challenge stays demo-gated (literal reading; confirm);
+   - ✅ the daily challenge stays demo-gated (Pieter confirmed);
    - ✅ the hero's cheek, fixed in code (build 64, live).
-6. **Next:** confirm the daily-challenge reading; a Chromebook check; the ledger drawer if Pieter wants it; the visual items never started (a modular building kit, splitting the city for culling, the male hip/waist ratio, the hero's remaining texture lines).
+6. **Next:** a Chromebook check; the ledger drawer if Pieter wants it; the visual items never started (a modular building kit, splitting the city for culling, the male hip/waist ratio, the hero's remaining texture lines).
 7. **Analytics: now due.** Pieter deferred it "until all the phases are completed" (2026-09-26), and Phases 0 and 1 are done. He signs up for Umami (free Hobby) and sends the Website ID; then it's a one-line release. Steps: HANDOVER §1b item 5.
 8. **Done on 2026-09-25:**
    - ✅ the economy fix (44, 49);

@@ -64,15 +64,14 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
 - **Pieter's three calls, "yes to all 3" (2026-09-26):**
   - **Build 63, live:** the 3D city is the default screen. `tycoon_start_in_city` is on unless it is `'0'`; `docs/verification/phase1-slice4-default-2026-09-26/`. The ledger drawer is not built.
   - **Build 64, live:** the hero's cheek. `smooth_face_normals()` in `scripts/build-town-hero.py` relaxes the skin's shading normals (custom normals; no vertex moves), and `HERO_VERSION` is `20260926a`; `docs/verification/hero-cheek-2026-09-26/`.
-  - **The daily challenge's demo gate stays**, reading "yes" to "whether it stays demo-only" literally. Confirm with Pieter.
+  - **The daily challenge's demo gate stays.** Pieter confirmed on 2026-09-26.
 - **Validation:** 498 tests / 88 files and the production build pass on the branch.
 - **The branch is ahead of `main` only by docs.** There is no unreleased code.
-- **Next session, first:** confirm the daily-challenge reading with Pieter (HANDOVER §1b). Then:
+- **Next session, first:**
   - a Chromebook check (needs a Chromebook), which matters more now that the city is the first screen;
   - the ledger drawer, only if Pieter wants it;
   - the visual items never started (assessment §3): a modular building kit, splitting the city for culling, the male hip/waist ratio, and the hero's remaining texture lines.
 - **Waiting on Pieter:**
-  - confirming that the daily challenge stays demo-gated;
   - whether to build the ledger drawer;
   - analytics (below).
 - **Analytics: now due.** Pieter deferred it on 2026-09-26 "until all the phases are completed", and Phases 0 and 1 are now done (apart from the optional ledger drawer). Remind him once; don't press.
@@ -330,7 +329,7 @@ New marketing assets:
   is merchant-of-record, so a SA solo seller sidesteps W-9/PO/DPA — make
   "buy → expense the receipt" the only paid path; don't chase district POs.
 
-⚠️ **Decision (2026-09-26): kept demo-gated**, reading Pieter's "yes" to "whether the daily challenge stays demo-only" literally (confirm with him). History: the GTM analysis recommends making the
+✅ **Decision (2026-09-26): kept demo-gated.** Pieter confirmed: "keep the daily challenge demo-gated". History: the GTM analysis recommends making the
 Daily Challenge completable in the free demo (to feed the viral loop + pass
 daily-game directory rules), but CLAUDE.md records the demo-gating as Pieter's
 deliberate call ("challenge is demo-gated; card doubles as upsell"). **Left
