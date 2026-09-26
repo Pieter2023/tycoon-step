@@ -1,6 +1,6 @@
 # Start here — Tycoon handover
 
-Updated **September 26, 2026, 09:25 PDT**. **Build 66, the sound audit and upgrade, went live at 09:16 PDT** (release 10, `main` = `6bb25f1`, deploy `6ab7efe0`; §1c). **Builds 40–65 were live** after nine releases (four on Sept 25, five on Sept 26), each with Pieter's go-ahead. **Analytics are on** (build 65, release 9): Umami Cloud Hobby, Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`. Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`.
+Updated **September 26, 2026, 09:30 PDT**, at the end of the sound session. **In progress in another session: an upgrade of the standard (2D) UI with the apple-design skill** (§1d, read it first if you are that session). **Build 66, the sound audit and upgrade, went live at 09:16 PDT** (release 10, `main` = `6bb25f1`, deploy `6ab7efe0`; §1c). **Builds 40–65 were live** after nine releases (four on Sept 25, five on Sept 26), each with Pieter's go-ahead. **Analytics are on** (build 65, release 9): Umami Cloud Hobby, Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`. Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`.
 
 **This session** (Sept 26, 06:00–08:20 PDT) ran the real-phone check of builds 52–59 (56–60 fps on the iPhone), then built and released builds 60–64:
 
@@ -111,6 +111,8 @@ Build 66 (sound, §1c) went live in release 10. The branch is ahead of `main` on
 - **The daily challenge's demo gate:** **kept**. Pieter confirmed on 2026-09-26: "keep the daily challenge demo-gated". There was no code change.
 
 **Next, in order:**
+0. **In progress (another session, from 09:30 PDT on 2026-09-26): the standard-UI upgrade** with the apple-design skill, outside the 3D world. See §1d.
+0b. **Pieter's ear on build 66's sounds** (live, or `docs/verification/sound-2026-09-26/audio/`). Tune whatever he flags; Claude can't hear them.
 1. ✅ The daily challenge stays demo-gated (Pieter confirmed).
 2. **A Chromebook check**, the classroom device. It has never been done, and it matters more now that the city is the first screen. It needs Pieter or a Chromebook on the network.
    - Use the LAN preview and `?stats`, like the iPhone.
@@ -131,7 +133,9 @@ Build 66 (sound, §1c) went live in release 10. The branch is ahead of `main` on
   - It has no `tycoon_start_in_city` key, so Continue opens the city (checked after release 8).
   - It was continued after each release, never advanced.
 - **`localhost:5191`** (`tycoon-qa-5191`) holds the production fixture save at month 8, with first steps reviewed and `tycoon_start_in_city=1`. To reload the fixture: see §5.
-- **The phone's LAN origin** (`192.168.1.80:5190`) holds an Alex save at month 2, with graphics on Auto.
+- **The phone's LAN origin** (`192.168.1.80:5190`) holds an Alex save at month 2, with graphics on Auto. `dist/` was rebuilt at build 66, so the LAN preview serves the new sounds.
+- **`127.0.0.1:5191`** (not `localhost`, which is a different origin) holds a new Alex game at month 2 from the build-66 live check.
+- **The production origin** was continued after release 10 and was not advanced. It was reloaded afterwards, so no test hook is left in the page.
 - **Blender's live session** was not touched; every build ran headless. The capture receivers are stopped.
 
 ## 1c. Build 66: the sound audit and upgrade (live since 2026-09-26, 09:16 PDT, release 10)
@@ -155,6 +159,44 @@ Pieter switched the city's sound on at the bank teller, and it "tweeted loudly l
   - walking the street with traffic: peak −29.
 - **Not done:** an ear test. Pieter should listen to `audio/bank-before-then-after.m4a` (turn the volume down for the first 3 s) and the `after-*` files, then say what to change.
 - **Released** on Pieter's "ship it, release 66": deploy `6ab7efe0`. On the live site, at the teller with sound switched off and on, the output measured −52.9 dBFS RMS with nothing at 4.3 kHz. The receipt and a one-line rollback are under release 10 in `docs/verification/release-2026-09-25/`. The engine ships in the shared `investmentModel-*.js` chunk, not `main-*.js`.
+
+## 1d. For the standard-UI upgrade session (started 2026-09-26, 09:30 PDT)
+
+Pieter is upgrading the standard 2D UI with the apple-design skill in a separate session, **not the 3D world**. The sound session has finished: it committed its docs and will not edit files again. From here the UI session owns `CLAUDE.md` and `HANDOVER.md`. Both sessions share this folder and the branch `town-lighting-pass`, whose HEAD at hand-off was the commit that added this section.
+
+**What is in scope**, the 2D shell:
+- `components/v2/`: `DesktopShell`, `MobileShell` (the bottom nav), `PageHeader`, `KpiChip`, `PlayPage`, `CommandDashboard`, `MoneyPage`, `CareerPage`, `LearnPage`, `LifePage`, `ActionsScreen`/`ActionsDrawer`, `MoreScreen`, `ProfileScreen`, `EventFeed`, `SignalsStack`, `NextBestStep`, `FirstSteps` and `MonthlyActionsPreview`;
+- the tab content in `components/tabs/`;
+- the dialogs in `components/modals/`, plus the shared `components/Modal.tsx`;
+- `ModeSelector.tsx` and `components/UnlockModal.tsx`;
+- the styles in `index.css` (Tailwind 4, `@theme` tokens) and `components/NEW_STYLES.css`.
+
+**Out of scope:** `components/town/**` and `town.css`, the 3D city including `TownModal`'s panels. The city is the default screen, so the 2D shell is what a player sees after closing it. A brand-new player sees it first, on the first-steps dashboard.
+
+**Don't touch the untracked dead files:** `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`, `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` (with its test and snapshot) and `components/NewUiRoot.tsx`.
+- They look like live UI, but nothing imports them. They were deleted in `3d55d82` and reappeared on disk.
+- Never commit them. The only snapshot test in the repo belongs to one of them.
+
+**Contracts that tests and players rely on:**
+- **Accessible names:** the integration tests drive the v2 shell by role and name. For example, the button "More options" opens the dialog "Quick actions", which holds the "Start in the 3D city" toggle (`test/StartInCity.test.tsx`). Keep the names, or change the tests on purpose.
+- **Test setup keys:** `tycoon_onboarding_seen_v1` is seeded by five integration tests.
+- **Keyboard:** one `createGameShortcuts` config in `App.tsx` drives both the keydown listener and the "?" overlay.
+- **`Modal.tsx`** (build 60): the overlay scrolls and the dialog has auto top and bottom margins, so tall dialogs keep their buttons on a phone. `TutorialModal` keeps its bottom sheet, and the city's dialogs pass `overflow: 'hidden'`. Test: `test/Modal.test.tsx`. Check the Sales quiz and Save and load at 393×659.
+- **Sound (build 66):** interface sounds fire from App's handlers (`playPurchase`, `playClick` and the others from `services/audioService.ts`). Restyled buttons must keep calling the same handlers, so the sounds and the de-duplication stay.
+  - Mute (the desktop header icon and Quick actions) is `toggleSound`. It is also the city's Sound button now.
+  - Don't add new sound calls in components. Ask the sound owner, or keep them in App.
+- **Motion:** use App's `reduceMotion`, which is `accessibilityPrefs.reduceMotion || prefers-reduced-motion`. Spring and gesture animations (framer-motion, the `motion` chunk) must fall back to none or a cross-fade under it.
+- **Money on screen:** the freedom meter and every progress bar read `financialFreedom` in `services/gameLogic.ts`, and the pace line reads `services/freedomPace.ts`. Don't recompute them in the UI.
+- **Market:** it is North America, in USD, with English and Spanish (`tl()` and `useI18n`). New copy needs both languages where the surrounding code has them.
+
+**QA:**
+- Start a fresh dev server on a new port with a new `.claude/launch.json` entry. Older chats hold 5188, 5189 and 5191, and 5190 is the LAN preview of `dist/`.
+- **Never touch Pieter's save on `127.0.0.1:5187`.**
+- Seed `tycoon_authenticated=true`, `tycoon_access_tier=full`, `tycoon_onboarding_seen_v1=1` and `tycoon_quick_tutorial_seen_v1=1` to skip the gates and tutorials.
+- Check desktop 1280×800, a Chromebook-like 1366×768, the iPhone at 393×659, and dark and light if the design adds a light theme.
+- Suite: 518 tests / 89 files, plus `tsc` and `npm run build`.
+
+**Release:** a separate "ship it" from Pieter per release, using the fast-forward recipe in `docs/verification/release-2026-09-25/`. Grep the live bundles by chunk: the audio engine ships in `investmentModel-*.js` and the city in `createTownScene-*.js`/`TownModal-*.js`, so `main-*.js` alone proves nothing.
 
 ## 2. Decisions waiting on Pieter
 

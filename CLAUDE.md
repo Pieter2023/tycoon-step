@@ -1,6 +1,8 @@
 # Tycoon: Financial Freedom Simulator
 
-## Current handover — September 26, 2026 (09:25 PDT)
+## Current handover — September 26, 2026 (09:30 PDT, end of the sound session)
+
+**In progress in another session: the standard (2D) UI upgrade with the apple-design skill, not the 3D world.** If you are that session, read HANDOVER.md §1d first: it covers scope, the untracked dead files, the test contracts, and the sound, motion and QA rules. The sound session has finished; from here the UI session owns this file and HANDOVER.md.
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
@@ -79,6 +81,8 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
 - **Validation:** 518 tests / 89 files, `tsc` and the production build pass on the branch.
 - **The branch is ahead of `main` only by docs** (the release-10 receipt). There is no unreleased code.
 - **Next session, first:**
+  - the standard-UI upgrade (in progress in another session; HANDOVER §1d);
+  - tune build 66's sounds once Pieter has listened;
   - a Chromebook check (needs a Chromebook), which matters more now that the city is the first screen;
   - the ledger drawer, only if Pieter wants it;
   - the visual items never started (assessment §3): a modular building kit, splitting the city for culling, the male hip/waist ratio, and the hero's remaining texture lines.
