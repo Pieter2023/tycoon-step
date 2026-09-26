@@ -1,4 +1,6 @@
 import { useI18n, type Translate } from '../../i18n';
+import FreedomPaceLine from '../FreedomPaceLine';
+import type { FreedomPace } from '../../services/freedomPace';
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -49,6 +51,8 @@ type CommandDashboardProps = {
   /** Freedom income (investments at the 4% rule) and its target: the same figures the win check uses. */
   freedomIncome?: number;
   freedomTarget?: number;
+  /** How far away freedom is at today's pace (services/freedomPace.ts). */
+  pace?: FreedomPace;
   expenseValue: number;
   formatMoney: (value: number) => string;
   freedomPercent: number;
@@ -600,7 +604,7 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
     </section>
     {gameState.firstSteps?.reviewed && <section className="tycoon-panel p-4"><h2 className="mb-3 text-lg font-bold">{t('shell.commandDashboard.your_next_milestone')}</h2><NextBestStep gameState={gameState} isProcessing={isProcessing} onClaimQuest={onClaimQuest} onOpenGoals={onOpenGoals} /></section>}
     <details className="tycoon-panel p-4"><summary className="cursor-pointer text-sm font-semibold">{t('shell.commandDashboard.recent_decisions_and_events')}</summary><div className="mt-3"><EventFeed events={events} limit={3} /></div></details>
-    <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-slate-400">{t('shell.commandDashboard.freedom_target', { target: formatMoney(targetPassive), ratio: ratioLabel })}</p>{viewToggle}</div>
+    <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs text-slate-400">{t('shell.commandDashboard.freedom_target', { target: formatMoney(targetPassive), ratio: ratioLabel })}</p>{props.pace && <FreedomPaceLine pace={props.pace} className="mt-0.5 text-xs font-semibold" />}</div>{viewToggle}</div>
   </div>;
 
   return (
@@ -804,13 +808,16 @@ const CommandDashboard: React.FC<CommandDashboardProps> = (props) => {
                   icon={<ShieldCheck size={15} />}
                   tone={safetyMonths >= 3 ? 'emerald' : safetyMonths >= 1.5 ? 'amber' : 'rose'}
                 />
-                <ProgressRow
-                  label={t('shell.commandDashboard.passive_coverage')}
-                  valueLabel={`${formatMoney(freedomIncome)} / ${formatMoney(targetPassive)}`}
-                  progress={freedomPercent * 100}
-                  icon={<Coins size={15} />}
-                  tone={freedomPercent >= 0.7 ? 'emerald' : 'cyan'}
-                />
+                <div>
+                  <ProgressRow
+                    label={t('shell.commandDashboard.passive_coverage')}
+                    valueLabel={`${formatMoney(freedomIncome)} / ${formatMoney(targetPassive)}`}
+                    progress={freedomPercent * 100}
+                    icon={<Coins size={15} />}
+                    tone={freedomPercent >= 0.7 ? 'emerald' : 'cyan'}
+                  />
+                  {props.pace && <FreedomPaceLine pace={props.pace} className="mt-1.5 text-xs" />}
+                </div>
                 <ProgressRow
                   label={t('shell.commandDashboard.diversification')}
                   valueLabel={`${assetTypeCount} / 4 types`}

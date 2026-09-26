@@ -24,6 +24,7 @@ import { eventPlace } from './services/townEvents';
 import { calculateMonthlyActionsMax, processTurn, calculateMonthlyCashFlowEstimate, financialFreedom, businessIncomeRange, applyScenarioOutcome, calculateNetWorth, createMortgage, getEducationSalaryMultiplier, applyMonthlyAction, getQuestProgress, updateQuests, claimQuestReward, getCreditTier, checkPromotion, MAX_SOLD_POSITIONS } from './services/gameLogic';
 import { playMoneyGain, playMoneyLoss, playClick, playPurchase, playSell, playAchievement, playLevelUp, playVictory, playWarning, playTick, playNotification, playError, setMuted } from './services/audioService';
 import { SaveSlotId } from './services/storageService';
+import { freedomPace, paceLabel } from './services/freedomPace';
 import confetti from 'canvas-confetti';
 import { useI18n, formatCurrencyCompactValue, formatCurrencyValue, formatPercentValue } from './i18n';
 import { GLOSSARY_ENTRIES, QUIZ_DEFINITIONS, getQuizDefinition } from './data/learning';
@@ -1256,6 +1257,8 @@ const [gameState, setGameState] = useState<GameState>(() => {
 
   // One freedom figure for every progress bar, the same one the win check uses (investments at the 4% rule).
   const freedom = useMemo(() => financialFreedom(gameState, cashFlow), [gameState, cashFlow]);
+  // How far away freedom is at today's pace (services/freedomPace.ts): the slow meter's countdown.
+  const pace = useMemo(() => freedomPace(gameState, cashFlow), [gameState, cashFlow]);
   const freedomPercent = Math.min(1, Math.max(0, freedom.coverage));
   const ratioValue = Math.min(100, Math.max(0, Math.round(freedom.coverage * 100)));
 
@@ -3528,7 +3531,9 @@ const [gameState, setGameState] = useState<GameState>(() => {
       <UnlockModal
         open={showDemoLimitModal}
         title="That's the end of the free demo"
-        description="You've played 3 in-game years. Unlock the full game to keep building this exact run — your progress is saved."
+        description={pace.status === 'on-track'
+          ? `You've played 3 in-game years. At this pace you're financially free in ${paceLabel(pace.months)}. Unlock the full game to keep building this exact run; your progress is saved.`
+          : "You've played 3 in-game years. Unlock the full game to keep building this exact run — your progress is saved."}
         perks={['Unlimited in-game years', 'Multiplayer for 2-4 players', 'All future updates']}
         onUnlocked={() => {
           setTier('full');
@@ -3964,6 +3969,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 passiveValue={cashFlow.passive}
                 freedomIncome={freedom.income}
                 freedomTarget={freedom.target}
+                pace={pace}
                 expenseValue={cashFlow.expenses}
                 formatMoney={formatMoney}
                 freedomPercent={freedomPercent}
@@ -4215,6 +4221,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
                 passiveValue={cashFlow.passive}
                 freedomIncome={freedom.income}
                 freedomTarget={freedom.target}
+                pace={pace}
                 expenseValue={cashFlow.expenses}
                 formatMoney={formatMoney}
                 freedomPercent={freedomPercent}

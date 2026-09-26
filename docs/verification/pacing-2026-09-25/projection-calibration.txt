@@ -1,0 +1,16 @@
+EASY   alex    seed 11 actual  113 | predicted at m12 128 m36 110 m60 108 m120 undefined m180 -
+EASY   alex    seed 23 actual  111 | predicted at m12 126 m36 134 m60 104 m120 undefined m180 -
+EASY   maria   seed 11 actual  154 | predicted at m12 327 m36 184 m60 155 m120 156 m180 -
+EASY   maria   seed 23 actual  161 | predicted at m12 324 m36 356 m60 162 m120 178 m180 -
+EASY   sarah   seed 11 actual  178 | predicted at m12 212 m36 172 m60 166 m120 157 m180 -
+EASY   sarah   seed 23 actual  158 | predicted at m12 210 m36 230 m60 138 m120 153 m180 -
+EASY   marcus  seed 11 actual  107 | predicted at m12 187 m36 124 m60 121 m120 undefined m180 -
+EASY   marcus  seed 23 actual  104 | predicted at m12 191 m36 105 m60 109 m120 undefined m180 -
+NORMAL alex    seed 11 actual  210 | predicted at m12 202 m36 207 m60 194 m120 off-track m180 206
+NORMAL alex    seed 23 actual  191 | predicted at m12 200 m36 171 m60 off-track m120 166 m180 185
+NORMAL maria   seed 11 actual  270 | predicted at m12 off-track m36 320 m60 233 m120 217 m180 219
+NORMAL maria   seed 23 actual  250 | predicted at m12 off-track m36 287 m60 224 m120 250 m180 236
+NORMAL sarah   seed 11 actual  245 | predicted at m12 449 m36 271 m60 209 m120 214 m180 240
+NORMAL sarah   seed 23 actual  217 | predicted at m12 411 m36 275 m60 221 m120 196 m180 200
+NORMAL marcus  seed 11 actual  116 | predicted at m12 366 m36 151 m60 117 m120 undefined m180 -
+NORMAL marcus  seed 23 actual  142 | predicted at m12 345 m36 328 m60 129 m120 147 m180 -

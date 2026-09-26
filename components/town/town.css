@@ -152,6 +152,7 @@
 .town-freedom-bar{height:8px;border-radius:5px;background:#0e2027;border:1px solid #3f5f5a;overflow:hidden}
 .town-freedom-bar i{display:block;height:100%;background:linear-gradient(90deg,#5cc6a7,#f2db9c);transition:width .6s ease}
 .town-freedom small{font-size:10px;color:#93a9a6}
+.town-freedom small.town-freedom-pace{color:#d9e7c4}.town-freedom small.town-freedom-pace[data-pace=off-track]{color:#f0c27a}
 @media (max-width:700px){.town-freedom{min-width:84px}.town-freedom small{display:none}}
 .tycoon-high-contrast .town-freedom small,.tycoon-high-contrast .town-freedom span{color:#f3eddc}
 .town-sleep-overlay{position:absolute;inset:0;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:#0b1830;color:#f1e3b8;pointer-events:none;animation:town-sleep 2.6s ease-in-out forwards}

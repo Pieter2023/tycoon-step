@@ -969,5 +969,13 @@
   "shell.header.off": "OFF",
   "shell.quickActions.start_in_city": "Start in the 3D city",
   "shell.quickActions.setting_on": "On",
-  "shell.quickActions.setting_off": "Off"
+  "shell.quickActions.setting_off": "Off",
+  "shell.pace.years": "about {n} years",
+  "shell.pace.months": "about {n} months",
+  "shell.pace.one_month": "about 1 month",
+  "shell.pace.on_track": "Free in {time} at this pace",
+  "shell.pace.off_track": "No freedom date yet: spending more than you earn",
+  "shell.pace.between_jobs": "Freedom date paused while you're between jobs",
+  "shell.pace.free": "Financially free",
+  "shell.pace.hint": "Estimate: today's surplus invested in index funds at 6% after inflation. Raises and a lower budget bring it closer."
 }

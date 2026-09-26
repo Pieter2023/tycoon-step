@@ -12,6 +12,7 @@ import { AssetType, GameState, MarketItem } from '../../types';
 import { MARKET_ITEMS } from '../../constants';
 import { incomeLabel, incomeYield } from '../../services/investmentModel';
 import { calculateMonthlyCashFlowEstimate, financialFreedom } from '../../services/gameLogic';
+import { freedomPace } from '../../services/freedomPace';
 import { windowDisplays, fountainLevel } from '../../services/townWealth';
 import { newMilestones, type MilestoneId } from '../../services/townMilestones';
 import { createTownScene, TownController } from './createTownScene';
@@ -112,6 +113,11 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
   const [unavailable, setUnavailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const freedom = React.useMemo(() => financialFreedom(state, calculateMonthlyCashFlowEstimate(state)), [state]);
+  // The meter's countdown at today's pace (services/freedomPace.ts).
+  const pace = React.useMemo(() => freedomPace(state), [state]);
+  const paceShort = pace.status === 'on-track' ? (pace.months >= 24 ? tl(`free in about ${Math.round(pace.months / 12)} years`, `libre en unos ${Math.round(pace.months / 12)} años`) : tl(`free in about ${pace.months} months`, `libre en unos ${pace.months} meses`))
+    : pace.status === 'off-track' ? tl('no freedom date: spending more than you earn', 'sin fecha: gastas más de lo que ganas')
+      : pace.status === 'between-jobs' ? tl('freedom date paused between jobs', 'fecha en pausa sin trabajo') : tl('financially free', 'libertad financiera');
   const [progress, setProgress] = useState(0);
   const { t } = useI18n(); // subscribe so a language change re-renders the city copy (tl reads the live locale); t translates quest titles
   const [showDetails, setShowDetails] = useState(false);
@@ -401,7 +407,7 @@ export default function TownModal({ state, disabled, reduceMotion, onBuy, onSell
     <header className="town-header">
       <div><p className="town-eyebrow">{tl(tl('Your city · playable preview','Tu ciudad · versión jugable'),'Tu ciudad · versión jugable')}</p><h2>{roomTitle}</h2><p className="sr-only" role="status">{room==='city'?tl('On Freedom Square','En la Plaza de la Libertad'):`${tl('Inside','Dentro de')} ${roomTitle}`}</p></div>
       <div className="town-balance"><span>{tl(tl('Cash available','Efectivo disponible'),'Efectivo disponible')}</span><strong>{money(state.cash)}</strong></div>
-      <div className="town-freedom" title={tl('Freedom income: investments at 4% of their value a year, businesses and rentals at what they pay, against 110% of your living costs.','Ingresos de libertad: inversiones al 4% de su valor al año, negocios y rentas por lo que pagan, frente al 110% de tu costo de vida.')}><span>{tl('Freedom','Libertad')} {Math.round(freedom.coverage*100)}%</span><div className="town-freedom-bar" role="progressbar" aria-label={tl('Progress to financial freedom','Progreso hacia la libertad financiera')} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100,Math.round(freedom.coverage*100))}><i style={{width:`${Math.min(100,freedom.coverage*100)}%`}}/></div><small>{money(freedom.income)} / {money(freedom.target)} {tl('a month','al mes')}</small></div>
+      <div className="town-freedom" title={tl('Freedom income: investments at 4% of their value a year, businesses and rentals at what they pay, against 110% of your living costs.','Ingresos de libertad: inversiones al 4% de su valor al año, negocios y rentas por lo que pagan, frente al 110% de tu costo de vida.')}><span>{tl('Freedom','Libertad')} {Math.round(freedom.coverage*100)}%</span><div className="town-freedom-bar" role="progressbar" aria-label={tl('Progress to financial freedom','Progreso hacia la libertad financiera')} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100,Math.round(freedom.coverage*100))}><i style={{width:`${Math.min(100,freedom.coverage*100)}%`}}/></div><small>{money(freedom.income)} / {money(freedom.target)} {tl('a month','al mes')}</small><small className="town-freedom-pace" data-pace={pace.status}>{paceShort}</small></div>
       <button className="town-focus-toggle" aria-pressed={focusView} onClick={()=>setFocusView(v=>!v)}>{focusView?tl('Show menus','Mostrar menús'):tl('More room','Ampliar vista')}</button>
       <button className="town-icon-button" onClick={onClose} aria-label={tl(tl('Back to dashboard','Volver al panel'),'Volver al panel')}><X size={22} /></button>
     </header>

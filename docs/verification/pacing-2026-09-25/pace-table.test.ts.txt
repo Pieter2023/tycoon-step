@@ -1,0 +1,16 @@
+import { it, afterEach, vi } from 'vitest';
+import { writeFileSync } from 'node:fs';
+import { CHARACTERS } from '../constants';
+import { clearSimSeed } from '../services/gameLogic';
+import { playLong, median, Difficulty, LongStrategy } from './strategyHarness';
+afterEach(() => { vi.restoreAllMocks(); clearSimSeed(); });
+it('pacing table', () => {
+  const cast = CHARACTERS.filter(c => ['alex', 'sarah', 'marcus', 'maria'].includes(c.id));
+  const rows: any[] = [];
+  for (const difficulty of ['EASY', 'NORMAL', 'HARD'] as Difficulty[]) for (const strategy of ['index', 'nothing'] as LongStrategy[]) {
+    const runs = cast.flatMap(c => [11, 23, 37].map(seed => { const r = playLong(c, strategy, seed * 131 + c.id.length, 30, difficulty); vi.restoreAllMocks(); clearSimSeed(); return r; }));
+    const med = (k: string) => median(runs.map(r => r.reached[k]).filter((x): x is number => x !== null));
+    rows.push({ difficulty, strategy, wins: runs.filter(r => r.won).length, runs: runs.length, bankrupt: runs.filter(r => r.bankrupt).length, medianWin: median(runs.filter(r => r.won).map(r => r.winMonth!)), minWin: Math.min(...runs.filter(r => r.won).map(r => r.winMonth!)), maxWin: Math.max(...runs.filter(r => r.won).map(r => r.winMonth!)), p10: med('0.1'), p25: med('0.25'), p50: med('0.5'), p75: med('0.75'), perChar: cast.map(c => c.id + ':' + runs.filter(r => r.char === c.name).map(r => r.winMonth ?? '-').join('/')).join(' ') });
+  }
+  writeFileSync(process.env.PACING_OUT!, JSON.stringify(rows, null, 1));
+}, 600000);

@@ -969,5 +969,13 @@
   "shell.header.off": "APAGADO",
   "shell.quickActions.start_in_city": "Empezar en la ciudad 3D",
   "shell.quickActions.setting_on": "Sí",
-  "shell.quickActions.setting_off": "No"
+  "shell.quickActions.setting_off": "No",
+  "shell.pace.years": "unos {n} años",
+  "shell.pace.months": "unos {n} meses",
+  "shell.pace.one_month": "aproximadamente 1 mes",
+  "shell.pace.on_track": "Libre en {time} a este ritmo",
+  "shell.pace.off_track": "Aún sin fecha de libertad: gastas más de lo que ganas",
+  "shell.pace.between_jobs": "Fecha de libertad en pausa mientras estás sin trabajo",
+  "shell.pace.free": "Libertad financiera",
+  "shell.pace.hint": "Estimación: el excedente de hoy invertido en fondos indexados al 6% sobre la inflación. Los aumentos y un presupuesto más bajo la acercan."
 }

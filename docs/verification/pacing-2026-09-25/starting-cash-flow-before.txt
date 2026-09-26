@@ -1,0 +1,32 @@
+alex     EASY    cash  17000 salary 6930 expenses 2983 (life 2005, tax 878, debt 0, cars 100) net 3947 lifestyle MODEST liab 
+alex     NORMAL  cash  10000 salary 5775 expenses 3230 (life 2506, tax 624, debt 0, cars 100) net 2545 lifestyle MODEST liab 
+alex     HARD    cash   6000 salary 5198 expenses 3479 (life 2882, tax 497, debt 0, cars 100) net 1719 lifestyle MODEST liab 
+alex     EXPERT  cash   4000 salary 4909 expenses 3869 (life 3133, tax 433, debt 203, cars 100) net 1040 lifestyle MODEST liab Personal Loan 8000
+maria    EASY    cash  15000 salary 3600 expenses 2664 (life 2005, tax 275, debt 284, cars 100) net 936 lifestyle MODEST liab Student Loans 25000
+maria    NORMAL  cash   8000 salary 3000 expenses 3093 (life 2506, tax 203, debt 284, cars 100) net -93 lifestyle MODEST liab Student Loans 25000
+maria    HARD    cash   4000 salary 2700 expenses 3433 (life 2882, tax 167, debt 284, cars 100) net -733 lifestyle MODEST liab Student Loans 25000
+maria    EXPERT  cash   2000 salary 2550 expenses 3869 (life 3133, tax 149, debt 487, cars 100) net -1319 lifestyle MODEST liab Student Loans 25000,Personal Loan 8000
+james    EASY    cash  20000 salary 6000 expenses 2778 (life 2005, tax 673, debt 0, cars 100) net 3222 lifestyle MODEST liab 
+james    NORMAL  cash  13000 salary 5000 expenses 3059 (life 2506, tax 453, debt 0, cars 100) net 1941 lifestyle MODEST liab 
+james    HARD    cash   9000 salary 4500 expenses 3365 (life 2882, tax 383, debt 0, cars 100) net 1135 lifestyle MODEST liab 
+james    EXPERT  cash   7000 salary 4250 expenses 3789 (life 3133, tax 353, debt 203, cars 100) net 461 lifestyle MODEST liab Personal Loan 8000
+sarah    EASY    cash  23000 salary 4200 expenses 2452 (life 2005, tax 347, debt 0, cars 100) net 1748 lifestyle MODEST liab 
+sarah    NORMAL  cash  16000 salary 3500 expenses 2869 (life 2506, tax 263, debt 0, cars 100) net 631 lifestyle MODEST liab 
+sarah    HARD    cash  12000 salary 3150 expenses 3203 (life 2882, tax 221, debt 0, cars 100) net -53 lifestyle MODEST liab 
+sarah    EXPERT  cash  10000 salary 2975 expenses 3636 (life 3133, tax 200, debt 203, cars 100) net -661 lifestyle MODEST liab Personal Loan 8000
+devon    EASY    cash  16000 salary 4200 expenses 2452 (life 2005, tax 347, debt 0, cars 100) net 1748 lifestyle MODEST liab 
+devon    NORMAL  cash   9000 salary 3500 expenses 2869 (life 2506, tax 263, debt 0, cars 100) net 631 lifestyle MODEST liab 
+devon    HARD    cash   5000 salary 3150 expenses 3203 (life 2882, tax 221, debt 0, cars 100) net -53 lifestyle MODEST liab 
+devon    EXPERT  cash   3000 salary 2975 expenses 3636 (life 3133, tax 200, debt 203, cars 100) net -661 lifestyle MODEST liab Personal Loan 8000
+marcus   EASY    cash  15000 salary 2880 expenses 1548 (life 1203, tax 188, debt 57, cars 100) net 1332 lifestyle FRUGAL liab Student Loans 5000
+marcus   NORMAL  cash   8000 salary 2400 expenses 1792 (life 1504, tax 131, debt 57, cars 100) net 608 lifestyle FRUGAL liab Student Loans 5000
+marcus   HARD    cash   4000 salary 2160 expenses 1988 (life 1729, tax 102, debt 57, cars 100) net 172 lifestyle FRUGAL liab Student Loans 5000
+marcus   EXPERT  cash   2000 salary 2040 expenses 2328 (life 1880, tax 88, debt 260, cars 100) net -288 lifestyle FRUGAL liab Student Loans 5000,Personal Loan 8000
+linda    EASY    cash  21000 salary 4200 expenses 2452 (life 2005, tax 347, debt 0, cars 100) net 1748 lifestyle MODEST liab 
+linda    NORMAL  cash  14000 salary 3500 expenses 2869 (life 2506, tax 263, debt 0, cars 100) net 631 lifestyle MODEST liab 
+linda    HARD    cash  10000 salary 3150 expenses 3203 (life 2882, tax 221, debt 0, cars 100) net -53 lifestyle MODEST liab 
+linda    EXPERT  cash   8000 salary 2975 expenses 3636 (life 3133, tax 200, debt 203, cars 100) net -661 lifestyle MODEST liab Personal Loan 8000
+tyler    EASY    cash  18000 salary 4200 expenses 2452 (life 2005, tax 347, debt 0, cars 100) net 1748 lifestyle MODEST liab 
+tyler    NORMAL  cash  11000 salary 3500 expenses 2869 (life 2506, tax 263, debt 0, cars 100) net 631 lifestyle MODEST liab 
+tyler    HARD    cash   7000 salary 3150 expenses 3203 (life 2882, tax 221, debt 0, cars 100) net -53 lifestyle MODEST liab 
+tyler    EXPERT  cash   5000 salary 2975 expenses 3636 (life 3133, tax 200, debt 203, cars 100) net -661 lifestyle MODEST liab Personal Loan 8000

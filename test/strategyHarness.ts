@@ -47,7 +47,7 @@ const MIX: Record<Exclude<LongStrategy, 'nothing'>, [string, number][]> = {
 };
 
 export const MILESTONE_SHARES = [.1, .25, .5, .75];
-export function playLong(char: Character, strategy: LongStrategy, seed: number, years = 30, difficulty: Difficulty = 'NORMAL'): LongRun {
+export function playLong(char: Character, strategy: LongStrategy, seed: number, years = 30, difficulty: Difficulty = 'NORMAL', onMonth?: (s: GameState) => void): LongRun {
   const rng = mulberry32(seed); vi.spyOn(Math, 'random').mockImplementation(rng);
   let s = startState(char, difficulty); let winMonth: number | null = null;
   const reached: Record<string, number | null> = Object.fromEntries(MILESTONE_SHARES.map(x => [String(x), null]));
@@ -68,6 +68,7 @@ export function playLong(char: Character, strategy: LongStrategy, seed: number, 
       if (surplus > 0) for (const [id, share] of MIX[strategy]) { const it = item(id); s = buy(s, it, Math.floor(surplus * share / nominalPrice(it, s.month, s.economy.inflationRate))); }
     }
     s = processTurn(s).newState;
+    onMonth?.(s);
     const cover = financialFreedom(s, calculateMonthlyCashFlowEstimate(s)).coverage;
     for (const x of MILESTONE_SHARES) if (reached[String(x)] === null && cover >= x) reached[String(x)] = s.month;
     if (s.hasWon && winMonth === null) winMonth = s.month;

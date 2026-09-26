@@ -14,7 +14,8 @@ import eventLibrary from './data/events.json';
 export const DIFFICULTY_SETTINGS = {
   EASY: {
     label: '😊 Easy',
-    description: 'Learning mode: extra starting support, smaller price swings and a 50% purchase-price floor. This protection is fictional.',
+    // Pace (test/strategyHarness.ts, careful index investor, 4 characters × 3 seeds): median 113 months, 104–178.
+    description: 'Learning mode: extra starting support, smaller price swings and a fictional 50% purchase-price floor. Steady investing reaches freedom in about 10 years.',
     startingCash: 15000,
     salaryMultiplier: 1.2,
     expenseMultiplier: 0.8,
@@ -25,7 +26,8 @@ export const DIFFICULTY_SETTINGS = {
   },
   NORMAL: {
     label: '😐 Normal',
-    description: 'Balanced experience for most players.',
+    // Pace: median 193 months, 116–282.
+    description: 'Realistic: steady investing reaches freedom in about 15–20 years. Better pay and a lower budget get you there sooner.',
     startingCash: 8000,
     salaryMultiplier: 1.0,
     expenseMultiplier: 1.0,
@@ -36,7 +38,8 @@ export const DIFFICULTY_SETTINGS = {
   },
   HARD: {
     label: '😤 Hard',
-    description: 'Tighter margins. Requires careful planning.',
+    // Pace: median 274 months, 151–350; most characters start near break-even.
+    description: 'Tighter margins: most characters start near break-even, and freedom takes 20 years or more.',
     startingCash: 4000,
     salaryMultiplier: 0.9,
     expenseMultiplier: 1.15,
@@ -105,10 +108,13 @@ export const CHARACTERS: Character[] = [
   {
     id: 'maria',
     name: 'Maria Santos',
-    backstory: 'Registered nurse with steady income and student loans.',
+    // Her ladder starts at Medical Assistant ($3,000) with RN pay ($5,500) after two years, and her nursing-school loans
+    // cost $284 a month: on a Modest budget she started $93 a month short, so she starts on a student budget.
+    backstory: 'Medical assistant finishing nursing school, on a student budget until RN pay.',
     avatarEmoji: '👩‍⚕️',
     avatarColor: 'from-pink-500 to-rose-500',
     careerPath: 'HEALTHCARE',
+    startingLifestyle: 'FRUGAL',
     startingBonus: { type: 'cash', amount: -25000 },
     traits: ['Caring', 'Resilient'],
     perk: {
