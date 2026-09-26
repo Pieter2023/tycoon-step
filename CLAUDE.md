@@ -4,8 +4,12 @@
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
-- **Production:** builds 40–51 are live since 2026-09-25 17:21 PDT: `origin/main` = `15c4812` (fast-forward from the branch), Netlify deploy `6ab70fda`. Receipt and rollback: `docs/verification/release-2026-09-25/`. (Before that, production was a Sept-13 CLI deploy, not `origin/main`.)
-- **Work branch `town-lighting-pass`:** checked out and pushed to `origin`; `main` was fast-forwarded to it for the release, and later commits wait here for the next one. It holds:
+- **Production:** builds 40–54 are live after two releases on 2026-09-25:
+  - 40–51 at 17:21 PDT, deploy `6ab70fda`;
+  - 52–54 at 18:19 PDT, `origin/main` = `4436196`, deploy `6ab71d6d`.
+
+  Both were fast-forwards from the branch. Receipts and rollbacks: `docs/verification/release-2026-09-25/`. (Before that, production was a Sept-13 CLI deploy, not `origin/main`.)
+- **Work branch `town-lighting-pass`:** checked out and pushed to `origin`. `main` is fast-forwarded to it for each release, and later commits wait here for the next one. It holds, all now live:
   - the Sept-13 atelier work, committed as found;
   - the sky-lit lighting pass and a longer camera lens (build 40);
   - the skinned townspeople from `scripts/build-town-people.py` (build 41). Every joint must keep an identity rest rotation.
@@ -17,7 +21,7 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - lighter sign lettering (build 48) and property costs, PMI, one FHA loan, no lender re-roll, a slower credit climb (build 49; `services/propertyCosts.ts`).
   - Phase 1 slice 4 as an opt-in setting (build 50): Quick actions → "Start in the 3D city" (localStorage `tycoon_start_in_city`) opens the city once per load, after the first-steps mission and anything waiting in the 2D shell. Test: `test/StartInCity.test.tsx`.
   - unique asset ids and a real production save as a migration test (build 51): `test/fixtures/save-production-2026-09-13-month7.json`, `test/ProductionSaveMigration.test.tsx`. Run it after any economy or save change.
-  - pacing (build 52, after the release): "free in about N years at this pace" (`services/freedomPace.ts`, `components/FreedomPaceLine.tsx`), Maria's student-budget start, each difficulty's description states its measured pace.
+  - pacing (build 52): "free in about N years at this pace" (`services/freedomPace.ts`, `components/FreedomPaceLine.tsx`), Maria's student-budget start, each difficulty's description states its measured pace.
   - Phase 1 slice 5 (build 53), the Freedom Track (`FREEDOM_TRACK` in `constants.ts`, the chapter logic in `updateQuests`, `services/freedomTrack.ts`, `components/FreedomTrack.tsx`):
     - the core quests in four chapters, run inside the quest engine, with story and side goals in two slots (`MAX_ACTIVE_QUESTS` 5);
     - new `FREEDOM_COVERAGE` milestones (coast 17%, 25/50/75%);
@@ -25,12 +29,11 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
     - month-close milestones are celebrated (App's `seenReady` ref);
     - energy and stress lead the Life tab and Profile.
   - events staged at their place in 3D (build 54, `components/town/townEventStage.ts`): a marker, a letter on the doorstep, hazard lights on the parked car.
-  - Builds 52–54 are on the branch only; releasing them needs Pieter's word.
 - **Validation:** 468 tests / 84 files and the production build pass on the branch.
+- **Next session, first:** the course rewards, approved by Pieter on 2026-09-25. Turn the Self Learn certifications' cash ($50k negotiations, $25k sales, $25k EQ) into a salary raise on top of the perks, and cut the failure penalties to a small retake fee. File map and test plan: HANDOVER §1b. Ask before releasing it.
 - **Waiting on Pieter:**
-  - pacing after the economy fix (about 14–20 game years to freedom for a careful index investor);
   - Phase 1 slice 4: try the "Start in the 3D city" setting, then decide whether the city becomes the default screen (and the dashboard a ledger drawer);
-  - whether to release builds 52–54 (pacing, the Freedom Track, event staging).
+  - the daily challenge's demo gate (from June).
 - **Visual QA:** the town scene is a code-split chunk, so verify town deploys by grepping `TownModal-*.js`/`createTownScene-*.js`, not `index-*.js`. When the browser pane is hidden, use the dev handle `__town.advance(frames)` with `scripts/qa/capture-receiver.py` (HANDOVER §5).
 - **Ports and saves:** the user preview is `127.0.0.1:5187`; isolate QA on 5188 (5189 and 5191 were also used on 2026-09-25; see HANDOVER §5). Preserve the user's save and all tracked and untracked work.
 - **Pushing:** pushing the backup branch is fine. Merging to `main`, which deploys, needs Pieter's go-ahead; earlier deploys were authorised case by case. The release recipe (fast-forward only, verify the live bundle and a real save) is in `docs/verification/release-2026-09-25/`.

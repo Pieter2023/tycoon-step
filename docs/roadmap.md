@@ -1,15 +1,30 @@
 # Roadmap
 
-## Current priorities — September 25, 2026
+## Current priorities — September 25, 2026 (evening)
 
-Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). Production is `origin/main` = `073f397` (build 39). Branch `town-lighting-pass` holds builds 40–50 (the lighting pass, the camera, the skinned townspeople, the AI-modelled Alex, the economy fixes, the traffic fix and Phase 1 slices 1–3 plus the slice-4 setting), with 443 tests / 79 files passing; it is pushed to `origin` as a backup, not merged or deployed.
+Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). **Production is builds 40–54**: `origin/main` = `4436196`, two releases on 2026-09-25 with receipts in `docs/verification/release-2026-09-25/`. 468 tests / 84 files pass.
 
-1. ✅ **Economy fix (Phase 0)** (build 44): prices drift with expected returns, businesses saturate and can lose money, shortfalls go on a credit card, tax is withheld monthly, and the 4% rule counts toward freedom. `docs/verification/economy-2026-09-25/`.
-2. ✅ **Traffic deadlock** fixed (build 45).
-3. ✅ **AI-modelled Alex** (build 42, concept 2, 38 credits; `docs/verification/hero-alex-2026-09-25/`). On the branch; not merged or deployed.
-4. **The city as the game (Phase 1):** slices 1–3 done (builds 46–47: wealth you can see, sleep to end the month, events in the world). Slice 4 is an opt-in setting, "Start in the 3D city" (build 50); making it the default, and slice 5, wait for Pieter. `docs/phase1-plan.md`.
-5. **Visual follow-ups:** lighter sign lettering done (build 48); an AO bake, textures, hair polish, a Sit clip and a blink for the hero Alex remain.
-6. **Chromebook test** (Pieter's iPhone passed at builds 43 and 47; repeat after layout changes), then ship the branch with Pieter's go-ahead.
+1. **Next: the course rewards** (approved by Pieter): the Self Learn certifications' cash ($50k / $25k / $25k) becomes a salary raise on top of the perks, and the failure penalties become a small retake fee. File map: HANDOVER §1b.
+2. **Visuals (Blender):**
+   - a hero blink (eyelid meshes, because the eyes are painted into the texture);
+   - hero face skin evenness;
+   - the Wave crease;
+   - a Sit clip;
+   - hair polish;
+   - an AO bake.
+3. **A real-phone check of builds 52–54, then a Chromebook check.**
+4. **Pieter's calls:** slice 4 as the default screen; the daily challenge's demo gate.
+5. **Done on 2026-09-25:**
+   - ✅ the economy fix (44, 49);
+   - ✅ traffic (45);
+   - ✅ the AI-modelled Alex (42);
+   - ✅ Phase 1 slices 1–3 (46–47);
+   - ✅ the slice-4 setting (50);
+   - ✅ production-save migration test (51);
+   - ✅ pacing countdown and Maria (52);
+   - ✅ the Freedom Track, slice 5 (53);
+   - ✅ events staged in 3D (54);
+   - ✅ lighter sign lettering (48).
 
 The September 5 list (real-phone test, Spanish native read, pacing second opinion, publication discipline, street-life follow-ups) is carried in HANDOVER's "Next session priorities".
 

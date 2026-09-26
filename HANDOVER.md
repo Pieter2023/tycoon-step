@@ -1,21 +1,21 @@
 # Start here — Tycoon handover
 
-Updated **September 25, 2026 (late evening PDT)**. That day produced: a full game assessment, a lighting pass, new skinned characters, the AI-modelled Alex (build 42), the walk-bob fix (43), the first real-phone check, the economy fix Phase 0 (44), the traffic-deadlock fix (45), Phase 1 slices 1–3 (46–47: wealth you can see, sleep to end the month, events in the world), lighter sign lettering (48: the city drops from 246k to 122k triangles), the smaller economy issues (49: property tax, insurance, closing costs, PMI, one FHA loan, no lender re-roll, a slower credit climb) and Phase 1 slice 4 as an opt-in setting (50: "Start in the 3D city"). Pieter said "do next as suggested", so §3 is being worked in order. Making the city the default screen (slice 4) and one milestone track (slice 5) change the core flow and wait for Pieter (`docs/phase1-plan.md`). Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
+Updated **September 25, 2026 (late evening PDT)**. That day produced: a full game assessment, a lighting pass, new skinned characters, the AI-modelled Alex (build 42), the walk-bob fix (43), the first real-phone check, the economy fix Phase 0 (44), the traffic-deadlock fix (45), Phase 1 slices 1–3 (46–47: wealth you can see, sleep to end the month, events in the world), lighter sign lettering (48: the city drops from 246k to 122k triangles), the smaller economy issues (49: property tax, insurance, closing costs, PMI, one FHA loan, no lender re-roll, a slower credit climb) Phase 1 slice 4 as an opt-in setting (50: "Start in the 3D city"), unique asset ids with a real production save as a migration test (51), pacing (52: "free in about N years at this pace"), Phase 1 slice 5 (53: the Freedom Track) and events staged in 3D (54). **Builds 40–54 are live** after two releases that evening. Making the city the default screen (slice 4) still waits for Pieter (`docs/phase1-plan.md`). Read sections 1–6 first. The numbered list under "Completed (chronological record)" is the history.
 
 ## 1. Where things stand
 
 | What | State |
 |---|---|
-| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | **Builds 40–51 are live** (2026-09-25 17:21 PDT, Pieter's go-ahead): `origin/main` = `15c4812`, Netlify deploy `6ab70fda`. Before that, production was a Sept-13 **CLI** deploy (`6aa6c7fa`), not `origin/main` (`073f397`). Receipt, live checks and the one-line rollback: `docs/verification/release-2026-09-25/`. |
+| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | **Builds 40–54 are live** after two releases, each with Pieter's go-ahead:<br>• 40–51 at 17:21 PDT, deploy `6ab70fda`;<br>• 52–54 at 18:19 PDT ("ship it"): `origin/main` = `4436196`, deploy `6ab71d6d`.<br>Before that, production was a Sept-13 **CLI** deploy (`6aa6c7fa`), not `origin/main` (`073f397`). Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`. |
 | Branch `codex/game-overhaul-20260503-223748` | The old release branch at `073f397` (build 39); now behind `main`. |
-| **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it at `15c4812` for the release; later commits here are ahead of `main` until the next release. Only `main` auto-deploys. See the commit list below. |
+| **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `4436196`. Later commits here are ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
-| Validation on the branch | 443 tests / 79 files, TypeScript and the production build. `dist/` currently holds the branch build (build 50). |
+| Validation on the branch | 468 tests / 84 files, TypeScript and the production build. `dist/` currently holds the release build (build 54). |
 | Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
-| QA servers | Another chat's Vite server held `127.0.0.1:5188`, so builds 42–45 were checked on `localhost:5189` (`tycoon-qa-5189` in `.claude/launch.json`) with a fresh Alex save. `tycoon-lan-preview` serves `dist/` on `0.0.0.0:5190` for the phone (`http://192.168.1.80:5190/?stats`). Build 50 was checked on `localhost:5191` (`tycoon-qa-5191`, a fresh Alex save), because 5189 was still held by the previous chat's server. |
+| QA servers | Another chat's Vite server held `127.0.0.1:5188`, so builds 42–45 were checked on `localhost:5189` (`tycoon-qa-5189` in `.claude/launch.json`) with a fresh Alex save. `tycoon-lan-preview` serves `dist/` on `0.0.0.0:5190` for the phone (`http://192.168.1.80:5190/?stats`). Builds 50–54 were checked on `localhost:5191` (`tycoon-qa-5191`), because 5189 was still held by the previous chat's server. |
 | Phone | Pieter's iPhone is reachable through macOS iPhone Mirroring (computer-use app `iPhone Mirroring`; clicks need full-screen control, background clicks do nothing). First check passed: 60 fps (`docs/verification/phone-2026-09-25/`). |
 
 **Commits on `town-lighting-pass`, oldest first:**
@@ -39,59 +39,57 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 18. `aa9fea8`: the "Start in the 3D city" setting finished, tested and checked in the browser (build 50).
 19. `15c4812`: unique asset ids and a real production save as a migration test (build 51). **Released: `main` = `15c4812`.**
 20. `5c3c0a9`: release receipt; the harness runs any difficulty.
-21. `388c9bc`: pacing (build 52): "free in about N years at this pace", Maria's student budget, and each difficulty's description states its pace. Receipt: `docs/verification/pacing-2026-09-25/`. Not released yet.
-22. `736a0a7`: Phase 1 slice 5, the Freedom Track (build 53): one milestone track in four chapters, with story and side goals alongside and energy and stress leading the meters. Receipt: `docs/verification/phase1-slice5-2026-09-25/`. Not released yet.
-23. `2c462a7`: events staged at their place in 3D (build 54): a marker at the event's place, a letter on the doorstep, hazard lights on the parked car. Receipt: `docs/verification/event-stage-2026-09-25/`. Not released yet.
+21. `388c9bc`: pacing (build 52): "free in about N years at this pace", Maria's student budget, and each difficulty's description states its pace. Receipt: `docs/verification/pacing-2026-09-25/`.
+22. `736a0a7`: Phase 1 slice 5, the Freedom Track (build 53): one milestone track in four chapters, with story and side goals alongside and energy and stress leading the meters. Receipt: `docs/verification/phase1-slice5-2026-09-25/`.
+23. `2c462a7`: events staged at their place in 3D (build 54): a marker at the event's place, a letter on the doorstep, hazard lights on the parked car. Receipt: `docs/verification/event-stage-2026-09-25/`.
+24. `a2d6207`, `4436196`: handover docs. **Released: `main` = `4436196`** (builds 52–54, Netlify deploy `6ab71d6d`).
 
-## 1b. Where the last session stopped (2026-09-25, ~18:20 PDT)
+## 1b. Where the last session stopped (2026-09-25, ~18:30 PDT)
 
-**Live: builds 40–51.** Pieter said "merge to main deploy". They went live at 17:21 PDT: `main` = `15c4812`, Netlify deploy `6ab70fda`. Receipt, live checks and a one-line rollback: `docs/verification/release-2026-09-25/`.
-- Production had been a Sept-13 CLI deploy, not `origin/main`.
-- A save made on the live site before the release continued on the new code.
+**Live: builds 40–54.** There were two releases that evening, each with Pieter's word; see `docs/verification/release-2026-09-25/` for both, with live checks and one-line rollbacks.
+- **40–51** at 17:21 PDT (deploy `6ab70fda`). Production had been a Sept-13 CLI deploy, not `origin/main`.
+- **52–54** at 18:19 PDT (deploy `6ab71d6d`, `main` = `4436196`):
+  - pacing (`docs/verification/pacing-2026-09-25/`);
+  - the Freedom Track (`docs/verification/phase1-slice5-2026-09-25/`);
+  - events staged in 3D (`docs/verification/event-stage-2026-09-25/`).
+- **Checks:** a save made on the live site before either release plays on the new code: the pace line, the track card, claiming, the log and the city header.
 
-**Built on the branch, not released: builds 52–54.** Each is verified with tests, a build and browser renders. Pieter's go-ahead covered the release he asked for, and these change what every live player sees, so they wait for his word:
-- **Build 52, pacing** (delegated): `docs/verification/pacing-2026-09-25/`.
-  - The honest ~16–18-year Normal arc stays.
-  - The slow meter gets a countdown, "Free in about N years at this pace" (`services/freedomPace.ts`), on the dashboard, the city header and the demo wall.
-  - Maria starts on a student budget: she was $93 a month short on Normal and went bankrupt on Hard.
-  - Each difficulty's description states its measured pace.
-- **Build 53, Phase 1 slice 5** (delegated): the Freedom Track, `docs/verification/phase1-slice5-2026-09-25/`.
-  - The core quests in four chapters, run inside the quest engine, with story and side goals alongside.
-  - It shows on the dashboard, in the goals log, on the notice board and in the city strip.
-  - Month-close milestones are now celebrated.
-  - Energy and stress lead the life meters.
-- **Build 54, events staged at their place in 3D:** `docs/verification/event-stage-2026-09-25/`.
-- **To release:** fast-forward `main` to the branch head, then check the live bundle and a real save (the recipe is in the release receipt).
+**Next session, first: the course rewards, approved.** Pieter on 2026-09-25: "I will do the course rewards as you recommended in next session". Turn the Self Learn certifications' one-time cash into what the skill really earns: a salary raise on top of the existing perks. Scale the failure penalties down to a small retake fee too.
 
-**Slice 4** stays opt-in ("Start in the 3D city"). The Chromebook, the classroom device, is untested, and the city is the heavy download.
+| Course | Cash today | Where |
+|---|---|---|
+| Master Negotiations | +$50,000 on pass; −$25,000 after three fails | `components/MasterNegotiationsTab.tsx:15-16` (`PASS_BONUS`, `FAIL_3X_PENALTY`), applied at `:387`, copy at `:403` and `:771` |
+| Sales Accelerator | +$25,000 on pass; `cashPenalty` $25,000 | `data/salesAcceleratorQuiz.ts:69`, `:77-78`, applied in `components/SalesCertificationPanel.tsx:124-128` |
+| EQ | +$25,000 on pass (the 1.5× career XP perk stays); a $10,000 fee on the fail path | `components/UpgradeEQTab.tsx:345`, `:418` |
+| Compound Interest | +$1,500 and +15 credit | `components/CompoundInterestCoursePanel.tsx:144` |
 
-**Flagged for Pieter, not changed: the course rewards distort pacing.** Passing a Self Learn course pays:
-- Master Negotiations: $50,000 (`PASS_BONUS` in `components/MasterNegotiationsTab.tsx`);
-- Sales Accelerator: $25,000;
-- EQ: $25,000;
-- Compound Interest: $1,500.
+- **The raise.** Suggested default: +5% base salary on the first pass, once per save.
+  - Reuse `salaryChangePct`, which scenario outcomes already support (build 27, the raise negotiation), so the pay stub and the pace pick it up.
+  - Keep the perks: deal discounts, 1.5× XP, credit.
+- **Existing saves** keep what they already claimed (the `rewardClaimed` flags); there is no claw-back.
+- **Copy.** Update the course copy that promises cash, in English and Spanish where it exists.
+- **Tests:**
+  - a pass raises salary once, and a retake costs little;
+  - rerun `test/StrategyRanking.test.ts`, `test/FreedomPace.test.ts` and `test/ProductionSaveMigration.test.tsx`;
+  - check in the browser that "free in about N years" drops after the raise.
+- **Release.** It changes live rewards, so ask Pieter before releasing.
 
-The first three can cut 3–5 years off the arc and teach "a course pays cash". Recommendation: turn the cash into what the skill really earns, a salary raise (for example +5%) on top of the existing perks. That changes a learning incentive, so it is his call.
-
-**Next, in order:**
-1. Pieter:
-   - release builds 52–54;
-   - slice 4 as the default;
-   - the course rewards;
-   - still open from June: the daily challenge's demo gate.
-2. **Visuals (§3.4).** Blender work that benefits from Pieter's eye on the result:
+**Then, in order:**
+1. **Visuals (§3.4).** Blender work that benefits from Pieter's eye on the result:
    - a hero blink: his eyes are painted into the texture, so it needs eyelid meshes over the eyes, since a morph can't close painted eyes;
    - hero face skin evenness;
    - the Wave armpit crease;
    - a Sit clip;
    - hair polish;
    - an AO bake.
-3. A Chromebook check. Repeat the phone check on a real device after releasing 52–54; the pane's 375-px check passed.
+2. **A real-phone check of builds 52–54** (iPhone Mirroring; clicks need full-screen control). The pane's 375-px check passed.
+3. **A Chromebook check.**
+4. **Still Pieter's calls:** slice 4 as the default (kept opt-in because the Chromebook, the classroom device, is untested), and the daily challenge's demo gate (from June).
 
 **QA state:**
-- `localhost:5191` (`tycoon-qa-5191`, stopped) holds the production fixture save at month 8. Its first steps are reviewed and `tycoon_start_in_city=1` is set, so Continue opens the city.
-- The production origin in the browser pane holds a throwaway Alex save at month 8.
-- The capture receiver used on port 5197 was a scratchpad copy that adds `Access-Control-Allow-Private-Network`. The live site still cannot post to it, so production saves were copied with a SHA-256 check.
+- `localhost:5191` (`tycoon-qa-5191`, stopped) holds the production fixture save at month 8, with first steps reviewed and `tycoon_start_in_city=1`, so Continue opens the city.
+- The production origin in the browser pane holds a throwaway Alex save at month 8 (First Investment claimed).
+- Production saves were copied out of the live page with a SHA-256 check. A public page cannot post to a local receiver, even with `Access-Control-Allow-Private-Network`.
 
 ## 2. Decisions waiting on Pieter
 
@@ -105,8 +103,8 @@ The first three can cut 3–5 years off the arc and teach "a course pays cash". 
 5. **Phase 1:**
    - **Slice 4:** try the "Start in the 3D city" setting (Quick actions, build 50), then decide whether the city becomes the default screen for everyone and whether the dashboard becomes a "ledger" drawer. Claude kept it opt-in because the Chromebook, the classroom device, is untested.
    - **Slice 5:** built as the Freedom Track (build 53). Say what to change.
-6. **Ship builds 52–54?** Pacing, the Freedom Track and the event staging are verified on the branch. Say the word to fast-forward `main`.
-7. **Course rewards.** The Self Learn certifications pay $50,000 (negotiations), $25,000 (sales), $25,000 (EQ) and $1,500 in cash, enough to cut years off the honest arc. Claude recommends turning the cash into a salary raise on top of the perks; §1b has the details.
+6. ✅ **Builds 52–54 shipped** on 2026-09-25 at 18:19 PDT ("ship it"; `docs/verification/release-2026-09-25/`).
+7. ✅ **Course rewards: approved** (2026-09-25) as recommended: a salary raise instead of cash, and small retake fees. It is the first task next session; §1b has the file map. Ask before releasing it.
 
 Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the AI Alex cost 38 (receipt: `docs/verification/hero-alex-2026-09-25/`). Still: never spend credits without a fresh yes.
 
@@ -142,7 +140,7 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
 ```sh
 cd '/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2'
 git status --short && git log --oneline -8
-npm run test:run          # 443 tests / 79 files on the branch
+npm run test:run          # 468 tests / 84 files on the branch
 npm run build
 npx vite --host 127.0.0.1 --port 5188 --strictPort   # or preview_start "tycoon-qa-5188" (.claude/launch.json)
 '/Applications/Blender.app/Contents/MacOS/Blender' --background --factory-startup --python scripts/build-town-people.py   # then bump PEOPLE_VERSION
@@ -153,7 +151,7 @@ npx vite --host 127.0.0.1 --port 5188 --strictPort   # or preview_start "tycoon-
 
 **Later QA saves:**
 - `localhost:5189`: Alex at month 4 or 5, with a coffee cart and `tycoon_start_in_city=1`. It runs on the previous chat's server.
-- `localhost:5191` (`tycoon-qa-5191`): Alex at month 2, first steps done and `tycoon_start_in_city=1`, so Continue lands in the city (the build 50 check).
+- `localhost:5191` (`tycoon-qa-5191`): the production fixture save (`test/fixtures/save-production-2026-09-13-month7.json`), played on to month 8, with first steps reviewed and `tycoon_start_in_city=1`, so Continue lands in the city. It was used for the builds 51–54 checks. To reload the fixture: `fetch('/test/fixtures/save-production-2026-09-13-month7.json')` → `localStorage.tycoon_saves_v2`.
 
 ### Visual QA with a hidden browser (added 2026-09-25)
 
@@ -355,7 +353,14 @@ These are last-observed snapshots, not values to restore over newer play:
 
 ## Validation and evidence
 
-Latest validation (2026-09-25, branch `town-lighting-pass`, build 50): **443 tests / 79 files**, TypeScript and production build; the latest receipt is `docs/verification/phase1-slice4-2026-09-25/`; earlier receipts in `docs/verification/lighting-2026-09-25/`, `docs/verification/characters-2026-09-25/` and `docs/verification/hero-alex-2026-09-25/`; assessment in `docs/assessment-2026-09-25.md`.
+Latest validation (2026-09-25, build 54, released as `main` = `4436196`): **468 tests / 84 files**, TypeScript and production build. The latest receipts are:
+- `docs/verification/release-2026-09-25/` (both releases);
+- `pacing-2026-09-25/`;
+- `phase1-slice5-2026-09-25/`;
+- `event-stage-2026-09-25/`;
+- `phase1-slice4-2026-09-25/`.
+
+Earlier receipts are in `docs/verification/lighting-2026-09-25/`, `docs/verification/characters-2026-09-25/` and `docs/verification/hero-alex-2026-09-25/`; assessment in `docs/assessment-2026-09-25.md`.
 
 Earlier validation (live playthrough fixes): **333 tests / 59 files passed**, TypeScript + production build passed; `git diff --check` passed. Existing chunk-size warnings remain. `dist/` was rebuilt at the end of that pass, so an already-open 5187 page needs a full refresh before opening the city. Commit `35a074d` (townhouse facade) is deployed: Netlify deploy `6a9d135b` published 2026-09-06 07:17 UTC and the live `TownModal-*.js` chunk contains the facade code. Note: the 3D city is a code-split chunk, so the `index-*.js` hash does not change for town-only work; grep the `TownModal` chunk instead. This handover does not repeat financial/cloud testing.
 

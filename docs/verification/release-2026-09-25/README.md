@@ -66,3 +66,43 @@ Or, in the Netlify UI: Deploys → the Sept 13 deploy → "Publish deploy".
 - Freedom now uses the 4% rule. A careful index investor gets there in about 15–18 game years, not through the old cart rush.
 - Income tax comes out monthly. Shortfalls go on a credit card instead of being forgiven.
 - Stacked businesses earn less per extra unit. Existing saves rebalance on load, which is intentional.
+
+# Release 2: builds 52–54 (2026-09-25, 18:19 PDT = 2026-09-26 01:19 UTC)
+
+Pieter's word: "ship it".
+
+## What shipped
+
+`origin/main` was fast-forwarded from `15c4812` to `4436196f` (`git push origin town-lighting-pass:main`). That was 7 commits: builds 52–54 and their docs, with no config, function or dependency changes. The Netlify production deploy is `6ab71d6d65da9100074af02a` (commit `4436196f`, published 01:19:07 UTC, about 60 s after the push). It contains:
+- **Build 52, pacing:**
+  - "Free in about N years at this pace" on the dashboard, the city header and the demo wall;
+  - Maria's student-budget start;
+  - each difficulty's description states its pace.
+- **Build 53, Phase 1 slice 5:** the Freedom Track (the goals card, the goals log, the notice board and the city strip; month-close milestones celebrated; energy and stress lead the life meters).
+- **Build 54:** events staged at their place in 3D.
+
+**Rollback** to builds 40–51:
+
+```sh
+netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb9907db","deploy_id":"6ab70fdab95d710008740f0d"}'
+```
+
+## Checks
+
+- **Before the push:**
+  - a fast-forward, with the branch equal to `origin`;
+  - 468 tests / 84 files, including the production-save migration test;
+  - the production build.
+- **The live bundle:**
+  - `main-CHEt4Nk-.js` holds the new quests (`Q_FREEDOM_25`);
+  - `TownModal-CwHPCq9_.js` holds the event stage and the pace line;
+  - `createTownScene-CPcnlt_j.js` holds `event-stage`.
+- **The pre-release Alex save on the live site** (month 8):
+  - the dashboard shows "Free in about 19 years at this pace" under "Freedom target: $4.2K/mo · 13% covered";
+  - after the first-steps review, the Freedom track card reads "Chapter 2 of 4 · Build the base · 5 of 12 milestones", with the emergency fund at 72% and five rewards waiting;
+  - claiming First Investment moved cash from $9,941 to $10,091;
+  - the log shows the four chapters (safety done, base current), "Your story" and "Side goals";
+  - the city header reads "Freedom 13% · $565 / $4,216 a month · free in about 19 years".
+- **Functions and pages:** `validate-access` refuses a fake code (`{"valid":false}`), and `/educators`, `/teacher-packet` and the city models answer 200.
+- **Requests and console.** Every request on the page load was 200. The console has only the two `ERR_BLOCKED_BY_CLIENT` lines from the earlier save-export attempt.
+- **Not done live:** walking to the notice board and seeing a staged event. The pane was hidden, and production has no frame-stepping handle. Both were checked on the branch (`phase1-slice5-2026-09-25/`, `event-stage-2026-09-25/`).
