@@ -10,15 +10,19 @@ import { incomeYield, nominalPrice } from '../services/investmentModel';
 // three-month cash reserve, invests any surplus above it by one rule, and picks the cheapest open option
 // in every event. The question is which rule reaches financial freedom, and how fast.
 export type LongStrategy = 'index' | 'carts' | 'savings' | 'nothing';
-export type LongRun = { char: string; strategy: LongStrategy; seed: number; won: boolean; winMonth: number | null; bankrupt: boolean; months: number; netWorth: number; coverage: number; detail?: Record<string, number | string> };
+export type LongRun = { char: string; strategy: LongStrategy; seed: number; won: boolean; winMonth: number | null; bankrupt: boolean; months: number; netWorth: number; coverage: number; detail?: Record<string, number | string>;
+  /** First month freedom coverage reached each share (0.1, 0.25, 0.5, 0.75); null if never. */
+  reached: Record<string, number | null> };
+export type Difficulty = keyof typeof DIFFICULTY_SETTINGS;
 
 const loanPayment = (p: number, r: number, n: number) => { const m = r / 12; return Math.round(p * m * Math.pow(1 + m, n) / (Math.pow(1 + m, n) - 1)); };
-export const startState = (char: Character): GameState => {
-  const diff = DIFFICULTY_SETTINGS.NORMAL; let cash = diff.startingCash + (char.startingBonus.type === 'cash' ? char.startingBonus.amount : 0);
+export const startState = (char: Character, difficulty: Difficulty = 'NORMAL'): GameState => {
+  const diff = DIFFICULTY_SETTINGS[difficulty]; let cash = diff.startingCash + (char.startingBonus.type === 'cash' ? char.startingBonus.amount : 0);
   const liabilities: GameState['liabilities'] = [];
   if (char.startingBonus.amount < 0) { const d = Math.abs(char.startingBonus.amount); liabilities.push({ id: 'sl', name: 'Student Loans', balance: d, originalBalance: d, interestRate: .065, monthlyPayment: loanPayment(d, .065, 120), type: 'STUDENT_LOAN' }); cash = diff.startingCash; }
   const career = CAREER_PATHS[char.careerPath], salary = Math.round(career.levels[0].baseSalary * diff.salaryMultiplier);
-  return { ...structuredClone(INITIAL_GAME_STATE), character: char, difficulty: 'NORMAL', lifestyle: char.startingLifestyle ?? INITIAL_GAME_STATE.lifestyle, cash: Math.max(0, cash), reserveBaseline: Math.max(0, cash) - liabilities.reduce((n, l) => n + l.balance, 0), career: { path: char.careerPath, title: career.levels[0].title, salary, level: 1, experience: 0, skills: {}, aiVulnerability: career.aiVulnerability, futureProofScore: career.futureProofScore }, playerJob: { title: career.levels[0].title, salary, level: 1, experience: 0 }, liabilities, activeSideHustles: [], quests: getInitialQuestState(char.id) };
+  if ('startingDebt' in diff && diff.startingDebt) liabilities.push({ id: 'pl', name: 'Personal Loan', balance: diff.startingDebt, originalBalance: diff.startingDebt, interestRate: .10, monthlyPayment: loanPayment(diff.startingDebt, .10, 48), type: 'PERSONAL_LOAN' });
+  return { ...structuredClone(INITIAL_GAME_STATE), character: char, difficulty, lifestyle: char.startingLifestyle ?? INITIAL_GAME_STATE.lifestyle, cash: Math.max(0, cash), reserveBaseline: Math.max(0, cash) - liabilities.reduce((n, l) => n + l.balance, 0), career: { path: char.careerPath, title: career.levels[0].title, salary, level: 1, experience: 0, skills: {}, aiVulnerability: career.aiVulnerability, futureProofScore: career.futureProofScore }, playerJob: { title: career.levels[0].title, salary, level: 1, experience: 0 }, liabilities, activeSideHustles: [], quests: getInitialQuestState(char.id) };
 };
 
 /** Cash purchase exactly as App's handleBuyAsset does it (same-name holdings merge). */
@@ -42,9 +46,11 @@ const MIX: Record<Exclude<LongStrategy, 'nothing'>, [string, number][]> = {
   savings: [['hysa', 1]],
 };
 
-export function playLong(char: Character, strategy: LongStrategy, seed: number, years = 30): LongRun {
+export const MILESTONE_SHARES = [.1, .25, .5, .75];
+export function playLong(char: Character, strategy: LongStrategy, seed: number, years = 30, difficulty: Difficulty = 'NORMAL'): LongRun {
   const rng = mulberry32(seed); vi.spyOn(Math, 'random').mockImplementation(rng);
-  let s = startState(char); let winMonth: number | null = null;
+  let s = startState(char, difficulty); let winMonth: number | null = null;
+  const reached: Record<string, number | null> = Object.fromEntries(MILESTONE_SHARES.map(x => [String(x), null]));
   // The cart earns nothing until its $60 permit is paid (the opening journey); the scripted cart owner pays it up front.
   if (strategy === 'carts') s = { ...s, cash: s.cash - 60, townProgress: { ...s.townProgress, permitMonth: 1 } };
   for (let m = 1; m <= years * 12; m++) {
@@ -62,11 +68,13 @@ export function playLong(char: Character, strategy: LongStrategy, seed: number, 
       if (surplus > 0) for (const [id, share] of MIX[strategy]) { const it = item(id); s = buy(s, it, Math.floor(surplus * share / nominalPrice(it, s.month, s.economy.inflationRate))); }
     }
     s = processTurn(s).newState;
+    const cover = financialFreedom(s, calculateMonthlyCashFlowEstimate(s)).coverage;
+    for (const x of MILESTONE_SHARES) if (reached[String(x)] === null && cover >= x) reached[String(x)] = s.month;
     if (s.hasWon && winMonth === null) winMonth = s.month;
     if (s.hasWon || s.isBankrupt) break;
   }
   const flow = calculateMonthlyCashFlowEstimate(s);
-  return { char: char.name, strategy, seed, won: winMonth !== null, winMonth, bankrupt: !!s.isBankrupt, months: s.month, netWorth: calculateNetWorth({ ...s, pendingScenario: null }), coverage: financialFreedom(s, flow).coverage, detail: { cash: Math.round(s.cash), portfolio: Math.round(s.assets.reduce((n, a) => n + a.value * a.quantity, 0)), expenses: flow.expenses, lifestyle: flow.lifestyleCost, lifestyleTier: s.lifestyle, debt: flow.debtPayments, kids: flow.childrenExpenses, cars: flow.vehicleCosts, ins: flow.insurancePremiums, salary: flow.salary, passive: flow.passive, freedomIncome: financialFreedom(s, flow).income, target: financialFreedom(s, flow).target, liab: Math.round(s.liabilities.reduce((n, l) => n + l.balance, 0)) } };
+  return { reached, char: char.name, strategy, seed, won: winMonth !== null, winMonth, bankrupt: !!s.isBankrupt, months: s.month, netWorth: calculateNetWorth({ ...s, pendingScenario: null }), coverage: financialFreedom(s, flow).coverage, detail: { cash: Math.round(s.cash), portfolio: Math.round(s.assets.reduce((n, a) => n + a.value * a.quantity, 0)), expenses: flow.expenses, lifestyle: flow.lifestyleCost, lifestyleTier: s.lifestyle, debt: flow.debtPayments, kids: flow.childrenExpenses, cars: flow.vehicleCosts, ins: flow.insurancePremiums, salary: flow.salary, passive: flow.passive, freedomIncome: financialFreedom(s, flow).income, target: financialFreedom(s, flow).target, liab: Math.round(s.liabilities.reduce((n, l) => n + l.balance, 0)) } };
 }
 
 export const median = (xs: number[]) => { if (!xs.length) return NaN; const v = [...xs].sort((a, b) => a - b); return v[Math.floor(v.length / 2)]; };

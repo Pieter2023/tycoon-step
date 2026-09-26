@@ -4,8 +4,8 @@
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
-- **Production:** `origin/main` = `073f397` (build 39), auto-deployed to Netlify `tycoonjan22026`. The whole 3D city is live there.
-- **Work branch `town-lighting-pass`:** checked out and pushed to `origin` as a backup, but **not merged into `main` and not deployed**. It holds:
+- **Production:** builds 40–51 are live since 2026-09-25 17:21 PDT: `origin/main` = `15c4812` (fast-forward from the branch), Netlify deploy `6ab70fda`. Receipt and rollback: `docs/verification/release-2026-09-25/`. (Before that, production was a Sept-13 CLI deploy, not `origin/main`.)
+- **Work branch `town-lighting-pass`:** checked out and pushed to `origin`; `main` was fast-forwarded to it for the release, and later commits wait here for the next one. It holds:
   - the Sept-13 atelier work, committed as found;
   - the sky-lit lighting pass and a longer camera lens (build 40);
   - the skinned townspeople from `scripts/build-town-people.py` (build 41). Every joint must keep an identity rest rotation.
@@ -16,15 +16,15 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - Phase 1 slices 1–3 (builds 46–47): wealth you can see (header freedom meter, Main Street window displays, the Freedom Fountain, milestone moments), sleep at home to end the month, events open over the city. Plan: `docs/phase1-plan.md`;
   - lighter sign lettering (build 48) and property costs, PMI, one FHA loan, no lender re-roll, a slower credit climb (build 49; `services/propertyCosts.ts`).
   - Phase 1 slice 4 as an opt-in setting (build 50): Quick actions → "Start in the 3D city" (localStorage `tycoon_start_in_city`) opens the city once per load, after the first-steps mission and anything waiting in the 2D shell. Test: `test/StartInCity.test.tsx`.
-- **Validation:** 443 tests / 79 files and the production build pass on the branch.
+  - unique asset ids and a real production save as a migration test (build 51): `test/fixtures/save-production-2026-09-13-month7.json`, `test/ProductionSaveMigration.test.tsx`. Run it after any economy or save change.
+- **Validation:** 446 tests / 80 files and the production build pass on the branch.
 - **Waiting on Pieter:**
-  - whether to ship the branch;
   - pacing after the economy fix (about 14–20 game years to freedom for a careful index investor);
   - Phase 1 slice 4: try the "Start in the 3D city" setting, then decide whether the city becomes the default screen (and the dashboard a ledger drawer);
   - Phase 1 slice 5 (one milestone track).
 - **Visual QA:** the town scene is a code-split chunk, so verify town deploys by grepping `TownModal-*.js`/`createTownScene-*.js`, not `index-*.js`. When the browser pane is hidden, use the dev handle `__town.advance(frames)` with `scripts/qa/capture-receiver.py` (HANDOVER §5).
 - **Ports and saves:** the user preview is `127.0.0.1:5187`; isolate QA on 5188 (5189 and 5191 were also used on 2026-09-25; see HANDOVER §5). Preserve the user's save and all tracked and untracked work.
-- **Pushing:** pushing the backup branch is fine. Merging to `main`, which deploys, needs Pieter's go-ahead; earlier deploys were authorised case by case.
+- **Pushing:** pushing the backup branch is fine. Merging to `main`, which deploys, needs Pieter's go-ahead; earlier deploys were authorised case by case. The release recipe (fast-forward only, verify the live bundle and a real save) is in `docs/verification/release-2026-09-25/`.
 
 Current feature/source map and run instructions are in the handover. Detailed evidence is in [docs/completed-improvements.md](docs/completed-improvements.md); remaining priorities are in [docs/roadmap.md](docs/roadmap.md). Physical-phone testing remains open. No new paid service is needed for the implemented prototype.
 
@@ -38,7 +38,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (79 files / 443 tests on `town-lighting-pass`, 2026-09-25; integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (80 files / 446 tests on `town-lighting-pass`, 2026-09-25; integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)

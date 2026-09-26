@@ -6,9 +6,9 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 
 | What | State |
 |---|---|
-| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | `origin/main` = `073f397` (build 39, Sept 7). The live site was not re-checked on 2026-09-25. |
-| Branch `codex/game-overhaul-20260503-223748` | The same commit as `origin/main`. |
-| **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin/town-lighting-pass` as a **backup** (2026-09-25). **Not merged into `main` and not deployed.** Only `main` auto-deploys. See the commit list below. |
+| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | **Builds 40–51 are live** (2026-09-25 17:21 PDT, Pieter's go-ahead): `origin/main` = `15c4812`, Netlify deploy `6ab70fda`. Before that, production was a Sept-13 **CLI** deploy (`6aa6c7fa`), not `origin/main` (`073f397`). Receipt, live checks and the one-line rollback: `docs/verification/release-2026-09-25/`. |
+| Branch `codex/game-overhaul-20260503-223748` | The old release branch at `073f397` (build 39); now behind `main`. |
+| **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it at `15c4812` for the release; later commits here are ahead of `main` until the next release. Only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
 | Validation on the branch | 443 tests / 79 files, TypeScript and the production build. `dist/` currently holds the branch build (build 50). |
@@ -36,38 +36,35 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 15. `c354281`: lighter sign lettering (build 48).
 16. `6514911`: property costs, PMI, one FHA loan, no lender re-roll, slower credit (build 49).
 17. `4d3c30b`, `fee4f2a`: handover docs, then the "Start in the 3D city" setting as work in progress.
-18. `feat(town): "Start in the 3D city" setting, Phase 1 slice 4 opt-in (build 50)`: the setting finished, tested and checked in the browser.
+18. `aa9fea8`: the "Start in the 3D city" setting finished, tested and checked in the browser (build 50).
+19. `15c4812`: unique asset ids and a real production save as a migration test (build 51). **Released: `main` = `15c4812`.**
 
-## 1b. Where the last session stopped (2026-09-25, ~17:00 PDT)
+## 1b. Where the last session stopped (2026-09-25, evening PDT)
 
-**Phase 1 slice 4 as an opt-in setting is done (build 50):** Quick actions → "Start in the 3D city". Receipt: `docs/verification/phase1-slice4-2026-09-25/`.
-- **The setting.** It lives in App.tsx (`startInCity`, `autoOpenedCity`, `toggleStartInCity`, and the effect below the `showCharacterSelect` state) and is saved in localStorage `tycoon_start_in_city`. It is off by default.
-- **When the city opens.** Once per load (a reload, or Back to Menu → Continue).
-  - Switching it on mid-game applies from the next load. That was the old §1b bug; its fix was already in `fee4f2a`, and build 50 verified it and pinned it with a test.
-  - An event, bankruptcy, the year in review or a side-hustle upgrade choice shows in the 2D shell first, and the city follows.
-  - A load that starts with a new player's first-steps mission unfinished stays on the dashboard for that whole load. The city opens from the next load.
-- **Tests:** `test/StartInCity.test.tsx` (6 tests). 443 tests / 79 files and the build pass.
-- **QA state:**
-  - `localhost:5191` (`tycoon-qa-5191` in `.claude/launch.json`) has a fresh Alex save at month 2, with first steps done and `tycoon_start_in_city=1`.
-  - Port 5189 (`tycoon-qa-5189`) and the capture receiver on 5199 still belong to the previous chat's processes. Its Alex save (month 4 or 5, with a coffee cart) is on `localhost:5189`, and `tycoon_start_in_city=1` is set there too.
+**Released.** Pieter said "merge to main deploy". Builds 40–51 went live at 17:21 PDT: `main` = `15c4812`, Netlify deploy `6ab70fda`. Receipt, live checks and rollback: `docs/verification/release-2026-09-25/`.
+- Production had been a Sept-13 CLI deploy, not `origin/main`.
+- A save made on the live site before the release continued on the new code in the same browser.
 
-**Next, in order:**
-1. Pieter's calls:
-   - ship the branch (merging to `main` deploys; ask);
-   - pacing after the economy fix;
-   - slice 4: try "Start in the 3D city" and decide whether the city becomes the default screen, and whether the dashboard becomes a "ledger" drawer;
-   - slice 5: one milestone track.
-2. Phase 1 polish: stage events at their place in 3D (the car at the garage bay, a letter on the doormat).
-3. More visuals (§3.4): hero blink (Alex's eyes are painted, so he needs a morph or an eyelid decal), hero face skin evenness, the Wave armpit crease, a Sit clip, hair polish, AO bake.
-4. A Chromebook check; repeat the phone check after any layout change (iPhone Mirroring works; clicks need full-screen control).
+**Delegated: pacing and slice 5.** Pieter's words: "you can decide whatever you think works best overall and gives the best user experience". In progress:
+1. **Pacing.** The strategy harness now runs any difficulty and records when coverage passes 10/25/50/75% (`playLong(…, difficulty)`, `reached`). Decide from the numbers; see §3.
+2. **Slice 5, one milestone track.** Merge quests, notice-board challenges and the guided journeys into one track, and cut the meters on screen down to what matters.
+
+Then continue §3 in order: stage events at their place in 3D, the visual list, and a Chromebook check.
+
+**Slice 4.** The setting stays opt-in, for now. Pieter didn't choose; see §2.
+
+**QA state:**
+- `localhost:5191` (`tycoon-qa-5191`) holds the production fixture save at month 8.
+- The production origin in the browser pane holds the same Alex save, at month 8 on the live site.
+- Port 5189 and the capture receiver on 5199 belong to the previous chat.
 
 ## 2. Decisions waiting on Pieter
 
-1. **Ship the branch?** It now holds builds 40–50: the lighting pass, the skinned townspeople, the AI-modelled Alex, the economy fixes, the traffic fix, Phase 1 slices 1–3 and the slice-4 setting.
+1. ✅ **Shipped** 2026-09-25 (builds 40–51; `docs/verification/release-2026-09-25/`). The notes below are kept for the record.
    - Review `docs/verification/lighting-2026-09-25/lighting-before-after.jpg`, `docs/verification/characters-2026-09-25/characters-before-after.jpg` and `docs/verification/hero-alex-2026-09-25/`, or play the branch as Alex.
    - Then merge into the release branch and push `main`, which auto-deploys.
    - Do a real-phone check first. The new costs are the skinned people, the sky recapture and the 502 KB hero download.
-2. **The economy fix is done** (build 44, approved 2026-09-25): see `docs/verification/economy-2026-09-25/`. Pacing to decide: a careful index investor now needs about 14–20 game years, realistic but slower than the old cart rush.
+2. **The economy fix is done** (build 44, approved 2026-09-25): see `docs/verification/economy-2026-09-25/`. **Pacing was delegated to Claude on 2026-09-25** ("decide whatever you think works best overall"); the decision and its numbers go in §3.
 3. **Still open from June:** whether the Daily Challenge should stay demo-gated (see the GTM section of CLAUDE.md).
 4. **Walk bob:** fixed in build 43 (approved).
 5. **Phase 1, slices 4–5** (`docs/phase1-plan.md`):
