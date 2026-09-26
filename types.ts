@@ -636,6 +636,9 @@ export interface GameState {
   negotiationsPerks?: NegotiationsPerksState;
   salesAcceleratorCourse?: SalesAcceleratorCourseState;
   compoundInterestCourse?: CompoundInterestCourseState;
+  // Lasting salary raises from certifications passed, in percent (services/courseRewards.ts).
+  // Saves that claimed the old one-time cash bonus have none.
+  courseRaises?: CourseRaises;
   autoInvest?: AutoInvestSettings;
   lastMonthlyReport?: MonthlyReport;
 
@@ -735,6 +738,9 @@ export interface SalesAcceleratorCourseState {
   certified: boolean;
   rewardClaimed: boolean;
 }
+
+export type CourseRaiseId = 'negotiations' | 'sales' | 'eq';
+export type CourseRaises = Partial<Record<CourseRaiseId, number>>;
 
 export interface CompoundInterestCourseState {
   failedAttempts: number;

@@ -64,9 +64,9 @@ export const SALES_ACCELERATOR_QUIZ_META = {
     passCondition: 'allCorrect',
     passPercentage: 100,
 
+    // Tries per set; a third miss costs the retake fee (services/courseRewards.ts) and buys a new set.
     attemptsAllowed: 3,
     onFail: {
-      cashPenalty: 25000,
       stressDelta: 0,
       careerDemotion: false,
     },
@@ -74,8 +74,8 @@ export const SALES_ACCELERATOR_QUIZ_META = {
 
   // Rewards placeholders (wire to your stat system)
   rewards: {
+    // Plus a lasting salary raise (COURSE_RAISE_PCT.sales); until build 55 a pass paid $25,000 cash.
     onPass: {
-      cash: 25000,
       fiq: 10,
       happiness: 5,
       perkId: 'perk_sales_accelerator_certified',

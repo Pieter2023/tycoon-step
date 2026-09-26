@@ -4,6 +4,7 @@ import { GameState } from '../types';
 import Modal from './Modal';
 import { SALES_ACCELERATOR_QUIZ, SALES_ACCELERATOR_QUIZ_META } from '../data/salesAcceleratorQuiz';
 import { useI18n } from '../i18n';
+import { COURSE_RAISE_PCT, COURSE_RETAKE_FEE, grantCourseRaise, recordMiss } from '../services/courseRewards';
 
 type SalesCertificationPanelProps = {
   gameState: GameState;
@@ -38,6 +39,7 @@ const SalesCertificationPanel: React.FC<SalesCertificationPanelProps> = ({
   const [quizPassed, setQuizPassed] = useState(false);
   const [rewardGranted, setRewardGranted] = useState(false);
   const [attemptsAfterRun, setAttemptsAfterRun] = useState<number | null>(null);
+  const [feeCharged, setFeeCharged] = useState(false);
   const [showSalesQuiz, setShowSalesQuiz] = useState(false);
 
   const courseState = gameState.salesAcceleratorCourse ?? {
@@ -69,6 +71,7 @@ const SalesCertificationPanel: React.FC<SalesCertificationPanelProps> = ({
     setQuizPassed(false);
     setRewardGranted(false);
     setAttemptsAfterRun(null);
+    setFeeCharged(false);
   };
 
   const closeQuiz = () => {
@@ -99,8 +102,12 @@ const SalesCertificationPanel: React.FC<SalesCertificationPanelProps> = ({
     setFinalScore(correctCount);
     setQuizPassed(passed);
     const shouldGrantReward = passed && !courseState.rewardClaimed;
+    const missed = !passed && !courseState.certified;
+    // A third miss pays the retake fee and starts a fresh set of tries.
+    const chargesFee = missed && attemptsLeft <= 1;
     setRewardGranted(shouldGrantReward);
-    setAttemptsAfterRun(passed || courseState.certified ? attemptsLeft : Math.max(0, attemptsLeft - 1));
+    setFeeCharged(chargesFee);
+    setAttemptsAfterRun(!missed ? attemptsLeft : chargesFee ? quizRules.attemptsAllowed : attemptsLeft - 1);
     setQuizPhase('results');
 
     setGameState(prev => {
@@ -116,16 +123,16 @@ const SalesCertificationPanel: React.FC<SalesCertificationPanelProps> = ({
         certified: current.certified || passed,
         rewardClaimed: current.rewardClaimed || (passed && !current.rewardClaimed)
       };
-      if (!passed && !current.certified) {
-        nextCourse.failedAttempts = current.failedAttempts + 1;
-      }
 
-      let nextState = { ...prev, salesAcceleratorCourse: nextCourse };
+      let nextState: GameState = { ...prev, salesAcceleratorCourse: nextCourse };
+      if (!passed && !current.certified) {
+        const miss = recordMiss(nextState, current.failedAttempts);
+        nextState = { ...miss.state, salesAcceleratorCourse: { ...nextCourse, failedAttempts: miss.failedAttempts } };
+      }
       if (passed && !current.rewardClaimed) {
         const reward = SALES_ACCELERATOR_QUIZ_META.rewards.onPass;
         nextState = {
-          ...nextState,
-          cash: nextState.cash + reward.cash,
+          ...grantCourseRaise(nextState, 'sales'),
           stats: {
             ...nextState.stats,
             financialIQ: clampStat((nextState.stats?.financialIQ ?? 0) + reward.fiq),
@@ -134,9 +141,6 @@ const SalesCertificationPanel: React.FC<SalesCertificationPanelProps> = ({
         };
       } else if (!passed) {
         const penalty = SALES_ACCELERATOR_QUIZ_META.rules.onFail;
-        if (penalty.cashPenalty) {
-          nextState = { ...nextState, cash: Math.max(0, nextState.cash - penalty.cashPenalty) };
-        }
         if (penalty.stressDelta) {
           nextState = {
             ...nextState,
@@ -286,7 +290,10 @@ const SalesCertificationPanel: React.FC<SalesCertificationPanelProps> = ({
                       : t('salesQuiz.ui.passingPercentage', { count: quizRules.passPercentage })}
                   </div>
                   {!courseState.certified && (
-                    <div className="mt-1 text-xs text-slate-500">{t('salesQuiz.ui.attemptsLeft', { count: attemptsLeft })}</div>
+                    <>
+                      <div className="mt-1 text-xs text-slate-500">{t('salesQuiz.ui.attemptsLeft', { count: attemptsLeft })}</div>
+                      <div className="mt-1 text-xs text-slate-400">{t('salesQuiz.ui.stakes', { raise: COURSE_RAISE_PCT.sales, fee: formatMoney(COURSE_RETAKE_FEE), count: quizRules.attemptsAllowed })}</div>
+                    </>
                   )}
                 </div>
                 <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-4">
@@ -452,7 +459,7 @@ const SalesCertificationPanel: React.FC<SalesCertificationPanelProps> = ({
               {quizPassed && rewardGranted && (
                 <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-100">
                   {t('salesQuiz.ui.rewardEarned', {
-                    cash: formatMoney(SALES_ACCELERATOR_QUIZ_META.rewards.onPass.cash),
+                    raise: COURSE_RAISE_PCT.sales,
                     fiq: SALES_ACCELERATOR_QUIZ_META.rewards.onPass.fiq,
                     happiness: SALES_ACCELERATOR_QUIZ_META.rewards.onPass.happiness
                   })}
@@ -461,6 +468,7 @@ const SalesCertificationPanel: React.FC<SalesCertificationPanelProps> = ({
 
               {!quizPassed && !courseState.certified && (
                 <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-100">
+                  {feeCharged && <p>{t('salesQuiz.ui.retakeFeeCharged', { fee: formatMoney(COURSE_RETAKE_FEE), count: quizRules.attemptsAllowed })}</p>}
                   {t('salesQuiz.ui.attemptsLeft', { count: attemptsAfterRun ?? Math.max(0, attemptsLeft - 1) })}
                 </div>
               )}

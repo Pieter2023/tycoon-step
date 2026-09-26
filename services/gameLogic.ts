@@ -701,6 +701,8 @@ export const calculateEffectiveMonthlySalary = (state: GameState): number => {
   const educationMultiplier = getEducationSalaryMultiplier(state);
   let baseSalary = (state.career?.salary || state.playerJob?.salary || 0);
   baseSalary = Math.round(baseSalary * educationMultiplier);
+  // Certification raises (Self Learn courses) stay with the player like a degree does.
+  baseSalary = Math.round(baseSalary * getCourseRaiseMultiplier(state));
 
   // Apply AI disruption to salary
   const careerPath = state.career?.path || 'TECH';
@@ -795,6 +797,10 @@ export const getEducationSalaryMultiplier = (state: GameState): number => {
   // Cap at 3x to prevent unrealistic salary inflation
   return Math.min(3.0, multiplier);
 };
+
+/** The lasting raise from Self Learn certifications passed (`courseRaises`, percent per course). */
+export const getCourseRaiseMultiplier = (state: GameState): number =>
+  Object.values(state.courseRaises ?? {}).reduce((m, pct) => m * (1 + (pct ?? 0) / 100), 1);
 
 // ============================================
 // CHILDREN EXPENSES CALCULATION
@@ -1760,9 +1766,11 @@ export const updateChildren = (state: GameState): GameState => {
 // ============================================
 // PROMOTION CHECK
 // ============================================
-const applyCareerSalaryGrowth = (state: GameState): GameState => {
+export const applyCareerSalaryGrowth = (state: GameState): GameState => {
   if (!state.career) return state;
-  const negotiationBonus = getNegotiationRaiseBonus(state);
+  // The negotiation bonus is a yearly figure (up to 3 points on the promotion odds, see checkPromotion);
+  // this growth runs every month, so it counts a twelfth. Unscaled it compounded to ~27% a year.
+  const negotiationBonus = getNegotiationRaiseBonus(state) / 12;
   const perkGrowthBonus = getCharacterPerkEffects(state).salaryGrowthBonus ?? 0;
   const careerLevel = state.career.level ?? 0;
   const experienceBoost = Math.min(0.002, careerLevel * 0.0004);
@@ -3359,7 +3367,7 @@ export const creditLimit = (state: GameState): number => {
   const multiple = score >= 740 ? 3 : score >= 670 ? 2 : score >= 580 ? 1.2 : .6;
   return Math.max(1000, Math.round(pay * multiple / 100) * 100);
 };
-const drawOnCard = (liabilities: Liability[], amount: number): Liability[] => {
+export const drawOnCard = (liabilities: Liability[], amount: number): Liability[] => {
   const card = liabilities.find(l => l.id === CARD_ID);
   if (!card) return [...liabilities, { id: CARD_ID, name: 'Credit card', balance: amount, originalBalance: amount, interestRate: CARD_APR, monthlyPayment: cardMinimumPayment(amount), type: 'CREDIT_CARD' }];
   return liabilities.map(l => l.id === CARD_ID ? { ...l, balance: l.balance + amount, originalBalance: Math.max(l.originalBalance, l.balance + amount), monthlyPayment: cardMinimumPayment(l.balance + amount) } : l);
@@ -3649,12 +3657,15 @@ export const processTurn = (state: GameState): { newState: GameState; monthlyRep
     })
     .filter(m => m.balance > 0);
   
-  // 10. Add experience
+  // 10. Add experience (the EQ certificate's perk earns it 1.5× faster; the fraction carries to next month)
+  const xpRate = newState.eqPerks?.careerXpMultiplier ?? 1;
+  const xpTotal = (newState.eqPerks?.careerXpCarry ?? 0) + xpRate, xpGain = Math.floor(xpTotal);
+  if (newState.eqPerks && xpRate !== 1) newState.eqPerks = { ...newState.eqPerks, careerXpCarry: xpTotal - xpGain };
   if (newState.career) {
-    newState.career = { ...newState.career, experience: newState.career.experience + 1 };
+    newState.career = { ...newState.career, experience: newState.career.experience + xpGain };
   }
   if (newState.playerJob) {
-    newState.playerJob = { ...newState.playerJob, experience: newState.playerJob.experience + 1 };
+    newState.playerJob = { ...newState.playerJob, experience: newState.playerJob.experience + xpGain };
   }
 
   // 10.5 Apply experience-based salary growth (negotiation + networking bonuses)

@@ -2,7 +2,7 @@ import type { GameState } from '../types';
 import { jobBoard, reviewPromotionBonus } from './townCareer';
 import { tl, isSpanish } from '../i18n/town';
 import { CAREER_PATHS, EDUCATION_OPTIONS, DIFFICULTY_SETTINGS } from '../constants';
-import { calculateEffectiveMonthlySalary, calculateAnnualTaxes, calculateMonthlyCashFlow, calculateMonthlyCashFlowEstimate, financialFreedom, getEducationSalaryMultiplier, getNegotiationRaiseBonus } from './gameLogic';
+import { calculateEffectiveMonthlySalary, calculateAnnualTaxes, calculateMonthlyCashFlow, calculateMonthlyCashFlowEstimate, financialFreedom, getCourseRaiseMultiplier, getEducationSalaryMultiplier, getNegotiationRaiseBonus } from './gameLogic';
 
 // Main Street Offices: the player's employer in the city. Everything here reads the real career,
 // education, stats and economy fields and explains them; nothing moves money. The pay stub
@@ -22,6 +22,8 @@ export function payStub(state: GameState): PayStub {
   let running = base;
   const edu = getEducationSalaryMultiplier(state);
   if (edu !== 1) { const next = Math.round(base * edu); lines.push({ label: tl('Education premium','Prima por estudios'), amount: next - running, note: `${Math.round((edu - 1) * 100)}% ${tl('for relevant qualifications','por títulos relevantes')}` }); running = next; }
+  const cert = getCourseRaiseMultiplier(state);
+  if (cert !== 1) { const next = Math.round(running * cert); lines.push({ label: tl('Certification raise','Aumento por certificación'), amount: next - running, note: `${Math.round((cert - 1) * 1000) / 10}% ${tl('for courses passed','por cursos aprobados')}` }); running = next; }
   const ai = state.aiDisruption?.affectedIndustries?.[career?.path ?? 'TECH']?.salaryImpact;
   if (ai && ai !== 1) { const next = Math.round(running * ai); lines.push({ label: tl('AI pressure on your industry','Presión de la IA en tu sector'), amount: next - running, note: tl('Automation is compressing pay in this field','La automatización comprime los sueldos en este campo') }); running = next; }
   if (state.economy?.recession && !unemployed) { const next = Math.round(running * .95); lines.push({ label: tl('Recession pay squeeze','Recorte por recesión'), amount: next - running, note: tl('Employers cut costs in a downturn','Los empleadores recortan costos en una recesión') }); running = next; }
@@ -40,7 +42,8 @@ export function promotionOutlook(state: GameState): Outlook {
   if (!career || !info) return none(state.playerJob?.title ?? tl('Your job','Tu empleo'), 0, 0, [tl('No career path on file yet.','Aún no hay una carrera registrada.')]);
   const nextLevel = info.levels[career.level];
   if (!nextLevel) return none(career.title, career.level, career.experience, []);
-  const monthsShort = Math.max(0, nextLevel.experienceRequired - career.experience);
+  // The EQ certificate earns experience faster, so the wait in months is shorter than the gap.
+  const monthsShort = Math.max(0, Math.ceil((nextLevel.experienceRequired - career.experience) / (state.eqPerks?.careerXpMultiplier ?? 1)));
   const educationNeeded = nextLevel.educationRequired && nextLevel.educationCategory ? `${words(nextLevel.educationRequired)} in ${words(nextLevel.educationCategory)}` : undefined;
   const educationMet = !educationNeeded || state.education.degrees.some(id => { const e = EDUCATION_OPTIONS.find(o => o.id === id); return !!e && LEVEL_ORDER.indexOf(e.level) >= LEVEL_ORDER.indexOf(nextLevel.educationRequired!) && e.category === nextLevel.educationCategory; });
   let chance = .15 + (state.stats.happiness - 50) / 500 + state.stats.networking / 500 - (state.stats.stress - 30) / 500 + getNegotiationRaiseBonus(state) + reviewPromotionBonus(state);

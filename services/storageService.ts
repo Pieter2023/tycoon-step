@@ -66,7 +66,9 @@ const normalizeAdultState = (state: GameState): GameState => {
 
   const rawSalesCourse = (state as any).salesAcceleratorCourse;
   const salesAcceleratorCourse = {
-    failedAttempts: typeof rawSalesCourse?.failedAttempts === 'number' ? rawSalesCourse.failedAttempts : 0,
+    // Before build 55 three Sales misses locked the course for good (after $25k a miss); a full set of
+    // misses now reopens it, as the retake fee does for new misses.
+    failedAttempts: typeof rawSalesCourse?.failedAttempts === 'number' && rawSalesCourse.failedAttempts < 3 ? rawSalesCourse.failedAttempts : 0,
     bestScore: typeof rawSalesCourse?.bestScore === 'number' ? rawSalesCourse.bestScore : 0,
     certified: typeof rawSalesCourse?.certified === 'boolean' ? rawSalesCourse.certified : false,
     rewardClaimed: typeof rawSalesCourse?.rewardClaimed === 'boolean' ? rawSalesCourse.rewardClaimed : false,
@@ -79,6 +81,12 @@ const normalizeAdultState = (state: GameState): GameState => {
     certified: typeof rawCompoundCourse?.certified === 'boolean' ? rawCompoundCourse.certified : false,
     rewardClaimed: typeof rawCompoundCourse?.rewardClaimed === 'boolean' ? rawCompoundCourse.rewardClaimed : false,
   };
+
+  // Certification raises: keep only known courses with a sane percentage.
+  const rawCourseRaises = (state as any).courseRaises;
+  const courseRaises = Object.fromEntries((['negotiations', 'sales', 'eq'] as const)
+    .filter(id => typeof rawCourseRaises?.[id] === 'number' && rawCourseRaises[id] > 0 && rawCourseRaises[id] <= 20)
+    .map(id => [id, rawCourseRaises[id]]));
 
   const rawAutoInvest = (state as any).autoInvest;
   const autoInvestAllocations = Array.isArray(rawAutoInvest?.allocations)
@@ -158,6 +166,7 @@ const normalizeAdultState = (state: GameState): GameState => {
     negotiationsPerks,
     salesAcceleratorCourse,
     compoundInterestCourse,
+    courseRaises,
     autoInvest,
     lastMonthlyReport,
     activeSideHustles,

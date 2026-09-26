@@ -47,9 +47,10 @@ const MIX: Record<Exclude<LongStrategy, 'nothing'>, [string, number][]> = {
 };
 
 export const MILESTONE_SHARES = [.1, .25, .5, .75];
-export function playLong(char: Character, strategy: LongStrategy, seed: number, years = 30, difficulty: Difficulty = 'NORMAL', onMonth?: (s: GameState) => void): LongRun {
+export function playLong(char: Character, strategy: LongStrategy, seed: number, years = 30, difficulty: Difficulty = 'NORMAL', onMonth?: (s: GameState) => void, prepare?: (s: GameState) => GameState): LongRun {
   const rng = mulberry32(seed); vi.spyOn(Math, 'random').mockImplementation(rng);
   let s = startState(char, difficulty); let winMonth: number | null = null;
+  if (prepare) s = prepare(s);
   const reached: Record<string, number | null> = Object.fromEntries(MILESTONE_SHARES.map(x => [String(x), null]));
   // The cart earns nothing until its $60 permit is paid (the opening journey); the scripted cart owner pays it up front.
   if (strategy === 'carts') s = { ...s, cash: s.cash - 60, townProgress: { ...s.townProgress, permitMonth: 1 } };

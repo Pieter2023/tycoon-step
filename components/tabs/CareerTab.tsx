@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Bot } from 'lucide-react';
 import { CAREER_PATHS, EDUCATION_OPTIONS } from '../../constants';
-import { getEducationSalaryMultiplier } from '../../services/gameLogic';
+import { getCourseRaiseMultiplier, getEducationSalaryMultiplier } from '../../services/gameLogic';
 import { Tooltip } from '../ui';
 
 type CareerTabProps = {
@@ -89,6 +89,9 @@ const CareerTab: React.FC<CareerTabProps> = (props) => {
             <p className="text-3xl font-bold text-emerald-400">{formatMoney(cashFlow.salary)}</p>
             {getEducationSalaryMultiplier(gameState) > 1 && (
               <p className="text-blue-400 text-xs">+{((getEducationSalaryMultiplier(gameState) - 1) * 100).toFixed(0)}% from education</p>
+            )}
+            {getCourseRaiseMultiplier(gameState) > 1 && (
+              <p className="text-blue-400 text-xs">+{((getCourseRaiseMultiplier(gameState) - 1) * 100).toFixed(1).replace(/\.0$/, '')}% from certifications</p>
             )}
           </div>
           <div className="glass-tile p-4 text-center">

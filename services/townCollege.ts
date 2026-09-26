@@ -82,10 +82,10 @@ export type Certificate = { id: string; name: string; certified: boolean; bestSc
 export function certificates(state: GameState): Certificate[] {
   const row = (id: string, name: string, course: { certified?: boolean; bestScore?: number } | undefined, total: number, perk: string, tab: TabId): Certificate => ({ id, name, certified: !!course?.certified, bestScore: course?.bestScore ?? 0, total, perk, tab });
   return [
-    row('sales', tl('Sales accelerator','Acelerador de ventas'), state.salesAcceleratorCourse, 10, tl('Sharper side-hustle and business income','Ingresos extra y de negocio más fuertes'), 'self_learn'),
+    row('sales', tl('Sales accelerator','Acelerador de ventas'), state.salesAcceleratorCourse, 10, tl('A 3% raise: selling well gets paid','Un aumento del 3%: vender bien se paga'), 'self_learn'),
     row('compound', tl('Compound interest','Interés compuesto'), state.compoundInterestCourse, 10, tl('Understand why time beats timing','Entender por qué el tiempo vence al momento'), 'self_learn'),
-    row('eq', tl('Emotional intelligence','Inteligencia emocional'), state.eqCourse, 15, tl('Lower stress, steadier decisions','Menos estrés, decisiones más firmes'), 'eq'),
-    row('negotiations', tl('Master negotiations','Negociación avanzada'), state.negotiationsCourse, 15, tl('Better raise odds and purchase prices','Mejores probabilidades de aumento y precios'), 'negotiations'),
+    row('eq', tl('Emotional intelligence','Inteligencia emocional'), state.eqCourse, 15, tl('A 3% raise and faster promotions','Un aumento del 3% y ascensos más rápidos'), 'eq'),
+    row('negotiations', tl('Master negotiations','Negociación avanzada'), state.negotiationsCourse, 15, tl('A 5% raise, better raises and purchase prices','Un aumento del 5%, mejores aumentos y precios'), 'negotiations'),
   ];
 }
 

@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Award, RefreshCw, ShieldAlert, Trophy } from 'lucide-react';
 import { GameState } from '../types';
-import { CAREER_PATHS } from '../constants';
+import { COURSE_ATTEMPTS, COURSE_RAISE_PCT, COURSE_RETAKE_FEE, grantCourseRaise, recordMiss } from '../services/courseRewards';
+
+const RAISE_PCT = COURSE_RAISE_PCT.eq;
 
 type Props = {
   gameState: GameState;
@@ -297,6 +299,9 @@ export default function UpgradeEQTab({ gameState, setGameState }: Props) {
   const [responses, setResponses] = useState<{ selected: number; correct: number }[]>([]);
   const [lastOutcome, setLastOutcome] = useState<'pass' | 'fail' | null>(null);
   const [penaltyApplied, setPenaltyApplied] = useState(false);
+  const [lastMiss, setLastMiss] = useState(0);
+  // The quiz panel stays clickable while it animates out; a second Finish must not count another attempt.
+  const finishedRef = useRef(false);
 
   const [questions, setQuestions] = useState<EQQuestion[]>(() => buildAttemptQuestions(EQ_QUESTIONS));
 
@@ -317,6 +322,8 @@ export default function UpgradeEQTab({ gameState, setGameState }: Props) {
     setResponses([]);
     setLastOutcome(null);
     setPenaltyApplied(false);
+    setLastMiss(0);
+    finishedRef.current = false;
     setPhase('quiz');
   };
 
@@ -337,12 +344,12 @@ export default function UpgradeEQTab({ gameState, setGameState }: Props) {
         careerXpCarry: prev.eqPerks?.careerXpCarry ?? 0
       };
 
-      // Always mark certified + enable perk; only grant money/stats once.
-      let cash = prev.cash;
+      // Always mark certified + enable perk; only grant the raise/stats once.
       let stats = { ...prev.stats };
+      let courseRaises = prev.courseRaises;
 
       if (!alreadyRewarded) {
-        cash = Math.round(cash + 25000);
+        courseRaises = grantCourseRaise(prev, 'eq').courseRaises;
         stats = {
           ...stats,
           networking: clamp((stats.networking ?? 0) + 12, 0, 100),
@@ -355,8 +362,8 @@ export default function UpgradeEQTab({ gameState, setGameState }: Props) {
 
       return {
         ...prev,
-        cash,
         stats,
+        courseRaises,
         eqCourse: nextEq,
         eqPerks: nextPerks
       };
@@ -374,81 +381,10 @@ export default function UpgradeEQTab({ gameState, setGameState }: Props) {
         return { ...prev, eqCourse: { ...prevEq, bestScore: nextBest } };
       }
 
-      // If 3 fails, apply penalty and reset attempts.
-      if (nextFailed >= 3) {
-        // Demote career/job to junior level.
-        let nextState: GameState = { ...prev };
-
-        if (nextState.career) {
-          const path = nextState.career.path;
-          const pathInfo = (CAREER_PATHS as any)[path];
-          if (pathInfo?.levels?.length) {
-            const lvl0 = pathInfo.levels[0];
-            nextState = {
-              ...nextState,
-              career: {
-                ...nextState.career,
-                level: 1,
-                title: lvl0.title,
-                salary: lvl0.baseSalary,
-                experience: 0
-              }
-            };
-          } else {
-            nextState = {
-              ...nextState,
-              career: { ...nextState.career, level: 1, experience: 0 }
-            };
-          }
-        }
-
-        // Also ensure playerJob reflects junior level.
-        if (nextState.playerJob) {
-          nextState = {
-            ...nextState,
-            playerJob: {
-              ...nextState.playerJob,
-              level: 1,
-              experience: 0,
-              title: nextState.playerJob.title || 'Employee'
-            }
-          };
-        }
-
-        // Charge $10,000. If cash insufficient, create a zero-interest liability for remainder.
-        const fee = 10000;
-        const cashAfter = nextState.cash - fee;
-        if (cashAfter >= 0) {
-          nextState = { ...nextState, cash: cashAfter };
-        } else {
-          const remainder = Math.abs(cashAfter);
-          nextState = {
-            ...nextState,
-            cash: 0,
-            liabilities: [
-              ...nextState.liabilities,
-              {
-                id: `eq-remediation-${Date.now()}`,
-                name: 'EQ Remediation Fee',
-                balance: remainder,
-                monthlyPayment: 0,
-                interestRate: 0,
-                type: 'OTHER'
-              } as any
-            ]
-          };
-        }
-
-        return {
-          ...nextState,
-          eqCourse: {
-            ...prevEq,
-            failedAttempts: 0,
-            bestScore: nextBest,
-            certified: false,
-            rewardClaimed: false
-          }
-        };
+      // A third miss costs the retake fee and starts a fresh set of tries.
+      const miss = recordMiss(prev, prevEq.failedAttempts ?? 0);
+      if (miss.feeCharged) {
+        return { ...miss.state, eqCourse: { ...prevEq, failedAttempts: 0, bestScore: nextBest } };
       }
 
       return {
@@ -480,7 +416,9 @@ export default function UpgradeEQTab({ gameState, setGameState }: Props) {
       setAnswered(false);
       return;
     }
-    // Finish
+    // Finish (once per run)
+    if (finishedRef.current) return;
+    finishedRef.current = true;
     const final = score;
     const passed = final === total;
     setLastOutcome(passed ? 'pass' : 'fail');
@@ -489,9 +427,10 @@ export default function UpgradeEQTab({ gameState, setGameState }: Props) {
       applyPassRewardsIfEligible();
     } else {
       applyFailProgressAndMaybePenalty(final);
-      // We can’t know if penalty applied until state update; track separately for UI hints.
+      // We can’t know if the fee applied until state update; track separately for UI hints.
       const nextFailed = (eqCourse.failedAttempts ?? 0) + 1;
-      setPenaltyApplied(!certified && nextFailed >= 3);
+      setLastMiss(nextFailed);
+      setPenaltyApplied(!certified && nextFailed >= COURSE_ATTEMPTS);
     }
   };
 
@@ -515,7 +454,7 @@ export default function UpgradeEQTab({ gameState, setGameState }: Props) {
             </div>
             {!certified && (
               <p className="text-xs text-slate-400 mt-2">
-                Attempts remaining before penalty: <span className="text-white font-semibold">{attemptInfo.remaining}</span>
+                Tries left before the retake fee: <span className="text-white font-semibold">{attemptInfo.remaining}</span>
               </p>
             )}
           </div>
@@ -539,8 +478,8 @@ export default function UpgradeEQTab({ gameState, setGameState }: Props) {
                 <div className="bg-slate-900/40 border border-slate-700 rounded-2xl p-4">
                   <p className="text-sm font-semibold text-white">If you pass (100%)</p>
                   <ul className="text-sm text-slate-300 mt-2 space-y-1 list-disc list-inside">
-                    <li>+ $25,000 cash reward (once per save)</li>
-                    <li>+50% career growth (monthly career XP)</li>
+                    <li>A {RAISE_PCT}% raise that stays through promotions and job changes (once per save)</li>
+                    <li>Career experience builds 1.5× faster, so promotions come sooner</li>
                     <li>Bonus stats: Networking +12, Happiness +6, Stress −10, Energy +4, Fulfillment +5</li>
                   </ul>
                 </div>
@@ -548,7 +487,7 @@ export default function UpgradeEQTab({ gameState, setGameState }: Props) {
                   <p className="text-sm font-semibold text-amber-200">If you fail (anything less than 100%)</p>
                   <ul className="text-sm text-slate-300 mt-2 space-y-1 list-disc list-inside">
                     <li>You can retry, but you must start from Question 1.</li>
-                    <li>After 3 failed attempts: demoted to Junior + $10,000 EQ fee.</li>
+                    <li>{COURSE_ATTEMPTS} tries included. After a third miss, a ${COURSE_RETAKE_FEE} retake fee buys {COURSE_ATTEMPTS} more.</li>
                   </ul>
                 </div>
               </div>
@@ -565,7 +504,7 @@ export default function UpgradeEQTab({ gameState, setGameState }: Props) {
                   </div>
                 </div>
                 <p className="text-xs text-slate-400 mt-3">
-                  Tip: If you’re already certified, you can still practice — no penalties, no extra rewards.
+                  Tip: once you’re certified, practice is free — no fees, no extra rewards.
                 </p>
               </div>
             </div>
@@ -717,8 +656,8 @@ export default function UpgradeEQTab({ gameState, setGameState }: Props) {
               <div className="mt-4 bg-slate-900/40 border border-emerald-700/30 rounded-2xl p-4">
                 <p className="text-sm font-semibold text-white">Rewards</p>
                 <ul className="text-sm text-slate-300 mt-2 space-y-1 list-disc list-inside">
-                  <li>+$25,000 cash (once per save)</li>
-                  <li>Career growth +50% (monthly career XP)</li>
+                  <li>A {RAISE_PCT}% raise that stays through promotions and job changes (once per save)</li>
+                  <li>Career experience builds 1.5× faster (earlier promotions)</li>
                   <li>Networking +12, Happiness +6, Stress −10, Energy +4, Fulfillment +5</li>
                 </ul>
               </div>
@@ -729,11 +668,11 @@ export default function UpgradeEQTab({ gameState, setGameState }: Props) {
                   <div>
                     <p className="text-sm font-semibold text-amber-200">Certification requires 100%</p>
                     <p className="text-sm text-slate-300 mt-1">Retakes must start from Question 1.</p>
-                    {!certified && (
-                      <p className="text-xs text-slate-400 mt-2">Failed attempts: {eqCourse.failedAttempts + 1} / 3</p>
+                    {!certified && lastMiss > 0 && (
+                      <p className="text-xs text-slate-400 mt-2">Miss {lastMiss} of {COURSE_ATTEMPTS}</p>
                     )}
                     {penaltyApplied && !certified && (
-                      <p className="text-sm text-rose-200 mt-2 font-semibold">Penalty applied: demoted to Junior and charged $10,000.</p>
+                      <p className="text-sm text-rose-200 mt-2 font-semibold">Retake fee: −${COURSE_RETAKE_FEE}. You have {COURSE_ATTEMPTS} more tries.</p>
                     )}
                   </div>
                 </div>

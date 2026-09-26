@@ -1,0 +1,30 @@
+// Copy to test/_measure_courses.test.ts and run: OUT=/tmp/out.txt npx vitest run test/_measure_courses.test.ts
+// (the 'before' numbers came from the same script's first variants on the pre-build-55 code)
+import { afterEach, it, vi } from 'vitest';
+import { CHARACTERS } from '../constants';
+import { clearSimSeed } from '../services/gameLogic';
+import { playLong, median } from './strategyHarness';
+import type { GameState } from '../types';
+import { grantCourseRaise } from '../services/courseRewards';
+afterEach(() => { vi.restoreAllMocks(); clearSimSeed(); });
+const CAST = CHARACTERS.filter(c => ['alex', 'sarah', 'marcus', 'maria'].includes(c.id));
+const nego = (s: GameState): GameState => ({ ...s, negotiationsCourse: { certified: true, rewardClaimed: true, failedAttempts: 0, bestScore: 15 }, negotiationsPerks: { dealDiscountPct: .05, saleBonusPct: .03 } });
+const eq = (s: GameState): GameState => ({ ...s, eqCourse: { certified: true, rewardClaimed: true, failedAttempts: 0, bestScore: 15 }, eqPerks: { careerXpMultiplier: 1.5, careerXpCarry: 0 } });
+const variants: Record<string, (s: GameState) => GameState> = {
+  none: s => s,
+  negoRaise: s => grantCourseRaise(nego(s), 'negotiations'),
+  negoOldCash: s => ({ ...nego(s), cash: s.cash + 50000 }),
+  eqRaise: s => grantCourseRaise(eq(s), 'eq'),
+  salesRaise: s => grantCourseRaise(s, 'sales'),
+  allThree: s => grantCourseRaise(grantCourseRaise(grantCourseRaise(eq(nego(s)), 'negotiations'), 'eq'), 'sales'),
+};
+it('measure', () => {
+  const out: string[] = [];
+  for (const [name, prep] of Object.entries(variants)) {
+    const runs = [];
+    for (const c of CAST) for (const seed of [11, 23]) runs.push(playLong(c, 'index', seed * 131 + c.id.length, 30, 'NORMAL', undefined, prep));
+    const wins = runs.filter(r => r.won);
+    out.push(`${name}: wins ${wins.length}/${runs.length} median ${median(wins.map(r => r.winMonth!))} months; salaries ${runs.map(r => r.detail?.salary).join(',')}; months ${runs.map(r => r.winMonth).join(',')}`);
+  }
+  require('node:fs').writeFileSync(process.env.OUT!, out.join('\n'));
+}, 600000);

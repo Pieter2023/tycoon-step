@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Award,
@@ -10,10 +10,10 @@ import {
   DollarSign,
 } from 'lucide-react';
 import type { GameState } from '../types';
+import { COURSE_ATTEMPTS, COURSE_RAISE_PCT, COURSE_RETAKE_FEE, grantCourseRaise, recordMiss } from '../services/courseRewards';
 
 // --- Course tuning ---
-const PASS_BONUS = 50_000;
-const FAIL_3X_PENALTY = 25_000;
+const RAISE_PCT = COURSE_RAISE_PCT.negotiations;
 
 // Permanent perks (real gameplay impact)
 const DEAL_DISCOUNT_PCT = 0.05; // 5% cheaper REAL_ESTATE + BUSINESS purchases
@@ -320,6 +320,9 @@ export default function MasterNegotiationsTab({
   const [score, setScore] = useState(0);
   const [lastOutcome, setLastOutcome] = useState<'pass' | 'fail' | null>(null);
   const [penaltyApplied, setPenaltyApplied] = useState(false);
+  const [lastMiss, setLastMiss] = useState(0);
+  // The quiz panel stays clickable while it animates out; a second Finish must not count another attempt.
+  const finishedRef = useRef(false);
 
   const negCourse = gameState.negotiationsCourse ?? DEFAULT_COURSE_STATE;
   const certified = !!negCourse.certified;
@@ -340,6 +343,8 @@ export default function MasterNegotiationsTab({
     setScore(0);
     setLastOutcome(null);
     setPenaltyApplied(false);
+    setLastMiss(0);
+    finishedRef.current = false;
     setPhase('quiz');
   }
 
@@ -359,9 +364,9 @@ export default function MasterNegotiationsTab({
     const alreadyClaimed = !!(gameState.negotiationsCourse?.rewardClaimed);
     const alreadyCertified = !!(gameState.negotiationsCourse?.certified);
 
-    // Passing always marks certified; cash bonus only once.
+    // Passing always marks certified; the raise only once.
     setGameState((prev) => {
-      const next: GameState = {
+      let next: GameState = {
         ...prev,
         negotiationsCourse: {
           certified: true,
@@ -384,30 +389,24 @@ export default function MasterNegotiationsTab({
       };
 
       if (!alreadyClaimed) {
-        next.cash = Math.max(0, (prev.cash ?? 0) + PASS_BONUS);
+        next = grantCourseRaise(next, 'negotiations');
         next.negotiationsCourse = {
           ...next.negotiationsCourse!,
           rewardClaimed: true,
         };
 
         if (playMoneyGain) playMoneyGain();
-        if (setFloatingNumbers) {
-          setFloatingNumbers((arr) => [
-            ...arr,
-            { id: `mn_bonus_${Date.now()}`, value: PASS_BONUS },
-          ]);
-        }
         if (showNotif) {
           showNotif(
             'Master Negotiations — Certified ✅',
-            `Bonus awarded: +${formatMoneyFull ? formatMoneyFull(PASS_BONUS) : '$50,000'} (one-time). Permanent deal perks unlocked.`,
+            `You negotiated a ${RAISE_PCT}% raise. It stays with you through promotions and job changes, and the deal perks are unlocked.`,
             'success'
           );
         }
       } else if (!alreadyCertified && showNotif) {
         showNotif(
           'Master Negotiations — Certified ✅',
-          'Certification saved. Bonus was already claimed in this save slot.',
+          'Certification saved. This save already claimed the course reward.',
           'info'
         );
       }
@@ -436,35 +435,38 @@ export default function MasterNegotiationsTab({
       return;
     }
 
+    // Local UI state is set here, not inside the game-state updater (that runs while App renders).
+    const missNo = (negCourse.failedAttempts ?? 0) + 1;
+    setLastMiss(missNo);
+    setPenaltyApplied(missNo >= COURSE_ATTEMPTS);
+
     setGameState((prev) => {
       const prevCourse = prev.negotiationsCourse ?? DEFAULT_COURSE_STATE;
-      const nextFailed = (prevCourse.failedAttempts ?? 0) + 1;
-      const triggersPenalty = nextFailed >= 3;
+      const miss = recordMiss(prev, prevCourse.failedAttempts ?? 0);
+      const fee = formatMoneyFull ? formatMoneyFull(COURSE_RETAKE_FEE) : `$${COURSE_RETAKE_FEE}`;
 
       const next: GameState = {
-        ...prev,
+        ...miss.state,
         negotiationsCourse: {
           certified: false,
           rewardClaimed: prevCourse.rewardClaimed ?? false,
-          failedAttempts: triggersPenalty ? 0 : nextFailed,
+          failedAttempts: miss.failedAttempts,
           bestScore: Math.max(prevCourse.bestScore ?? 0, finalScore),
         },
       };
 
-      if (triggersPenalty) {
-        next.cash = Math.max(0, (prev.cash ?? 0) - FAIL_3X_PENALTY);
-        setPenaltyApplied(true);
+      if (miss.feeCharged) {
         if (playMoneyLoss) playMoneyLoss();
         if (setFloatingNumbers) {
           setFloatingNumbers((arr) => [
             ...arr,
-            { id: `mn_penalty_${Date.now()}`, value: -FAIL_3X_PENALTY },
+            { id: `mn_retake_${Date.now()}`, value: -COURSE_RETAKE_FEE },
           ]);
         }
         if (showNotif) {
           showNotif(
-            'Master Negotiations — Penalty applied',
-            `You failed 3 times. Penalty: -${formatMoneyFull ? formatMoneyFull(FAIL_3X_PENALTY) : '$25,000'}.`,
+            'Master Negotiations — Retake fee',
+            `Third miss: a ${fee} retake fee buys ${COURSE_ATTEMPTS} more tries.`,
             'warning'
           );
         }
@@ -472,7 +474,7 @@ export default function MasterNegotiationsTab({
         if (showNotif) {
           showNotif(
             'Master Negotiations — Not certified yet',
-            `Attempt ${nextFailed}/3. You need 100% to pass.`,
+            `Try ${miss.failedAttempts} of ${COURSE_ATTEMPTS}. You need 100% to pass.`,
             'info'
           );
         }
@@ -494,7 +496,9 @@ export default function MasterNegotiationsTab({
       return;
     }
 
-    // Finish
+    // Finish (once per run)
+    if (finishedRef.current) return;
+    finishedRef.current = true;
     const finalScore = score;
     const isPerfect = finalScore === total;
     setLastOutcome(isPerfect ? 'pass' : 'fail');
@@ -534,7 +538,7 @@ export default function MasterNegotiationsTab({
               <DollarSign size={18} />
               <p className="text-sm font-semibold">Pass reward</p>
             </div>
-            <p className="text-sm text-slate-300 mt-2">Get 100% and earn <span className="text-emerald-200 font-semibold">+$50,000</span> (once per save).</p>
+            <p className="text-sm text-slate-300 mt-2">Get 100% and earn a <span className="text-emerald-200 font-semibold">{RAISE_PCT}% raise</span> that stays with you (once per save).</p>
           </div>
 
           <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-4">
@@ -543,16 +547,16 @@ export default function MasterNegotiationsTab({
               <p className="text-sm font-semibold">Permanent perks</p>
             </div>
             <p className="text-sm text-slate-300 mt-2">
-              After certification: <span className="text-emerald-200 font-semibold">5% cheaper</span> REAL_ESTATE/BUSINESS buys and <span className="text-emerald-200 font-semibold">3% higher</span> sale proceeds.
+              After certification: <span className="text-emerald-200 font-semibold">5% cheaper</span> property and business buys, <span className="text-emerald-200 font-semibold">3% higher</span> sale proceeds, and better yearly raises and promotion odds.
             </p>
           </div>
 
           <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-4">
             <div className="flex items-center gap-2 text-slate-200">
               <ShieldAlert size={18} />
-              <p className="text-sm font-semibold">Fail rule</p>
+              <p className="text-sm font-semibold">Retakes</p>
             </div>
-            <p className="text-sm text-slate-300 mt-2">If you fail <span className="text-rose-200 font-semibold">3 times</span>, you lose <span className="text-rose-200 font-semibold">$25,000</span>.</p>
+            <p className="text-sm text-slate-300 mt-2"><span className="text-rose-200 font-semibold">{COURSE_ATTEMPTS} tries</span> included. After a third miss, a <span className="text-rose-200 font-semibold">${COURSE_RETAKE_FEE} retake fee</span> buys {COURSE_ATTEMPTS} more.</p>
           </div>
         </div>
       </div>
@@ -589,7 +593,7 @@ export default function MasterNegotiationsTab({
                     <ul className="text-sm text-slate-300 mt-2 space-y-1 list-disc list-inside">
                       <li>Pass requires 100% correct</li>
                       <li>Questions + answer letters shuffle each run</li>
-                      <li>After you’re certified: practice mode has no penalties</li>
+                      <li>After you’re certified: practice is free</li>
                     </ul>
                   </div>
                 </div>
@@ -616,7 +620,7 @@ export default function MasterNegotiationsTab({
                 </div>
 
                 <p className="text-xs text-slate-400">
-                  Tip: If you’re already certified, you can still practice — no penalties, no extra rewards.
+                  Tip: once you’re certified, practice is free — no fees, no extra rewards.
                 </p>
               </div>
             </div>
@@ -768,9 +772,10 @@ export default function MasterNegotiationsTab({
               <div className="mt-4 bg-slate-900/40 border border-emerald-700/30 rounded-2xl p-4">
                 <p className="text-sm font-semibold text-white">Rewards & perks</p>
                 <ul className="text-sm text-slate-300 mt-2 space-y-1 list-disc list-inside">
-                  <li>+${PASS_BONUS.toLocaleString()} cash (once per save)</li>
-                  <li>Permanent: 5% cheaper REAL_ESTATE & BUSINESS buys</li>
-                  <li>Permanent: 3% higher REAL_ESTATE & BUSINESS sale proceeds</li>
+                  <li>A {RAISE_PCT}% raise that stays through promotions and job changes (once per save)</li>
+                  <li>Permanent: better yearly raises and promotion odds</li>
+                  <li>Permanent: 5% cheaper property and business buys</li>
+                  <li>Permanent: 3% higher property and business sale proceeds</li>
                   <li>Networking +10, Happiness +4, Stress −6, Energy +2, Fulfillment +4</li>
                 </ul>
               </div>
@@ -781,11 +786,11 @@ export default function MasterNegotiationsTab({
                   <div>
                     <p className="text-sm font-semibold text-amber-200">Certification requires 100%</p>
                     <p className="text-sm text-slate-300 mt-1">Retakes must start from Question 1.</p>
-                    {!certified && (
-                      <p className="text-xs text-slate-400 mt-2">Failed attempts: {negCourse.failedAttempts + 1} / 3</p>
+                    {!certified && lastMiss > 0 && (
+                      <p className="text-xs text-slate-400 mt-2">Miss {lastMiss} of {COURSE_ATTEMPTS}</p>
                     )}
                     {penaltyApplied && !certified && (
-                      <p className="text-sm text-rose-200 mt-2 font-semibold">Penalty applied: −$25,000.</p>
+                      <p className="text-sm text-rose-200 mt-2 font-semibold">Retake fee: −${COURSE_RETAKE_FEE}. You have {COURSE_ATTEMPTS} more tries.</p>
                     )}
                   </div>
                 </div>
