@@ -43,34 +43,55 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 22. `736a0a7`: Phase 1 slice 5, the Freedom Track (build 53): one milestone track in four chapters, with story and side goals alongside and energy and stress leading the meters. Receipt: `docs/verification/phase1-slice5-2026-09-25/`. Not released yet.
 23. `2c462a7`: events staged at their place in 3D (build 54): a marker at the event's place, a letter on the doorstep, hazard lights on the parked car. Receipt: `docs/verification/event-stage-2026-09-25/`. Not released yet.
 
-## 1b. Where the last session stopped (2026-09-25, evening PDT)
+## 1b. Where the last session stopped (2026-09-25, ~18:20 PDT)
 
-**Released.** Pieter said "merge to main deploy". Builds 40–51 went live at 17:21 PDT: `main` = `15c4812`, Netlify deploy `6ab70fda`. Receipt, live checks and rollback: `docs/verification/release-2026-09-25/`.
+**Live: builds 40–51.** Pieter said "merge to main deploy". They went live at 17:21 PDT: `main` = `15c4812`, Netlify deploy `6ab70fda`. Receipt, live checks and a one-line rollback: `docs/verification/release-2026-09-25/`.
 - Production had been a Sept-13 CLI deploy, not `origin/main`.
-- A save made on the live site before the release continued on the new code in the same browser.
+- A save made on the live site before the release continued on the new code.
 
-**Delegated: pacing and slice 5.** Pieter's words: "you can decide whatever you think works best overall and gives the best user experience". In progress:
-1. ✅ **Pacing, build 52** (`docs/verification/pacing-2026-09-25/`):
-   - the honest arc stays (Normal median 16 years for a careful index investor);
-   - the slow meter gets a countdown, "Free in about N years at this pace" (`services/freedomPace.ts`), on the dashboard, the city header and the demo wall;
-   - Maria starts on a student budget (she was $93 a month short on Normal and went bankrupt on Hard);
-   - each difficulty's description states its measured pace.
-2. ✅ **Slice 5, build 53, the Freedom Track** (`docs/verification/phase1-slice5-2026-09-25/`):
-   - the core quests in four chapters (Safety first → Build the base → Money that works → Freedom), run inside the quest engine, with new coast / 25 / 50 / 75% milestones;
-   - story and side goals share two slots;
-   - shown on the dashboard, in the goals log (retitled), on the notice board and in the city strip;
-   - month-close milestones and finished chapters are celebrated (a gap the old sync had);
-   - energy and stress lead the Life tab and Profile.
-3. **Release builds 52–54: waiting for Pieter's word.** His go-ahead covered the 40–51 release; these change the goal screens, the pacing copy and the city's event staging, so they wait for a fresh yes. The recipe is in `docs/verification/release-2026-09-25/`: fast-forward `main`, then check the live bundle and a real save.
+**Built on the branch, not released: builds 52–54.** Each is verified with tests, a build and browser renders. Pieter's go-ahead covered the release he asked for, and these change what every live player sees, so they wait for his word:
+- **Build 52, pacing** (delegated): `docs/verification/pacing-2026-09-25/`.
+  - The honest ~16–18-year Normal arc stays.
+  - The slow meter gets a countdown, "Free in about N years at this pace" (`services/freedomPace.ts`), on the dashboard, the city header and the demo wall.
+  - Maria starts on a student budget: she was $93 a month short on Normal and went bankrupt on Hard.
+  - Each difficulty's description states its measured pace.
+- **Build 53, Phase 1 slice 5** (delegated): the Freedom Track, `docs/verification/phase1-slice5-2026-09-25/`.
+  - The core quests in four chapters, run inside the quest engine, with story and side goals alongside.
+  - It shows on the dashboard, in the goals log, on the notice board and in the city strip.
+  - Month-close milestones are now celebrated.
+  - Energy and stress lead the life meters.
+- **Build 54, events staged at their place in 3D:** `docs/verification/event-stage-2026-09-25/`.
+- **To release:** fast-forward `main` to the branch head, then check the live bundle and a real save (the recipe is in the release receipt).
 
-Then continue §3 in order: ✅ events staged at their place in 3D (build 54). Next come the visual list and a Chromebook check.
+**Slice 4** stays opt-in ("Start in the 3D city"). The Chromebook, the classroom device, is untested, and the city is the heavy download.
 
-**Slice 4.** The setting stays opt-in, for now. Pieter didn't choose; see §2.
+**Flagged for Pieter, not changed: the course rewards distort pacing.** Passing a Self Learn course pays:
+- Master Negotiations: $50,000 (`PASS_BONUS` in `components/MasterNegotiationsTab.tsx`);
+- Sales Accelerator: $25,000;
+- EQ: $25,000;
+- Compound Interest: $1,500.
+
+The first three can cut 3–5 years off the arc and teach "a course pays cash". Recommendation: turn the cash into what the skill really earns, a salary raise (for example +5%) on top of the existing perks. That changes a learning incentive, so it is his call.
+
+**Next, in order:**
+1. Pieter:
+   - release builds 52–54;
+   - slice 4 as the default;
+   - the course rewards;
+   - still open from June: the daily challenge's demo gate.
+2. **Visuals (§3.4).** Blender work that benefits from Pieter's eye on the result:
+   - a hero blink: his eyes are painted into the texture, so it needs eyelid meshes over the eyes, since a morph can't close painted eyes;
+   - hero face skin evenness;
+   - the Wave armpit crease;
+   - a Sit clip;
+   - hair polish;
+   - an AO bake.
+3. A Chromebook check. Repeat the phone check on a real device after releasing 52–54; the pane's 375-px check passed.
 
 **QA state:**
-- `localhost:5191` (`tycoon-qa-5191`) holds the production fixture save at month 8.
-- The production origin in the browser pane holds the same Alex save, at month 8 on the live site.
-- Port 5189 and the capture receiver on 5199 belong to the previous chat.
+- `localhost:5191` (`tycoon-qa-5191`, stopped) holds the production fixture save at month 8. Its first steps are reviewed and `tycoon_start_in_city=1` is set, so Continue opens the city.
+- The production origin in the browser pane holds a throwaway Alex save at month 8.
+- The capture receiver used on port 5197 was a scratchpad copy that adds `Access-Control-Allow-Private-Network`. The live site still cannot post to it, so production saves were copied with a SHA-256 check.
 
 ## 2. Decisions waiting on Pieter
 
@@ -85,6 +106,7 @@ Then continue §3 in order: ✅ events staged at their place in 3D (build 54). N
    - **Slice 4:** try the "Start in the 3D city" setting (Quick actions, build 50), then decide whether the city becomes the default screen for everyone and whether the dashboard becomes a "ledger" drawer. Claude kept it opt-in because the Chromebook, the classroom device, is untested.
    - **Slice 5:** built as the Freedom Track (build 53). Say what to change.
 6. **Ship builds 52–54?** Pacing, the Freedom Track and the event staging are verified on the branch. Say the word to fast-forward `main`.
+7. **Course rewards.** The Self Learn certifications pay $50,000 (negotiations), $25,000 (sales), $25,000 (EQ) and $1,500 in cash, enough to cut years off the honest arc. Claude recommends turning the cash into a salary raise on top of the perks; §1b has the details.
 
 Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the AI Alex cost 38 (receipt: `docs/verification/hero-alex-2026-09-25/`). Still: never spend credits without a fresh yes.
 
