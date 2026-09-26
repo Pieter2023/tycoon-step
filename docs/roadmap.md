@@ -1,6 +1,6 @@
 # Roadmap
 
-## Current priorities — September 26, 2026
+## Current priorities — September 26, 2026 (end of session)
 
 Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). **Production is builds 40–64**: `origin/main` = `cc2df03`, eight releases (four on 2026-09-25, builds 60–64 on 2026-09-26) with receipts in `docs/verification/release-2026-09-25/`. 498 tests / 88 files pass.
 
@@ -10,7 +10,7 @@ Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](
    - Receipt: `docs/verification/course-rewards-2026-09-25/`.
 2. **Visuals (Blender):**
    - ✅ a hero blink (build 56, live);
-   - ✅ hero face skin evenness (build 57, live; the shading step on one cheek is geometry and remains);
+   - ✅ hero face skin evenness (build 57, live), and the cheek's shading step smoothed (build 64, live);
    - ✅ the Wave crease, a Sit clip and hair polish (build 58, live);
    - ✅ an AO bake (build 59, live).
 3. ✅ **The real-phone check of builds 52–59** (2026-09-26, `docs/verification/phone-2026-09-26/`): 56–60 fps. It found **build 60**: on a phone, tall dialogs (the Sales quiz, Save and load) hid their close and action buttons. The fix is in `components/Modal.tsx`, **live since 06:45 PDT on 2026-09-26** (deploy `6ab7cc8d`). **A Chromebook check** is still open. ✅ The check's smaller findings are fixed in build 62 (`docs/verification/phone-findings-2026-09-26/`), live since 07:41 PDT on 2026-09-26.
@@ -19,8 +19,9 @@ Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](
    - ✅ the city is the default screen (build 63, live);
    - ✅ the daily challenge stays demo-gated (literal reading; confirm);
    - ✅ the hero's cheek, fixed in code (build 64, live).
-6. **Analytics: after all the phases are completed** (Pieter's decision, 2026-09-26). He signs up for Umami (free Hobby) and sends the Website ID; then it's a one-line release. Steps: HANDOVER §1b.
-7. **Done on 2026-09-25:**
+6. **Next:** confirm the daily-challenge reading; a Chromebook check; the ledger drawer if Pieter wants it; the visual items never started (a modular building kit, splitting the city for culling, the male hip/waist ratio, the hero's remaining texture lines).
+7. **Analytics: now due.** Pieter deferred it "until all the phases are completed" (2026-09-26), and Phases 0 and 1 are done. He signs up for Umami (free Hobby) and sends the Website ID; then it's a one-line release. Steps: HANDOVER §1b item 5.
+8. **Done on 2026-09-25:**
    - ✅ the economy fix (44, 49);
    - ✅ traffic (45);
    - ✅ the AI-modelled Alex (42);

@@ -1,18 +1,18 @@
 # Start here — Tycoon handover
 
-Updated **September 26, 2026, 08:10 PDT**. **Builds 40–64 are live.** Builds 63–64 were released at 08:02 PDT ("ship it, release 63-64"): `main` = `cc2df03`, deploy `6ab7de71`. The receipt is release 8 in `docs/verification/release-2026-09-25/`. Pieter had said "yes to all 3" of his open calls:
-- **Build 63:** the 3D city is the default screen. "Start in the 3D city" is on unless a player switched it off (`docs/verification/phase1-slice4-default-2026-09-26/`). The ledger drawer is not built.
-- **Build 64:** the hero's cheek. The face's shading normals are relaxed at build time (custom normals; no vertex moves), so the hard cheek-and-jaw line is gone (`docs/verification/hero-cheek-2026-09-26/`).
-- **The daily challenge:** read literally ("whether it stays demo-only": yes), so the demo gate stays and there is no code change. **Confirm with Pieter that he didn't mean to open it to the free demo.**
+Updated **September 26, 2026, 08:20 PDT**, at the end of the session. **Builds 40–64 are live** after eight releases (four on Sept 25, four on Sept 26), each with Pieter's go-ahead. Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`.
 
-Earlier, at 07:50 PDT: builds 40–62 went live. Build 62, the phone check's findings, was released at 07:41 PDT ("ship it, release 62"): `main` = `7a4d644`, deploy `6ab7d981`. The receipt is release 7 in `docs/verification/release-2026-09-25/`. Build 62 (`docs/verification/phone-findings-2026-09-26/`):
-- events are framed where they happen: office, doormat, Main Street, home, square, and a new Property & Co. place for rentals;
-- the destination row gets ‹ › buttons when it overflows;
-- on phones, rooms trade the destination row for a one-row room bar, and the journey strip is one row. The bank's 3D view goes from 305 to 467 px. Build 61, tileable paving, brick and asphalt (`docs/verification/surfaces-2026-09-26/`), was released at 07:13 PDT ("ship it, release 61"): `main` = `1bc4d4e`, deploy `6ab7d2f2`. The receipt is release 6 in `docs/verification/release-2026-09-25/`.
+**This session** (Sept 26, 06:00–08:20 PDT) ran the real-phone check of builds 52–59 (56–60 fps on the iPhone), then built and released builds 60–64:
 
-Earlier the same morning (06:55 PDT): **builds 40–60 went live.** The real-phone check of builds 52–59 passed (56–60 fps, `docs/verification/phone-2026-09-26/`). It found one phone bug: dialogs taller than the screen, such as the Sales quiz and Save and load, had their close and action buttons out of reach. The fix, **build 60**, was **released at 06:45 PDT** ("ship it, release 60"): `main` = `e8e1d16`, deploy `6ab7cc8d`. The receipt is release 5 in `docs/verification/release-2026-09-25/`.
+| Build | What | Receipt | Released |
+|---|---|---|---|
+| 60 | Dialogs fit a phone: the shared `Modal` scrolls, so the Sales quiz and Save and load keep their buttons on screen | `phone-2026-09-26/` | 06:45, release 5 |
+| 61 | Tileable paving, brick and asphalt, painted at runtime with normal maps (`townSurfaces.ts`); walls got their own materials | `surfaces-2026-09-26/` | 07:13, release 6 |
+| 62 | The phone check's findings: events framed where they happen (`EVENT_PLACES`, a Property & Co. place), ‹ › on the destination row, a one-row room bar and journey strip on phones | `phone-findings-2026-09-26/` | 07:41, release 7 |
+| 63 | The 3D city is the default screen ("Start in the 3D city" is on unless switched off) | `phase1-slice4-default-2026-09-26/` | 08:02, release 8 |
+| 64 | The hero's cheek: the face's shading normals are relaxed at build time, and no vertex moves | `hero-cheek-2026-09-26/` | 08:02, release 8 |
 
-Before that, updated **September 26, 2026, 06:00 PDT**. Builds 40–59 went live in four releases on the evening of September 25 (all with Pieter's go-ahead; receipts and rollbacks in `docs/verification/release-2026-09-25/`). That day produced a full game assessment, then:
+**The session before** (Sept 25) built 40–59, starting from a full game assessment:
 - the art upgrade: the lighting pass (40), skinned townspeople (41), the AI-modelled Alex (42), the walk-bob fix (43) and lighter sign lettering (48);
 - the economy: Phase 0 (44), property costs and loans (49), pacing (52) and course rewards that pay a raise (55);
 - fixes and plumbing: the traffic deadlock (45), unique asset ids with a production-save migration test (51);
@@ -31,11 +31,10 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
 | Validation on the branch | 498 tests / 88 files, TypeScript and the production build (builds 63–64, live). |
-| Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
+| Servers | Left running at the end of this session:<br>• `tycoon-lan-preview` on `0.0.0.0:5190`, serving the builds 63–64 `dist/` for the phone (`http://192.168.1.80:5190/?stats`);<br>• `tycoon-qa-5191` (a Vite dev server) on `localhost:5191`.<br>Older chats' Vite dev servers from Sept 25 may still hold 5188 and 5189; don't rely on them. The capture receivers were stopped. Pieter's own save lives on `127.0.0.1:5187` and was never touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
-| QA servers | Another chat's Vite server held `127.0.0.1:5188`, so builds 42–45 were checked on `localhost:5189` (`tycoon-qa-5189` in `.claude/launch.json`) with a fresh Alex save. `tycoon-lan-preview` serves `dist/` on `0.0.0.0:5190` for the phone (`http://192.168.1.80:5190/?stats`). Builds 50–59 were checked on `localhost:5191` (`tycoon-qa-5191`), because 5189 was still held by the previous chat's server. An older chat's capture receiver holds port 5199, so builds 56–59 used one on 5198. |
-| Phone | Pieter's iPhone is reachable through macOS iPhone Mirroring (computer-use app `iPhone Mirroring`; clicks need full-screen control, background clicks do nothing). Checks passed: build 43 at 60 fps (`docs/verification/phone-2026-09-25/`); builds 52–59 at 56–60 fps on Detailed for 3 minutes, 60 on Auto (`docs/verification/phone-2026-09-26/`). |
+| Phone | Pieter's iPhone is reachable through macOS iPhone Mirroring (computer-use app `iPhone Mirroring`; clicks need full-screen control, background clicks do nothing). Checks passed: build 43 at 60 fps (`phone-2026-09-25/`); builds 52–59 at 56–60 fps on Detailed for 3 minutes, 60 on Auto (`phone-2026-09-26/`); build 61's textures at 58–60 fps on Detailed; build 62's layout at 60 fps. Tips are in §6. |
 
 **Commits on `town-lighting-pass`, oldest first:**
 1. `263aeeb`: snapshot of the Sept-13 atelier work, which was uncommitted until then.
@@ -77,69 +76,56 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 37. `9bed375`: the release-5 receipt.
 38. `1bc4d4e`: build 61, tileable paving, brick and asphalt (`components/town/townSurfaces.ts`, `dressTown`, wall materials in `scripts/build-town-assets.py`, `MODEL_VERSION` `20260926b`). Receipt: `docs/verification/surfaces-2026-09-26/`. **Released: `main` = `1bc4d4e`** (deploy `6ab7d2f2`).
 39. `c079952`: the release-6 receipt.
-40. Build 62: the phone check's findings (`services/townEvents.ts` `EVENT_PLACES`, the `property` stage, the destination scroll buttons and the phone room bar in `TownModal`/`town.css`). Receipt: `docs/verification/phone-findings-2026-09-26/`. **Released: `main` = `7a4d644`** (deploy `6ab7d981`).
+40. `7a4d644`: build 62, the phone check's findings (`services/townEvents.ts` `EVENT_PLACES`, the `property` stage, the destination scroll buttons and the phone room bar in `TownModal`/`town.css`). Receipt: `docs/verification/phone-findings-2026-09-26/`. **Released: `main` = `7a4d644`** (deploy `6ab7d981`).
 41. `f9a6d40`: the release-7 receipt.
 42. `9f3cdf1`: build 63, the 3D city is the default screen (`App.tsx` `startInCity`, `test/StartInCity.test.tsx`).
 43. `cc2df03`: build 64, the hero's cheek (`smooth_face_normals()` in `scripts/build-town-hero.py`, `HERO_VERSION` `20260926a`). Receipt: `docs/verification/hero-cheek-2026-09-26/`. **Released with build 63: `main` = `cc2df03`** (deploy `6ab7de71`).
-44. The release-8 receipt and this handover.
+44. `23ac83c`: the release-8 receipt.
+45. The end-of-session handover (this file, CLAUDE.md and the roadmap).
 
-## 1b. Where the last session stopped (2026-09-26, 06:00 PDT)
+## 1b. Where the last session stopped (2026-09-26, 08:20 PDT)
 
 **Live: builds 40–64**, in four releases on 2026-09-25 and four on 2026-09-26. Each has a receipt, live checks and a one-line rollback in `docs/verification/release-2026-09-25/`:
 
 | Release | Builds | Time (PDT) | `main` | Netlify deploy |
 |---|---|---|---|---|
-| 1 | 40–51 | 17:21 | `15c4812` | `6ab70fda` |
+| 1 | 40–51 | 17:21 (Sept 25) | `15c4812` | `6ab70fda` |
 | 2 | 52–54 | 18:19 | `4436196` | `6ab71d6d` |
 | 3 | 55–57 | 21:01 | `21f7771` | `6ab743ad` |
 | 4 | 58–59 | 22:27 | `e3097ca` | `6ab757c4` |
 | 5 | 60 | 06:45 (Sept 26) | `e8e1d16` | `6ab7cc8d` |
-| 6 | 61 | 07:13 (Sept 26) | `1bc4d4e` | `6ab7d2f2` |
-| 7 | 62 | 07:41 (Sept 26) | `7a4d644` | `6ab7d981` |
-| 8 | 63–64 | 08:02 (Sept 26) | `cc2df03` | `6ab7de71` (current) |
+| 6 | 61 | 07:13 | `1bc4d4e` | `6ab7d2f2` |
+| 7 | 62 | 07:41 | `7a4d644` | `6ab7d981` |
+| 8 | 63–64 | 08:02 | `cc2df03` | `6ab7de71` (current) |
 
-**What the last session built (details in each receipt):**
-- **55, course rewards** (`course-rewards-2026-09-25/`):
-  - a pass pays a lasting raise (Negotiations +5%, Sales +3%, EQ +3%; `services/courseRewards.ts`, `getCourseRaiseMultiplier`) instead of cash;
-  - a third miss costs $150;
-  - fixed along the way: the negotiation salary-growth bonus had compounded ~27% a year, and the EQ 1.5× career-experience perk was never applied.
-- **56, the hero blinks** (`hero-blink-2026-09-25/`): eyelid meshes (`build_eyelids()`), driven by `createBlink`. Dev handle: `__town.blink(amount)`.
-- **57, a cleaner hero face** (`hero-face-2026-09-25/`): `repair_face()` removes Meshy's grey seam lines. A shading step down one cheek is face geometry and remains.
-- **58, characters** (`characters-polish-2026-09-25/`):
-  - a real wave, with the arm aimed and `tether_torso_sides()`;
-  - a Sit clip (`seatedClip()`);
-  - `sitHips` made idempotent (seated people had sunk through the floor);
-  - short hair that tapers to the nape.
-- **59, city AO** (`city-ao-2026-09-25/`): a Cycles AO lightmap on `TEXCOORD_1` (1024 px) at strength `TOWN_AO_STRENGTH` 1.4. It adds 481 KB (the city file is 1.38 MB) and one texture.
+The branch is ahead of `main` only by docs (the release-8 receipt and this handover). There is no unreleased code.
+
+**Pieter's calls this session:** "ship it" for each release, and "yes to all 3" on his open decisions:
+- **The city as the default screen:** done (build 63). The ledger drawer, the plan's other half of slice 4, is **not built**. Ask before building it.
+- **The hero's cheek:** done (build 64). It is done in code, by relaxing the shading normals. Moving the vertices was tried first and slid the painted eyes out from under the eyelids.
+- **The daily challenge's demo gate:** **kept**, reading "yes" to "whether it stays demo-only" literally. There was no code change. **Confirm this with Pieter first thing.** If he meant to open it, let demo players finish the 120-month challenge (the demo wall is in `advanceMonth`; see the GTM section of CLAUDE.md).
 
 **Next, in order:**
-1. ✅ **The real-phone check of builds 52–59** (2026-09-26, `docs/verification/phone-2026-09-26/`): 56–60 fps on Detailed over 3 minutes, 60 on Auto, the café shift and sleep-at-home work on the phone. It found build 60 (below).
-2. ✅ **Build 60 released** (2026-09-26, 06:45 PDT, deploy `6ab7cc8d`; release 5 in `docs/verification/release-2026-09-25/`). On a phone, dialogs taller than the screen (the Sales quiz, Save and load) had their close and action buttons out of reach, so a phone player couldn't take the Sales certification. The shared `Modal` now scrolls. Code: `components/Modal.tsx`, plus one line each in `TutorialModal`, `TownModal` and `KidsSquareModal`.
-3. **A Chromebook check**, the classroom device. It has never been done, and it needs Pieter or a Chromebook on the network.
-4. ✅ **The phone check's findings** (build 62, **live since 07:41 PDT**, deploy `6ab7d981`; `docs/verification/phone-findings-2026-09-26/`): event places per event, ‹ › on the destination row, and a compact room layout on phones.
-5. ✅ **Tileable textures** (build 61, **live since 07:13 PDT**, deploy `6ab7d2f2`; `docs/verification/surfaces-2026-09-26/`):
-   - sandstone paving, painted brick walls and asphalt, painted at runtime with normal maps;
-   - iPhone 58–60 fps on Detailed.
-
-   That closes assessment §3's visual list, apart from the bigger items it never started: a modular building kit, splitting the city for culling, and the male hip/waist ratio.
-6. **Pieter's calls, answered "yes to all 3" on 2026-09-26:**
-   - ✅ the city as the default screen: build 63, live since 08:02 PDT. The ledger drawer is not built; ask before building it.
-   - ✅ the daily challenge's demo gate stays (the literal reading of "yes" to "whether it stays demo-only"). **Confirm with Pieter.**
-   - ✅ the hero's cheek: build 64, live since 08:02 PDT. It is done in code, by relaxing the shading normals; moving the vertices was tried and slid the painted eyes.
-7. **Analytics: Pieter will do it himself once all the phases are completed** (he said so on 2026-09-26). Don't prompt him before then; when the phases are done, remind him.
+1. **Confirm the daily-challenge reading** with Pieter (above).
+2. **A Chromebook check**, the classroom device. It has never been done, and it matters more now that the city is the first screen. It needs Pieter or a Chromebook on the network.
+   - Use the LAN preview and `?stats`, like the iPhone.
+   - Watch the load time, the fps on Auto, and whether the graphics governor steps down.
+   - If WebGL is missing, the city falls back to its text panels.
+3. **The ledger drawer**, only if Pieter wants it: a half-height money sheet opened from inside the city (`docs/phase1-plan.md`, slice 4).
+4. **Visual items never started** (assessment §3): a modular building kit to replace the box shopfronts; splitting the city into blocks for culling; the male hip/waist ratio. Also the hero's remaining texture lines: the forehead lines and the line above the nose (build 57 receipt).
+5. **Analytics: Pieter's to do, and now due.** He said on 2026-09-26 he would do it once all the phases are completed. Phases 0 and 1 are now complete (apart from the optional ledger drawer), so remind him once, and don't press.
    - The code is ready: `services/analytics.ts` tracks the whole funnel, and the snippet is commented out in `index.html`.
    - The plan is Umami Cloud **Hobby**: $0, 100K events a month, 1 website, 6-month retention, no cookie banner.
    - His part: sign up at https://cloud.umami.is, add the website `tycoonjan22026.netlify.app`, and send the Website ID.
    - Then: uncomment the snippet with that ID plus `data-domains="tycoonjan22026.netlify.app"` (so local QA doesn't count), check it locally and release it.
 
 **QA state:**
-- The production origin in the browser pane still holds the throwaway Alex save at month 8 ($10,091). It was continued after release 5, not advanced.
-- Phone (2026-09-26): the LAN preview on port 5190 serves the build-60 `dist/`. The phone's `192.168.1.80:5190` origin holds an Alex save at month 2, with graphics back on Auto.
-- `localhost:5191` (`tycoon-qa-5191`) holds the production fixture save at month 8, with first steps reviewed and `tycoon_start_in_city=1`, so Continue opens the city.
-  - Sales is certified there (the 3% raise), with one Negotiations miss after a retake fee.
-  - To reload the fixture: see §5.
-- The production origin in the browser pane holds a throwaway Alex save at month 8: Sales certified through the live UI in release 3 (`courseRaises: {sales: 3}`), $10,091.
-- Scratch capture receivers were stopped. Blender's live session was not touched; every build ran headless.
+- **The browser pane's production origin** (`tycoonjan22026.netlify.app`) holds the throwaway Alex save at month 8 ($10,091, Sales certified in release 3).
+  - It has no `tycoon_start_in_city` key, so Continue opens the city (checked after release 8).
+  - It was continued after each release, never advanced.
+- **`localhost:5191`** (`tycoon-qa-5191`) holds the production fixture save at month 8, with first steps reviewed and `tycoon_start_in_city=1`. To reload the fixture: see §5.
+- **The phone's LAN origin** (`192.168.1.80:5190`) holds an Alex save at month 2, with graphics on Auto.
+- **Blender's live session** was not touched; every build ran headless. The capture receivers are stopped.
 
 ## 2. Decisions waiting on Pieter
 
@@ -157,7 +143,7 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 7. ✅ **Course rewards: live** (build 55, release 3 at 21:01 PDT; receipt `docs/verification/course-rewards-2026-09-25/`). Certified negotiators on existing saves now get the corrected, slower growth.
 8. ✅ **Builds 56–59 shipped** (releases 3 and 4). Pieter saw the AO before-and-after and said "ship it".
 9. ✅ **The hero's cheek shading step:** Pieter said yes on 2026-09-26; fixed in build 64 (`docs/verification/hero-cheek-2026-09-26/`), live since 08:02 PDT.
-10. **Analytics: deferred by Pieter until all the phases are completed.** He will sign up for Umami (free Hobby plan) and send the Website ID; §1b item 5 has the steps.
+10. **Analytics: deferred by Pieter until all the phases are completed.** Phases 0 and 1 are now done, so it is due: remind him once. He signs up for Umami (free Hobby plan) and sends the Website ID; §1b item 5 has the steps.
 
 Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the AI Alex cost 38 (receipt: `docs/verification/hero-alex-2026-09-25/`). Still: never spend credits without a fresh yes.
 
@@ -168,7 +154,7 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
 3. **The city as the game (Phase 1)**, plan in `docs/phase1-plan.md`:
    - ✅ slice 1, wealth you can see: freedom meter in the city header, window displays, the Freedom Fountain, milestone moments (build 46);
    - ✅ slices 2–3: sleep at home to end the month with morning mail; events open over the city with a place line (build 47);
-   - 🔨 slice 4 as an opt-in setting, "Start in the 3D city" (build 50, `docs/verification/phase1-slice4-2026-09-25/`). Making it the default and the ledger drawer need Pieter's call;
+   - ✅ slice 4: "Start in the 3D city" as an opt-in (build 50), the default since build 63 (`docs/verification/phase1-slice4-default-2026-09-26/`). The ledger drawer is not built;
    - ✅ slice 5, one milestone track: the Freedom Track (build 53);
    - ✅ events staged at their place in 3D (build 54): the marker, the doorstep letter and the car's hazard lights.
    - ✅ course rewards (build 55, live): a lasting raise instead of cash, a $150 retake fee, and two course bugs fixed.
@@ -177,9 +163,9 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
    - ✅ AO bake (build 59, live); ✅ tileable textures for pavement, brick and road (build 61, live; `docs/verification/surfaces-2026-09-26/`);
    - ✅ hair polish, the armpit crease in Wave and a Sit clip (build 58, live);
    - ✅ a blink for the hero Alex (build 56, live);
-   - ✅ an even skin tone on the hero's face texture (build 57, live; the shading step on one cheek is geometry and remains).
-5. **Phone**: ✅ iPhone checks passed at build 43 (60 fps) and builds 52–59 (56–60 fps; `docs/verification/phone-2026-09-26/`), which found build 60 (tall dialogs; live since 06:45 PDT on Sept 26). A Chromebook is still untested.
-6. **Analytics, after all the phases:** Pieter's step (Umami sign-up and Website ID), then a one-line release. See §1b item 5.
+   - ✅ an even skin tone on the hero's face texture (build 57, live), and the cheek's shading step smoothed (build 64, live).
+5. **Phone**: ✅ iPhone checks passed at build 43 (60 fps) and builds 52–59 (56–60 fps; `docs/verification/phone-2026-09-26/`), which found builds 60 and 62. A Chromebook is still untested (§1b item 2).
+6. **Analytics, now due:** Pieter's step (Umami sign-up and Website ID), then a one-line release. See §1b item 5.
 
 ## 4. What Pieter wants (standing)
 
@@ -476,17 +462,25 @@ These are last-observed snapshots, not values to restore over newer play:
 
 ## Validation and evidence
 
-Latest validation (2026-09-25, build 59, released as `main` = `e3097ca`): **483 tests / 85 files**, TypeScript and production build. The latest receipts are:
-- `docs/verification/city-ao-2026-09-25/` (build 59);
-- `docs/verification/characters-polish-2026-09-25/` (build 58);
-- `docs/verification/hero-face-2026-09-25/` (build 57);
-- `docs/verification/hero-blink-2026-09-25/` (build 56);
-- `docs/verification/course-rewards-2026-09-25/` (build 55);
-- `docs/verification/release-2026-09-25/` (both releases);
-- `pacing-2026-09-25/`;
-- `phase1-slice5-2026-09-25/`;
-- `event-stage-2026-09-25/`;
-- `phase1-slice4-2026-09-25/`.
+Latest validation (2026-09-26, build 64, released as `main` = `cc2df03`): **498 tests / 88 files**, TypeScript and the production build. The latest receipts:
+
+| Build(s) | Receipt |
+|---|---|
+| 64 | `docs/verification/hero-cheek-2026-09-26/` |
+| 63 | `docs/verification/phase1-slice4-default-2026-09-26/` |
+| 62 | `docs/verification/phone-findings-2026-09-26/` |
+| 61 | `docs/verification/surfaces-2026-09-26/` |
+| 60, and the phone check of 52–59 | `docs/verification/phone-2026-09-26/` |
+| All eight releases | `docs/verification/release-2026-09-25/` |
+| 59 | `city-ao-2026-09-25/` |
+| 58 | `characters-polish-2026-09-25/` |
+| 57 | `hero-face-2026-09-25/` |
+| 56 | `hero-blink-2026-09-25/` |
+| 55 | `course-rewards-2026-09-25/` |
+| 52 | `pacing-2026-09-25/` |
+| 53 | `phase1-slice5-2026-09-25/` |
+| 54 | `event-stage-2026-09-25/` |
+| 50 | `phase1-slice4-2026-09-25/` |
 
 Earlier receipts are in `docs/verification/lighting-2026-09-25/`, `docs/verification/characters-2026-09-25/` and `docs/verification/hero-alex-2026-09-25/`; assessment in `docs/assessment-2026-09-25.md`.
 
@@ -502,7 +496,7 @@ Earlier validation (live playthrough fixes): **333 tests / 59 files passed**, Ty
 
 The current ordered list is §3 above. Standing items from earlier sessions:
 
-- **Physical-phone and Chromebook check** (never done): touch and multitouch, camera feel, frame rate with the skinned cast and sky recapture, thermals, orientation, suspend/resume, and the soundscape on a real speaker.
+- **Chromebook check** (never done). The iPhone is checked (builds 43, 52–59, 61 and 62). On the phone, these are still untested: orientation, suspend/resume, rain and night, the kids square, and the soundscape on a real speaker.
 - **Spanish:** a Latin American Spanish speaker's read is still worth an afternoon, the quiz especially. The tab bodies and the monthly-action cards are still English.
 - **Publishing discipline:** preserve all work, review unrelated changes, recheck tests and build, and inspect the real hosting target. For town-only changes, verify the `TownModal-*.js`/`createTownScene-*.js` chunks, not `index-*.js`.
 

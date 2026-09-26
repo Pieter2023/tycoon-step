@@ -1,6 +1,6 @@
 # Tycoon: Financial Freedom Simulator
 
-## Current handover — September 26, 2026 (08:10 PDT)
+## Current handover — September 26, 2026 (08:20 PDT, end of session)
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
@@ -66,22 +66,30 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - **Build 64, live:** the hero's cheek. `smooth_face_normals()` in `scripts/build-town-hero.py` relaxes the skin's shading normals (custom normals; no vertex moves), and `HERO_VERSION` is `20260926a`; `docs/verification/hero-cheek-2026-09-26/`.
   - **The daily challenge's demo gate stays**, reading "yes" to "whether it stays demo-only" literally. Confirm with Pieter.
 - **Validation:** 498 tests / 88 files and the production build pass on the branch.
-- **Next session, first:** confirm the daily-challenge reading with Pieter. Then:
-  - a Chromebook check (needs a Chromebook), which matters more now that the city is the default screen;
-  - the ledger drawer, if Pieter wants it.
+- **The branch is ahead of `main` only by docs.** There is no unreleased code.
+- **Next session, first:** confirm the daily-challenge reading with Pieter (HANDOVER §1b). Then:
+  - a Chromebook check (needs a Chromebook), which matters more now that the city is the first screen;
+  - the ledger drawer, only if Pieter wants it;
+  - the visual items never started (assessment §3): a modular building kit, splitting the city for culling, the male hip/waist ratio, and the hero's remaining texture lines.
 - **Waiting on Pieter:**
   - confirming that the daily challenge stays demo-gated;
-  - whether to build the ledger drawer.
-- **Analytics: deferred by Pieter until all the phases are completed** (2026-09-26).
-  - Don't prompt him before then; remind him when the phases are done.
+  - whether to build the ledger drawer;
+  - analytics (below).
+- **Analytics: now due.** Pieter deferred it on 2026-09-26 "until all the phases are completed", and Phases 0 and 1 are now done (apart from the optional ledger drawer). Remind him once; don't press.
   - His part: a free Umami Cloud Hobby site for `tycoonjan22026.netlify.app`, and the Website ID.
   - Ours: uncomment the snippet in `index.html` with that ID and `data-domains="tycoonjan22026.netlify.app"`, check it and release it.
-  - Steps: HANDOVER §1b item 7.
+  - Steps: HANDOVER §1b item 5.
 - **Visual QA:** the town scene is a code-split chunk, so verify town deploys by grepping `TownModal-*.js`/`createTownScene-*.js`, not `index-*.js`. When the browser pane is hidden, use the dev handle `__town.advance(frames)` with `scripts/qa/capture-receiver.py` (HANDOVER §5).
-- **Ports and saves:** the user preview is `127.0.0.1:5187`; isolate QA on 5188 (5189 and 5191 were also used on 2026-09-25; the capture receiver ran on 5198 because 5199 was held; see HANDOVER §5). Preserve the user's save and all tracked and untracked work.
+- **Ports and saves:**
+  - The user preview is `127.0.0.1:5187`.
+  - QA runs on `tycoon-qa-5191`, which holds the production fixture save.
+  - `tycoon-lan-preview` serves `dist/` on `0.0.0.0:5190` for the phone. Both were left running on 2026-09-26.
+  - Older chats' servers may still hold 5188 and 5189.
+  - The capture receiver uses 5199, or 5198 if that is held; see HANDOVER §5.
+  - Preserve the user's save and all tracked and untracked work.
 - **Pushing:** pushing the backup branch is fine. Merging to `main`, which deploys, needs Pieter's go-ahead; earlier deploys were authorised case by case. The release recipe (fast-forward only, verify the live bundle and a real save) is in `docs/verification/release-2026-09-25/`.
 
-Current feature/source map and run instructions are in the handover. Detailed evidence is in [docs/completed-improvements.md](docs/completed-improvements.md); remaining priorities are in [docs/roadmap.md](docs/roadmap.md). Physical-phone testing remains open. No new paid service is needed for the implemented prototype.
+Current feature/source map and run instructions are in the handover. Detailed evidence is in [docs/completed-improvements.md](docs/completed-improvements.md); remaining priorities are in [docs/roadmap.md](docs/roadmap.md). The iPhone is checked; a Chromebook check remains open. No new paid service is needed for the implemented prototype.
 
 The older dated service, business and deployment sections below are historical reference. They are not proof of current hosting/account state and do not supersede this handover.
 
