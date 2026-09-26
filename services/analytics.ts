@@ -5,10 +5,10 @@
 // a provider script is added this is a safe no-op (in dev it logs to console),
 // so calling track() anywhere is always safe and never throws.
 //
-// To turn analytics ON: create a free site at https://cloud.umami.is (no
-// cookies, no PII — matches the "no student data" promise on /educators),
-// then uncomment the <script> in index.html and paste your website id. No code
-// changes needed here — the events below start flowing automatically.
+// ON since 2026-09-26: Umami Cloud (free Hobby plan, no cookies, no PII — matches
+// the "no student data" promise on /educators), loaded by the <script> in
+// index.html. Its data-domains attribute limits tracking to the live site, so
+// local and LAN QA never counts.
 //
 // The conversion funnel these events trace (watch the drop in your dashboard):
 //   app_loaded          — the app booted / page view
