@@ -4,7 +4,7 @@ import type { EventPlace } from '../../services/townEvents';
 // Events happen in the world (Phase 1 polish on slice 3): while a life event waits, the city stages it where it
 // happens. A bobbing badge and a pulsing ring on the pavement mark the place; tax and legal mail lies on the
 // townhouse doorstep as a letter; car trouble blinks the parked car's hazard lights. The card, its choice and its
-// outcome are unchanged (services/townEvents.ts picks the place from the event's category).
+// outcome are unchanged (services/townEvents.ts picks the place from the event's id, or else its category).
 
 type Spot = { badge: [number, number, number]; ring: [number, number] };
 /** Where each place is staged: the badge floats above the spot, the ring lies on the walkable pavement in front. */
@@ -15,6 +15,7 @@ export const EVENT_STAGE: Record<EventPlace, Spot> = {
   work: { badge: [15.9, 3.0, 7.4], ring: [15.7, 7.4] },       // over the Main St Offices door
   exchange: { badge: [-3.5, 3.4, -1.6], ring: [-3.5, -1.1] },
   business: { badge: [3.5, 3.4, -1.6], ring: [3.5, -1.1] },
+  property: { badge: [10.5, 3.4, -1.6], ring: [10.5, -1.1] },  // Property & Co., for the player's rentals
   bank: { badge: [-10.5, 3.4, -1.6], ring: [-10.5, -1.1] },
   square: { badge: [0, 3.6, 12], ring: [0, 9.8] },            // over the fountain; the ring at the pavement's edge
   rosa: { badge: [-6, 2.4, 7.1], ring: [-6, 7.9] },            // Rosa on the west bench

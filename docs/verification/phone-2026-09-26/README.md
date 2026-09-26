@@ -56,7 +56,7 @@ Compared with earlier checks: build 43 ran 56–59 fps on Detailed with 683–68
 - Desktop at 1024×768: the quiz is still centred (90 px above and below), and the city is still centred (23 px).
 - **On the iPhone:** after a reload, the quiz shows its title and close button, scrolls to Close / Start Certification, and closes without using an attempt (still 3 left). The city ran afterwards at 60 fps.
 
-## Other findings, not changed
+## Other findings (fixed in build 62, `docs/verification/phone-findings-2026-09-26/`)
 
 1. **Event place line:** "Office Birthday Collection" is a `SOCIAL` event, and `services/townEvents.ts` maps every `SOCIAL` event to Rosa, so an office event reads "Rosa knocks on your door". Decide per event, or map SOCIAL events set at work to `work`.
 2. **Destination row:** Café, Home, Work and Garage still need a sideways swipe on a portrait phone (known since Sept 25).

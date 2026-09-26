@@ -1,6 +1,6 @@
 # Tycoon: Financial Freedom Simulator
 
-## Current handover — September 26, 2026 (07:20 PDT)
+## Current handover — September 26, 2026 (07:45 PDT)
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
@@ -55,10 +55,14 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - The city model gives the building walls their own `wall*` materials, and `MODEL_VERSION` is `20260926b`.
   - iPhone: 58–60 fps on Detailed.
   - Receipt: `docs/verification/surfaces-2026-09-26/`. Test: `test/TownSurfaces.test.ts`.
-- **Validation:** 491 tests / 86 files and the production build pass on the branch.
-- **Next session, first:**
+- **Build 62, on the branch, not released:** the phone check's findings (`docs/verification/phone-findings-2026-09-26/`).
+  - Events take their place by id first (`EVENT_PLACES` in `services/townEvents.ts`), with a new Property & Co. place for rentals.
+  - The destination row gets ‹ › buttons when it overflows.
+  - On phones, rooms swap the destination row for a one-row room bar ("?", walk-to, "Exit ↗"), and the journey strip is one row. The bank's 3D view goes from 305 to 467 px at 393×659.
+- **Validation:** 496 tests / 88 files and the production build pass on the branch.
+- **Next session, first:** release build 62 when Pieter says so. Then:
   - a Chromebook check (needs a Chromebook);
-  - the phone check's small findings (HANDOVER §1b item 4).
+  - Pieter's open calls (HANDOVER §1b item 6).
 - **Waiting on Pieter:**
   - whether the hero's cheek shading step is worth hand re-topology in Blender (build 57 receipt);
   - Phase 1 slice 4: try the "Start in the 3D city" setting, then decide whether the city becomes the default screen (and the dashboard a ledger drawer);
@@ -84,7 +88,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (86 files / 491 tests on `town-lighting-pass`, 2026-09-26; integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (88 files / 496 tests on `town-lighting-pass`, 2026-09-26; integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)

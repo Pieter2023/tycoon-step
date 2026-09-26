@@ -159,3 +159,30 @@
 .town-sleep-overlay span{font-size:40px}.town-sleep-overlay strong{font-size:22px}.town-sleep-overlay p{font-size:13px;color:#c8d3e6}
 .town-sleep-still{animation:none;opacity:.9}
 @keyframes town-sleep{0%{opacity:0}30%{opacity:.94}72%{opacity:.94}100%{opacity:0}}
+/* Phone check 2026-09-26 (build 62). The destination row overflows on a portrait phone: edge buttons show there is more
+   and scroll it. In rooms the square's destinations give way to the room's own bar (walk-to, exit, back to the square),
+   which shares one row with "What can I do here?"; the journey strip folds into a single row. Desktop is unchanged. */
+.town-destinations-wrap{position:relative;flex-shrink:0}
+.town-dest-scroll{position:absolute;top:0;bottom:1px;width:56px;z-index:1;display:flex;align-items:center;font-size:24px;font-weight:700;color:#f5eed9}
+.town-dest-right{right:0;justify-content:flex-end;padding-right:12px;background:linear-gradient(to right,rgba(24,45,55,0),#182d37 60%)}
+.town-dest-left{left:0;justify-content:flex-start;padding-left:12px;background:linear-gradient(to left,rgba(24,45,55,0),#182d37 60%)}
+.town-in-service .town-destinations-wrap,.town-focused .town-destinations-wrap{display:none}
+.town-room-bar{display:contents}
+.town-help-icon,.town-exit-short{display:none}
+@media(max-width:767px){
+ .town-in-room .town-destinations-wrap{display:none}
+ .town-room-bar{display:flex;align-items:center;overflow-x:auto;background:#42685b;flex-shrink:0}
+ .town-room-bar .town-interior-nav{flex:none;overflow:visible;padding-right:4px;gap:5px}
+ .town-room-bar .town-interior-nav button{padding:7px 8px}
+ .town-room-bar .town-location-help{order:-1;flex:none;align-self:center;margin:0 0 0 10px;padding:0;width:44px;min-height:44px;border:1px solid #aec1a677;border-radius:50%;text-decoration:none;display:flex;align-items:center;justify-content:center}
+ .town-room-bar .town-help-text{display:none}
+ .town-room-bar .town-help-icon{display:inline;font-size:17px;font-weight:800;color:#f5eed9}
+ .town-room-bar .town-walk-exit,.town-room-bar .town-exit-long{display:none}
+ .town-room-bar .town-exit-short{display:inline}
+ .town-journey-strip{grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:6px 12px}
+ .town-journey-summary{min-height:44px;justify-content:center}
+ .town-journey-summary span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .town-journey-summary strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:11.5px;line-height:1.25}
+ .town-guide-next{grid-column:auto;width:auto;max-width:44vw;white-space:normal;line-height:1.2;text-align:center;padding:6px 12px}
+ .town-journey-strip .town-sound{grid-column:auto;grid-row:auto}
+}

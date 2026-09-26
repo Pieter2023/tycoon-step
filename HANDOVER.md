@@ -1,6 +1,11 @@
 # Start here — Tycoon handover
 
-Updated **September 26, 2026, 07:20 PDT**. **Builds 40–61 are live.** Build 61, tileable paving, brick and asphalt (`docs/verification/surfaces-2026-09-26/`), was released at 07:13 PDT ("ship it, release 61"): `main` = `1bc4d4e`, deploy `6ab7d2f2`. The receipt is release 6 in `docs/verification/release-2026-09-25/`.
+Updated **September 26, 2026, 07:45 PDT**. **Build 62, the phone check's findings, is on the branch, not released** (`docs/verification/phone-findings-2026-09-26/`):
+- events are framed where they happen: office, doormat, Main Street, home, square, and a new Property & Co. place for rentals;
+- the destination row gets ‹ › buttons when it overflows;
+- on phones, rooms trade the destination row for a one-row room bar, and the journey strip is one row. The bank's 3D view goes from 305 to 467 px.
+
+**Builds 40–61 are live.** Build 61, tileable paving, brick and asphalt (`docs/verification/surfaces-2026-09-26/`), was released at 07:13 PDT ("ship it, release 61"): `main` = `1bc4d4e`, deploy `6ab7d2f2`. The receipt is release 6 in `docs/verification/release-2026-09-25/`.
 
 Earlier the same morning (06:55 PDT): **builds 40–60 went live.** The real-phone check of builds 52–59 passed (56–60 fps, `docs/verification/phone-2026-09-26/`). It found one phone bug: dialogs taller than the screen, such as the Sales quiz and Save and load, had their close and action buttons out of reach. The fix, **build 60**, was **released at 06:45 PDT** ("ship it, release 60"): `main` = `e8e1d16`, deploy `6ab7cc8d`. The receipt is release 5 in `docs/verification/release-2026-09-25/`.
 
@@ -22,7 +27,7 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 | **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `1bc4d4e` (release 6, build 61). Later commits, such as the release-6 receipt, stay ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
-| Validation on the branch | 491 tests / 86 files, TypeScript and the production build (build 61, live). |
+| Validation on the branch | 496 tests / 88 files, TypeScript and the production build (build 62, not released; build 61 is live). |
 | Servers | A Vite dev server on `localhost:5188` (the QA origin) may still be running; don't rely on it. Pieter's own save lives on `127.0.0.1:5187` and was not touched. |
 | Higgsfield (connected MCP) | Plus plan, 427.33 credits left. 2.5 were spent on concept images and 38 on the Alex model (Pieter approved up to 50). |
 | Blender | 5.2.1 at `/Applications/Blender.app`. The Blender MCP add-on was connected. The open file has a `TownPeople` scene I added; the window was switched back to Pieter's `Scene`. Build 42 ran headless only and did not touch the live session. |
@@ -68,7 +73,8 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 36. `e8e1d16`: build 60, dialogs fit a phone (`components/Modal.tsx`), found by the phone check of builds 52–59. Receipt: `docs/verification/phone-2026-09-26/`. **Released: `main` = `e8e1d16`** (deploy `6ab7cc8d`).
 37. `9bed375`: the release-5 receipt.
 38. `1bc4d4e`: build 61, tileable paving, brick and asphalt (`components/town/townSurfaces.ts`, `dressTown`, wall materials in `scripts/build-town-assets.py`, `MODEL_VERSION` `20260926b`). Receipt: `docs/verification/surfaces-2026-09-26/`. **Released: `main` = `1bc4d4e`** (deploy `6ab7d2f2`).
-39. The release-6 receipt and this handover.
+39. `c079952`: the release-6 receipt.
+40. Build 62: the phone check's findings (`services/townEvents.ts` `EVENT_PLACES`, the `property` stage, the destination scroll buttons and the phone room bar in `TownModal`/`town.css`). Receipt: `docs/verification/phone-findings-2026-09-26/`. **Not released.**
 
 ## 1b. Where the last session stopped (2026-09-26, 06:00 PDT)
 
@@ -101,7 +107,7 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 1. ✅ **The real-phone check of builds 52–59** (2026-09-26, `docs/verification/phone-2026-09-26/`): 56–60 fps on Detailed over 3 minutes, 60 on Auto, the café shift and sleep-at-home work on the phone. It found build 60 (below).
 2. ✅ **Build 60 released** (2026-09-26, 06:45 PDT, deploy `6ab7cc8d`; release 5 in `docs/verification/release-2026-09-25/`). On a phone, dialogs taller than the screen (the Sales quiz, Save and load) had their close and action buttons out of reach, so a phone player couldn't take the Sales certification. The shared `Modal` now scrolls. Code: `components/Modal.tsx`, plus one line each in `TutorialModal`, `TownModal` and `KidsSquareModal`.
 3. **A Chromebook check**, the classroom device. It has never been done, and it needs Pieter or a Chromebook on the network.
-4. **Small findings from the phone check** (receipt, "Other findings"): all `SOCIAL` events are framed as "Rosa knocks on your door", including the office birthday collection; rooms leave the 3D view about a third of a portrait screen.
+4. ✅ **The phone check's findings** (build 62, on the branch, **awaiting Pieter's release go-ahead**; `docs/verification/phone-findings-2026-09-26/`): event places per event, ‹ › on the destination row, and a compact room layout on phones.
 5. ✅ **Tileable textures** (build 61, **live since 07:13 PDT**, deploy `6ab7d2f2`; `docs/verification/surfaces-2026-09-26/`):
    - sandstone paving, painted brick walls and asphalt, painted at runtime with normal maps;
    - iPhone 58–60 fps on Detailed.
@@ -178,7 +184,7 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
 ```sh
 cd '/Users/pietervanderwalt/Desktop/Current High Value Apps/tycoon-step-main 2'
 git status --short && git log --oneline -8
-npm run test:run          # 491 tests / 86 files on the branch
+npm run test:run          # 496 tests / 88 files on the branch
 npm run build
 npx vite --host 127.0.0.1 --port 5188 --strictPort   # or preview_start "tycoon-qa-5188" (.claude/launch.json)
 '/Applications/Blender.app/Contents/MacOS/Blender' --background --factory-startup --python scripts/build-town-people.py   # then bump PEOPLE_VERSION
@@ -290,6 +296,12 @@ To enter a room while the pane is hidden:
 **Hero texture and blink (builds 56–57)**
 - The painted eyes were measured once from an unlit orthographic Workbench render (`color_type='TEXTURE'`, `light='FLAT'`). Workbench shows untextured meshes as plain white, so an open lid sliver appears as a white line in those QA renders only.
 - Meshy's face lines sit mostly on chart borders but some inside charts; the rules in `repair_face()` cover both.
+
+**Phone layout and event places (build 62)**
+- **Event places:** an event's place comes from `EVENT_PLACES` by id first, then its category. A new place needs a label in `eventPlace` and a spot in `EVENT_STAGE`. `test/TownEventPlaces.test.ts` fails on an unknown id or an unwalkable ring.
+- **Phone-only layout:** everything is in `town.css` under `max-width: 767px`: the room bar, "?", "Exit ↗" and the one-row journey strip. On desktop the room bar is `display: contents`.
+- **Hidden pane:** it throttles scroll and resize events and smooth scrolling. Check the ‹ › buttons in visible headless WebKit (`docs/verification/phone-findings-2026-09-26/phone-layout.cjs`, iPhone 15 Pro), not the pane.
+- **QA gotcha:** `__town.setView` inside a room moves the player outdoors while the UI still says the room, so the exit button then does nothing. Leave the room first.
 
 **Tileable surfaces (build 61)**
 - The textures are painted at runtime in `townSurfaces.ts`: pure pixel arrays uploaded as `DataTexture`s, so tests run them without a canvas. `DataTexture`s aren't flipped, so rows run with v, and `normalsFromRelief` follows that.

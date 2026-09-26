@@ -3706,7 +3706,7 @@ const [gameState, setGameState] = useState<GameState>(() => {
           autoplaySpeedLabel={autoplaySpeedLabel}
           onToggleAutoplay={toggleAutoplay}
           onExploreTown={!showTown && !isMultiplayer && !gameState.challenge ? () => { setExploringEvent(true); setShowTown(true); } : undefined}
-          cityPlace={showTown ? eventPlace(gameState.pendingScenario.category).label : undefined}
+          cityPlace={showTown ? eventPlace(gameState.pendingScenario.category, gameState.pendingScenario.id).label : undefined}
           onOpenImage={openImageLightbox}
           onChoose={handleScenarioChoice}
         />
