@@ -1,10 +1,10 @@
 # Tycoon: Financial Freedom Simulator
 
-## Current handover — September 26, 2026 (08:20 PDT, end of session)
+## Current handover — September 26, 2026 (08:45 PDT, end of session)
 
 Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, the decisions waiting on Pieter, the next steps in order, the run/QA recipes and the latest gotchas. The assessment and improvement plan are in [docs/assessment-2026-09-25.md](docs/assessment-2026-09-25.md).
 
-- **Production:** builds 40–64 are live after eight releases. Four were on 2026-09-25, and builds 60–64 followed on 2026-09-26:
+- **Production:** builds 40–65 are live after nine releases. Four were on 2026-09-25, and builds 60–65 followed on 2026-09-26:
   - 40–51 at 17:21 PDT, deploy `6ab70fda`;
   - 52–54 at 18:19 PDT, deploy `6ab71d6d`;
   - 55–57 at 21:01 PDT, deploy `6ab743ad`;
@@ -12,7 +12,8 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - 60 on 2026-09-26 at 06:45 PDT, deploy `6ab7cc8d`;
   - 61 on 2026-09-26 at 07:13 PDT, deploy `6ab7d2f2`;
   - 62 on 2026-09-26 at 07:41 PDT, deploy `6ab7d981`;
-  - **63–64 on 2026-09-26 at 08:02 PDT, `origin/main` = `cc2df03`, deploy `6ab7de71`** ("ship it, release 63-64").
+  - 63–64 on 2026-09-26 at 08:02 PDT, deploy `6ab7de71`;
+  - **65, analytics on, on 2026-09-26 at 08:40 PDT: `origin/main` = `5ab30ca`, deploy `6ab7e74f`.**
 
   Both were fast-forwards from the branch. Receipts and rollbacks: `docs/verification/release-2026-09-25/`. (Before that, production was a Sept-13 CLI deploy, not `origin/main`.)
 - **Work branch `town-lighting-pass`:** checked out and pushed to `origin`. `main` is fast-forwarded to it for each release, and later commits wait here for the next one. It holds, all now live:
@@ -71,13 +72,12 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - a Chromebook check (needs a Chromebook), which matters more now that the city is the first screen;
   - the ledger drawer, only if Pieter wants it;
   - the visual items never started (assessment §3): a modular building kit, splitting the city for culling, the male hip/waist ratio, and the hero's remaining texture lines.
-- **Waiting on Pieter:**
-  - whether to build the ledger drawer;
-  - analytics (below).
-- **Analytics: now due.** Pieter deferred it on 2026-09-26 "until all the phases are completed", and Phases 0 and 1 are now done (apart from the optional ledger drawer). Remind him once; don't press.
-  - His part: a free Umami Cloud Hobby site for `tycoonjan22026.netlify.app`, and the Website ID.
-  - Ours: uncomment the snippet in `index.html` with that ID and `data-domains="tycoonjan22026.netlify.app"`, check it and release it.
-  - Steps: HANDOVER §1b item 5.
+- **Waiting on Pieter:** whether to build the ledger drawer.
+- **Analytics: ON since 2026-09-26** (build 65, release 9).
+  - Umami Cloud, Hobby plan ($0), in Pieter's account. Site "Tycoon", Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`.
+  - Dashboard: https://cloud.umami.is/analytics/us/websites/a8297643-15e9-4122-95b8-0b49cf4a7f98
+  - The snippet in `index.html` has `data-domains="tycoonjan22026.netlify.app"`, so local and LAN QA never counts. The funnel events come from `services/analytics.ts`.
+  - To exclude a browser on the live site: `localStorage.setItem('umami.disabled','1')`. The browser pane's production origin already has it.
 - **Visual QA:** the town scene is a code-split chunk, so verify town deploys by grepping `TownModal-*.js`/`createTownScene-*.js`, not `index-*.js`. When the browser pane is hidden, use the dev handle `__town.advance(frames)` with `scripts/qa/capture-receiver.py` (HANDOVER §5).
 - **Ports and saves:**
   - The user preview is `127.0.0.1:5187`.
@@ -299,8 +299,8 @@ Code:
   (each ModeSelector card), `demo_started` (auto on first load), `demo_wall_hit`
   + `unlock_modal_opened` (App.tsx advanceMonth wall; ModeSelector banner/
   multiplayer), `gumroad_click` + `purchase_unlocked` (UnlockModal).
-  **To turn ON: uncomment the Umami snippet in `index.html` and paste a website
-  id from cloud.umami.is** — events flow automatically, no code change.
+  **ON since 2026-09-26 (build 65):** Umami Cloud Hobby, Website ID
+  `a8297643-15e9-4122-95b8-0b49cf4a7f98`, snippet live in `index.html`.
 - **Password gate removed** (`ModeSelector.tsx` mount effect): first-time
   visitors now auto-start in the free demo and land on the mode picker in one
   click (was a 🔐 "Unlock the Full Game" password wall — the biggest leak). The
@@ -338,7 +338,7 @@ unchanged** — needs Pieter's decision before reversing.
 Next (Pieter, human GTM — see the GTM plan + `docs/outreach-drafts.md`):
 1. Downgrade Supabase (ref `bvsqnhtlwklexyijvexw`) to Free to stop the ~$10/mo
    bleed (game is Netlify-static; leaderboard/saves degrade gracefully).
-2. Turn on analytics (uncomment Umami snippet + paste id), then deploy. **Deferred (2026-09-26): Pieter will do this once all the phases are completed.**
+2. ✅ Analytics on (2026-09-26, build 65): Umami Cloud Hobby, live on the site.
 3. Post to **FinLit Fanatics** (NOT "NGPF Fans" — the drafts have the name
    wrong), email teachers/Jump$tart affiliates, attach the lesson plan.
 

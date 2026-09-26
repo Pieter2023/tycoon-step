@@ -2,7 +2,7 @@
 
 ## Current priorities — September 26, 2026 (end of session)
 
-Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). **Production is builds 40–64**: `origin/main` = `cc2df03`, eight releases (four on 2026-09-25, builds 60–64 on 2026-09-26) with receipts in `docs/verification/release-2026-09-25/`. 498 tests / 88 files pass.
+Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](assessment-2026-09-25.md). **Production is builds 40–65**: `origin/main` = `5ab30ca`, nine releases (four on 2026-09-25, builds 60–65 on 2026-09-26) with receipts in `docs/verification/release-2026-09-25/`. 498 tests / 88 files pass.
 
 1. ✅ **Live: the course rewards** (build 55, `3364c54`, release 3).
    - A pass pays a lasting raise instead of cash; a third miss costs a $150 retake fee.
@@ -20,7 +20,7 @@ Start with [HANDOVER.md](../HANDOVER.md) §1–6 and [assessment-2026-09-25.md](
    - ✅ the daily challenge stays demo-gated (Pieter confirmed);
    - ✅ the hero's cheek, fixed in code (build 64, live).
 6. **Next:** a Chromebook check; the ledger drawer if Pieter wants it; the visual items never started (a modular building kit, splitting the city for culling, the male hip/waist ratio, the hero's remaining texture lines).
-7. **Analytics: now due.** Pieter deferred it "until all the phases are completed" (2026-09-26), and Phases 0 and 1 are done. He signs up for Umami (free Hobby) and sends the Website ID; then it's a one-line release. Steps: HANDOVER §1b item 5.
+7. ✅ **Analytics: on** (build 65, 2026-09-26): Umami Cloud Hobby, Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`. Next: read the funnel once traffic arrives (HANDOVER §1b item 5).
 8. **Done on 2026-09-25:**
    - ✅ the economy fix (44, 49);
    - ✅ traffic (45);

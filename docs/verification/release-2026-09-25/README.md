@@ -353,3 +353,41 @@ A player who wants the old start screen can switch it off: Quick actions → "St
   - all eight models load with 200, including the hero at `20260926a`;
   - no console errors.
 - **Not done live:** a close-up of the face (the pane was hidden, and production has no frame-stepping handle). It was checked in game on the branch (`hero-cheek-2026-09-26/face-before-after.jpg`), with the same file.
+
+# Release 9: build 65, analytics on (2026-09-26, 08:40 PDT = 15:40 UTC)
+
+Pieter's word: "drive this: create a free Umami Cloud Hobby site … and switch it on in a one-line release". He signed up himself (Claude does not create accounts), then asked Claude to do the rest.
+
+## What shipped
+
+`origin/main` was fast-forwarded from `cc2df03b` to `5ab30cab` (pushed 15:39:57 UTC). That was 4 commits: three docs commits and build 65. The only non-doc change is the `index.html` snippet and a comment in `services/analytics.ts`. The Netlify production deploy is `6ab7e74f80c17b0008470a81`, published 15:40:30 UTC.
+
+**Umami Cloud**, in Pieter's account (`pieterhouseofrealtors@gmail.com`, region `us`):
+- **Plan:** Hobby, $0: 100K events a month, 1 website, 6-month retention.
+- **Website:** "Tycoon", domain `tycoonjan22026.netlify.app`.
+- **Website ID:** `a8297643-15e9-4122-95b8-0b49cf4a7f98`. It is public by design and appears in the page source.
+- **Dashboard:** https://cloud.umami.is/analytics/us/websites/a8297643-15e9-4122-95b8-0b49cf4a7f98
+
+**The snippet** (`index.html`):
+```html
+<script defer src="https://cloud.umami.is/script.js" data-website-id="a8297643-15e9-4122-95b8-0b49cf4a7f98" data-domains="tycoonjan22026.netlify.app"></script>
+```
+- `data-domains` limits tracking to the live site, so local and LAN QA never counts.
+- The funnel events come from `services/analytics.ts`: `app_loaded`, `mode_selected`, `demo_started`, `demo_wall_hit`, `unlock_modal_opened`, `gumroad_click` and `purchase_unlocked`.
+- No cookies, no personal data.
+
+**Rollback** to builds 40–64 (analytics off):
+
+```sh
+netlify api restoreSiteDeploy --data '{"site_id":"72e985ce-4d87-437f-b4a0-fc6bbb9907db","deploy_id":"6ab7de7106a8a700086c9cfb"}'
+```
+
+## Checks
+
+- **Locally** (`localhost:5191`): the script loaded, `window.umami.track` existed, a test call threw nothing, **no event was sent from localhost**, and the app's own `app_loaded` still fired. 498 tests / 88 files, `tsc` and the build pass.
+- **Before the push:** a fast-forward with nothing on `main` missing from it, a clean tree, and `index.html` the only config-level file changed.
+- **Live:**
+  - the HTML serves the snippet;
+  - loading the site sent two events to `gateway.umami.is/api/send`, both answered 200;
+  - Umami's realtime view showed the visit at 8:40:45 AM: "Visitor from Canada using Chrome on macOS", the `/` pageview and **`app_loaded on /`**.
+- **Excluding QA:** that test visit was from Claude's browser pane. The pane's production origin now has `localStorage['umami.disabled'] = '1'`, Umami's own opt-out, so later QA there is not counted. Pieter can run the same line in his own browsers' consoles on the live site to exclude himself.

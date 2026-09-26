@@ -1,6 +1,6 @@
 # Start here — Tycoon handover
 
-Updated **September 26, 2026, 08:20 PDT**, at the end of the session. **Builds 40–64 are live** after eight releases (four on Sept 25, four on Sept 26), each with Pieter's go-ahead. Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`.
+Updated **September 26, 2026, 08:45 PDT**, at the end of the session. **Builds 40–65 are live** after nine releases (four on Sept 25, five on Sept 26), each with Pieter's go-ahead. **Analytics are on** (build 65, release 9): Umami Cloud Hobby, Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`. Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`.
 
 **This session** (Sept 26, 06:00–08:20 PDT) ran the real-phone check of builds 52–59 (56–60 fps on the iPhone), then built and released builds 60–64:
 
@@ -11,6 +11,7 @@ Updated **September 26, 2026, 08:20 PDT**, at the end of the session. **Builds 4
 | 62 | The phone check's findings: events framed where they happen (`EVENT_PLACES`, a Property & Co. place), ‹ › on the destination row, a one-row room bar and journey strip on phones | `phone-findings-2026-09-26/` | 07:41, release 7 |
 | 63 | The 3D city is the default screen ("Start in the 3D city" is on unless switched off) | `phase1-slice4-default-2026-09-26/` | 08:02, release 8 |
 | 64 | The hero's cheek: the face's shading normals are relaxed at build time, and no vertex moves | `hero-cheek-2026-09-26/` | 08:02, release 8 |
+| 65 | Analytics on: Umami Cloud (free Hobby) in Pieter's account, snippet in `index.html` limited to the live domain; `app_loaded` confirmed arriving | release 9 in `release-2026-09-25/` | 08:40, release 9 |
 
 **The session before** (Sept 25) built 40–59, starting from a full game assessment:
 - the art upgrade: the lighting pass (40), skinned townspeople (41), the AI-modelled Alex (42), the walk-bob fix (43) and lighter sign lettering (48);
@@ -25,9 +26,9 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 
 | What | State |
 |---|---|
-| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | **Builds 40–64 are live** after eight releases, each with Pieter's go-ahead:<br>• 40–51 at 17:21 PDT, deploy `6ab70fda`;<br>• 52–54 at 18:19 PDT ("ship it"), deploy `6ab71d6d`;<br>• 55–57 at 21:01 PDT ("ship it, release 55-57"), deploy `6ab743ad`;<br>• 58–59 at 22:27 PDT ("ship it, release 58-59"), deploy `6ab757c4`;<br>• 60 on 2026-09-26 at 06:45 PDT ("ship it, release 60"), deploy `6ab7cc8d`;<br>• 61 on 2026-09-26 at 07:13 PDT ("ship it, release 61"), deploy `6ab7d2f2`;<br>• 62 on 2026-09-26 at 07:41 PDT ("ship it, release 62"), deploy `6ab7d981`;<br>• **63–64 on 2026-09-26 at 08:02 PDT** ("ship it, release 63-64"): `origin/main` = `cc2df03`, deploy `6ab7de71`.<br>Before that, production was a Sept-13 **CLI** deploy (`6aa6c7fa`), not `origin/main` (`073f397`). Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`. |
+| Production (Netlify `tycoonjan22026`, auto-deploys `origin/main`) | **Builds 40–65 are live** after nine releases, each with Pieter's go-ahead:<br>• 40–51 at 17:21 PDT, deploy `6ab70fda`;<br>• 52–54 at 18:19 PDT ("ship it"), deploy `6ab71d6d`;<br>• 55–57 at 21:01 PDT ("ship it, release 55-57"), deploy `6ab743ad`;<br>• 58–59 at 22:27 PDT ("ship it, release 58-59"), deploy `6ab757c4`;<br>• 60 on 2026-09-26 at 06:45 PDT ("ship it, release 60"), deploy `6ab7cc8d`;<br>• 61 on 2026-09-26 at 07:13 PDT ("ship it, release 61"), deploy `6ab7d2f2`;<br>• 62 on 2026-09-26 at 07:41 PDT ("ship it, release 62"), deploy `6ab7d981`;<br>• 63–64 on 2026-09-26 at 08:02 PDT ("ship it, release 63-64"), deploy `6ab7de71`;<br>• **65 (analytics) on 2026-09-26 at 08:40 PDT** ("drive this"): `origin/main` = `5ab30ca`, deploy `6ab7e74f`.<br>Before that, production was a Sept-13 **CLI** deploy (`6aa6c7fa`), not `origin/main` (`073f397`). Receipts, live checks and one-line rollbacks: `docs/verification/release-2026-09-25/`. |
 | Branch `codex/game-overhaul-20260503-223748` | The old release branch at `073f397` (build 39); now behind `main`. |
-| **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `cc2df03` (release 8, builds 63–64). Later commits, such as the release-8 receipt, stay ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
+| **Work branch `town-lighting-pass`** (checked out) | Pushed to `origin`. `main` was fast-forwarded to it for each release, most recently at `5ab30ca` (release 9, build 65). Later commits, such as the release-9 receipt, stay ahead of `main` until the next release; only `main` auto-deploys. See the commit list below. |
 | Local `main` | Stale (99 behind `origin`). Never run `git checkout main` in this folder: its old history tracks `node_modules`, `dist` and `.env.local`. |
 | Untracked, left on purpose | `graphify-out/` and `espresso-machine.png`. Also seven files deleted as dead code in `3d55d82` that have reappeared on disk: `components/ActionCard.tsx`, `components/CharacterSelect.tsx`, `components/FinancialFreedomBreakdown.tsx` and its test, `components/NewUiRoot.tsx`, `components/v2/DashboardScreen.tsx`, `components/v2/DashboardScreenEnhanced.tsx`, `components/v2/SidebarShell.tsx`. Nothing imports them. Delete them or leave them, but don't commit them. |
 | Validation on the branch | 498 tests / 88 files, TypeScript and the production build (builds 63–64, live). |
@@ -81,11 +82,13 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 42. `9f3cdf1`: build 63, the 3D city is the default screen (`App.tsx` `startInCity`, `test/StartInCity.test.tsx`).
 43. `cc2df03`: build 64, the hero's cheek (`smooth_face_normals()` in `scripts/build-town-hero.py`, `HERO_VERSION` `20260926a`). Receipt: `docs/verification/hero-cheek-2026-09-26/`. **Released with build 63: `main` = `cc2df03`** (deploy `6ab7de71`).
 44. `23ac83c`: the release-8 receipt.
-45. The end-of-session handover (this file, CLAUDE.md and the roadmap).
+45. `9e8a52c`: the end-of-session handover; `fc91480`: the daily challenge stays demo-gated.
+46. `5ab30ca`: build 65, analytics on (Umami). **Released: `main` = `5ab30ca`** (deploy `6ab7e74f`).
+47. The release-9 receipt.
 
 ## 1b. Where the last session stopped (2026-09-26, 08:20 PDT)
 
-**Live: builds 40–64**, in four releases on 2026-09-25 and four on 2026-09-26. Each has a receipt, live checks and a one-line rollback in `docs/verification/release-2026-09-25/`:
+**Live: builds 40–65**, in four releases on 2026-09-25 and five on 2026-09-26. Each has a receipt, live checks and a one-line rollback in `docs/verification/release-2026-09-25/`:
 
 | Release | Builds | Time (PDT) | `main` | Netlify deploy |
 |---|---|---|---|---|
@@ -96,9 +99,10 @@ Read sections 1–6 first. The numbered list under "Completed (chronological rec
 | 5 | 60 | 06:45 (Sept 26) | `e8e1d16` | `6ab7cc8d` |
 | 6 | 61 | 07:13 | `1bc4d4e` | `6ab7d2f2` |
 | 7 | 62 | 07:41 | `7a4d644` | `6ab7d981` |
-| 8 | 63–64 | 08:02 | `cc2df03` | `6ab7de71` (current) |
+| 8 | 63–64 | 08:02 | `cc2df03` | `6ab7de71` |
+| 9 | 65 (analytics) | 08:40 | `5ab30ca` | `6ab7e74f` (current) |
 
-The branch is ahead of `main` only by docs (the release-8 receipt and this handover). There is no unreleased code.
+The branch is ahead of `main` only by docs (the release-9 receipt). There is no unreleased code.
 
 **Pieter's calls this session:** "ship it" for each release, and "yes to all 3" on his open decisions:
 - **The city as the default screen:** done (build 63). The ledger drawer, the plan's other half of slice 4, is **not built**. Ask before building it.
@@ -113,11 +117,13 @@ The branch is ahead of `main` only by docs (the release-8 receipt and this hando
    - If WebGL is missing, the city falls back to its text panels.
 3. **The ledger drawer**, only if Pieter wants it: a half-height money sheet opened from inside the city (`docs/phase1-plan.md`, slice 4).
 4. **Visual items never started** (assessment §3): a modular building kit to replace the box shopfronts; splitting the city into blocks for culling; the male hip/waist ratio. Also the hero's remaining texture lines: the forehead lines and the line above the nose (build 57 receipt).
-5. **Analytics: Pieter's to do, and now due.** He said on 2026-09-26 he would do it once all the phases are completed. Phases 0 and 1 are now complete (apart from the optional ledger drawer), so remind him once, and don't press.
-   - The code is ready: `services/analytics.ts` tracks the whole funnel, and the snippet is commented out in `index.html`.
-   - The plan is Umami Cloud **Hobby**: $0, 100K events a month, 1 website, 6-month retention, no cookie banner.
-   - His part: sign up at https://cloud.umami.is, add the website `tycoonjan22026.netlify.app`, and send the Website ID.
-   - Then: uncomment the snippet with that ID plus `data-domains="tycoonjan22026.netlify.app"` (so local QA doesn't count), check it locally and release it.
+5. ✅ **Analytics: on** (build 65, release 9 at 08:40 PDT). Pieter signed up for Umami Cloud himself, and Claude did the rest.
+   - **Site:** "Tycoon", on the Hobby plan ($0, 100K events a month, 6-month retention). Website ID `a8297643-15e9-4122-95b8-0b49cf4a7f98`.
+   - **Dashboard:** https://cloud.umami.is/analytics/us/websites/a8297643-15e9-4122-95b8-0b49cf4a7f98 (Pieter's Google account `pieterhouseofrealtors@gmail.com`).
+   - **Snippet:** `index.html`, with `data-domains="tycoonjan22026.netlify.app"`, so local and LAN QA is not counted. The funnel events come from `services/analytics.ts`.
+   - **Verified live:** Umami's realtime view showed the pageview and `app_loaded`.
+   - **Excluding QA:** the browser pane's production origin has `localStorage['umami.disabled']='1'`. Set the same in any browser whose visits should not count.
+   - **Next:** after a week or two of traffic, read the funnel (demo started → wall hit → unlock opened → Gumroad click → purchase). A Umami Funnel report can be set up in the dashboard.
 
 **QA state:**
 - **The browser pane's production origin** (`tycoonjan22026.netlify.app`) holds the throwaway Alex save at month 8 ($10,091, Sales certified in release 3).
@@ -143,7 +149,7 @@ The branch is ahead of `main` only by docs (the release-8 receipt and this hando
 7. ✅ **Course rewards: live** (build 55, release 3 at 21:01 PDT; receipt `docs/verification/course-rewards-2026-09-25/`). Certified negotiators on existing saves now get the corrected, slower growth.
 8. ✅ **Builds 56–59 shipped** (releases 3 and 4). Pieter saw the AO before-and-after and said "ship it".
 9. ✅ **The hero's cheek shading step:** Pieter said yes on 2026-09-26; fixed in build 64 (`docs/verification/hero-cheek-2026-09-26/`), live since 08:02 PDT.
-10. **Analytics: deferred by Pieter until all the phases are completed.** Phases 0 and 1 are now done, so it is due: remind him once. He signs up for Umami (free Hobby plan) and sends the Website ID; §1b item 5 has the steps.
+10. ✅ **Analytics: on** since 2026-09-26 (build 65; §1b item 5).
 
 Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the AI Alex cost 38 (receipt: `docs/verification/hero-alex-2026-09-25/`). Still: never spend credits without a fresh yes.
 
@@ -165,7 +171,7 @@ Done 2026-09-25: Pieter picked **concept 2** and approved up to 50 credits; the 
    - ✅ a blink for the hero Alex (build 56, live);
    - ✅ an even skin tone on the hero's face texture (build 57, live), and the cheek's shading step smoothed (build 64, live).
 5. **Phone**: ✅ iPhone checks passed at build 43 (60 fps) and builds 52–59 (56–60 fps; `docs/verification/phone-2026-09-26/`), which found builds 60 and 62. A Chromebook is still untested (§1b item 2).
-6. **Analytics, now due:** Pieter's step (Umami sign-up and Website ID), then a one-line release. See §1b item 5.
+6. ✅ **Analytics: on** (build 65). Read the funnel once there is traffic (§1b item 5).
 
 ## 4. What Pieter wants (standing)
 
