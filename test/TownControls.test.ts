@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, statSync } from 'node:fs';
 import { cameraRelativeMovement, normalizeStick, cameraPreset, cameraFov } from '../components/town/townControls';
+import { LID_OPEN } from '../components/town/townCharacterExpression';
 describe('third-person controls and Blender assets', () => {
   it('frames the square with a longer lens from further back, and keeps rooms as they were', () => {
     const follow = cameraPreset('follow', false);
@@ -55,5 +56,11 @@ describe('third-person controls and Blender assets', () => {
     for (const joint of joints) expect(joint.rotation ?? [0,0,0,1]).toEqual([0,0,0,1]);
     expect(hero.extensionsUsed).toContain('KHR_draco_mesh_compression');
     expect(statSync(path).size).toBeLessThan(700_000);
+    // The blink: his eyes are painted into the texture, so the lids are a mesh on the Head joint, stored open
+    // (squashed to LID_OPEN) and coloured by vertex (skin, then the lash line).
+    const lid = hero.nodes.findIndex((n:any)=>n.name==='Eyelids');
+    expect(hero.nodes.find((n:any)=>(n.children??[]).includes(lid))?.name).toBe('Head');
+    expect(hero.nodes[lid].scale[1]).toBeCloseTo(LID_OPEN);
+    expect(Object.keys(hero.meshes[hero.nodes[lid].mesh].primitives[0].attributes)).toContain('COLOR_0');
   });
 });

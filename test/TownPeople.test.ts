@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
 import { styleCharacter, sitHips, SIT_DROP } from '../components/town/townResidents';
-import { createBlink } from '../components/town/townCharacterExpression';
+import { createBlink, LID_OPEN } from '../components/town/townCharacterExpression';
 import { CLIP_GROUND_SPEED } from '../components/town/townLocomotion';
 
 // A minimal stand-in for public/models/town/town-people.glb: an armature node, a Hips joint,
@@ -43,6 +43,15 @@ describe('skinned townspeople', () => {
     for (let t = 0; t < 12; t += .02) { blink(t); closed = Math.max(closed, p.shirt.morphTargetInfluences![1]); }
     expect(closed).toBeGreaterThan(.9);
     blink(0, true); expect(p.shirt.morphTargetInfluences![1]).toBe(0);
+  });
+  it('blinks the hero by lowering his Eyelids mesh, hidden between blinks and under reduced motion', () => {
+    const root = new THREE.Group(), head = new THREE.Bone(); head.name = 'Head'; root.add(head);
+    const lids = new THREE.Mesh(new THREE.PlaneGeometry(.1, .02), new THREE.MeshStandardMaterial()); lids.name = 'Eyelids'; lids.scale.y = LID_OPEN; head.add(lids);
+    const blink = createBlink(root, 1); expect(lids.visible).toBe(false);
+    let closed = 0, shownOpen = false;
+    for (let t = 0; t < 12; t += .01) { blink(t); closed = Math.max(closed, lids.scale.y); if (lids.visible && lids.scale.y <= LID_OPEN) shownOpen = true; }
+    expect(closed).toBeGreaterThan(.95); expect(shownOpen).toBe(false);
+    blink(0, true); expect(lids.visible).toBe(false); expect(lids.scale.y).toBe(LID_OPEN);
   });
   it('plays walk and run at the ground speed their strides were built for', () => {
     expect(CLIP_GROUND_SPEED.Walk).toBeCloseTo(1.03125); expect(CLIP_GROUND_SPEED.Run).toBeCloseTo(1.5);

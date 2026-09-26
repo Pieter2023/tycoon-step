@@ -1,13 +1,20 @@
 import * as THREE from 'three';
-/** Blinks for the skinned townspeople through their 'Blink' morph target; each person keeps their own rhythm. */
+/** The hero's lids (scripts/build-town-hero.py) are stored open, squashed to the crease at this height. */
+export const LID_OPEN=.02;
+/** Blinks, each person with their own rhythm: the townspeople through their 'Blink' morph target, the hero
+ *  (whose eyes are painted into the texture) by lowering the 'Eyelids' mesh over them. */
 export function createBlink(root:THREE.Object3D, seed:number){
- const targets:{mesh:THREE.Mesh;index:number}[]=[];
- root.traverse(o=>{if(o instanceof THREE.Mesh&&o.morphTargetInfluences&&o.morphTargetDictionary?.Blink!==undefined)targets.push({mesh:o,index:o.morphTargetDictionary.Blink});});
+ const targets:{mesh:THREE.Mesh;index:number}[]=[], lids:THREE.Object3D[]=[];
+ root.traverse(o=>{
+  if(o instanceof THREE.Mesh&&o.morphTargetInfluences&&o.morphTargetDictionary?.Blink!==undefined)targets.push({mesh:o,index:o.morphTargetDictionary.Blink});
+  if(o.name==='Eyelids'&&o.parent?.name!=='Eyelids'){lids.push(o);o.visible=false;}
+ });
  const period=3.4+(seed*1.37)%2.2, offset=(seed*.73)%period;
- return (seconds:number,reducedMotion=false)=>{
-  if(!targets.length)return;
-  const phase=(seconds+offset)%period, closed=reducedMotion?0:phase<.16?Math.sin(phase/.16*Math.PI):0;
+ return (seconds:number,reducedMotion=false,hold?:number)=>{
+  if(!targets.length&&!lids.length)return;
+  const phase=(seconds+offset)%period, closed=hold??(reducedMotion?0:phase<.16?Math.sin(phase/.16*Math.PI):0);
   for(const t of targets)t.mesh.morphTargetInfluences![t.index]=closed;
+  for(const lid of lids){lid.visible=closed>LID_OPEN;lid.scale.y=Math.max(LID_OPEN,closed);}
  };
 }
 /** Subtle eyelid motion on the pilot; no rig or material changes to other characters. */

@@ -172,8 +172,62 @@ town_rig.bones_up(arm, activate)
 town_rig.add_clips(arm, list(JOINTS), LEGS)
 scene.render.fps = 30; scene.frame_set(1)
 
+# ---------------------------------------------------------------- eyelids (the blink)
+# The eyes are painted into the texture, and Draco drops morph targets, so the blink is geometry: a thin
+# skin-coloured lid over each eye, shaped to the face by raycasting and parented to the Head joint. Closed
+# (scale 1) it covers the painted eye and ends in a dark lash line along the eye's lower outline; the file
+# stores it open, squashed flat to the crease above the eye (LID_OPEN). createBlink in
+# components/town/townCharacterExpression.ts scales node 'Eyelids' down over the eyes and hides it between blinks.
+# Outlines measured on the built hero (feet at 0, crown at 2.0) from an unlit orthographic front render.
+EYE_X = [(-.0646, -.0278), (.0266, .0610)]          # inner and outer corners of the painted eyes
+EYE_TOP, EYE_LOW_CORNER, EYE_LOW_MID = 1.841, 1.830, 1.823
+LID_SKIN, LID_LASH = (.985, .749, .639), (.16, .11, .10)   # sRGB: the skin just above the eyes, the painted lash line
+LID_OPEN = .02
+def build_eyelids():
+    from mathutils.bvhtree import BVHTree
+    arm.data.pose_position = 'REST'; bpy.context.view_layer.update()
+    deps = bpy.context.evaluated_depsgraph_get(); tree = BVHTree.FromObject(body, deps)
+    crease = EYE_TOP + .005
+    verts, faces, shade = [], [], []
+    ROWS, COLS = [0, .3, .55, .75, .9, 1], 12
+    for x0, x1 in EYE_X:
+        xa, xb = x0 - .002, x1 + .002
+        base = len(verts)
+        for v in ROWS:
+            for i in range(COLS):
+                t = i / (COLS - 1); x = xa + (xb - xa) * t
+                low = (EYE_LOW_CORNER - .001) - (EYE_LOW_CORNER - EYE_LOW_MID + .0002) * (1 - (2 * t - 1) ** 2)
+                z = crease + (low - crease) * v
+                hit, normal, _, _ = tree.ray_cast(Vector((x, -1, z)), Vector((0, 1, 0)))
+                verts.append(hit + normal * .0015)
+                edge = min(1, t / .12, (1 - t) / .12)            # the lash line fades out past the eye corners
+                shade.append(edge * max(0, (v - .8) / .2))
+        for r in range(len(ROWS) - 1):
+            for i in range(COLS - 1):
+                a = base + r * COLS + i
+                faces.append((a, a + COLS, a + COLS + 1, a + 1))
+    origin = Vector((0, sum(verts[i].y for i in range(COLS)) / COLS, crease))
+    me = bpy.data.meshes.new('Eyelids'); me.from_pydata([p - origin for p in verts], [], faces); me.update()
+    for p in me.polygons: p.use_smooth = True
+    colours = me.color_attributes.new('Col', 'FLOAT_COLOR', 'POINT')
+    for i, s in enumerate(shade):
+        colours.data[i].color_srgb = tuple(LID_SKIN[k] + (LID_LASH[k] - LID_SKIN[k]) * s for k in range(3)) + (1,)
+    lid_mat = bpy.data.materials.new('alex-lid'); lid_mat.use_nodes = True; lid_mat.use_backface_culling = True
+    nodes = lid_mat.node_tree.nodes; bsdf = next(n for n in nodes if n.type == 'BSDF_PRINCIPLED')
+    bsdf.inputs['Roughness'].default_value = .55; bsdf.inputs['Metallic'].default_value = 0
+    attr = nodes.new('ShaderNodeVertexColor'); attr.layer_name = 'Col'
+    lid_mat.node_tree.links.new(attr.outputs['Color'], bsdf.inputs['Base Color'])
+    me.materials.append(lid_mat)
+    lids = bpy.data.objects.new('Eyelids', me); col.objects.link(lids)
+    lids.parent = arm; lids.parent_type = 'BONE'; lids.parent_bone = 'Head'
+    bpy.context.view_layer.update(); lids.matrix_world = Matrix.Translation(origin); bpy.context.view_layer.update()
+    lids.scale.z = LID_OPEN
+    arm.data.pose_position = 'POSE'; bpy.context.view_layer.update()
+    return lids
+lids = build_eyelids()
+
 # ---------------------------------------------------------------- export
-for o in scene.objects: o.select_set(o in (arm, body))
+for o in scene.objects: o.select_set(o in (arm, body, lids))
 os.makedirs(os.path.dirname(OUT_GLB), exist_ok=True)
 bpy.ops.export_scene.gltf(filepath=OUT_GLB, export_format='GLB', use_selection=True, export_animations=True, export_animation_mode='NLA_TRACKS',
                           export_force_sampling=True, export_yup=True, export_skins=True, export_morph=True, export_morph_normal=False, export_apply=False,
@@ -209,3 +263,10 @@ if PREVIEW:
     only(None); scene.frame_set(1)
     scene.render.resolution_x, scene.render.resolution_y = 700, 700; place(0, dist=1.6, z=1.66, lens=70, target_z=1.8)
     scene.render.filepath = os.path.join(PREVIEW, 'face.png'); bpy.ops.render.render(write_still=True)
+    # the blink: rest pose, lids open, half and closed, straight on and from three quarters
+    arm.data.pose_position = 'REST'
+    for angle in (0, 35):
+        for name, amount in (('open', LID_OPEN), ('half', .5), ('closed', 1)):
+            lids.scale.z = amount; place(angle, dist=1.1, z=1.72, lens=85, target_z=1.83)
+            scene.render.filepath = os.path.join(PREVIEW, f'blink-{angle}-{name}.png'); bpy.ops.render.render(write_still=True)
+    lids.scale.z = LID_OPEN; arm.data.pose_position = 'POSE'
