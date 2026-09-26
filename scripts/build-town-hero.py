@@ -226,6 +226,94 @@ def build_eyelids():
     return lids
 lids = build_eyelids()
 
+# ---------------------------------------------------------------- face skin evenness
+# Meshy's face atlas has thin dark-grey lines in it (forehead, nose, cheeks, around the mouth, chin), mostly along its
+# chart borders but some inside charts; they show at café and bench distances. Every skin texel of the head is placed
+# back in 3D (barycentric over its triangle) and skin tone is averaged over 3D neighbourhoods (3 mm cells, ±2 cells),
+# which crosses the chart seams. A texel takes that tone when it is off it by more than .03, its 3D neighbourhood is
+# mostly skin (a brow, a nostril or the eyes' boxes are not) and it is either within two texels of a chart border or
+# a thin dark line (darker, not redder, with skin around it in a 5×5 texel median). Lips and blush (redder than the
+# skin) are left as painted. The charts are then re-dilated three texels into their padding, which texture
+# filtering and mipmaps sample. (Smoothing the face's normals for the side-lit terminator on one cheek was tried and
+# looked worse: a hard band where the Head weights end. That terminator is the decimated face's geometry.)
+def repair_face():
+    W, H = image.size
+    px = np.empty(W * H * 4, np.float32); image.pixels.foreach_get(px); px = px.reshape(H, W, 4)
+    me = body.data; me.calc_loop_triangles(); uvs = me.uv_layers.active.data
+    head = body.vertex_groups['Head'].index
+    def w_head(vi): return next((g.weight for g in me.vertices[vi].groups if g.group == head), 0)
+    cover = np.zeros((H, W), bool)                     # texel centres inside any triangle of the model
+    xs, ys, pos = [], [], []
+    for tri in me.loop_triangles:
+        (u0, v0), (u1, v1), (u2, v2) = [(uvs[l].uv.x * W - .5, uvs[l].uv.y * H - .5) for l in tri.loops]
+        det = (v1 - v2) * (u0 - u2) + (u2 - u1) * (v0 - v2)
+        if abs(det) < 1e-9: continue
+        x0, x1 = int(max(0, math.floor(min(u0, u1, u2)))), int(min(W - 1, math.ceil(max(u0, u1, u2))))
+        y0, y1 = int(max(0, math.floor(min(v0, v1, v2)))), int(min(H - 1, math.ceil(max(v0, v1, v2))))
+        X, Y = np.meshgrid(np.arange(x0, x1 + 1), np.arange(y0, y1 + 1))
+        a = ((v1 - v2) * (X - u2) + (u2 - u1) * (Y - v2)) / det; b = ((v2 - v0) * (X - u2) + (u0 - u2) * (Y - v2)) / det; c = 1 - a - b
+        cover[Y[(a >= 0) & (b >= 0) & (c >= 0)], X[(a >= 0) & (b >= 0) & (c >= 0)]] = True
+        if min(w_head(v) for v in tri.vertices) < .3: continue   # the face, and the jaw it shares with the Torso
+        inside = (a >= -.08) & (b >= -.08) & (c >= -.08)
+        if not inside.any(): continue
+        A, B, C = (np.array(me.vertices[v].co) for v in tri.vertices)
+        xs.append(X[inside]); ys.append(Y[inside]); pos.append(a[inside, None] * A + b[inside, None] * B + c[inside, None] * C)
+    xs, ys, pos = np.concatenate(xs), np.concatenate(ys), np.concatenate(pos)
+    rgb = px[ys, xs, :3]; lum = rgb.mean(1); sat = rgb.max(1) - rgb.min(1)
+    in_eye = np.zeros(len(xs), bool)
+    for x0, x1 in EYE_X:
+        in_eye |= (pos[:, 0] > x0 - .006) & (pos[:, 0] < x1 + .006) & (pos[:, 2] > EYE_LOW_MID - .006) & (pos[:, 2] < EYE_TOP + .006)
+    skin = (lum > .55) & (lum < .97) & (rgb[:, 0] > rgb[:, 1]) & (rgb[:, 1] > rgb[:, 2]) & (rgb[:, 0] - rgb[:, 2] > .1) & ~in_eye
+    # the tone the skin should have at each texel: a blurred 3D grid of the skin texels (two passes, the second
+    # without the outliers the first one found)
+    cell = np.floor((pos - pos.min(0)) / .003).astype(int); dims = cell.max(0) + 5
+    def smooth(mask):
+        acc = np.zeros(tuple(dims) + (4,), np.float64)
+        np.add.at(acc, (cell[mask, 0] + 2, cell[mask, 1] + 2, cell[mask, 2] + 2), np.c_[rgb[mask], np.ones(mask.sum())])
+        for axis in range(3):
+            acc = sum(np.roll(acc, k, axis) for k in range(-2, 3))
+        field = acc[cell[:, 0] + 2, cell[:, 1] + 2, cell[:, 2] + 2]
+        return field[:, :3] / np.maximum(field[:, 3:], 1e-9), field[:, 3]
+    tone, _ = smooth(skin)
+    typical = skin & (np.abs(lum - tone.mean(1)) < .03)
+    tone, support = smooth(typical)
+    # how much of each texel's 3D neighbourhood is skin: high around a thin seam line, low in a brow or nostril
+    everything = np.ones(len(xs), bool)
+    _, n_all = smooth(everything); _, n_skin = smooth(skin)
+    skin_share = n_skin / np.maximum(n_all, 1)
+    # the chart border: texels next to an uncovered texel, or next to one that lies more than 3 mm away in 3D (two
+    # charts packed edge to edge), and the texels within two texels of those
+    where = np.full((H, W, 3), np.nan); where[ys, xs] = pos
+    inner = cover.copy()
+    for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        nb = np.roll(np.roll(where, dy, 0), dx, 1); jump = np.linalg.norm(nb - where, axis=2)
+        inner &= np.roll(np.roll(cover, dy, 0), dx, 1) & ~(jump > .003)
+    for _ in range(2):
+        inner = inner & np.roll(inner, 1, 0) & np.roll(inner, -1, 0) & np.roll(inner, 1, 1) & np.roll(inner, -1, 1)
+    ring = ~inner[ys, xs]
+    lip = (rgb[:, 0] - rgb[:, 1] > .27) & (lum < .8)
+    off = np.abs(rgb - tone).max(1)
+    # lines inside a chart: darker than the skin, not redder, and thin (the 5×5 texel median around them is skin)
+    padded = np.pad(px[..., :3], ((2, 2), (2, 2), (0, 0)), mode='edge')
+    around = np.median(np.stack([padded[ys + 2 + dy, xs + 2 + dx] for dy in range(-2, 3) for dx in range(-2, 3)], 1), 1)
+    t_lum, t_sat = tone.mean(1), tone.max(1) - tone.min(1)
+    thin = (t_lum - lum > .03) & (sat <= t_sat + .02) & (np.abs(around - tone).max(1) < .04)
+    fix = ~in_eye & ~lip & (skin_share > .75) & (support > 20) & (off > .03) & (ring | thin)
+    px[ys[fix], xs[fix], :3] = tone[fix]
+    # re-dilate the head's skin charts into their padding, where no other chart borders it
+    filled = np.zeros((H, W), bool); filled[ys[skin | fix], xs[skin | fix]] = True
+    grown = 0
+    for _ in range(3):
+        n = np.zeros((H, W, 3)); k = np.zeros((H, W)); other = np.zeros((H, W), bool)
+        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            f = np.roll(np.roll(filled, dy, 0), dx, 1); n += np.roll(np.roll(px[..., :3], dy, 0), dx, 1) * f[..., None]; k += f
+            other |= np.roll(np.roll(cover & ~filled, dy, 0), dx, 1)
+        grow = ~cover & ~filled & (k > 0) & ~other
+        px[grow, :3] = n[grow] / k[grow, None]; filled |= grow; grown += int(grow.sum())
+    image.pixels.foreach_set(px.ravel()); image.update()
+    return {'skin texels': int(skin.sum()), 'border texels fixed': int(fix.sum()), 'padding': grown}
+print('HERO face', repair_face())
+
 # ---------------------------------------------------------------- export
 for o in scene.objects: o.select_set(o in (arm, body, lids))
 os.makedirs(os.path.dirname(OUT_GLB), exist_ok=True)
