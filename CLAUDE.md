@@ -17,7 +17,8 @@ Read [HANDOVER.md](HANDOVER.md) sections 1–6 before acting. It has the state, 
   - lighter sign lettering (build 48) and property costs, PMI, one FHA loan, no lender re-roll, a slower credit climb (build 49; `services/propertyCosts.ts`).
   - Phase 1 slice 4 as an opt-in setting (build 50): Quick actions → "Start in the 3D city" (localStorage `tycoon_start_in_city`) opens the city once per load, after the first-steps mission and anything waiting in the 2D shell. Test: `test/StartInCity.test.tsx`.
   - unique asset ids and a real production save as a migration test (build 51): `test/fixtures/save-production-2026-09-13-month7.json`, `test/ProductionSaveMigration.test.tsx`. Run it after any economy or save change.
-- **Validation:** 446 tests / 80 files and the production build pass on the branch.
+  - pacing (build 52, after the release): "free in about N years at this pace" (`services/freedomPace.ts`, `components/FreedomPaceLine.tsx`), Maria's student-budget start, each difficulty's description states its measured pace.
+- **Validation:** 452 tests / 81 files and the production build pass on the branch.
 - **Waiting on Pieter:**
   - pacing after the economy fix (about 14–20 game years to freedom for a careful index investor);
   - Phase 1 slice 4: try the "Start in the 3D city" setting, then decide whether the city becomes the default screen (and the dashboard a ledger drawer);
@@ -38,7 +39,7 @@ Target market: **North America** (USD, FHA loans, US credit scores — intention
 
 - `npm run dev` — dev server on :5173 (Netlify functions NOT served; see Access below)
 - `netlify dev` — dev server WITH functions (needed to test /api/validate-access)
-- `npm run test:run` — vitest suite (80 files / 446 tests on `town-lighting-pass`, 2026-09-25; integration tests drive the v2 shell)
+- `npm run test:run` — vitest suite (81 files / 452 tests on `town-lighting-pass`, 2026-09-25; integration tests drive the v2 shell)
 - `npm run build` — tsc + vite build (chunk-size warning is known/pre-existing)
 
 ## Architecture (key files)

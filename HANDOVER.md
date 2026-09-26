@@ -38,6 +38,8 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 17. `4d3c30b`, `fee4f2a`: handover docs, then the "Start in the 3D city" setting as work in progress.
 18. `aa9fea8`: the "Start in the 3D city" setting finished, tested and checked in the browser (build 50).
 19. `15c4812`: unique asset ids and a real production save as a migration test (build 51). **Released: `main` = `15c4812`.**
+20. `5c3c0a9`: release receipt; the harness runs any difficulty.
+21. `388c9bc`: pacing (build 52): "free in about N years at this pace", Maria's student budget, and each difficulty's description states its pace. Receipt: `docs/verification/pacing-2026-09-25/`. Not released yet.
 
 ## 1b. Where the last session stopped (2026-09-25, evening PDT)
 
@@ -46,7 +48,11 @@ Updated **September 25, 2026 (late evening PDT)**. That day produced: a full gam
 - A save made on the live site before the release continued on the new code in the same browser.
 
 **Delegated: pacing and slice 5.** Pieter's words: "you can decide whatever you think works best overall and gives the best user experience". In progress:
-1. **Pacing.** The strategy harness now runs any difficulty and records when coverage passes 10/25/50/75% (`playLong(…, difficulty)`, `reached`). Decide from the numbers; see §3.
+1. ✅ **Pacing, build 52** (`docs/verification/pacing-2026-09-25/`):
+   - the honest arc stays (Normal median 16 years for a careful index investor);
+   - the slow meter gets a countdown, "Free in about N years at this pace" (`services/freedomPace.ts`), on the dashboard, the city header and the demo wall;
+   - Maria starts on a student budget (she was $93 a month short on Normal and went bankrupt on Hard);
+   - each difficulty's description states its measured pace.
 2. **Slice 5, one milestone track.** Merge quests, notice-board challenges and the guided journeys into one track, and cut the meters on screen down to what matters.
 
 Then continue §3 in order: stage events at their place in 3D, the visual list, and a Chromebook check.
